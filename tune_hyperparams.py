@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 
-import parsing.parse
+from parsing import parse
 from parsing.config import Config
 from ucca.evaluation import UNLABELED, WEAK_LABELED, LABELED
 
@@ -34,7 +34,7 @@ class Hyperparams(object):
 
     def print(self, file):
         e = self.scores.evaluators
-        print(", ".join("%.3f" % p for p in
+        print(", ".join("%.3f" % float(p) for p in
                         [self.learning_rate, self.decay_factor, self.score(),
                          e[LABELED].regular.f1,      e[LABELED].remotes.f1,
                          e[UNLABELED].regular.f1,    e[UNLABELED].remotes.f1,
