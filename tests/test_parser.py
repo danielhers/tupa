@@ -1,4 +1,4 @@
-"""Testing code for the parser package, unit-testing only."""
+"""Testing code for the parsing package, unit-testing only."""
 
 import unittest
 
