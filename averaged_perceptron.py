@@ -45,6 +45,13 @@ class Weights(object):
         averaged_weights = totals / update_index
         return Weights(len(label_map), averaged_weights)
 
+    def resize(self, num_labels):
+        if num_labels > self.num_labels:
+            self.num_labels = num_labels
+            self.weights.resize(num_labels)
+            self._last_update.resize(num_labels)
+            self._totals.resize(num_labels)
+
 
 class AveragedPerceptron(object):
     def __init__(self, num_labels, min_update=1, weights=None, label_map=None):
@@ -88,6 +95,13 @@ class AveragedPerceptron(object):
         """
         assert not self.is_frozen, "Cannot update a frozen model"
         self._update_index += 1
+        num_labels = max(true, pred) + 1
+        if num_labels > self.num_labels:
+            self._true_labels += [False] * (num_labels - self.num_labels)
+            self.num_labels = num_labels
+            for weights in self.weights.values():
+                weights.resize(num_labels)
+            self.weights.default_factory = lambda: Weights(num_labels)
         self._true_labels[true] = True
         for feature, value in features.items():
             if not value:

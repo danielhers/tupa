@@ -68,42 +68,44 @@ class State(object):
 
         def assert_possible_parent(node):
             assert node.text is None, "Terminals may not have children"
-            assert action.tag not in Constraints.UniqueOutgoing or action.tag not in node.outgoing_tags, \
-                "Outgoing edge tag %s must be unique, but %s already has one" % (
-                    action.tag, node)
-            assert action.tag not in Constraints.MutuallyExclusiveOutgoing or not \
-                node.outgoing_tags & Constraints.MutuallyExclusiveOutgoing, \
-                "Outgoing edge tags %s are mutually exclusive, but %s already has %s and is being added %s" % (
-                    Constraints.MutuallyExclusiveOutgoing, node, node.outgoing_tags, action.tag)
-            assert action.tag in Constraints.ChildlessOutgoing or not \
-                node.incoming_tags & Constraints.ChildlessIncoming, \
-                "Units with incoming %s edges may not have children, and %s has incoming %s" % (
-                    Constraints.ChildlessIncoming, node, node.incoming_tags)
+            if Config().constraints:
+                assert action.tag not in Constraints.UniqueOutgoing or action.tag not in node.outgoing_tags, \
+                    "Outgoing edge tag %s must be unique, but %s already has one" % (
+                        action.tag, node)
+                assert action.tag not in Constraints.MutuallyExclusiveOutgoing or not \
+                    node.outgoing_tags & Constraints.MutuallyExclusiveOutgoing, \
+                    "Outgoing edge tags %s are mutually exclusive, but %s already has %s and is being added %s" % (
+                        Constraints.MutuallyExclusiveOutgoing, node, node.outgoing_tags, action.tag)
+                assert action.tag in Constraints.ChildlessOutgoing or not \
+                    node.incoming_tags & Constraints.ChildlessIncoming, \
+                    "Units with incoming %s edges may not have children, and %s has incoming %s" % (
+                        Constraints.ChildlessIncoming, node, node.incoming_tags)
 
         def assert_possible_child(node):
             assert node is not self.root, "The root may not have parents"
-            assert (node.text is not None) == (action.tag == EdgeTags.Terminal), \
-                "Edge tag must be %s iff child is terminal, but node is %s and edge tag is %s" % (
-                    EdgeTags.Terminal, node, action.tag)
-            assert action.tag not in Constraints.UniqueIncoming or \
-                action.tag not in node.incoming_tags, \
-                "Incoming edge tag %s must be unique, but %s already has one" % (
-                    action.tag, node)
-            assert action.tag not in Constraints.ChildlessIncoming or \
-                node.outgoing_tags <= Constraints.ChildlessOutgoing, \
-                "Units with incoming %s edges may not have children, but %s has %d" % (
-                    Constraints.ChildlessIncoming, node, len(node.children))
-            # Commented out due to passage 106, unit 1.300
-            # assert not node.incoming_tags or (action.tag in Constraints.LinkerIncoming) == (
-            #     node.incoming_tags <= Constraints.LinkerIncoming), \
-            #     "Linker units may only have incoming edges with tags from %s, but %s is being added '%s'" % (
-            #         Constraints.LinkerIncoming, node, action.tag)
+            if Config().constraints:
+                assert (node.text is not None) == (action.tag == EdgeTags.Terminal), \
+                    "Edge tag must be %s iff child is terminal, but node is %s and edge tag is %s" % (
+                        EdgeTags.Terminal, node, action.tag)
+                assert action.tag not in Constraints.UniqueIncoming or \
+                    action.tag not in node.incoming_tags, \
+                    "Incoming edge tag %s must be unique, but %s already has one" % (
+                        action.tag, node)
+                assert action.tag not in Constraints.ChildlessIncoming or \
+                    node.outgoing_tags <= Constraints.ChildlessOutgoing, \
+                    "Units with incoming %s edges may not have children, but %s has %d" % (
+                        Constraints.ChildlessIncoming, node, len(node.children))
+                # Commented out due to passage 106, unit 1.300
+                # assert not node.incoming_tags or (action.tag in Constraints.LinkerIncoming) == (
+                #     node.incoming_tags <= Constraints.LinkerIncoming), \
+                #     "Linker units may only have incoming edges with tags from %s, but %s is being added '%s'" % (
+                #         Constraints.LinkerIncoming, node, action.tag)
 
         def assert_possible_edge():
             parent, child = self.get_parent_child(action)
             assert_possible_parent(parent)
             assert_possible_child(child)
-            if parent is self.root:
+            if parent is self.root and Config().constraints:
                 assert child.text is None, "Root may not have terminal children, but is being added '%s'" % child
                 assert action.tag in Constraints.TopLevel, "The root may not have %s edges" % action.tag
             if Config().multiple_edges:

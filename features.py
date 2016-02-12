@@ -245,7 +245,7 @@ def get_head_terminal(node):
                  if not edge.remote and not edge.child.implicit]
         if not edges:
             return None
-        node = min(edges, key=lambda edge: EDGE_PRIORITY[edge.tag]).child
+        node = min(edges, key=lambda edge: EDGE_PRIORITY.get(edge.tag, 0)).child
     return node
 
 

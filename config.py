@@ -57,6 +57,8 @@ class Config(object, metaclass=Singleton):
                                help="ignore linkage nodes and edges during both train and test")
         argparser.add_argument("-S", "--noswap", action="store_true",
                                help="disable swap transitions entirely")
+        argparser.add_argument("-C", "--constraints", action="store_true",
+                               help="use constrained inference according to UCCA rules")
         self.args = argparser.parse_args()
 
         assert not (self.args.train or self.args.dev) or self.args.folds is None,\
@@ -86,6 +88,7 @@ class Config(object, metaclass=Singleton):
         self.max_nodes_ratio = self.args.maxnodes
         self.multiple_edges = self.args.multiedge
         self.no_linkage = self.args.nolinkage
+        self.constraints = self.args.constraints
 
     def log(self, message):
         if self._log_file is None:
