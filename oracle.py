@@ -117,9 +117,9 @@ class Oracle(object):
         return action(edge.tag, orig_edge=edge, orig_node=node, oracle=self)
 
     def remove(self, edge, node=None):
-        self.edges_remaining.remove(edge)
+        self.edges_remaining.discard(edge)
         if node is not None:
-            self.nodes_remaining.remove(node.ID)
+            self.nodes_remaining.discard(node.ID)
 
     def str(self, sep):
         return "nodes left: [%s]%sedges left: [%s]" % (" ".join(self.nodes_remaining), sep,
