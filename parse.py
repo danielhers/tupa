@@ -298,12 +298,17 @@ class Parser(object):
                 passage = ioutil.file2passage(passage)  # XML or binary format
                 passage_id = passage.ID
             except (IOError, ParseError):
-                passage_id = os.path.splitext(os.path.basename(passage))[0]
-                with open(passage) as text_file:  # simple text file
-                    lines = (line.strip() for line in text_file.readlines())
-                    passage = [[token for line in group for token in line.split()]
-                               for is_sep, group in groupby(lines, lambda x: not x)
-                               if not is_sep]
+                passage_id, ext = os.path.splitext(os.path.basename(passage))
+                converter = convert.CONVERTERS.get(ext.lstrip("."))
+                with open(passage) as f:
+                    if converter is None:  # Simple text file
+                        lines = (line.strip() for line in f.readlines())
+                        passage = [[token for line in group for token in line.split()]
+                                   for is_sep, group in groupby(lines, lambda x: not x)
+                                   if not is_sep]
+                    else:  # Known extension, convert to passage
+                        converter, _ = converter
+                        passage = next(converter(f, passage_id))
         else:
             raise IOError("File not found: %s" % passage)
         return passage, passage_id
