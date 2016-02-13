@@ -43,8 +43,10 @@ class Parser(object):
     def train(self, passages, dev=None, iterations=1):
         """
         Train parser on given passages
-        :param passages: iterable of Passage objects to train on
-        :param dev: iterable of Passage objects to tune on
+        :param passages: iterable of pairs of (passage, passage ID) to train on,
+                         where passage may be either Passage object, or list of lists of tokens
+        :param dev: iterable of pairs of (passage, passage ID) to tune on,
+                    where passage may be either Passage object, or list of lists of tokens
         :param iterations: number of iterations to perform
         :return: trained model
         """
