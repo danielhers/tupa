@@ -43,10 +43,8 @@ class Parser(object):
     def train(self, passages, dev=None, iterations=1):
         """
         Train parser on given passages
-        :param passages: iterable of pairs of (passage, passage ID) to train on,
-                         where passage may be either Passage object, or list of lists of tokens
-        :param dev: iterable of pairs of (passage, passage ID) to tune on,
-                    where passage may be either Passage object, or list of lists of tokens
+        :param passages: iterable of passages to train on
+        :param dev: iterable of passages to tune on
         :param iterations: number of iterations to perform
         :return: trained model
         """
@@ -60,16 +58,14 @@ class Parser(object):
         save_model = True
         for iteration in range(iterations):
             print("Training iteration %d of %d: " % (iteration + 1, iterations))
-            passages = [(passage, passage_id) for _, passage, passage_id in
-                        self.parse(passages, mode="train")]
+            passages = [passage for _, passage in self.parse(passages, mode="train")]
             self.learning_rate *= self.decay_factor
             shuffle(passages)
             if dev:
                 print("Evaluating on dev passages")
-                dev, scores = zip(*[((passage, passage_id),
-                                     evaluation.evaluate(predicted_passage, passage,
-                                                         verbose=False, units=False, errors=False))
-                                    for predicted_passage, passage, passage_id in
+                dev, scores = zip(*[(passage, evaluation.evaluate(
+                    predicted_passage, passage, verbose=False, units=False, errors=False))
+                                    for predicted_passage, passage in
                                     self.parse(dev, mode="dev")])
                 score = evaluation.Scores.aggregate(scores).average_f1()
                 print("Average F1 score on dev: %.3f" % score)
@@ -95,12 +91,11 @@ class Parser(object):
     def parse(self, passages, mode="test"):
         """
         Parse given passages
-        :param passages: iterable of pairs of (passage, passage ID), where passage may be:
-                         either Passage object, or list of lists of tokens
+        :param passages: iterable of passages to parse
         :param mode: "train", "test" or "dev".
                      If "train", use oracle to train on given passages.
                      Otherwise, just parse with classifier.
-        :return: generator of triplets of (parsed passage, original passage, passage ID)
+        :return: generator of pairs of (parsed passage, original passage)
         """
         train = (mode == "train")
         passage_word = "sentence" if Config().sentences else \
@@ -112,13 +107,13 @@ class Parser(object):
         total_duration = 0
         total_tokens = 0
         num_passages = 0
-        for passage, passage_id in passages:
-            print("%s %-7s" % (passage_word, passage_id), end=Config().line_end, flush=True)
+        for passage in passages:
+            print("%s %-7s" % (passage_word, passage.ID), end=Config().line_end, flush=True)
             started = time.time()
             self.action_count = 0
             self.correct_count = 0
             assert not train or isinstance(passage, core.Passage), "Cannot train on unannotated passage"
-            self.state = State(passage, passage_id, callback=self.pos_tag)
+            self.state = State(passage, callback=self.pos_tag)
             history = set()
             self.oracle = Oracle(passage) if isinstance(passage, core.Passage) else None
             failed = False
@@ -127,7 +122,7 @@ class Parser(object):
             except ParserException as e:
                 if train:
                     raise
-                Config().log("%s %s: %s" % (passage_word, passage_id, e))
+                Config().log("%s %s: %s" % (passage_word, passage.ID, e))
                 print("failed")
                 failed = True
             predicted_passage = passage
@@ -149,7 +144,7 @@ class Parser(object):
             self.total_correct += self.correct_count
             self.total_actions += self.action_count
             num_passages += 1
-            yield predicted_passage, passage, passage_id
+            yield predicted_passage, passage
 
         if num_passages > 1:
             print("Parsed %d %ss" % (num_passages, passage_word))
@@ -301,13 +296,12 @@ def train_test(train_passages, dev_passages, test_passages, args):
         if args.train:
             print("Evaluating on test passages")
         passage_scores = []
-        for guessed_passage, ref_passage, _ in p.parse(test_passages):
-            if isinstance(ref_passage, core.Passage):
-                passage_scores.append(evaluation.evaluate(guessed_passage, ref_passage,
-                                                          verbose=args.verbose and guessed_passage is not None))
+        for guessed_passage, ref_passage in p.parse(test_passages):
+            passage_scores.append(evaluation.evaluate(
+                guessed_passage, ref_passage, verbose=args.verbose and guessed_passage is not None))
             if guessed_passage is not None:
-                write_passage(guessed_passage,
-                              args.outdir, args.prefix, args.binary, args.verbose)
+                write_passage(
+                    guessed_passage, args.outdir, args.prefix, args.binary, args.verbose)
         if passage_scores:
             scores = evaluation.Scores.aggregate(passage_scores)
             print("\nAverage F1 score on test: %.3f" % scores.average_f1())

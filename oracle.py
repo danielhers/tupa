@@ -1,6 +1,5 @@
 from parsing.action import Action, Actions
 from parsing.config import Config
-from parsing.constants import ROOT_ID
 from ucca import layer1
 
 
@@ -11,8 +10,9 @@ class Oracle(object):
     :param passage gold passage to get the correct edges from
     """
     def __init__(self, passage):
-        self.nodes_remaining = {node.ID for node in passage.layer(layer1.LAYER_ID).all
-                                if node.ID != ROOT_ID and
+        l1 = passage.layer(layer1.LAYER_ID)
+        self.nodes_remaining = {node.ID for node in l1.all
+                                if node is not l1.heads[0] and
                                 (not Config().no_linkage or node.tag != layer1.NodeTags.Linkage)}
         self.edges_remaining = {edge for node in passage.nodes.values() for edge in node
                                 if not Config().no_linkage or edge.tag not in (

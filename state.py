@@ -5,45 +5,36 @@ from operator import attrgetter
 
 from parsing.action import Actions
 from parsing.config import Config
-from parsing.constants import ROOT_ID, Constraints
+from parsing.constants import Constraints
 from parsing.edge import Edge
 from parsing.node import Node
-from ucca import core, layer0, layer1, convert
+from ucca import core, layer0, layer1
 from ucca.layer1 import EdgeTags
 
 
 class State(object):
     """
     The parser's state, responsible for applying actions and creating the final Passage
-    :param passage: a Passage object to get the tokens from, or a list of lists of strings
-    :param passage_id: the ID of the passage to generate
+    :param passage: a Passage object to get the tokens from, and everything else if training
     :param callback: function to call after creating the list of nodes (e.g. POS tagger)
     """
-    def __init__(self, passage, passage_id, callback=None):
+    def __init__(self, passage, callback=None):
         self.log = []
         self.finished = False
-        self.is_passage = isinstance(passage, core.Passage)
-        if self.is_passage:  # During training or evaluation, create from gold Passage
-            self.nodes = [Node(i, orig_node=x, text=x.text, paragraph=x.paragraph, tag=x.tag)
-                          for i, x in enumerate(passage.layer(layer0.LAYER_ID).all)]
-            self.tokens = [[terminal.text for terminal in terminals]
-                           for _, terminals in groupby(passage.layer(layer0.LAYER_ID).all,
-                                                       key=attrgetter("paragraph"))]
-            root_node = passage.by_id(ROOT_ID)
-        else:  # During parsing, create from plain text: assume passage is list of lists of strings
-            self.tokens = passage
-            self.nodes = [Node(i, text=token, paragraph=paragraph, tag=convert.is_punctuation(token))
-                          for i, (paragraph, token) in
-                          enumerate((paragraph, token) for paragraph, paragraph_tokens in
-                                    enumerate(passage) for token in paragraph_tokens)]
-            root_node = None
+        l0 = passage.layer(layer0.LAYER_ID)
+        l1 = passage.layer(layer1.LAYER_ID)
+        self.train = len(l1.all) > 1
+        self.nodes = [Node(i, orig_node=t, text=t.text, paragraph=t.paragraph, tag=t.tag)
+                      for i, t in enumerate(l0.all)]
+        self.tokens = [[t.text for t in ts]
+                       for _, ts in groupby(l0.all, key=attrgetter("paragraph"))]
         if callback is not None:  # For POS tagging, or other functions that operate on the nodes
             callback(self)
         self.terminals = list(self.nodes)
         self.buffer = deque(self.nodes)
-        self.root = self.add_node(root_node)  # The root is not part of the stack/buffer
+        self.root = self.add_node(l1.heads[0])  # The root is not part of the stack/buffer
         self.stack = [self.root]
-        self.passage_id = passage_id
+        self.passage_id = passage.ID
         self.actions = []
 
     def is_valid(self, action):
@@ -63,7 +54,7 @@ class State(object):
         :param action: action to check for validity
         """
         def assert_orig_node_exists():
-            if self.is_passage:  # We're in training, so we must have an original node to refer to
+            if self.train:  # We're in training, so we must have an original node to refer to
                 assert action.orig_node is not None, "May only create real nodes during training"
 
         def assert_possible_parent(node):
@@ -109,7 +100,7 @@ class State(object):
                 assert child.text is None, "Root may not have terminal children, but is being added '%s'" % child
                 assert action.tag in Constraints.TopLevel, "The root may not have %s edges" % action.tag
             if Config().multiple_edges:
-                edge = self.create_edge(action)
+                edge = Edge(parent, child, action.tag, remote=action.remote)
                 assert edge not in parent.outgoing, "Edge must not already exist: %s" % edge
             else:
                 assert child not in parent.children, "Edge must not already exist: %s->%s" % (parent, child)
@@ -240,14 +231,14 @@ class State(object):
         terminals = [l0.add_terminal(text=terminal.text, punct=terminal.tag == layer0.NodeTags.Punct,
                                      paragraph=terminal.paragraph) for terminal in self.terminals]
         l1 = layer1.Layer1(passage)
-        if self.is_passage:  # We are in training and we have a gold passage
-            passage.nodes[ROOT_ID].extra["remarks"] = self.root.node_id  # For reference
+        if self.train:  # We are in training and we have a gold passage
+            l1.heads[0].extra["remarks"] = self.root.node_id  # For reference
             self.fix_terminal_tags(terminals)
         remotes = []  # To be handled after all nodes are created
         linkages = []  # To be handled after all non-linkage nodes are created
         self.topological_sort()  # Sort self.nodes
         for node in self.nodes:
-            if self.is_passage and assert_proper:
+            if self.train and assert_proper:
                 assert node.text or node.outgoing or node.implicit, "Non-terminal leaf node: %s" % node
                 assert node.node or node is self.root or node.is_linkage, "Non-root without incoming: %s" % node
             if node.is_linkage:

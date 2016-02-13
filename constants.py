@@ -1,7 +1,5 @@
 from ucca.layer1 import EdgeTags
 
-ROOT_ID = "1.1"  # ID of root node in UCCA passages
-
 
 class Constraints:
     # A unit may not have more than one outgoing edge with the same tag, if it is one of these:
