@@ -61,6 +61,8 @@ class Config(object, metaclass=Singleton):
                                help="use constrained inference according to UCCA rules")
         self.args = argparser.parse_args()
 
+        assert self.args.passages or self.args.train,\
+            "Either passages or --train is required"
         assert not (self.args.train or self.args.dev) or self.args.folds is None,\
             "--train and --dev are incompatible with --folds"
 
