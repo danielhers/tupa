@@ -22,7 +22,8 @@ def read_passages(files):
                 base, ext = os.path.splitext(os.path.basename(file))
                 converter = convert.FROM_FORMAT.get(ext.lstrip("."), convert.from_text)
                 with open(file) as f:
-                    passage = next(converter(f, passage_id=base))
+                    yield from converter(f, passage_id=base, split=Config().split)
+                continue
         else:
             raise IOError("File not found: %s" % file)
         if Config().split:
