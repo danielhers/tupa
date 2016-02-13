@@ -83,10 +83,10 @@ class State(object):
 
         def assert_possible_child(node):
             assert node is not self.root, "The root may not have parents"
+            assert (node.text is not None) == (action.tag == EdgeTags.Terminal), \
+                "Edge tag must be %s iff child is terminal, but node is %s and edge tag is %s" % (
+                    EdgeTags.Terminal, node, action.tag)
             if Config().constraints:
-                assert (node.text is not None) == (action.tag == EdgeTags.Terminal), \
-                    "Edge tag must be %s iff child is terminal, but node is %s and edge tag is %s" % (
-                        EdgeTags.Terminal, node, action.tag)
                 assert action.tag not in Constraints.UniqueIncoming or \
                     action.tag not in node.incoming_tags, \
                     "Incoming edge tag %s must be unique, but %s already has one" % (
