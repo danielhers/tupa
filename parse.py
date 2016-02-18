@@ -82,7 +82,7 @@ class Parser(object):
                 if self.model_file is not None:
                     best_model.save(self.model_file)
 
-            print()
+            print("Classifier: %s" % self.model)
         print("Trained %d iterations" % iterations)
 
         self.model = best_model

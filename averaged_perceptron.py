@@ -174,3 +174,9 @@ class AveragedPerceptron(object):
                 self._update_index = db["_update_index"]
                 self._true_labels = db["_true_labels"]
         print("Done (%.3fs)." % (time.time() - started))
+
+    def __str__(self):
+        return ("%d labels total, " % self.num_labels) + (
+                "frozen" if self.is_frozen else
+                "%d labels occurred" % self._true_labels.count(True))
+
