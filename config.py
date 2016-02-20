@@ -19,12 +19,18 @@ class Config(object, metaclass=Singleton):
                                help="passage files/directories to train on")
         argparser.add_argument("-d", "--dev", nargs="+", default=(),
                                help="passage files/directories to tune on")
-        argparser.add_argument("-f", "--folds", type=int, choices=range(2, 11), default=None,
+        argparser.add_argument("-f", "--folds", type=int, choices=range(2, 11),
                                help="number of folds for k-fold cross validation")
-        argparser.add_argument("-m", "--model", default=None, help="model file to load/save")
-        argparser.add_argument("-o", "--outdir", default=".", help="output directory for parsed files")
-        argparser.add_argument("-p", "--prefix", default="ucca_passage", help="output filename prefix")
-        argparser.add_argument("-L", "--log", default="parser.log", help="output log file")
+        argparser.add_argument("-m", "--model",
+                               help="model file to load/save")
+        argparser.add_argument("-o", "--outdir", default=".",
+                               help="output directory for parsed files")
+        argparser.add_argument("-p", "--prefix", default="ucca_passage",
+                               help="output filename prefix")
+        argparser.add_argument("-L", "--log", default="parser.log",
+                               help="output log file")
+        argparser.add_argument("-e", "--devscores", default="dev_scores.csv",
+                               help="output file for dev scores")
         argparser.add_argument("-I", "--iterations", type=int, default=1,
                                help="number of training iterations")
         argparser.add_argument("-b", "--binary", action="store_true",
@@ -77,6 +83,7 @@ class Config(object, metaclass=Singleton):
         self.split = self.sentences or self.paragraphs
 
         self.iterations = self.args.iterations
+        self.dev_scores = self.args.devscores
         self.learning_rate = self.args.learningrate
         self.decay_factor = self.args.decayfactor
         self.importance = self.args.importance

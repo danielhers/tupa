@@ -56,6 +56,8 @@ class Parser(object):
         best_score = 0
         best_model = None
         save_model = True
+        with open(Config().dev_scores, "w") as f:
+            print(",".join(["iteration"] + evaluation.Scores.field_titles()), file=f)
         for iteration in range(iterations):
             print("Training iteration %d of %d: " % (iteration + 1, iterations))
             passages = [passage for _, passage in self.parse(passages, mode="train")]
@@ -67,8 +69,11 @@ class Parser(object):
                     predicted_passage, passage, verbose=False, units=False, errors=False))
                                     for predicted_passage, passage in
                                     self.parse(dev, mode="dev")])
-                score = evaluation.Scores.aggregate(scores).average_f1()
+                scores = evaluation.Scores.aggregate(scores)
+                score = scores.average_f1()
                 print("Average F1 score on dev: %.3f" % score)
+                with open(Config().dev_scores, "a") as f:
+                    print(",".join([str(iteration)] + scores.fields()), file=f)
                 if score >= best_score:
                     print("Better than previous best score (%.3f)" % best_score)
                     best_score = score

@@ -2,9 +2,9 @@ import os
 
 import numpy as np
 
+from evaluation import Scores
 from parsing import parse
 from parsing.config import Config
-from ucca.evaluation import UNLABELED, WEAK_LABELED, LABELED
 
 
 class Hyperparams(object):
@@ -33,20 +33,15 @@ class Hyperparams(object):
         return ret
 
     def print(self, file):
-        e = self.scores.evaluators
-        print(", ".join("%.3f" % float(p) for p in
-                        [self.learning_rate, self.decay_factor, self.score(),
-                         e[LABELED].regular.f1,      e[LABELED].remotes.f1,
-                         e[UNLABELED].regular.f1,    e[UNLABELED].remotes.f1,
-                         e[WEAK_LABELED].regular.f1, e[WEAK_LABELED].remotes.f1]),
+        print(", ".join(["%.3f" % float(p) for p in
+                         (self.learning_rate, self.decay_factor, self.score())] +
+                        self.scores.fields()),
               file=file)
 
     @staticmethod
     def print_title(file):
         print("learning rate, decay factor, average f1, "
-              "regular labeled f1, remote labeled f1, "
-              "regular unlabeled f1, remote unlabeled f1, "
-              "regular weakly labeled f1, remote weakly labeled f1, ",
+              ", ".join(Scores.field_titles()),
               file=file)
 
 
