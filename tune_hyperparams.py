@@ -23,13 +23,13 @@ class Hyperparams(object):
         assert self.score is not None, "parser failed to produce score"
 
     def score(self):
-        return -float("inf") if self.scores is None else self.scores.average_f1()
+        return -float("inf") if self.scores is None else self.scores.average_unlabeled_f1()
 
     def __str__(self):
         ret = "learning rate: %.3f" % self.learning_rate
         ret += ", decay factor: %.3f" % self.decay_factor
         if self.scores is not None:
-            ret += ", average f1: %.3f" % self.score()
+            ret += ", average unlabeled f1: %.3f" % self.score()
         return ret
 
     def print(self, file):
@@ -40,7 +40,7 @@ class Hyperparams(object):
 
     @staticmethod
     def print_title(file):
-        print("learning rate, decay factor, average f1, "
+        print("learning rate, decay factor, average unlabeled f1, "
               ", ".join(Scores.field_titles()),
               file=file)
 

@@ -70,8 +70,8 @@ class Parser(object):
                                     for predicted_passage, passage in
                                     self.parse(dev, mode="dev")])
                 scores = evaluation.Scores.aggregate(scores)
-                score = scores.average_f1()
-                print("Average F1 score on dev: %.3f" % score)
+                score = scores.average_unlabeled_f1()
+                print("Average unlabeled F1 score on dev: %.3f" % score)
                 with open(Config().dev_scores, "a") as f:
                     print(",".join([str(iteration)] + scores.fields()), file=f)
                 if score >= best_score:
@@ -309,7 +309,7 @@ def train_test(train_passages, dev_passages, test_passages, args):
                     guessed_passage, args.outdir, args.prefix, args.binary, args.verbose)
         if passage_scores:
             scores = evaluation.Scores.aggregate(passage_scores)
-            print("\nAverage F1 score on test: %.3f" % scores.average_f1())
+            print("\nAverage F1 score on test: %.3f" % scores.average_unlabeled_f1())
             print("Aggregated scores:")
             scores.print()
     return scores
@@ -335,8 +335,8 @@ def main():
                               for passage in fold]
             fold_scores.append(train_test(train_passages, dev_passages, test_passages, args))
         scores = evaluation.Scores.aggregate(fold_scores)
-        print("Average F1 score for each fold: " + ", ".join(
-            "%.3f" % s.average_f1() for s in fold_scores))
+        print("Average unlabeled F1 score for each fold: " + ", ".join(
+            "%.3f" % s.average_unlabeled_f1() for s in fold_scores))
         print("Aggregated scores across folds:\n")
         scores.print()
     else:  # Simple train/dev/test by given arguments
