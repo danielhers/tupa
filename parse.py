@@ -335,7 +335,7 @@ def main():
                               for passage in fold]
             fold_scores.append(train_test(train_passages, dev_passages, test_passages, args))
         scores = evaluation.Scores.aggregate(fold_scores)
-        print("Average unlabeled F1 score for each fold: " + ", ".join(
+        print("Average unlabeled test F1 score for each fold: " + ", ".join(
             "%.3f" % s.average_unlabeled_f1() for s in fold_scores))
         print("Aggregated scores across folds:\n")
         scores.print()
