@@ -41,6 +41,9 @@ class Parser(object):
         self.learning_rate = Config().learning_rate
         self.decay_factor = Config().decay_factor
 
+        # Used in verify_passage to optionally ignore a mismatch in linkage nodes
+        self.ignore_node = lambda n: n.tag == layer1.NodeTags.Linkage if Config().no_linkage else None
+
     def train(self, passages, dev=None, iterations=1):
         """
         Train parser on given passages
@@ -182,7 +185,7 @@ class Parser(object):
                         raise ParserException("Error in oracle during training") from e
 
             features = self.feature_extractor.extract_features(self.state)
-            predicted_action = self.predict_action(features, true_actions)
+            predicted_action = self.predict_action(features, true_actions)  # sets self.scores
             action = predicted_action
             if not true_actions:
                 true_actions = "?"
@@ -233,6 +236,8 @@ class Parser(object):
         :return: valid action with maximum probability according to classifier
         """
         self.scores = self.model.score(features)  # Returns dict of id -> score
+        if true_actions is not None:
+            self.scores.update({a.id: float("-inf") for a in true_actions if a.id not in self.scores})
         best_action = self.select_action(max(self.scores, key=self.scores.get), true_actions)
         if self.state.is_valid(best_action):
             return best_action
@@ -256,8 +261,7 @@ class Parser(object):
         except StopIteration:
             return action
 
-    @staticmethod
-    def verify_passage(passage, predicted_passage, show_diff):
+    def verify_passage(self, passage, predicted_passage, show_diff):
         """
         Compare predicted passage to true passage and die if they differ
         :param passage: true passage
@@ -266,7 +270,7 @@ class Parser(object):
                           Depends on predicted_passage having the original node IDs annotated
                           in the "remarks" field for each node.
         """
-        assert passage.equals(predicted_passage, ignore_node=ignore_node),\
+        assert passage.equals(predicted_passage, ignore_node=self.ignore_node),\
             "Failed to produce true passage" + \
             (diffutil.diff_passages(
                     passage, predicted_passage) if show_diff else "")
@@ -283,14 +287,6 @@ class Parser(object):
             print(" ".join("%s/%s" % (token, tag) for (token, tag) in zip(tokens, tags)))
         for node, tag in zip(state.nodes, tags):
             node.pos_tag = tag
-
-
-# Used in verify_passage to optionally ignore a mismatch in linkage nodes
-if Config().no_linkage:
-    def ignore_node(node):
-        return node.tag == layer1.NodeTags.Linkage
-else:
-    ignore_node = None
 
 
 def train_test(train_passages, dev_passages, test_passages, args, model_suffix=""):
