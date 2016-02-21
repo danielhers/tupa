@@ -1,5 +1,3 @@
-import os
-import shelve
 import time
 from collections import defaultdict
 
@@ -127,55 +125,40 @@ class AveragedPerceptron(object):
         print("Done (%.3fs)." % (time.time() - started))
         return averaged
 
-    def save(self, filename):
+    def save(self):
         """
-        Save all parameters to file
-        :param filename: file to write to; the actual written file may have an additional suffix
+        Return dictionary of all parameters for saving
         """
-        print("Saving model to '%s'... " % filename, end="", flush=True)
-        started = time.time()
-        with shelve.open(filename) as db:
-            db["num_labels"] = self.num_labels
-            db["weights"] = dict(self.weights)
-            db["is_frozen"] = self.is_frozen
-            if self.is_frozen:
-                db["_label_map"] = self._label_map
-            else:
-                db["_min_update"] = self._min_update
-                db["_update_index"] = self._update_index
-                db["_true_labels"] = self._true_labels
-        print("Done (%.3fs)." % (time.time() - started))
+        d = {
+            "num_labels": self.num_labels,
+            "weights": dict(self.weights),
+            "is_frozen": self.is_frozen,
+        }
+        if self.is_frozen:
+            d["_label_map"] = self._label_map
+        else:
+            d.update({
+                "_min_update": self._min_update,
+                "_update_index": self._update_index,
+                "_true_labels": self._true_labels,
+            })
+        return d
 
-    def load(self, filename):
+    def load(self, d):
         """
-        Load all parameters from file
-        :param filename: file to read from; the actual read file may have an additional suffix
+        Load all parameters from dictionary
+        :param d: dictionary to load from
         """
-        def try_open(*names):
-            exception = None
-            for f in names:
-                # noinspection PyBroadException
-                try:
-                    return shelve.open(f, flag="r")
-                except Exception as e:
-                    exception = e
-            if exception is not None:
-                raise IOError("Model file not found: " + filename) from exception
-
-        print("Loading model from '%s'... " % filename, end="", flush=True)
-        started = time.time()
-        with try_open(filename, os.path.splitext(filename)[0]) as db:
-            self.num_labels = db["num_labels"]
-            self.weights.clear()
-            self.weights.update(db["weights"])
-            self.is_frozen = db["is_frozen"]
-            if self.is_frozen:
-                self._label_map = db["_label_map"]
-            else:
-                self._min_update = db["_min_update"]
-                self._update_index = db["_update_index"]
-                self._true_labels = db["_true_labels"]
-        print("Done (%.3fs)." % (time.time() - started))
+        self.num_labels = d["num_labels"]
+        self.weights.clear()
+        self.weights.update(d["weights"])
+        self.is_frozen = d["is_frozen"]
+        if self.is_frozen:
+            self._label_map = d["_label_map"]
+        else:
+            self._min_update = d["_min_update"]
+            self._update_index = d["_update_index"]
+            self._true_labels = d["_true_labels"]
 
     def __str__(self):
         return ("%d labels total, " % self.num_labels) + (

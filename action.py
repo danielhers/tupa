@@ -1,7 +1,6 @@
 import re
 
-from parsing.config import Config
-from ucca.layer1 import EdgeTags
+from parsing.config import Config, Singleton
 
 
 class Action(object):
@@ -45,10 +44,10 @@ class Action(object):
 
     @classmethod
     def edge_action(cls, direction, remote, tag, *args, **kwargs):
-        if direction == cls.RIGHT:
-            return Actions.RightRemote(tag, *args, **kwargs) if remote else Actions.RightEdge(tag, *args, **kwargs)
-        else:
-            return Actions.LeftRemote(tag, *args, **kwargs) if remote else Actions.LeftEdge(tag, *args, **kwargs)
+        remote_action, edge_action = (Actions.RightRemote, Actions.RightEdge) \
+            if direction == cls.RIGHT else (Actions.LeftRemote, Actions.LeftEdge)
+        action = remote_action if remote else edge_action
+        return action(tag, *args, **kwargs)
 
     def __repr__(self):
         return Action.__name__ + "(" + self.type + (", " + self.tag if self.tag else "") + ")"
@@ -76,34 +75,18 @@ class Action(object):
     @property
     def id(self):
         if self._id is None:
-            Action.get_all_actions()
             key = (self.type_id, self.tag)
-            self._id = Action.all_action_ids.get(key)
+            actions = Actions()
+            self._id = actions.ids.get(key)
             if self._id is None:  # Unseen action tag
-                self._id = len(Action.all_actions)
-                Action.all_actions.append(self)
-                Action.all_action_ids[key] = self._id
+                self._id = len(actions.all)
+                actions.all.append(self)
+                actions.ids[key] = self._id
         return self._id
 
-    @classmethod
-    def get_all_actions(cls):
-        if cls.all_actions is None:
-            # edge and node action will be created as they are returned by the oracle
-            cls.all_actions = [Actions.Reduce, Actions.Shift, Actions.Finish]
-            if Config().compound_swap:
-                cls.all_actions += [Actions.Swap(i) for i in range(1, cls.MAX_SWAP)]
-            elif not Config().no_swap:
-                cls.all_actions.append(Actions.Swap)
-            cls.all_action_ids = {(action.type_id, action.tag): i
-                                  for i, action in enumerate(cls.all_actions)}
-        return cls.all_actions
 
-    @classmethod
-    def by_id(cls, i):
-        return cls.get_all_actions()[i]
+class Actions(object, metaclass=Singleton):
 
-
-class Actions:
     Shift = Action("SHIFT")
     Node = Action("NODE")
     Implicit = Action("IMPLICIT")
@@ -114,3 +97,34 @@ class Actions:
     RightRemote = Action("RIGHT-REMOTE")
     Swap = Action("SWAP")
     Finish = Action("FINISH")
+
+    def __init__(self):
+        self._all = None
+        self._ids = None
+
+    def init(self):
+        # edge and node action will be created as they are returned by the oracle
+        self.all = [Actions.Reduce, Actions.Shift, Actions.Finish] + \
+                   (map(Actions.Swap, range(1, Action.MAX_SWAP)) if Config().compound_swap
+                    else [] if Config().no_swap else [Actions.Swap])
+
+    @property
+    def all(self):
+        if self._all is None:
+            self.init()
+        return self._all
+
+    @all.setter
+    def all(self, actions):
+        self._all = list(actions)
+        self._ids = {(action.type_id, action.tag): i for i, action in enumerate(actions)}
+
+    @property
+    def ids(self):
+        if self._all is None:
+            self.init()
+        return self._ids
+
+    def by_id(self, i):
+        return self.all[i]
+

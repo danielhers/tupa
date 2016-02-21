@@ -5,13 +5,13 @@ from random import shuffle
 
 from nltk import pos_tag
 
-from parsing.action import Action
+from parsing.action import Actions
 from parsing.averaged_perceptron import AveragedPerceptron
 from parsing.config import Config
 from parsing.features import FeatureExtractor
 from parsing.oracle import Oracle
 from parsing.state import State
-from parsing.util import read_files_and_dirs, write_passage
+from parsing.util import read_files_and_dirs, write_passage, save, load
 from ucca import core, diffutil, evaluation, layer0, layer1
 
 
@@ -33,7 +33,7 @@ class Parser(object):
         self.total_actions = 0
         self.total_correct = 0
 
-        self.model = AveragedPerceptron(len(Action.get_all_actions()),
+        self.model = AveragedPerceptron(len(Actions().all),
                                         min_update=Config().min_update)
         self.model_file = model_file
         self.feature_extractor = FeatureExtractor()
@@ -54,7 +54,9 @@ class Parser(object):
         """
         if not passages:
             if self.model_file is not None:  # Nothing to train on; pre-trained model given
-                self.model.load(self.model_file)
+                d = load(self.model_file)
+                self.model.load(d["model"])
+                Actions.all = d["actions"]
             return self.model
 
         best_score = 0
@@ -89,7 +91,8 @@ class Parser(object):
             if save_model or best_model is None:
                 best_model = self.model.average()
                 if self.model_file is not None:
-                    best_model.save(self.model_file)
+                    save(self.model_file, {"model": best_model.save(),
+                                           "actions": Actions().all})
 
         print("Trained %d iterations" % iterations)
 
@@ -196,7 +199,7 @@ class Parser(object):
                                           key=self.scores.get) if len(true_actions) > 1 \
                     else true_actions[0].id
                 rate = self.learning_rate
-                if Action.by_id(best_true_action_id).is_swap:
+                if Actions().by_id(best_true_action_id).is_swap:
                     rate *= Config().importance
                 self.model.update(features, predicted_action.id, best_true_action_id, rate)
                 action = random.choice(true_actions)
@@ -255,7 +258,7 @@ class Parser(object):
 
     @staticmethod
     def select_action(i, true_actions):
-        action = Action.by_id(i)
+        action = Actions().by_id(i)
         try:
             return next(true_action for true_action in true_actions if action == true_action)
         except StopIteration:
