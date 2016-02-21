@@ -259,7 +259,8 @@ def gap_length_sum(node):
 
 
 def gap_lengths(node):
-    return (t1.index - t2.index - 1 for (t1, t2) in zip(node.terminals[1:], node.terminals[:-1]))
+    terminals = node.get_terminals()
+    return (t1.index - t2.index - 1 for (t1, t2) in zip(terminals[1:], terminals[:-1]))
 
 
 def gap_type(node):
