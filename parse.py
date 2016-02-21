@@ -86,7 +86,7 @@ class Parser(object):
                     print("Not better than previous best score (%.3f)" % best_score)
                     save_model = False
 
-            if save_model:
+            if save_model or best_model is None:
                 best_model = self.model.average()
                 if self.model_file is not None:
                     best_model.save(self.model_file)
