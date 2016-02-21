@@ -1,3 +1,4 @@
+import os
 import random
 import time
 from random import shuffle
@@ -292,9 +293,13 @@ else:
     ignore_node = None
 
 
-def train_test(train_passages, dev_passages, test_passages, args):
+def train_test(train_passages, dev_passages, test_passages, args, model_suffix=""):
     scores = None
-    p = Parser(args.model)
+    model_file = args.model
+    if model_file is not None:
+        model_base, model_ext = os.path.splitext(model_file)
+        model_file = model_base + model_suffix + model_ext
+    p = Parser(model_file)
     p.train(train_passages, dev=dev_passages, iterations=args.iterations)
     if test_passages:
         if args.train or args.folds:
@@ -331,7 +336,7 @@ def main():
             train_passages = [passage for fold in folds
                               if fold is not dev_passages and fold is not test_passages
                               for passage in fold]
-            fold_scores.append(train_test(train_passages, dev_passages, test_passages, args))
+            fold_scores.append(train_test(train_passages, dev_passages, test_passages, args, "_%d" % i))
         scores = evaluation.Scores.aggregate(fold_scores)
         print("Average unlabeled test F1 score for each fold: " + ", ".join(
             "%.3f" % s.average_unlabeled_f1() for s in fold_scores))
