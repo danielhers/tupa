@@ -118,7 +118,7 @@ class AveragedPerceptron(object):
         started = time.time()
         # Freeze set of features and set of labels; also allow pickle
         label_map = [i for i, is_true in enumerate(self._true_labels) if is_true]
-        print("Averaging weights (keeping %d true labels out of the original %d)... " % (
+        print("Averaging weights (keeping %d labels out of %d)... " % (
             len(label_map), self.num_labels), end="", flush=True)
         averaged_weights = {feature: weights.average(self._update_index, label_map)
                             for feature, weights in self.weights.items()

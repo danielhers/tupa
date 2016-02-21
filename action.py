@@ -88,15 +88,8 @@ class Action(object):
     @classmethod
     def get_all_actions(cls):
         if cls.all_actions is None:
-            cls.all_actions = [action(tag) for action in
-                               (Actions.Node, Actions.Implicit,
-                                Actions.LeftEdge, Actions.RightEdge,
-                                Actions.LeftRemote, Actions.RightRemote)
-                               for name, tag in EdgeTags.__dict__.items()
-                               if isinstance(tag, str) and not name.startswith('__') and
-                               (not Config().no_linkage or tag not in (
-                                   EdgeTags.LinkRelation, EdgeTags.LinkArgument))] + \
-                              [Actions.Reduce, Actions.Shift, Actions.Finish]
+            # edge and node action will be created as they are returned by the oracle
+            cls.all_actions = [Actions.Reduce, Actions.Shift, Actions.Finish]
             if Config().compound_swap:
                 cls.all_actions += [Actions.Swap(i) for i in range(1, cls.MAX_SWAP)]
             elif not Config().no_swap:
