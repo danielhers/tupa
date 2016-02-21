@@ -1,6 +1,4 @@
 import os
-from itertools import groupby
-from operator import not_
 from xml.etree.ElementTree import ParseError
 
 from parsing.config import Config

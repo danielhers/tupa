@@ -43,6 +43,10 @@ class Node(object):
     def add_to_l1(self, l1, parent, tag, terminals):
         """
         Called when creating final Passage to add a new core.Node
+        :param l1: Layer1 of the passage
+        :param parent: node
+        :param tag: edge tag to link to parent
+        :param terminals: all terminals strings in the passage
         """
         if Config().verify:
             assert self.node is None or self.text is not None,\

@@ -250,7 +250,7 @@ def get_head_terminal(node):
 
 
 def has_gaps(node):
-    """Possibly the same as FoundationalNode.discontiguous"""
+    # Possibly the same as FoundationalNode.discontiguous
     return any(length > 0 for length in gap_lengths(node))
 
 

@@ -152,13 +152,15 @@ class AveragedPerceptron(object):
         :param filename: file to read from; the actual read file may have an additional suffix
         """
         def try_open(*names):
+            exception = None
             for f in names:
                 # noinspection PyBroadException
                 try:
                     return shelve.open(f, flag="r")
                 except Exception as e:
                     exception = e
-            raise IOError("Model file not found: " + filename) from exception
+            if exception is not None:
+                raise IOError("Model file not found: " + filename) from exception
 
         print("Loading model from '%s'... " % filename, end="", flush=True)
         started = time.time()
@@ -179,4 +181,3 @@ class AveragedPerceptron(object):
         return ("%d labels total, " % self.num_labels) + (
                 "frozen" if self.is_frozen else
                 "%d labels occurred" % self._true_labels.count(True))
-
