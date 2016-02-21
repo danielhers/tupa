@@ -87,7 +87,6 @@ class Parser(object):
                 if self.model_file is not None:
                     best_model.save(self.model_file)
 
-            print("Classifier: %s" % self.model)
         print("Trained %d iterations" % iterations)
 
         self.model = best_model
@@ -298,15 +297,14 @@ def train_test(train_passages, dev_passages, test_passages, args):
     p = Parser(args.model)
     p.train(train_passages, dev=dev_passages, iterations=args.iterations)
     if test_passages:
-        if args.train:
+        if args.train or args.folds:
             print("Evaluating on test passages")
         passage_scores = []
         for guessed_passage, ref_passage in p.parse(test_passages):
             passage_scores.append(evaluation.evaluate(
                 guessed_passage, ref_passage, verbose=args.verbose and guessed_passage is not None))
             if guessed_passage is not None:
-                write_passage(
-                    guessed_passage, args.outdir, args.prefix, args.binary, args.verbose)
+                write_passage(guessed_passage, args)
         if passage_scores:
             scores = evaluation.Scores.aggregate(passage_scores)
             print("\nAverage F1 score on test: %.3f" % scores.average_unlabeled_f1())

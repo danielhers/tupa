@@ -43,9 +43,15 @@ def read_files_and_dirs(files_and_dirs):
     return read_passages(files) if files else ()
 
 
-def write_passage(passage, outdir, prefix, binary, verbose):
-    suffix = ".pickle" if binary else ".xml"
-    outfile = outdir + os.path.sep + prefix + passage.ID + suffix
-    if verbose:
+def write_passage(passage, args):
+    suffix = args.format or ("pickle" if args.binary else "xml")
+    outfile = args.outdir + os.path.sep + args.prefix + passage.ID + "." + suffix
+    if args.verbose:
         print("Writing passage '%s'..." % outfile)
-    ioutil.passage2file(passage, outfile, binary=binary)
+    if args.format is None:
+        ioutil.passage2file(passage, outfile, binary=args.binary)
+    else:
+        converter = convert.TO_FORMAT[args.format]
+        output = "\n".join(line for line in converter(passage))
+        with open(outfile, "w") as f:
+            f.write(output + "\n")

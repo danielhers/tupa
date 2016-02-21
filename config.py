@@ -1,5 +1,7 @@
 import argparse
 
+from ucca import convert
+
 
 class Singleton(type):
     instance = None
@@ -19,12 +21,14 @@ class Config(object, metaclass=Singleton):
                                help="passage files/directories to train on")
         argparser.add_argument("-d", "--dev", nargs="+", default=(),
                                help="passage files/directories to tune on")
-        argparser.add_argument("-f", "--folds", type=int, choices=range(2, 11),
+        argparser.add_argument("-F", "--folds", type=int, choices=range(3, 11),
                                help="number of folds for k-fold cross validation")
         argparser.add_argument("-m", "--model",
                                help="model file to load/save")
         argparser.add_argument("-o", "--outdir", default=".",
                                help="output directory for parsed files")
+        argparser.add_argument("-f", "--format", choices=convert.CONVERTERS,
+                               help="output format for parsed files, if not UCCA format")
         argparser.add_argument("-p", "--prefix", default="",
                                help="output filename prefix")
         argparser.add_argument("-L", "--log", default="parser.log",
@@ -71,6 +75,8 @@ class Config(object, metaclass=Singleton):
             "Either passages or --train is required"
         assert not (self.args.train or self.args.dev) or self.args.folds is None,\
             "--train and --dev are incompatible with --folds"
+        assert not (self.args.binary and self.args.format),\
+            "--binary and --format are incompatible"
 
         self.verbose = self.args.verbose
         self.line_end = "\n" if self.verbose else " "  # show all in one line unless verbose
