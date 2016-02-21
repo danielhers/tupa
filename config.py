@@ -73,6 +73,8 @@ class Config(object, metaclass=Singleton):
 
         assert self.args.passages or self.args.train,\
             "Either passages or --train is required"
+        assert self.args.model or self.args.train or self.args.folds,\
+            "Either --model or --train or --folds is required"
         assert not (self.args.train or self.args.dev) or self.args.folds is None,\
             "--train and --dev are incompatible with --folds"
         assert not (self.args.binary and self.args.format),\
