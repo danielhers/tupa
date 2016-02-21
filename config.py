@@ -13,7 +13,7 @@ class Singleton(type):
 
 
 class Config(object, metaclass=Singleton):
-    def __init__(self):
+    def __init__(self, *args):
         argparser = argparse.ArgumentParser(description="""Transition-based parser for UCCA.""")
         argparser.add_argument("passages", nargs="*", default=(),
                                help="passage files/directories to test on/parse")
@@ -69,7 +69,7 @@ class Config(object, metaclass=Singleton):
                                help="disable swap transitions entirely")
         argparser.add_argument("-C", "--constraints", action="store_true",
                                help="use constrained inference according to UCCA rules")
-        self.args = argparser.parse_args()
+        self.args = argparser.parse_args(args if args else None)
 
         assert self.args.passages or self.args.train,\
             "Either passages or --train is required"

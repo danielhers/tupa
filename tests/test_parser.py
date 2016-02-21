@@ -2,6 +2,7 @@
 
 import unittest
 
+from parsing.config import Config
 from parsing.oracle import Oracle
 from parsing.parse import Parser
 from parsing.state import State
@@ -10,6 +11,10 @@ from ucca.tests.test_ucca import TestUtil
 
 
 class ParserTests(unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        super(ParserTests, self).__init__(*args, **kwargs)
+        Config("", "-m", "test")
+
     def test_oracle(self):
         passage = convert.from_standard(TestUtil.load_xml('test_files/standard3.xml'))
         oracle = Oracle(passage)
