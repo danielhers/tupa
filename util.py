@@ -27,8 +27,7 @@ def read_passages(files):
         else:
             raise IOError("File not found: %s" % file)
         if Config().split:
-            yield from convert.split2segments(
-                passage, is_sentences=Config().sentences, remarks=True)
+            yield from convert.split2segments(passage, is_sentences=Config().sentences)
         else:
             yield passage
 

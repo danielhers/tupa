@@ -40,13 +40,14 @@ class Node(object):
         self.outgoing_tags.add(edge.tag)
         self._terminals = None  # Invalidate terminals because we might have added some
 
-    def add_to_l1(self, l1, parent, tag, terminals):
+    def add_to_l1(self, l1, parent, tag, terminals, train):
         """
         Called when creating final Passage to add a new core.Node
         :param l1: Layer1 of the passage
         :param parent: node
         :param tag: edge tag to link to parent
         :param terminals: all terminals strings in the passage
+        :param train: in training, so keep original node IDs in the "remarks" field
         """
         if Config().verify:
             assert self.node is None or self.text is not None,\
@@ -64,7 +65,7 @@ class Node(object):
             edge.child.node = self.node[0].child
         else:  # The usual case
             self.node = l1.add_fnode(parent.node, tag, implicit=self.implicit)
-        if self.node is not None and self.node_id is not None:  # In training, and we have a gold passage
+        if train and self.node is not None and self.node_id is not None:  # In training
             self.node.extra["remarks"] = self.node_id  # Keep original node ID for reference
 
     @property

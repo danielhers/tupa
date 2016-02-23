@@ -249,7 +249,7 @@ class State(object):
                     if edge.remote:
                         remotes.append((node, edge))
                     else:
-                        edge.child.add_to_l1(l1, node, edge.tag, terminals)
+                        edge.child.add_to_l1(l1, node, edge.tag, terminals, self.train)
 
         for node, edge in remotes:  # Add remote edges
             try:
