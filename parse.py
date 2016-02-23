@@ -110,25 +110,30 @@ class Parser(object):
                      Otherwise, just parse with classifier.
         :return: generator of pairs of (parsed passage, original passage)
         """
-        train = (mode == "train")
+        train = mode == "train"
+        dev = mode == "dev"
+        test = mode == "test"
+        assert train or dev or test, "Invalid parse mode: %s" % mode
         passage_word = "sentence" if Config().sentences else \
                        "paragraph" if Config().paragraphs else \
                        "passage"
-        assert train or mode in ("test", "dev"), "Invalid parse mode: %s" % mode
         self.total_actions = 0
         self.total_correct = 0
         total_duration = 0
         total_tokens = 0
         num_passages = 0
         for passage in passages:
+            l0 = passage.layer(layer0.LAYER_ID)
+            l1 = passage.layer(layer1.LAYER_ID)
+            labeled = len(l1.all) > 1
+            assert not train or labeled, "Cannot train on unannotated passage"
             print("%s %-7s" % (passage_word, passage.ID), end=Config().line_end, flush=True)
             started = time.time()
             self.action_count = 0
             self.correct_count = 0
-            assert not train or isinstance(passage, core.Passage), "Cannot train on unannotated passage"
             self.state = State(passage, callback=self.pos_tag)
             self.state_hash_history = set()
-            self.oracle = Oracle(passage) if isinstance(passage, core.Passage) else None
+            self.oracle = Oracle(passage) if labeled else None
             failed = False
             try:
                 self.parse_passage(train)  # This is where the actual parsing takes place
@@ -136,7 +141,8 @@ class Parser(object):
                 if train:
                     raise
                 Config().log("%s %s: %s" % (passage_word, passage.ID, e))
-                print("failed")
+                if not test:
+                    print("failed")
                 failed = True
             predicted_passage = passage
             if not train or Config().verify:
@@ -144,16 +150,19 @@ class Parser(object):
             duration = time.time() - started
             total_duration += duration
             if not failed:
-                if self.oracle:  # passage is a Passage object, and we have an oracle to verify by
+                if labeled:  # passage is a Passage object, and we have an oracle to verify by
                     if Config().verify:
                         self.verify_passage(passage, predicted_passage, train)
-                    print("accuracy: %.3f (%d/%d)" %
-                          (self.correct_count/self.action_count, self.correct_count, self.action_count)
-                          if self.action_count else "No actions done", end=Config().line_end)
-                num_tokens = len(passage.layer(layer0.LAYER_ID).all) if self.oracle else sum(map(len, passage))
+                    if self.action_count:
+                        print("accuracy: %.3f (%d/%d)" %
+                              (self.correct_count/self.action_count,
+                               self.correct_count, self.action_count), end=Config().line_end)
+                num_tokens = len(l0.all)
                 total_tokens += num_tokens
-                print("time: %0.3fs (%d tokens/second)" % (duration, num_tokens / duration),
-                      end=Config().line_end + "\n", flush=True)
+            print("time: %0.3fs" % duration, end="")
+            if not failed:
+                print(" (%d tokens/second)" % (num_tokens / duration), end="")
+            print(Config().line_end, flush=True)
             self.total_correct += self.correct_count
             self.total_actions += self.action_count
             num_passages += 1

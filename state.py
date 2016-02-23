@@ -24,7 +24,7 @@ class State(object):
         l0 = passage.layer(layer0.LAYER_ID)
         l1 = passage.layer(layer1.LAYER_ID)
         assert l0.all, "Empty passage '%s'" % passage.ID
-        self.train = len(l1.all) > 1
+        self.labeled = len(l1.all) > 1
         self.nodes = [Node(i, orig_node=t, text=t.text, paragraph=t.paragraph, tag=t.tag)
                       for i, t in enumerate(l0.all)]
         self.tokens = [[t.text for t in ts]
@@ -55,7 +55,7 @@ class State(object):
         :param action: action to check for validity
         """
         def assert_orig_node_exists():
-            if self.train:  # We're in training, so we must have an original node to refer to
+            if self.labeled:  # We're in training, so we must have an original node to refer to
                 assert action.orig_node is not None, "May only create real nodes during training"
 
         def assert_possible_parent(node):
@@ -232,14 +232,14 @@ class State(object):
         terminals = [l0.add_terminal(text=terminal.text, punct=terminal.tag == layer0.NodeTags.Punct,
                                      paragraph=terminal.paragraph) for terminal in self.terminals]
         l1 = layer1.Layer1(passage)
-        if self.train:  # We are in training and we have a gold passage
+        if self.labeled:  # We are in training and we have a gold passage
             l1.heads[0].extra["remarks"] = self.root.node_id  # For reference
             self.fix_terminal_tags(terminals)
         remotes = []  # To be handled after all nodes are created
         linkages = []  # To be handled after all non-linkage nodes are created
         self.topological_sort()  # Sort self.nodes
         for node in self.nodes:
-            if self.train and assert_proper:
+            if self.labeled and assert_proper:
                 assert node.text or node.outgoing or node.implicit, "Non-terminal leaf node: %s" % node
                 assert node.node or node is self.root or node.is_linkage, "Non-root without incoming: %s" % node
             if node.is_linkage:
@@ -249,7 +249,7 @@ class State(object):
                     if edge.remote:
                         remotes.append((node, edge))
                     else:
-                        edge.child.add_to_l1(l1, node, edge.tag, terminals, self.train)
+                        edge.child.add_to_l1(l1, node, edge.tag, terminals, self.labeled)
 
         for node, edge in remotes:  # Add remote edges
             try:
