@@ -23,6 +23,7 @@ class State(object):
         self.finished = False
         l0 = passage.layer(layer0.LAYER_ID)
         l1 = passage.layer(layer1.LAYER_ID)
+        assert l0.all, "Empty passage '%s'" % passage.ID
         self.train = len(l1.all) > 1
         self.nodes = [Node(i, orig_node=t, text=t.text, paragraph=t.paragraph, tag=t.tag)
                       for i, t in enumerate(l0.all)]
