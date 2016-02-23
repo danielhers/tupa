@@ -33,12 +33,14 @@ class Config(object, metaclass=Singleton):
                                help="output filename prefix")
         argparser.add_argument("-L", "--log", default="parser.log",
                                help="output log file")
-        argparser.add_argument("-e", "--devscores", default="dev_scores.csv",
+        argparser.add_argument("-O", "--devscores", default="dev_scores.csv",
                                help="output file for dev scores")
         argparser.add_argument("-I", "--iterations", type=int, default=1,
                                help="number of training iterations")
         argparser.add_argument("-b", "--binary", action="store_true",
                                help="read and write passages in Pickle binary format, not XML")
+        argparser.add_argument("-e", "--evaluate", action="store_true",
+                               help="show evaluation results on parsed passages")
         argparser.add_argument("-v", "--verbose", action="store_true",
                                help="display detailed information while parsing")
         argparser.add_argument("-s", "--sentences", action="store_true",
@@ -77,6 +79,8 @@ class Config(object, metaclass=Singleton):
             "Either --model or --train or --folds is required"
         assert not (self.args.train or self.args.dev) or self.args.folds is None,\
             "--train and --dev are incompatible with --folds"
+        assert self.args.train or not self.args.dev,\
+            "--dev is only possible together with --train"
         assert not (self.args.binary and self.args.format),\
             "--binary and --format are incompatible"
 

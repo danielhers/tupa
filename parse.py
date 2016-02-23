@@ -306,8 +306,10 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
             print("Evaluating on test passages")
         passage_scores = []
         for guessed_passage, ref_passage in p.parse(test_passages):
-            passage_scores.append(evaluation.evaluate(
-                guessed_passage, ref_passage, verbose=args.verbose and guessed_passage is not None))
+            if args.evaluate or train_passages:
+                passage_scores.append(evaluation.evaluate(
+                    guessed_passage, ref_passage,
+                    verbose=args.verbose and guessed_passage is not None))
             if guessed_passage is not None:
                 write_passage(guessed_passage, args)
         if passage_scores:
@@ -321,6 +323,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
 def main():
     args = Config().args
     print("Running parser with %s" % Config())
+    scores = None
     if args.folds is not None:
         k = args.folds
         fold_scores = []
@@ -336,12 +339,15 @@ def main():
             train_passages = [passage for fold in folds
                               if fold is not dev_passages and fold is not test_passages
                               for passage in fold]
-            fold_scores.append(train_test(train_passages, dev_passages, test_passages, args, "_%d" % i))
-        scores = evaluation.Scores.aggregate(fold_scores)
-        print("Average unlabeled test F1 score for each fold: " + ", ".join(
-            "%.3f" % s.average_unlabeled_f1() for s in fold_scores))
-        print("Aggregated scores across folds:\n")
-        scores.print()
+            s = train_test(train_passages, dev_passages, test_passages, args, "_%d" % i)
+            if s is not None:
+                fold_scores.append(s)
+        if fold_scores:
+            scores = evaluation.Scores.aggregate(fold_scores)
+            print("Average unlabeled test F1 score for each fold: " + ", ".join(
+                "%.3f" % s.average_unlabeled_f1() for s in fold_scores))
+            print("Aggregated scores across folds:\n")
+            scores.print()
     else:  # Simple train/dev/test by given arguments
         train_passages, dev_passages, test_passages = [read_files_and_dirs(arg) for arg in
                                                        (args.train, args.dev, args.passages)]
