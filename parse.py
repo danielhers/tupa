@@ -44,6 +44,8 @@ class Parser(object):
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes
         self.ignore_node = lambda n: n.tag == layer1.NodeTags.Linkage if Config().no_linkage else None
 
+        self.state_hash_history = None  # For loop checking
+
     def train(self, passages, dev=None, iterations=1):
         """
         Train parser on given passages
@@ -125,11 +127,11 @@ class Parser(object):
             self.correct_count = 0
             assert not train or isinstance(passage, core.Passage), "Cannot train on unannotated passage"
             self.state = State(passage, callback=self.pos_tag)
-            history = set()
+            self.state_hash_history = set()
             self.oracle = Oracle(passage) if isinstance(passage, core.Passage) else None
             failed = False
             try:
-                self.parse_passage(history, train)  # This is where the actual parsing takes place
+                self.parse_passage(train)  # This is where the actual parsing takes place
             except ParserException as e:
                 if train:
                     raise
@@ -167,17 +169,16 @@ class Parser(object):
                 total_duration, passage_word, total_duration / num_passages,
                 total_tokens / total_duration), flush=True)
 
-    def parse_passage(self, history=None, train=False):
+    def parse_passage(self, train=False):
         """
         Internal method to parse a single passage
-        :param history: set of hashed states in the parser's history, if loop checking is enabled
         :param train: use oracle to train on given passages, or just parse with classifier?
         """
         if Config().verbose:
             print("  initial state: %s" % self.state)
         while True:
-            if Config().check_loops and history is not None:
-                self.check_loop(history, train)
+            if Config().check_loops:
+                self.check_loop(print_oracle=train)
 
             true_actions = []
             if self.oracle is not None:
@@ -220,16 +221,16 @@ class Parser(object):
             if self.state.finished:
                 return  # action is FINISH
 
-    def check_loop(self, history, train):
+    def check_loop(self, print_oracle):
         """
         Check if the current state has already occurred, indicating a loop
-        :param history: set of hashed states in the parser's history
-        :param train: whether to print the oracle in case of an assertion error
+        :param print_oracle: whether to print the oracle in case of an assertion error
         """
         h = hash(self.state)
-        assert h not in history, "\n".join(["Transition loop", self.state.str("\n")] +
-                                           [self.oracle.str("\n")] if train else ())
-        history.add(h)
+        assert h not in self.state_hash_history,\
+            "\n".join(["Transition loop", self.state.str("\n")] +
+                      [self.oracle.str("\n")] if print_oracle else ())
+        self.state_hash_history.add(h)
 
     def predict_action(self, features, true_actions=None):
         """
