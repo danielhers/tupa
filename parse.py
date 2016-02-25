@@ -217,7 +217,7 @@ class Parser(object):
             try:
                 self.state.transition(action)
             except AssertionError as e:
-                raise ParserException("Invalid transition: %s" % action) from e
+                raise ParserException("Invalid transition (%s): %s" % (action, e)) from e
             if Config().verbose:
                 if self.oracle is None:
                     print("  action: %-15s %s" % (action, self.state))

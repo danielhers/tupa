@@ -118,6 +118,7 @@ class FeatureExtractor(object):
         """
         features = {
             "b": 1,  # Bias
+            "n/t": state.node_ratio(),  # number of non-terminals divided by number of terminals
         }
         for feature_template in self.feature_templates:
             values = calc_feature(feature_template, state)

@@ -54,9 +54,10 @@ class State(object):
         Raise AssertionError if the action is invalid in the current state
         :param action: action to check for validity
         """
-        def assert_orig_node_exists():
+        def assert_possible_node():
             if self.labeled:  # We're in training, so we must have an original node to refer to
                 assert action.orig_node is not None, "May only create real nodes during training"
+            self.assert_node_ratio(extra=1)
 
         def assert_possible_parent(node):
             assert node.text is None, "Terminals may not have children"
@@ -116,11 +117,11 @@ class State(object):
             s0 = self.stack[-1]
             if action.is_type(Actions.Node):
                 assert_possible_child(s0)
-                assert_orig_node_exists()
+                assert_possible_node()
             elif action.is_type(Actions.Implicit):
                 assert not s0.implicit, "Implicit node loop on %s" % s0
                 assert_possible_parent(s0)
-                assert_orig_node_exists()
+                assert_possible_node()
             elif action.is_type(Actions.Reduce):
                 assert s0 is not self.root or s0.outgoing, "May not reduce the root without children"
                 # Commented out due to passage 126, unit 1.338
@@ -324,10 +325,13 @@ class State(object):
             node.outgoing.sort(key=lambda x: x.child.node_index or self.nodes.index(x.child))
             node.incoming.sort(key=lambda x: x.parent.node_index or self.nodes.index(x.parent))
 
-    def assert_node_ratio(self):
-        ratio = len(self.nodes) / len(self.terminals) - 1
+    def node_ratio(self, extra=0):
+        return (len(self.nodes) + extra) / len(self.terminals) - 1
+
+    def assert_node_ratio(self, extra=0):
         max_ratio = Config().max_nodes_ratio
-        assert ratio <= max_ratio, "Reached maximum ratio (%.3f) of non-terminals to terminals" % max_ratio
+        assert self.node_ratio(extra=extra) <= max_ratio, \
+            "Reached maximum ratio (%.3f) of non-terminals to terminals" % max_ratio
 
     def update_swap_index(self, node):
         """
