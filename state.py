@@ -60,7 +60,8 @@ class State(object):
             self.assert_node_ratio(extra=1)
 
         def assert_possible_parent(node):
-            assert node.text is None, "Terminals may not have children"
+            assert node.text is None, "Terminals may not have children: %s" % node.text
+            assert not node.implicit, "Implicit nodes may not have children: %s" % s0
             if Config().constraints:
                 assert action.tag not in Constraints.UniqueOutgoing or action.tag not in node.outgoing_tags, \
                     "Outgoing edge tag %s must be unique, but %s already has one" % (
@@ -119,7 +120,6 @@ class State(object):
                 assert_possible_child(s0)
                 assert_possible_node()
             elif action.is_type(Actions.Implicit):
-                assert not s0.implicit, "Implicit node loop on %s" % s0
                 assert_possible_parent(s0)
                 assert_possible_node()
             elif action.is_type(Actions.Reduce):
