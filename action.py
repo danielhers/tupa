@@ -5,12 +5,9 @@ from parsing.config import Config, Singleton
 
 class Action(object):
     type_to_id = {}
-    all_actions = None
-    all_action_ids = None
 
     RIGHT = 0
     LEFT = 1
-
     MAX_SWAP = 15  # default maximum size for compound swap
 
     def __init__(self, action_type, tag=None, orig_edge=None, orig_node=None, oracle=None):
@@ -78,7 +75,7 @@ class Action(object):
             key = (self.type_id, self.tag)
             actions = Actions()
             self._id = actions.ids.get(key)
-            if self._id is None:  # Unseen action tag
+            if self._id is None:  # New action, add to list
                 self._id = len(actions.all)
                 actions.all.append(self)
                 actions.ids[key] = self._id
@@ -125,6 +122,4 @@ class Actions(object, metaclass=Singleton):
             self.init()
         return self._ids
 
-    def by_id(self, i):
-        return self.all[i]
 

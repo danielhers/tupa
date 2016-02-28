@@ -2,7 +2,6 @@ import time
 from collections import defaultdict
 
 import numpy as np
-import sys
 
 
 class Weights(object):
@@ -45,18 +44,17 @@ class Weights(object):
         return Weights(len(label_map), averaged_weights)
 
     def resize(self, num_labels):
-        if num_labels > self.num_labels:
-            self.num_labels = num_labels
-            self.weights.resize(num_labels)
-            self._last_update.resize(num_labels)
-            self._totals.resize(num_labels)
+        self.num_labels = num_labels
+        self.weights.resize(num_labels, refcheck=False)
+        self._last_update.resize(num_labels)
+        self._totals.resize(num_labels)
 
 
 class AveragedPerceptron(object):
-    def __init__(self, num_labels=0, min_update=1, weights=None, label_map=None):
-        self._init_num_labels = num_labels
-        self.num_labels = num_labels
-        self.weights = defaultdict(lambda: Weights(num_labels))
+    def __init__(self, labels=None, min_update=1, weights=None, label_map=None):
+        self.labels = labels or []
+        self._init_num_labels = len(labels)
+        self.weights = defaultdict(lambda: Weights(self.num_labels))
         self.is_frozen = weights is not None
         if self.is_frozen:
             self.weights.update(weights)
@@ -64,7 +62,11 @@ class AveragedPerceptron(object):
         else:
             self._min_update = min_update  # Minimum number of updates for a feature to be used in scoring
             self._update_index = 0  # Counter for calls to update()
-            self._true_labels = [False] * num_labels  # For is each, has it ever been a true label in update()?
+            self._true_labels = [False] * self.num_labels  # Has it ever been a true label in update()?
+
+    @property
+    def num_labels(self):
+        return len(self.labels)
 
     def score(self, features):
         """
@@ -72,6 +74,8 @@ class AveragedPerceptron(object):
         :param features: extracted feature values, in the form of a dict (name -> value)
         :return: score for each label: dict (label -> score)
         """
+        if not self.is_frozen:
+            self._update_num_labels()
         scores = np.zeros(self.num_labels)
         for feature, value in features.items():
             if not value:
@@ -95,13 +99,7 @@ class AveragedPerceptron(object):
         """
         assert not self.is_frozen, "Cannot update a frozen model"
         self._update_index += 1
-        num_labels = max(true, pred) + 1
-        if num_labels > self.num_labels:
-            self._true_labels += [False] * (num_labels - self.num_labels)
-            self.num_labels = num_labels
-            for weights in self.weights.values():
-                weights.resize(num_labels)
-            self.weights.default_factory = lambda: Weights(num_labels)
+        self._update_num_labels()
         self._true_labels[true] = True
         for feature, value in features.items():
             if not value:
@@ -110,32 +108,47 @@ class AveragedPerceptron(object):
             weights.update(true, learning_rate * value, self._update_index)
             weights.update(pred, -learning_rate * value, self._update_index)
 
+    def _update_num_labels(self):
+        if self.num_labels > len(self._true_labels):
+            self._true_labels += [False] * (self.num_labels - len(self._true_labels))
+            for weights in self.weights.values():
+                weights.resize(self.num_labels)
+            self.weights.default_factory = lambda: Weights(self.num_labels)
+
     def average(self):
         """
         Average all weights over all updates, as a form of regularization
         :return new AveragedPerceptron object with the weights averaged
         """
+        assert not self.is_frozen, "Cannot freeze a frozen model"
         started = time.time()
         # Freeze set of features and set of labels; also allow pickle
-        label_map = [i for i, is_true in enumerate(self._true_labels) if is_true]
-        print("Averaging weights (labels: %d original, %d new, %d removed)... " % (
-            self._init_num_labels,
-            len(label_map) - self._init_num_labels,
-            self.num_labels - len(label_map)),
-              end="", flush=True)
-        averaged_weights = {feature: weights.average(self._update_index, label_map)
+        self._update_num_labels()
+        label_map, labels = zip(*[(i, l) for i, l in enumerate(self.labels)
+                                  if self._true_labels[i]])
+        print("Averaging weights... ", end="", flush=True)
+        averaged_weights = {feature: weights.average(self._update_index, list(label_map))
                             for feature, weights in self.weights.items()
                             if weights.update_count >= self._min_update}
-        averaged = AveragedPerceptron(len(label_map), weights=averaged_weights, label_map=label_map)
+        averaged = AveragedPerceptron(labels, weights=averaged_weights, label_map=label_map)
         print("Done (%.3fs)." % (time.time() - started))
+        print("Labels: %d original, %d new, %d removed (%s)" % (
+            self._init_num_labels,
+            len(label_map) - self._init_num_labels,
+            self.num_labels - len(label_map),
+            ", ".join(str(l) for i, l in enumerate(self.labels) if not self._true_labels[i])))
+        print("Features: %d overall, %d occurred at least %d times" % (
+            len(self.weights), len(averaged_weights), self._min_update))
         return averaged
 
-    def save(self):
+    def save(self, filename, io):
         """
-        Return dictionary of all parameters for saving
+        Save all parameters to file
+        :param filename: file to save to
+        :param io: module with 'save' function to write a dictionary to file
         """
         d = {
-            "num_labels": self.num_labels,
+            "labels": self.labels,
             "weights": dict(self.weights),
             "is_frozen": self.is_frozen,
         }
@@ -147,14 +160,16 @@ class AveragedPerceptron(object):
                 "_update_index": self._update_index,
                 "_true_labels": self._true_labels,
             })
-        return d
+        io.save(filename, d)
 
-    def load(self, d):
+    def load(self, filename, io):
         """
-        Load all parameters from dictionary
-        :param d: dictionary to load from
+        Load all parameters from file
+        :param filename: file to load from
+        :param io: module with 'load' function to read a dictionary from file
         """
-        self.num_labels = d["num_labels"]
+        d = io.load(filename)
+        self.labels = d["labels"]
         self.weights.clear()
         self.weights.update(d["weights"])
         self.is_frozen = d["is_frozen"]
@@ -170,10 +185,10 @@ class AveragedPerceptron(object):
                 "frozen" if self.is_frozen else
                 "%d labels occurred" % self._true_labels.count(True))
 
-    def write_csv(self, filename, labels):
+    def write(self, filename, labels, sep="\t"):
         print("Writing model to '%s'..." % filename)
         with open(filename, "w") as f:
-            print(",".join(["feature"] + labels), file=f)
+            print(sep.join(["feature"] + labels), file=f)
             for feature, weights in self.weights.items():
-                print(",".join([feature] +
+                print(sep.join([feature] +
                                ["%.8f" % w for w in weights.weights]), file=f)

@@ -11,7 +11,7 @@ from parsing.config import Config
 from parsing.features import FeatureExtractor
 from parsing.oracle import Oracle
 from parsing.state import State
-from parsing.util import read_files_and_dirs, write_passage, save, load
+from parsing import util
 from ucca import diffutil, evaluation, layer0, layer1
 
 
@@ -33,7 +33,7 @@ class Parser(object):
         self.total_actions = 0
         self.total_correct = 0
 
-        self.model = AveragedPerceptron(len(Actions().all),
+        self.model = AveragedPerceptron(Actions().all,
                                         min_update=Config().min_update)
         self.model_file = model_file
         self.feature_extractor = FeatureExtractor()
@@ -56,9 +56,8 @@ class Parser(object):
         """
         if not passages:
             if self.model_file is not None:  # Nothing to train on; pre-trained model given
-                d = load(self.model_file)
-                self.model.load(d["model"])
-                Actions.all = d["actions"]
+                self.model.load(self.model_file, util)
+                Actions.all = self.model.labels
             return self.model
 
         best_score = 0
@@ -93,8 +92,7 @@ class Parser(object):
             if save_model or best_model is None:
                 best_model = self.model.average()
                 if self.model_file is not None:
-                    save(self.model_file, {"model": best_model.save(),
-                                           "actions": Actions().all})
+                    best_model.save(self.model_file, util)
 
         print("Trained %d iterations" % iterations)
 
@@ -209,7 +207,7 @@ class Parser(object):
                                           key=self.scores.get) if len(true_actions) > 1 \
                     else true_actions[0].id
                 rate = self.learning_rate
-                if Actions().by_id(best_true_action_id).is_swap:
+                if Actions().all[best_true_action_id].is_swap:
                     rate *= Config().importance
                 self.model.update(features, predicted_action.id, best_true_action_id, rate)
                 action = random.choice(true_actions)
@@ -268,7 +266,7 @@ class Parser(object):
 
     @staticmethod
     def select_action(i, true_actions):
-        action = Actions().by_id(i)
+        action = Actions().all[i]
         try:
             return next(true_action for true_action in true_actions if action == true_action)
         except StopIteration:
@@ -320,7 +318,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                     guessed_passage, ref_passage,
                     verbose=args.verbose and guessed_passage is not None))
             if guessed_passage is not None and not args.nowrite:
-                write_passage(guessed_passage, args)
+                util.write_passage(guessed_passage, args)
         if passage_scores:
             scores = evaluation.Scores.aggregate(passage_scores)
             print("\nAverage F1 score on test: %.3f" % scores.average_unlabeled_f1())
@@ -336,7 +334,7 @@ def main():
     if args.folds is not None:
         k = args.folds
         fold_scores = []
-        all_passages = list(read_files_and_dirs(args.passages))
+        all_passages = list(util.read_files_and_dirs(args.passages))
         assert len(all_passages) >= k,\
             "%d folds are not possible with only %d passages" % (k, len(all_passages))
         shuffle(all_passages)
@@ -358,7 +356,7 @@ def main():
             print("Aggregated scores across folds:\n")
             scores.print()
     else:  # Simple train/dev/test by given arguments
-        train_passages, dev_passages, test_passages = [read_files_and_dirs(arg) for arg in
+        train_passages, dev_passages, test_passages = [util.read_files_and_dirs(arg) for arg in
                                                        (args.train, args.dev, args.passages)]
         scores = train_test(train_passages, dev_passages, test_passages, args)
     return scores
