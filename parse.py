@@ -12,7 +12,7 @@ from parsing.features import FeatureExtractor
 from parsing.oracle import Oracle
 from parsing.state import State
 from parsing.util import read_files_and_dirs, write_passage, save, load
-from ucca import core, diffutil, evaluation, layer0, layer1
+from ucca import diffutil, evaluation, layer0, layer1
 
 
 class ParserException(Exception):
@@ -319,7 +319,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 passage_scores.append(evaluation.evaluate(
                     guessed_passage, ref_passage,
                     verbose=args.verbose and guessed_passage is not None))
-            if guessed_passage is not None:
+            if guessed_passage is not None and not args.nowrite:
                 write_passage(guessed_passage, args)
         if passage_scores:
             scores = evaluation.Scores.aggregate(passage_scores)
