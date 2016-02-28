@@ -2,6 +2,7 @@ import time
 from collections import defaultdict
 
 import numpy as np
+import sys
 
 
 class Weights(object):
@@ -52,7 +53,7 @@ class Weights(object):
 
 
 class AveragedPerceptron(object):
-    def __init__(self, num_labels, min_update=1, weights=None, label_map=None):
+    def __init__(self, num_labels=0, min_update=1, weights=None, label_map=None):
         self._init_num_labels = num_labels
         self.num_labels = num_labels
         self.weights = defaultdict(lambda: Weights(num_labels))
@@ -168,3 +169,11 @@ class AveragedPerceptron(object):
         return ("%d labels total, " % self.num_labels) + (
                 "frozen" if self.is_frozen else
                 "%d labels occurred" % self._true_labels.count(True))
+
+    def write_csv(self, filename, labels):
+        print("Writing model to '%s'..." % filename)
+        with open(filename, "w") as f:
+            print(",".join(["feature"] + labels), file=f)
+            for feature, weights in self.weights.items():
+                print(",".join([feature] +
+                               ["%.8f" % w for w in weights.weights]), file=f)
