@@ -53,6 +53,7 @@ class Weights(object):
 
 class AveragedPerceptron(object):
     def __init__(self, num_labels, min_update=1, weights=None, label_map=None):
+        self._init_num_labels = num_labels
         self.num_labels = num_labels
         self.weights = defaultdict(lambda: Weights(num_labels))
         self.is_frozen = weights is not None
@@ -116,8 +117,11 @@ class AveragedPerceptron(object):
         started = time.time()
         # Freeze set of features and set of labels; also allow pickle
         label_map = [i for i, is_true in enumerate(self._true_labels) if is_true]
-        print("Averaging weights (keeping %d labels out of %d)... " % (
-            len(label_map), self.num_labels), end="", flush=True)
+        print("Averaging weights (labels: %d original, %d new, %d removed)... " % (
+            self._init_num_labels,
+            len(label_map) - self._init_num_labels,
+            self.num_labels - len(label_map)),
+              end="", flush=True)
         averaged_weights = {feature: weights.average(self._update_index, label_map)
                             for feature, weights in self.weights.items()
                             if weights.update_count >= self._min_update}
