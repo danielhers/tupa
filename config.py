@@ -123,4 +123,4 @@ class Config(object, metaclass=Singleton):
             self._log_file.close()
 
     def __str__(self):
-        return " ".join("--%s=%s" % item for item in vars(self.args).items())
+        return " ".join("%s=%s" % item for item in vars(self.args).items())
