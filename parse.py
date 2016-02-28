@@ -57,7 +57,7 @@ class Parser(object):
         if not passages:
             if self.model_file is not None:  # Nothing to train on; pre-trained model given
                 self.model.load(self.model_file, util)
-                Actions.all = self.model.labels
+                Actions().all = self.model.labels
             return self.model
 
         best_score = 0
@@ -254,7 +254,7 @@ class Parser(object):
             return best_action
         # Usually the best action is valid, so max is enough to choose it in O(n) time
         # Otherwise, sort all the other scores to choose the best valid one in O(n lg n)
-        sorted_ids = reversed(sorted(self.scores, key=self.scores.get))
+        sorted_ids = sorted(self.scores, key=self.scores.get, reverse=True)
         actions = (self.select_action(i, true_actions) for i in sorted_ids)
         try:
             return next(action for action in actions if self.state.is_valid(action))

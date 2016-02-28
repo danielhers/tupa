@@ -56,9 +56,9 @@ class AveragedPerceptron(object):
         self._init_num_labels = len(labels)
         self.weights = defaultdict(lambda: Weights(self.num_labels))
         self.is_frozen = weights is not None
+        self._label_map = label_map  # List of original indices for all current labels
         if self.is_frozen:
             self.weights.update(weights)
-            self._label_map = label_map  # List of original indices for all current labels
         else:
             self._min_update = min_update  # Minimum number of updates for a feature to be used in scoring
             self._update_index = 0  # Counter for calls to update()
@@ -84,10 +84,8 @@ class AveragedPerceptron(object):
             if weights is None or not self.is_frozen and weights.update_count < self._min_update:
                 continue
             scores += value * weights.weights
-        if self.is_frozen:
-            return {self._label_map[i]: score for i, score in enumerate(scores)}
-        else:
-            return dict(enumerate(scores))
+        return dict(enumerate(scores)) if self._label_map is None else \
+            {self._label_map[i]: score for i, score in enumerate(scores)}
 
     def update(self, features, pred, true, learning_rate=1):
         """
@@ -124,8 +122,8 @@ class AveragedPerceptron(object):
         started = time.time()
         # Freeze set of features and set of labels; also allow pickle
         self._update_num_labels()
-        label_map, labels = zip(*[(i, l) for i, l in enumerate(self.labels)
-                                  if self._true_labels[i]])
+        label_map, labels = zip(*[(i, l) for i, (t, l) in
+                                  enumerate(zip(self._true_labels, self.labels)) if t])
         print("Averaging weights... ", end="", flush=True)
         averaged_weights = {feature: weights.average(self._update_index, list(label_map))
                             for feature, weights in self.weights.items()
@@ -152,9 +150,7 @@ class AveragedPerceptron(object):
             "weights": dict(self.weights),
             "is_frozen": self.is_frozen,
         }
-        if self.is_frozen:
-            d["_label_map"] = self._label_map
-        else:
+        if not self.is_frozen:
             d.update({
                 "_min_update": self._min_update,
                 "_update_index": self._update_index,
@@ -169,13 +165,11 @@ class AveragedPerceptron(object):
         :param io: module with 'load' function to read a dictionary from file
         """
         d = io.load(filename)
-        self.labels = d["labels"]
+        self.labels = list(d["labels"])
         self.weights.clear()
         self.weights.update(d["weights"])
         self.is_frozen = d["is_frozen"]
-        if self.is_frozen:
-            self._label_map = d["_label_map"]
-        else:
+        if not self.is_frozen:
             self._min_update = d["_min_update"]
             self._update_index = d["_update_index"]
             self._true_labels = d["_true_labels"]
