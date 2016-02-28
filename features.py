@@ -86,6 +86,8 @@ class FeatureTemplateElement(object):
                            y: sum of gap lengths
                            P: number of parents
                            C: number of children
+                           I: number of implicit children
+                           R: number of remote children
                            If empty, the value will be 1 if there is an edge from this node to the
                            next one in the template, or 0 otherwise. Also, if the next node comes
                            with the "e" property, then the edge with this node will be considered.
@@ -195,6 +197,10 @@ def get_prop(node, p, prev_node=None):
         return len(node.incoming)
     if p == "C":
         return len(node.outgoing)
+    if p == "I":
+        return len([n for n in node.children if n.implicit])
+    if p == "R":
+        return len([e for e in node.outgoing if e.remote])
     raise Exception("Unknown node property: " + p)
 
 
