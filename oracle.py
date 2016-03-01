@@ -13,10 +13,12 @@ class Oracle(object):
         l1 = passage.layer(layer1.LAYER_ID)
         self.nodes_remaining = {node.ID for node in l1.all
                                 if node is not l1.heads[0] and
-                                (not Config().no_linkage or node.tag != layer1.NodeTags.Linkage)}
+                                (not Config().no_linkage or node.tag != layer1.NodeTags.Linkage) and
+                                (not Config().no_implicit or not node.attrib.get("implicit"))}
         self.edges_remaining = {edge for node in passage.nodes.values() for edge in node
-                                if not Config().no_linkage or edge.tag not in (
-                                    layer1.EdgeTags.LinkRelation, layer1.EdgeTags.LinkArgument)}
+                                if (not Config().no_linkage or edge.tag not in (
+                                    layer1.EdgeTags.LinkRelation, layer1.EdgeTags.LinkArgument)) and
+                                (not Config().no_implicit or not edge.child.attrib.get("implicit"))}
         self.passage = passage
         self.edge_found = False
         self.log = None

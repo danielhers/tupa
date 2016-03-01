@@ -67,10 +67,10 @@ class Config(object, metaclass=Singleton):
                                help="maximum ratio between non-terminal to terminal nodes")
         argparser.add_argument("-H", "--maxheight", type=int, default=20,
                                help="maximum graph height")
-        argparser.add_argument("-M", "--multiedge", action="store_true",
-                               help="allow multiple edges between the same nodes (with different tags)")
         argparser.add_argument("-L", "--nolinkage", action="store_true",
                                help="ignore linkage nodes and edges during both train and test")
+        argparser.add_argument("-M", "--noimplicit", action="store_true",
+                               help="ignore implicit nodes and their incoming edges")
         argparser.add_argument("-S", "--noswap", action="store_true",
                                help="disable swap transitions entirely")
         argparser.add_argument("-C", "--constraints", action="store_true",
@@ -112,8 +112,8 @@ class Config(object, metaclass=Singleton):
             "--compoundswap and --noswap are incompatible"
         self.max_nodes_ratio = self.args.maxnodes
         self.max_height = self.args.maxheight
-        self.multiple_edges = self.args.multiedge
         self.no_linkage = self.args.nolinkage
+        self.no_implicit = self.args.noimplicit
         self.constraints = self.args.constraints
 
     def log(self, message):

@@ -108,11 +108,11 @@ class State(object):
             if parent is self.root and Config().constraints:
                 assert child.text is None, "Root may not have terminal children, but is being added '%s'" % child
                 assert action.tag in Constraints.TopLevel, "The root may not have %s edges" % action.tag
-            if Config().multiple_edges:
-                edge = Edge(parent, child, action.tag, remote=action.remote)
-                assert edge not in parent.outgoing, "Edge must not already exist: %s" % edge
-            else:
-                assert child not in parent.children, "Edge must not already exist: %s->%s" % (parent, child)
+            # if Config().multiple_edges:  # Removed this option because it is not useful right now
+            #     edge = Edge(parent, child, action.tag, remote=action.remote)
+            #     assert edge not in parent.outgoing, "Edge must not already exist: %s" % edge
+            # else:
+            assert child not in parent.children, "Edge must not already exist: %s->%s" % (parent, child)
             assert parent not in child.descendants, "Detected cycle created by edge: %s->%s" % (parent, child)
 
         if action.is_type(Actions.Finish):
