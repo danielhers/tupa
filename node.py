@@ -27,6 +27,7 @@ class Node(object):
         self.node = None  # Associated core.Node, when creating final Passage
         self.implicit = implicit  # True or False
         self.swap_index = self.index  # Used to make sure nodes are not swapped more than once
+        self.height = 0
         self._terminals = None
 
     def add_incoming(self, edge):
@@ -38,6 +39,7 @@ class Node(object):
         self.outgoing.append(edge)
         self.children.append(edge.child)
         self.outgoing_tags.add(edge.tag)
+        self.height = max(self.height, edge.child.height + 1)
         self._terminals = None  # Invalidate terminals because we might have added some
 
     def add_to_l1(self, l1, parent, tag, terminals, train):

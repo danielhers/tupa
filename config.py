@@ -65,6 +65,8 @@ class Config(object, metaclass=Singleton):
                                help="enable compound swap")
         argparser.add_argument("-N", "--maxnodes", type=float, default=3.0,
                                help="maximum ratio between non-terminal to terminal nodes")
+        argparser.add_argument("-H", "--maxheight", type=int, default=20,
+                               help="maximum graph height")
         argparser.add_argument("-M", "--multiedge", action="store_true",
                                help="allow multiple edges between the same nodes (with different tags)")
         argparser.add_argument("-n", "--nolinkage", action="store_true",
@@ -109,6 +111,7 @@ class Config(object, metaclass=Singleton):
         assert not (self.compound_swap and self.no_swap),\
             "--compoundswap and --noswap are incompatible"
         self.max_nodes_ratio = self.args.maxnodes
+        self.max_height = self.args.maxheight
         self.multiple_edges = self.args.multiedge
         self.no_linkage = self.args.nolinkage
         self.constraints = self.args.constraints

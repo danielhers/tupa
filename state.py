@@ -58,6 +58,7 @@ class State(object):
             if self.labeled:  # We're in training, so we must have an original node to refer to
                 assert action.orig_node is not None, "May only create real nodes during training"
             self.assert_node_ratio(extra=1)
+            self.assert_height()
 
         def assert_possible_parent(node):
             assert node.text is None, "Terminals may not have children: %s" % node.text
@@ -333,6 +334,11 @@ class State(object):
         max_ratio = Config().max_nodes_ratio
         assert self.node_ratio(extra=extra) <= max_ratio, \
             "Reached maximum ratio (%.3f) of non-terminals to terminals" % max_ratio
+
+    def assert_height(self):
+        max_height = Config().max_height
+        assert self.root.height <= max_height, \
+            "Reached maximum graph height (%d)" % max_height
 
     def update_swap_index(self, node):
         """
