@@ -46,12 +46,13 @@ class Parser(object):
 
         self.state_hash_history = None  # For loop checking
 
-    def train(self, passages, dev=None, iterations=1):
+    def train(self, passages, dev=None, iterations=1, folds=None):
         """
         Train parser on given passages
         :param passages: iterable of passages to train on
         :param dev: iterable of passages to tune on
         :param iterations: number of iterations to perform
+        :param folds: whether we are inside cross-validation with this many folds
         :return: trained model
         """
         if not passages:
@@ -69,13 +70,18 @@ class Parser(object):
         for iteration in range(iterations):
             print("Training iteration %d of %d: " % (iteration + 1, iterations))
             passages = [passage for _, passage in self.parse(passages, mode="train")]
-            self.learning_rate *= self.decay_factor
-            shuffle(passages)
+            if iteration == iterations - 1:
+                if folds is None:  # Free some memory, as these are not needed any more
+                    del passages[:]
+            else:
+                self.learning_rate *= self.decay_factor
+                shuffle(passages)
             if dev:
                 print("Evaluating on dev passages")
                 dev, scores = zip(*[(passage, evaluate_passage(predicted_passage, passage))
                                     for predicted_passage, passage in
                                     self.parse(dev, mode="dev")])
+                dev = list(dev)
                 scores = evaluation.Scores.aggregate(scores)
                 score = scores.average_unlabeled_f1()
                 print("Average unlabeled F1 score on dev: %.3f" % score)
@@ -89,6 +95,8 @@ class Parser(object):
                 else:
                     print("Not better than previous best score (%.3f)" % best_score)
                     save_model = False
+                if iteration == iterations - 1 and folds is None:  # Free more memory
+                    del dev[:]
 
             if save_model or best_model is None:
                 best_model = self.model.average()
@@ -303,18 +311,19 @@ class Parser(object):
 
 def train_test(train_passages, dev_passages, test_passages, args, model_suffix=""):
     scores = None
+    train = bool(train_passages)
     model_file = args.model
     if model_file is not None:
         model_base, model_ext = os.path.splitext(model_file)
         model_file = model_base + model_suffix + model_ext
     p = Parser(model_file)
-    p.train(train_passages, dev=dev_passages, iterations=args.iterations)
+    p.train(train_passages, dev=dev_passages, iterations=args.iterations, folds=args.folds)
     if test_passages:
         if args.train or args.folds:
             print("Evaluating on test passages")
         passage_scores = []
         for guessed_passage, ref_passage in p.parse(test_passages):
-            if args.evaluate or train_passages:
+            if args.evaluate or train:
                 score = evaluate_passage(guessed_passage, ref_passage,
                                          verbose=args.verbose and guessed_passage is not None)
                 passage_scores.append(score)
