@@ -73,8 +73,7 @@ class Parser(object):
             shuffle(passages)
             if dev:
                 print("Evaluating on dev passages")
-                dev, scores = zip(*[(passage, evaluation.evaluate(
-                    predicted_passage, passage, verbose=False, units=False, errors=False))
+                dev, scores = zip(*[(passage, evaluate_passage(predicted_passage, passage))
                                     for predicted_passage, passage in
                                     self.parse(dev, mode="dev")])
                 scores = evaluation.Scores.aggregate(scores)
@@ -160,7 +159,7 @@ class Parser(object):
                 total_tokens += num_tokens
             print("%0.3fs" % duration, end="")
             print("%-15s" % ("" if failed else " (%d tokens/s)" % (num_tokens / duration)), end="")
-            if not test:
+            if train:
                 print(Config().line_end, flush=True)
             self.total_correct += self.correct_count
             self.total_actions += self.action_count
@@ -316,10 +315,9 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
         passage_scores = []
         for guessed_passage, ref_passage in p.parse(test_passages):
             if args.evaluate or train_passages:
-                score = evaluation.evaluate(guessed_passage, ref_passage,
-                                            verbose=args.verbose and guessed_passage is not None)
+                score = evaluate_passage(guessed_passage, ref_passage,
+                                         verbose=args.verbose and guessed_passage is not None)
                 passage_scores.append(score)
-                print(" F1=%.3f" % score.average_unlabeled_f1(), flush=True)
             if guessed_passage is not None and not args.nowrite:
                 util.write_passage(guessed_passage, args)
         if passage_scores:
@@ -328,6 +326,13 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
             print("Aggregated scores:")
             scores.print()
     return scores
+
+
+def evaluate_passage(guessed_passage, ref_passage, verbose=False):
+    score = evaluation.evaluate(guessed_passage, ref_passage,
+                                verbose=verbose, units=False, errors=False)
+    print(" F1=%.3f" % score.average_unlabeled_f1(), flush=True)
+    return score
 
 
 def main():
