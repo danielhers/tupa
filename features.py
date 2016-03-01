@@ -3,7 +3,7 @@ import re
 from ucca import layer0
 from ucca.layer1 import EdgeTags
 
-FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lrup]*)([wtepqxyPC]*)")
+FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lrup]*)([wtepqxyPCIR]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile("^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 
 FEATURE_TEMPLATES = (
@@ -43,6 +43,9 @@ FEATURE_TEMPLATES = (
     "s0b0e", "b0s0e",
     # past actions (Tokgöz and Eryiğit 2015):
     "a0we", "a1we",
+    # UCCA-specific
+    "s0I", "s0R", "s0wI", "s0wR",
+    "b0I", "b0R", "b0wI", "b0wR",
 )
 
 
