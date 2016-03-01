@@ -90,6 +90,11 @@ class State(object):
                     node.outgoing_tags <= Constraints.ChildlessOutgoing, \
                     "Units with incoming %s edges may not have children, but %s has %d" % (
                         Constraints.ChildlessIncoming, node, len(node.children))
+                assert action.remote or action.tag in Constraints.PossibleMultipleIncoming or \
+                    all(e.remote or e.tag in Constraints.PossibleMultipleIncoming
+                        for e in node.incoming), \
+                    "Multiple parents only allowed if they are remote or linkage edges: %s, %s" % (
+                        action, node)
                 # Commented out due to passage 106, unit 1.300
                 # assert not node.incoming_tags or (action.tag in Constraints.LinkerIncoming) == (
                 #     node.incoming_tags <= Constraints.LinkerIncoming), \

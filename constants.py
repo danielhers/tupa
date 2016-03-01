@@ -70,3 +70,9 @@ class Constraints:
         EdgeTags.Linker,
         EdgeTags.LinkRelation,
     }
+
+    # Only a unit with one of these incoming tags may also have another non-remote incoming edge:
+    PossibleMultipleIncoming = {
+        EdgeTags.LinkArgument,
+        EdgeTags.LinkRelation,
+    }
