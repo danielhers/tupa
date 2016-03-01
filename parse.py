@@ -152,15 +152,16 @@ class Parser(object):
                     if Config().verify:
                         self.verify_passage(passage, predicted_passage, train)
                     if self.action_count:
-                        print("accuracy: %.3f (%d/%d)" %
-                              (self.correct_count/self.action_count,
-                               self.correct_count, self.action_count), end=Config().line_end)
+                        print("%-16s" % ("%d%% (%d/%d)" %
+                              (100 * self.correct_count / self.action_count,
+                               self.correct_count, self.action_count)), end=Config().line_end)
                 num_tokens = len(l0.all)
                 total_tokens += num_tokens
-            print("time: %0.3fs" % duration, end="")
+            print("%0.3fs" % duration, end="")
             if not failed:
-                print(" (%d tokens/second)" % (num_tokens / duration), end="")
-            print(Config().line_end, flush=True)
+                print("%-15s" % (" (%d tokens/s)" % (num_tokens / duration)), end="")
+            if not test:
+                print(Config().line_end, flush=True)
             self.total_correct += self.correct_count
             self.total_actions += self.action_count
             num_passages += 1
@@ -169,10 +170,11 @@ class Parser(object):
         if num_passages > 1:
             print("Parsed %d %ss" % (num_passages, passage_word))
             if self.oracle and self.total_actions:
-                print("Overall %s accuracy: %.3f (%d/%d)" %
-                      (mode,
-                       self.total_correct / self.total_actions, self.total_correct, self.total_actions))
-            print("Total time: %.3fs (average time/%s: %.3fs, average tokens/second: %d)" % (
+                print("Overall %d%% correct transitions (%d/%d) on %s" %
+                      (188 * self.total_correct / self.total_actions,
+                       self.total_correct, self.total_actions,
+                       mode))
+            print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
                 total_duration, passage_word, total_duration / num_passages,
                 total_tokens / total_duration), flush=True)
 
@@ -314,9 +316,10 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
         passage_scores = []
         for guessed_passage, ref_passage in p.parse(test_passages):
             if args.evaluate or train_passages:
-                passage_scores.append(evaluation.evaluate(
-                    guessed_passage, ref_passage,
-                    verbose=args.verbose and guessed_passage is not None))
+                score = evaluation.evaluate(guessed_passage, ref_passage,
+                                            verbose=args.verbose and guessed_passage is not None)
+                passage_scores.append(score)
+                print(" F1=%.3f" % score.average_unlabeled_f1(), flush=True)
             if guessed_passage is not None and not args.nowrite:
                 util.write_passage(guessed_passage, args)
         if passage_scores:
