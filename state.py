@@ -116,7 +116,9 @@ class State(object):
             assert parent not in child.descendants, "Detected cycle created by edge: %s->%s" % (parent, child)
 
         if action.is_type(Actions.Finish):
-            assert self.root.outgoing, "Root must have at least one child at the end of the parse, but has none"
+            if not Config().no_swap:  # Without swap, the oracle may be incapable even of single action
+                assert self.root.outgoing, \
+                    "Root must have at least one child at the end of the parse, but has none"
         elif action.is_type(Actions.Shift):
             assert self.buffer, "Buffer must not be empty in order to shift from it"
         else:  # Unary actions

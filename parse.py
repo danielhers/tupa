@@ -5,13 +5,13 @@ from random import shuffle
 
 from nltk import pos_tag
 
+from parsing import util
 from parsing.action import Actions
 from parsing.averaged_perceptron import AveragedPerceptron
 from parsing.config import Config
 from parsing.features import FeatureExtractor
 from parsing.oracle import Oracle
 from parsing.state import State
-from parsing import util
 from ucca import diffutil, evaluation, layer0, layer1
 
 
