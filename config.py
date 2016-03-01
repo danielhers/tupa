@@ -51,7 +51,7 @@ class Config(object, metaclass=Singleton):
                                help="separate passages to paragraphs and parse each one separately")
         argparser.add_argument("-r", "--learningrate", type=float, default=1.0,
                                help="learning rate for the model weight updates")
-        argparser.add_argument("-D", "--decayfactor", type=float, default=0.9,
+        argparser.add_argument("-D", "--decayfactor", type=float, default=1.0,
                                help="learning rate decay factor at each training iteration")
         argparser.add_argument("-i", "--importance", type=float, default=2.0,
                                help="learning rate factor at swap transitions")
