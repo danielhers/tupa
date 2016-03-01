@@ -53,7 +53,7 @@ class Weights(object):
 class AveragedPerceptron(object):
     def __init__(self, labels=None, min_update=1, weights=None, label_map=None):
         self.labels = labels or []
-        self._init_num_labels = len(labels)
+        self._init_num_labels = len(self.labels)
         self.weights = defaultdict(lambda: Weights(self.num_labels))
         self.is_frozen = weights is not None
         self._label_map = label_map  # List of original indices for all current labels
@@ -179,10 +179,10 @@ class AveragedPerceptron(object):
                 "frozen" if self.is_frozen else
                 "%d labels occurred" % self._true_labels.count(True))
 
-    def write(self, filename, labels, sep="\t"):
+    def write(self, filename, sep="\t"):
         print("Writing model to '%s'..." % filename)
         with open(filename, "w") as f:
-            print(sep.join(["feature"] + labels), file=f)
+            print(sep.join(["feature"] + list(map(str, self.labels))), file=f)
             for feature, weights in self.weights.items():
                 print(sep.join([feature] +
                                ["%.8f" % w for w in weights.weights]), file=f)
