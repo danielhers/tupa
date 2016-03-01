@@ -63,8 +63,9 @@ class Parser(object):
         best_score = 0
         best_model = None
         save_model = True
-        with open(Config().dev_scores, "w") as f:
-            print(",".join(["iteration"] + evaluation.Scores.field_titles()), file=f)
+        if Config().dev_scores:
+            with open(Config().dev_scores, "w") as f:
+                print(",".join(["iteration"] + evaluation.Scores.field_titles()), file=f)
         for iteration in range(iterations):
             print("Training iteration %d of %d: " % (iteration + 1, iterations))
             passages = [passage for _, passage in self.parse(passages, mode="train")]
@@ -79,8 +80,9 @@ class Parser(object):
                 scores = evaluation.Scores.aggregate(scores)
                 score = scores.average_unlabeled_f1()
                 print("Average unlabeled F1 score on dev: %.3f" % score)
-                with open(Config().dev_scores, "a") as f:
-                    print(",".join([str(iteration)] + scores.fields()), file=f)
+                if Config().dev_scores:
+                    with open(Config().dev_scores, "a") as f:
+                        print(",".join([str(iteration)] + scores.fields()), file=f)
                 if score >= best_score:
                     print("Better than previous best score (%.3f)" % best_score)
                     best_score = score
@@ -147,19 +149,17 @@ class Parser(object):
                 predicted_passage = self.state.create_passage(assert_proper=Config().verify)
             duration = time.time() - started
             total_duration += duration
-            if not failed:
-                if labeled:  # passage is a Passage object, and we have an oracle to verify by
-                    if Config().verify:
-                        self.verify_passage(passage, predicted_passage, train)
-                    if self.action_count:
-                        print("%-16s" % ("%d%% (%d/%d)" %
-                              (100 * self.correct_count / self.action_count,
-                               self.correct_count, self.action_count)), end=Config().line_end)
+            if labeled:  # We have an oracle to verify by
+                if not failed and Config().verify:
+                    self.verify_passage(passage, predicted_passage, train)
+                if self.action_count:
+                    print("%-16s" % ("%d%% (%d/%d)" %
+                          (100 * self.correct_count / self.action_count,
+                           self.correct_count, self.action_count)), end=Config().line_end)
                 num_tokens = len(l0.all)
                 total_tokens += num_tokens
             print("%0.3fs" % duration, end="")
-            if not failed:
-                print("%-15s" % (" (%d tokens/s)" % (num_tokens / duration)), end="")
+            print("%-15s" % ("" if failed else " (%d tokens/s)" % (num_tokens / duration)), end="")
             if not test:
                 print(Config().line_end, flush=True)
             self.total_correct += self.correct_count
@@ -171,7 +171,7 @@ class Parser(object):
             print("Parsed %d %ss" % (num_passages, passage_word))
             if self.oracle and self.total_actions:
                 print("Overall %d%% correct transitions (%d/%d) on %s" %
-                      (188 * self.total_correct / self.total_actions,
+                      (100 * self.total_correct / self.total_actions,
                        self.total_correct, self.total_actions,
                        mode))
             print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (

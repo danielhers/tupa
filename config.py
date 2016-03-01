@@ -31,9 +31,9 @@ class Config(object, metaclass=Singleton):
                                help="output format for parsed files, if not UCCA format")
         argparser.add_argument("-p", "--prefix", default="",
                                help="output filename prefix")
-        argparser.add_argument("-L", "--log", default="parse.log",
+        argparser.add_argument("-O", "--log", default="parse.log",
                                help="output log file")
-        argparser.add_argument("-O", "--devscores", default="dev_scores.csv",
+        argparser.add_argument("--devscores",
                                help="output file for dev scores")
         argparser.add_argument("-I", "--iterations", type=int, default=1,
                                help="number of training iterations")
@@ -69,7 +69,7 @@ class Config(object, metaclass=Singleton):
                                help="maximum graph height")
         argparser.add_argument("-M", "--multiedge", action="store_true",
                                help="allow multiple edges between the same nodes (with different tags)")
-        argparser.add_argument("-n", "--nolinkage", action="store_true",
+        argparser.add_argument("-L", "--nolinkage", action="store_true",
                                help="ignore linkage nodes and edges during both train and test")
         argparser.add_argument("-S", "--noswap", action="store_true",
                                help="disable swap transitions entirely")
