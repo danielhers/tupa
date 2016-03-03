@@ -64,13 +64,17 @@ class Parser(object):
         best_score = 0
         best_model = None
         save_model = True
+        last = False
         if Config().dev_scores:
             with open(Config().dev_scores, "w") as f:
                 print(",".join(["iteration"] + evaluation.Scores.field_titles()), file=f)
         for iteration in range(iterations):
+            if last:
+                break
+            last = iteration == iterations - 1
             print("Training iteration %d of %d: " % (iteration + 1, iterations))
             passages = [passage for _, passage in self.parse(passages, mode="train")]
-            if iteration == iterations - 1:
+            if last:
                 if folds is None:  # Free some memory, as these are not needed any more
                     del passages[:]
             else:
@@ -95,7 +99,9 @@ class Parser(object):
                 else:
                     print("Not better than previous best score (%.3f)" % best_score)
                     save_model = False
-                if iteration == iterations - 1 and folds is None:  # Free more memory
+                if score >= 1:
+                    last = True
+                if last and folds is None:  # Free more memory
                     del dev[:]
 
             if save_model or best_model is None:
