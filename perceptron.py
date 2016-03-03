@@ -4,7 +4,7 @@ from collections import defaultdict
 import numpy as np
 
 
-class Weights(object):
+class FeatureWeights(object):
     """
     The weights for one feature, for all labels
     """
@@ -44,7 +44,7 @@ class Weights(object):
             weights = totals / update_index
         else:
             weights = self.weights[label_indices]
-        return Weights(weights=weights)
+        return FeatureWeights(weights=weights)
 
     def resize(self, num_labels):
         self.weights.resize(num_labels, refcheck=False)
@@ -52,11 +52,11 @@ class Weights(object):
         self._totals.resize(num_labels)
 
 
-class AveragedPerceptron(object):
+class Perceptron(object):
     def __init__(self, labels=None, min_update=1, weights=None, label_indices=None):
         self.labels = labels or []
         self._init_num_labels = len(self.labels)
-        self.weights = defaultdict(lambda: Weights(self.num_labels))
+        self.weights = defaultdict(lambda: FeatureWeights(self.num_labels))
         self.is_frozen = weights is not None
         self._label_indices = label_indices  # List of original indices for all current labels
         if self.is_frozen:
@@ -113,7 +113,7 @@ class AveragedPerceptron(object):
             self._true_labels += [False] * (self.num_labels - len(self._true_labels))
             for weights in self.weights.values():
                 weights.resize(self.num_labels)
-            self.weights.default_factory = lambda: Weights(self.num_labels)
+            self.weights.default_factory = lambda: FeatureWeights(self.num_labels)
 
     def finalize(self, average=True):
         """
@@ -131,7 +131,7 @@ class AveragedPerceptron(object):
             print("Averaging weights... ", end="", flush=True)
         weights = {f: w.finalize(self._update_index, list(label_indices), average=average)
                    for f, w in self.weights.items() if w.update_count >= self._min_update}
-        averaged = AveragedPerceptron(labels, weights=weights, label_indices=label_indices)
+        averaged = Perceptron(labels, weights=weights, label_indices=label_indices)
         print("Done (%.3fs)." % (time.time() - started))
         print("Labels: %d original, %d new, %d removed (%s)" % (
             self._init_num_labels,
