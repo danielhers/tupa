@@ -11,9 +11,9 @@ class FeatureWeights(object):
     def __init__(self, num_labels=None, weights=None):
         if num_labels is not None and weights is None:
             self.weights = np.zeros(num_labels, dtype=float)  # 0.01 * np.random.randn(num_labels)
-            self.update_count = 0
-            self._last_update = np.zeros(num_labels, dtype=int)
             self._totals = np.zeros(num_labels, dtype=float)
+            self._last_update = np.zeros(num_labels, dtype=int)
+            self.update_count = 0
         else:
             self.weights = weights
 
@@ -25,40 +25,50 @@ class FeatureWeights(object):
         :param update_index: which update this is (for averaging)
         """
         self.update_count += 1
-        n = update_index - self._last_update[label]
-        self._last_update[label] = update_index
-        self._totals[label] += n * self.weights[label]
+        self._update_totals(label, update_index)
         self.weights[label] += value
 
-    def finalize(self, update_index, label_indices, average=True):
+    def finalize(self, update_index, labels, average=True):
         """
         Average weights over all updates, and keep only true label columns
         :param update_index: number of updates to average over
-        :param label_indices: list of label indices to keep
+        :param labels: list of label indices to keep
         :param average: whether to really average the weights or just return them as they are now
-        :return new Weights object with the weights averaged
+        :return new Weights object with the weights averaged and only selected indices remaining
         """
-        if average:
-            n = update_index - self._last_update[label_indices]
-            totals = self._totals[label_indices] + n * self.weights[label_indices]
-            weights = totals / update_index
-        else:
-            weights = self.weights[label_indices]
+        self._update_totals(labels, update_index)
+        weights = self._totals[labels] / update_index if average else self.weights[labels]
         return FeatureWeights(weights=weights)
+
+    def _update_totals(self, label, update_index):
+        self._totals[label] += self.weights[label] * (update_index - self._last_update[label])
+        self._last_update[label] = update_index
 
     def resize(self, num_labels):
         self.weights.resize(num_labels, refcheck=False)
-        self._last_update.resize(num_labels, refcheck=False)
         self._totals.resize(num_labels, refcheck=False)
+        self._last_update.resize(num_labels, refcheck=False)
 
 
 class Perceptron(object):
+    """
+    Multi-class averaged perceptron with min-update
+    """
+
     def __init__(self, labels=None, min_update=1, weights=None, label_indices=None):
+        """
+        Create a new untrained Perceptron or copy the weights from an existing one
+        :param labels: a list of labels that can be updated later to add a new label
+        :param min_update: minimum number of updates to a feature required for consideration
+        :param weights: if given, copy the weights (from a trained model)
+        :param label_indices: list of original indices for all current labels
+        :return:
+        """
         self.labels = labels or []
         self._init_num_labels = len(self.labels)
         self.weights = defaultdict(lambda: FeatureWeights(self.num_labels))
         self.is_frozen = weights is not None
-        self._label_indices = label_indices  # List of original indices for all current labels
+        self._label_indices = label_indices
         if self.is_frozen:
             self.weights.update(weights)
         else:
@@ -109,6 +119,10 @@ class Perceptron(object):
             weights.update(pred, -learning_rate * value, self._update_index)
 
     def _update_num_labels(self):
+        """
+        self.num_labels is updated automatically when a label is added to self.labels,
+        but we need to update the weights whenever that happens
+        """
         if self.num_labels > len(self._true_labels):
             self._true_labels += [False] * (self.num_labels - len(self._true_labels))
             for weights in self.weights.values():
@@ -131,8 +145,9 @@ class Perceptron(object):
             print("Averaging weights... ", end="", flush=True)
         weights = {f: w.finalize(self._update_index, list(label_indices), average=average)
                    for f, w in self.weights.items() if w.update_count >= self._min_update}
-        averaged = Perceptron(labels, weights=weights, label_indices=label_indices)
-        print("Done (%.3fs)." % (time.time() - started))
+        finalized = Perceptron(labels, weights=weights, label_indices=label_indices)
+        if average:
+            print("Done (%.3fs)." % (time.time() - started))
         print("Labels: %d original, %d new, %d removed (%s)" % (
             self._init_num_labels,
             len(label_indices) - self._init_num_labels,
@@ -140,7 +155,7 @@ class Perceptron(object):
             ", ".join(str(l) for i, l in enumerate(self.labels) if not self._true_labels[i])))
         print("Features: %d overall, %d occurred at least %d times" % (
             len(self.weights), len(weights), self._min_update))
-        return averaged
+        return finalized
 
     def save(self, filename, io):
         """
