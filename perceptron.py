@@ -25,8 +25,8 @@ class FeatureWeights(object):
         :param update_index: which update this is (for averaging)
         """
         self.update_count += 1
-        self._last_update[label] = update_index
         n = update_index - self._last_update[label]
+        self._last_update[label] = update_index
         self._totals[label] += n * self.weights[label]
         self.weights[label] += value
 
@@ -48,8 +48,8 @@ class FeatureWeights(object):
 
     def resize(self, num_labels):
         self.weights.resize(num_labels, refcheck=False)
-        self._last_update.resize(num_labels)
-        self._totals.resize(num_labels)
+        self._last_update.resize(num_labels, refcheck=False)
+        self._totals.resize(num_labels, refcheck=False)
 
 
 class Perceptron(object):

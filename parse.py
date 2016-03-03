@@ -75,7 +75,7 @@ class Parser(object):
             print("Training iteration %d of %d: " % (iteration + 1, iterations))
             passages = [passage for _, passage in self.parse(passages, mode="train")]
             model = self.model  # Save non-finalize model
-            self.model = self.model.finalize(average=False)  # To evaluate finalized model on dev
+            self.model = self.model.finalize()  # To evaluate finalized model on dev
             if last:
                 if folds is None:  # Free some memory, as these are not needed any more
                     del passages[:]
