@@ -167,6 +167,7 @@ class Parser(object):
                            self.correct_count, self.action_count)), end=Config().line_end)
             print("%0.3fs" % duration, end="")
             print("%-15s" % ("" if failed else " (%d tokens/s)" % (num_tokens / duration)), end="")
+            print(Config().line_end, end="")
             if train:
                 print(Config().line_end, flush=True)
             self.total_correct += self.correct_count
@@ -324,12 +325,11 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
         passage_scores = []
         for guessed_passage, ref_passage in p.parse(test_passages):
             if args.evaluate or train:
-                score = evaluate_passage(guessed_passage, ref_passage,
-                                         verbose=args.verbose and guessed_passage is not None)
+                score = evaluate_passage(guessed_passage, ref_passage)
                 passage_scores.append(score)
             if guessed_passage is not None and not args.nowrite:
                 util.write_passage(guessed_passage, args)
-        if passage_scores:
+        if passage_scores and (not args.verbose or len(passage_scores) > 1):
             scores = evaluation.Scores.aggregate(passage_scores)
             print("\nAverage F1 score on test: %.3f" % scores.average_unlabeled_f1())
             print("Aggregated scores:")
@@ -337,10 +337,11 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
     return scores
 
 
-def evaluate_passage(guessed_passage, ref_passage, verbose=False):
+def evaluate_passage(guessed_passage, ref_passage):
     score = evaluation.evaluate(guessed_passage, ref_passage,
-                                verbose=verbose, units=False, errors=False)
-    print(" F1=%.3f" % score.average_unlabeled_f1(), flush=True)
+                                verbose=Config().verbose and guessed_passage is not None,
+                                units=False, errors=False)
+    print("F1=%.3f" % score.average_unlabeled_f1(), flush=True)
     return score
 
 
