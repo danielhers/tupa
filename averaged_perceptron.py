@@ -8,9 +8,8 @@ class Weights(object):
     """
     The weights for one feature, for all labels
     """
-    def __init__(self, num_labels, weights=None):
-        self.num_labels = num_labels
-        if weights is None:
+    def __init__(self, num_labels=None, weights=None):
+        if num_labels is not None and weights is None:
             self.weights = np.zeros(num_labels, dtype=float)  # 0.01 * np.random.randn(num_labels)
             self.update_count = 0
             self._last_update = np.zeros(num_labels, dtype=int)
@@ -31,36 +30,35 @@ class Weights(object):
         self._totals[label] += n * self.weights[label]
         self.weights[label] += value
 
-    def finalize(self, update_index, label_map, average=True):
+    def finalize(self, update_index, label_indices, average=True):
         """
         Average weights over all updates, and keep only true label columns
         :param update_index: number of updates to average over
-        :param label_map: list of label indices to keep
+        :param label_indices: list of label indices to keep
         :param average: whether to really average the weights or just return them as they are now
         :return new Weights object with the weights averaged
         """
         if average:
-            n = update_index - self._last_update[label_map]
-            totals = self._totals[label_map] + n * self.weights[label_map]
+            n = update_index - self._last_update[label_indices]
+            totals = self._totals[label_indices] + n * self.weights[label_indices]
             weights = totals / update_index
         else:
-            weights = self.weights[label_map]
-        return Weights(len(label_map), weights)
+            weights = self.weights[label_indices]
+        return Weights(weights=weights)
 
     def resize(self, num_labels):
-        self.num_labels = num_labels
         self.weights.resize(num_labels, refcheck=False)
         self._last_update.resize(num_labels)
         self._totals.resize(num_labels)
 
 
 class AveragedPerceptron(object):
-    def __init__(self, labels=None, min_update=1, weights=None, label_map=None):
+    def __init__(self, labels=None, min_update=1, weights=None, label_indices=None):
         self.labels = labels or []
         self._init_num_labels = len(self.labels)
         self.weights = defaultdict(lambda: Weights(self.num_labels))
         self.is_frozen = weights is not None
-        self._label_map = label_map  # List of original indices for all current labels
+        self._label_indices = label_indices  # List of original indices for all current labels
         if self.is_frozen:
             self.weights.update(weights)
         else:
@@ -88,8 +86,8 @@ class AveragedPerceptron(object):
             if weights is None or not self.is_frozen and weights.update_count < self._min_update:
                 continue
             scores += value * weights.weights
-        return dict(enumerate(scores)) if self._label_map is None else \
-            {self._label_map[i]: score for i, score in enumerate(scores)}
+        return dict(enumerate(scores)) if self._label_indices is None else \
+            {self._label_indices[i]: score for i, score in enumerate(scores)}
 
     def update(self, features, pred, true, learning_rate=1):
         """
@@ -127,18 +125,18 @@ class AveragedPerceptron(object):
         started = time.time()
         # Freeze set of features and set of labels; also allow pickle
         self._update_num_labels()
-        label_map, labels = zip(*[(i, l) for i, (t, l) in
-                                  enumerate(zip(self._true_labels, self.labels)) if t])
+        label_indices, labels = zip(*[(i, l) for i, (t, l) in
+                                      enumerate(zip(self._true_labels, self.labels)) if t])
         if average:
             print("Averaging weights... ", end="", flush=True)
-        weights = {f: w.finalize(self._update_index, list(label_map), average=average)
+        weights = {f: w.finalize(self._update_index, list(label_indices), average=average)
                    for f, w in self.weights.items() if w.update_count >= self._min_update}
-        averaged = AveragedPerceptron(labels, weights=weights, label_map=label_map)
+        averaged = AveragedPerceptron(labels, weights=weights, label_indices=label_indices)
         print("Done (%.3fs)." % (time.time() - started))
         print("Labels: %d original, %d new, %d removed (%s)" % (
             self._init_num_labels,
-            len(label_map) - self._init_num_labels,
-            self.num_labels - len(label_map),
+            len(label_indices) - self._init_num_labels,
+            self.num_labels - len(label_indices),
             ", ".join(str(l) for i, l in enumerate(self.labels) if not self._true_labels[i])))
         print("Features: %d overall, %d occurred at least %d times" % (
             len(self.weights), len(weights), self._min_update))
