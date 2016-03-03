@@ -131,6 +131,8 @@ class Parser(object):
         num_passages = 0
         for passage in passages:
             l0 = passage.layer(layer0.LAYER_ID)
+            num_tokens = len(l0.all)
+            total_tokens += num_tokens
             l1 = passage.layer(layer1.LAYER_ID)
             labeled = len(l1.all) > 1
             assert not train or labeled, "Cannot train on unannotated passage"
@@ -163,8 +165,6 @@ class Parser(object):
                     print("%-16s" % ("%d%% (%d/%d)" %
                           (100 * self.correct_count / self.action_count,
                            self.correct_count, self.action_count)), end=Config().line_end)
-                num_tokens = len(l0.all)
-                total_tokens += num_tokens
             print("%0.3fs" % duration, end="")
             print("%-15s" % ("" if failed else " (%d tokens/s)" % (num_tokens / duration)), end="")
             if train:
