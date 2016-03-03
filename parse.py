@@ -74,6 +74,8 @@ class Parser(object):
             last = iteration == iterations - 1
             print("Training iteration %d of %d: " % (iteration + 1, iterations))
             passages = [passage for _, passage in self.parse(passages, mode="train")]
+            model = self.model  # Save non-finalize model
+            self.model = self.model.finalize(average=False)  # To evaluate finalized model on dev
             if last:
                 if folds is None:  # Free some memory, as these are not needed any more
                     del passages[:]
@@ -99,15 +101,16 @@ class Parser(object):
                 else:
                     print("Not better than previous best score (%.3f)" % best_score)
                     save_model = False
-                if score >= 1:
+                if score >= 1:  # Score cannot go any better, so no point in more training
                     last = True
                 if last and folds is None:  # Free more memory
                     del dev[:]
-
             if save_model or best_model is None:
-                best_model = self.model.average()
+                best_model = self.model  # This is the finalized model
                 if self.model_file is not None:
                     best_model.save(self.model_file, util)
+            if not last:
+                self.model = model  # Restore non-finalized model
 
         print("Trained %d iterations" % iterations)
 

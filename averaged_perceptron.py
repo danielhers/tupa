@@ -31,17 +31,21 @@ class Weights(object):
         self._totals[label] += n * self.weights[label]
         self.weights[label] += value
 
-    def average(self, update_index, label_map):
+    def finalize(self, update_index, label_map, average=True):
         """
         Average weights over all updates, and keep only true label columns
         :param update_index: number of updates to average over
         :param label_map: list of label indices to keep
+        :param average: whether to really average the weights or just return them as they are now
         :return new Weights object with the weights averaged
         """
-        n = update_index - self._last_update[label_map]
-        totals = self._totals[label_map] + n * self.weights[label_map]
-        averaged_weights = totals / update_index
-        return Weights(len(label_map), averaged_weights)
+        if average:
+            n = update_index - self._last_update[label_map]
+            totals = self._totals[label_map] + n * self.weights[label_map]
+            weights = totals / update_index
+        else:
+            weights = self.weights[label_map]
+        return Weights(len(label_map), weights)
 
     def resize(self, num_labels):
         self.num_labels = num_labels
@@ -113,9 +117,10 @@ class AveragedPerceptron(object):
                 weights.resize(self.num_labels)
             self.weights.default_factory = lambda: Weights(self.num_labels)
 
-    def average(self):
+    def finalize(self, average=True):
         """
         Average all weights over all updates, as a form of regularization
+        :param average: whether to really average the weights or just return them as they are now
         :return new AveragedPerceptron object with the weights averaged
         """
         assert not self.is_frozen, "Cannot freeze a frozen model"
@@ -124,11 +129,11 @@ class AveragedPerceptron(object):
         self._update_num_labels()
         label_map, labels = zip(*[(i, l) for i, (t, l) in
                                   enumerate(zip(self._true_labels, self.labels)) if t])
-        print("Averaging weights... ", end="", flush=True)
-        averaged_weights = {feature: weights.average(self._update_index, list(label_map))
-                            for feature, weights in self.weights.items()
-                            if weights.update_count >= self._min_update}
-        averaged = AveragedPerceptron(labels, weights=averaged_weights, label_map=label_map)
+        if average:
+            print("Averaging weights... ", end="", flush=True)
+        weights = {f: w.finalize(self._update_index, list(label_map), average=average)
+                   for f, w in self.weights.items() if w.update_count >= self._min_update}
+        averaged = AveragedPerceptron(labels, weights=weights, label_map=label_map)
         print("Done (%.3fs)." % (time.time() - started))
         print("Labels: %d original, %d new, %d removed (%s)" % (
             self._init_num_labels,
@@ -136,7 +141,7 @@ class AveragedPerceptron(object):
             self.num_labels - len(label_map),
             ", ".join(str(l) for i, l in enumerate(self.labels) if not self._true_labels[i])))
         print("Features: %d overall, %d occurred at least %d times" % (
-            len(self.weights), len(averaged_weights), self._min_update))
+            len(self.weights), len(weights), self._min_update))
         return averaged
 
     def save(self, filename, io):
