@@ -71,6 +71,8 @@ class Config(object, metaclass=Singleton):
                                help="ignore linkage nodes and edges during both train and test")
         argparser.add_argument("-M", "--noimplicit", action="store_true",
                                help="ignore implicit nodes and their incoming edges")
+        argparser.add_argument("-R", "--noremote", action="store_true",
+                               help="ignore remote edges")
         argparser.add_argument("-S", "--noswap", action="store_true",
                                help="disable swap transitions entirely")
         argparser.add_argument("-C", "--constraints", action="store_true",
@@ -114,6 +116,7 @@ class Config(object, metaclass=Singleton):
         self.max_height = self.args.maxheight
         self.no_linkage = self.args.nolinkage
         self.no_implicit = self.args.noimplicit
+        self.no_remote = self.args.noremote
         self.constraints = self.args.constraints
 
     def log(self, message):

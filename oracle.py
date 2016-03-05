@@ -18,7 +18,8 @@ class Oracle(object):
         self.edges_remaining = {edge for node in passage.nodes.values() for edge in node
                                 if (not Config().no_linkage or edge.tag not in (
                                     layer1.EdgeTags.LinkRelation, layer1.EdgeTags.LinkArgument)) and
-                                (not Config().no_implicit or not edge.child.attrib.get("implicit"))}
+                                (not Config().no_implicit or not edge.child.attrib.get("implicit")) and
+                                (not Config().no_remote or not edge.attrib.get("remote"))}
         self.passage = passage
         self.edge_found = False
         self.log = None
