@@ -350,7 +350,7 @@ class State(object):
     def update_swap_index(self, node):
         """
         Update the node's swap index according to the nodes before and after it.
-        Usually the swap index is usually just the index, and that is what it is initialized to.
+        Usually the swap index is just the index, and that is what it is initialized to.
         If the buffer is not empty and the next node on it is not a terminal, it means that it is
         a non-terminal that was created at some point, probably before this node (because this method
         should be run just when this node is created).
