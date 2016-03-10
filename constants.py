@@ -1,3 +1,4 @@
+from parsing.config import Config
 from ucca.layer1 import EdgeTags
 
 
@@ -76,3 +77,7 @@ class Constraints:
         EdgeTags.LinkArgument,
         EdgeTags.LinkRelation,
     }
+
+    @classmethod
+    def possible_multiple_incoming(cls):
+        return () if Config().no_linkage else cls.PossibleMultipleIncoming
