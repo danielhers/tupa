@@ -133,7 +133,7 @@ class Perceptron(object):
         """
         Average all weights over all updates, as a form of regularization
         :param average: whether to really average the weights or just return them as they are now
-        :return new AveragedPerceptron object with the weights averaged
+        :return new Perceptron object with the weights averaged
         """
         assert not self.is_frozen, "Cannot freeze a frozen model"
         started = time.time()
