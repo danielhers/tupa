@@ -342,6 +342,9 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
             print("\nAverage F1 score on test: %.3f" % scores.average_unlabeled_f1())
             print("Aggregated scores:")
             scores.print()
+            if Config().test_scores:
+                with open(Config().test_scores, "a") as f:
+                    print(",".join(scores.fields()), file=f)
     return scores
 
 
@@ -357,6 +360,9 @@ def main():
     args = Config().args
     print("Running parser with %s" % Config())
     scores = None
+    if Config().test_scores:
+        with open(Config().test_scores, "w") as f:
+            print(",".join(evaluation.Scores.field_titles()), file=f)
     if args.folds is not None:
         k = args.folds
         fold_scores = []

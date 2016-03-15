@@ -15,32 +15,23 @@ class Singleton(type):
 class Config(object, metaclass=Singleton):
     def __init__(self, *args):
         argparser = argparse.ArgumentParser(description="""Transition-based parser for UCCA.""")
-        argparser.add_argument("passages", nargs="*", default=(),
-                               help="passage files/directories to test on/parse")
-        argparser.add_argument("-t", "--train", nargs="+", default=(),
-                               help="passage files/directories to train on")
-        argparser.add_argument("-d", "--dev", nargs="+", default=(),
-                               help="passage files/directories to tune on")
-        argparser.add_argument("-F", "--folds", type=int, choices=range(3, 11),
+        argparser.add_argument("passages", nargs="*", default=(), help="passage files/directories to test on/parse")
+        argparser.add_argument("-t", "--train", nargs="+", default=(), help="passage files/directories to train on")
+        argparser.add_argument("-d", "--dev", nargs="+", default=(), help="passage files/directories to tune on")
+        argparser.add_argument("-F", "--folds", type=int, choices=(3, 5, 10),
                                help="number of folds for k-fold cross validation")
-        argparser.add_argument("-m", "--model",
-                               help="model file to load/save")
-        argparser.add_argument("-o", "--outdir", default=".",
-                               help="output directory for parsed files")
+        argparser.add_argument("-m", "--model", help="model file to load/save")
+        argparser.add_argument("-o", "--outdir", default=".", help="output directory for parsed files")
         argparser.add_argument("-f", "--format", choices=convert.CONVERTERS,
                                help="output format for parsed files, if not UCCA format")
-        argparser.add_argument("-p", "--prefix", default="",
-                               help="output filename prefix")
-        argparser.add_argument("-O", "--log", default="parse.log",
-                               help="output log file")
-        argparser.add_argument("--devscores",
-                               help="output file for dev scores")
-        argparser.add_argument("-I", "--iterations", type=int, default=1,
-                               help="number of training iterations")
+        argparser.add_argument("-p", "--prefix", default="", help="output filename prefix")
+        argparser.add_argument("-O", "--log", default="parse.log", help="output log file")
+        argparser.add_argument("--devscores", help="output CSV file for dev scores")
+        argparser.add_argument("--testscores", help="output CSV file for test scores")
+        argparser.add_argument("-I", "--iterations", type=int, default=1, help="number of training iterations")
         argparser.add_argument("-b", "--binary", action="store_true",
                                help="read and write passages in Pickle binary format, not XML")
-        argparser.add_argument("-W", "--nowrite", action="store_true",
-                               help="do not write parsed passages to file")
+        argparser.add_argument("-W", "--nowrite", action="store_true", help="do not write parsed passages to file")
         argparser.add_argument("-e", "--evaluate", action="store_true",
                                help="show evaluation results on parsed passages")
         argparser.add_argument("-v", "--verbose", action="store_true",
@@ -61,20 +52,16 @@ class Config(object, metaclass=Singleton):
                                help="abort if the parser reaches the exact same state as it did before")
         argparser.add_argument("-V", "--verify", action="store_true",
                                help="verify oracle successfully reproduces the passage")
-        argparser.add_argument("-c", "--compoundswap", action="store_true",
-                               help="enable compound swap")
+        argparser.add_argument("-c", "--compoundswap", action="store_true", help="enable compound swap")
         argparser.add_argument("-N", "--maxnodes", type=float, default=3.0,
                                help="maximum ratio between non-terminal to terminal nodes")
-        argparser.add_argument("-H", "--maxheight", type=int, default=20,
-                               help="maximum graph height")
+        argparser.add_argument("-H", "--maxheight", type=int, default=20, help="maximum graph height")
         argparser.add_argument("-L", "--nolinkage", action="store_true",
                                help="ignore linkage nodes and edges during both train and test")
         argparser.add_argument("-M", "--noimplicit", action="store_true",
                                help="ignore implicit nodes and their incoming edges")
-        argparser.add_argument("-R", "--noremote", action="store_true",
-                               help="ignore remote edges")
-        argparser.add_argument("-S", "--noswap", action="store_true",
-                               help="disable swap transitions entirely")
+        argparser.add_argument("-R", "--noremote", action="store_true", help="ignore remote edges")
+        argparser.add_argument("-S", "--noswap", action="store_true", help="disable swap transitions entirely")
         argparser.add_argument("-C", "--constraints", action="store_true",
                                help="use constrained inference according to UCCA rules")
         self.args = argparser.parse_args(args if args else None)
@@ -102,6 +89,7 @@ class Config(object, metaclass=Singleton):
 
         self.iterations = self.args.iterations
         self.dev_scores = self.args.devscores
+        self.test_scores = self.args.testscores
         self.learning_rate = self.args.learningrate
         self.decay_factor = self.args.decayfactor
         self.importance = self.args.importance
