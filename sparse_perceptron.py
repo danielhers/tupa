@@ -3,6 +3,8 @@ from collections import defaultdict
 
 import numpy as np
 
+from classifier import Classifier
+
 
 class FeatureWeights(object):
     """
@@ -28,16 +30,15 @@ class FeatureWeights(object):
         self._update_totals(label, update_index)
         self.weights[label] += value
 
-    def finalize(self, update_index, labels, average=True):
+    def finalize(self, update_index, average=True):
         """
         Average weights over all updates, and keep only true label columns
         :param update_index: number of updates to average over
-        :param labels: list of label indices to keep
         :param average: whether to really average the weights or just return them as they are now
         :return new Weights object with the weights averaged and only selected indices remaining
         """
-        self._update_totals(labels, update_index)
-        weights = self._totals[labels] / update_index if average else self.weights[labels]
+        self._update_totals(None, update_index)
+        weights = self._totals / update_index if average else self.weights
         return FeatureWeights(weights=weights)
 
     def _update_totals(self, label, update_index):
@@ -50,35 +51,27 @@ class FeatureWeights(object):
         self._last_update.resize(num_labels, refcheck=False)
 
 
-class Perceptron(object):
+class SparsePerceptron(Classifier):
     """
-    Multi-class averaged perceptron with min-update
+    Multi-class averaged perceptron with min-update for sparse features.
+    Keeps weights in a dictionary by feature name, allowing adding new features on-the-fly.
+    Also allows adding new labels on-the-fly.
     """
 
-    def __init__(self, labels=None, min_update=1, weights=None, label_indices=None):
+    def __init__(self, labels=None, min_update=1, weights=None):
         """
         Create a new untrained Perceptron or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
         :param min_update: minimum number of updates to a feature required for consideration
         :param weights: if given, copy the weights (from a trained model)
-        :param label_indices: list of original indices for all current labels
-        :return:
         """
-        self.labels = labels or []
-        self._init_num_labels = len(self.labels)
+        super(SparsePerceptron, self).__init__(labels=labels, weights=weights)
         self.weights = defaultdict(lambda: FeatureWeights(self.num_labels))
-        self.is_frozen = weights is not None
-        self._label_indices = label_indices
         if self.is_frozen:
             self.weights.update(weights)
         else:
             self._min_update = min_update  # Minimum number of updates for a feature to be used in scoring
             self._update_index = 0  # Counter for calls to update()
-            self._true_labels = [False] * self.num_labels  # Has it ever been a true label in update()?
-
-    @property
-    def num_labels(self):
-        return len(self.labels)
 
     def score(self, features):
         """
@@ -96,8 +89,7 @@ class Perceptron(object):
             if weights is None or not self.is_frozen and weights.update_count < self._min_update:
                 continue
             scores += value * weights.weights
-        return dict(enumerate(scores)) if self._label_indices is None else \
-            {self._label_indices[i]: score for i, score in enumerate(scores)}
+        return dict(enumerate(scores))
 
     def update(self, features, pred, true, learning_rate=1):
         """
@@ -107,10 +99,8 @@ class Perceptron(object):
         :param true: true label (non-negative integer less than num_labels)
         :param learning_rate: how much to scale the feature vector for the weight update
         """
-        assert not self.is_frozen, "Cannot update a frozen model"
+        super(SparsePerceptron, self).update(features, pred, true, learning_rate)
         self._update_index += 1
-        self._update_num_labels()
-        self._true_labels[true] = True
         for feature, value in features.items():
             if not value:
                 continue
@@ -118,43 +108,30 @@ class Perceptron(object):
             weights.update(true, learning_rate * value, self._update_index)
             weights.update(pred, -learning_rate * value, self._update_index)
 
-    def _update_num_labels(self):
-        """
-        self.num_labels is updated automatically when a label is added to self.labels,
-        but we need to update the weights whenever that happens
-        """
-        if self.num_labels > len(self._true_labels):
-            self._true_labels += [False] * (self.num_labels - len(self._true_labels))
-            for weights in self.weights.values():
-                weights.resize(self.num_labels)
-            self.weights.default_factory = lambda: FeatureWeights(self.num_labels)
+    def resize(self):
+        for weights in self.weights.values():
+            weights.resize(self.num_labels)
+        self.weights.default_factory = lambda: FeatureWeights(self.num_labels)
 
     def finalize(self, average=True):
         """
         Average all weights over all updates, as a form of regularization
         :param average: whether to really average the weights or just return them as they are now
-        :return new Perceptron object with the weights averaged
+        :return new SparsePerceptron object with the weights averaged
         """
-        assert not self.is_frozen, "Cannot freeze a frozen model"
+        super(SparsePerceptron, self).finalize(average=average)
         started = time.time()
-        # Freeze set of features and set of labels; also allow pickle
-        self._update_num_labels()
-        label_indices, labels = zip(*[(i, l) for i, (t, l) in
-                                      enumerate(zip(self._true_labels, self.labels)) if t])
         if average:
             print("Averaging weights... ", end="", flush=True)
-        weights = {f: w.finalize(self._update_index, list(label_indices), average=average)
+        weights = {f: w.finalize(self._update_index, average=average)
                    for f, w in self.weights.items() if w.update_count >= self._min_update}
-        finalized = Perceptron(labels, weights=weights, label_indices=label_indices)
+        finalized = SparsePerceptron(list(self.labels), weights=weights)
         if average:
             print("Done (%.3fs)." % (time.time() - started))
-        print("Labels: %d original, %d new, %d removed (%s)" % (
-            self._init_num_labels,
-            len(label_indices) - self._init_num_labels,
-            self.num_labels - len(label_indices),
-            ", ".join(str(l) for i, l in enumerate(self.labels) if not self._true_labels[i])))
+        print("Labels: %d original, %d new" % (
+            self._init_num_labels, self.num_labels - self._init_num_labels))
         print("Features: %d overall, %d occurred at least %d times" % (
-            len(self.weights), len(weights), self._min_update))
+            self.num_features, len(weights), self._min_update))
         return finalized
 
     def save(self, filename, io):
@@ -172,7 +149,6 @@ class Perceptron(object):
             d.update({
                 "_min_update": self._min_update,
                 "_update_index": self._update_index,
-                "_true_labels": self._true_labels,
             })
         io.save(filename, d)
 
@@ -190,12 +166,14 @@ class Perceptron(object):
         if not self.is_frozen:
             self._min_update = d["_min_update"]
             self._update_index = d["_update_index"]
-            self._true_labels = d["_true_labels"]
+
+    @property
+    def num_features(self):
+        return len(self.weights)
 
     def __str__(self):
-        return ("%d labels total, " % self.num_labels) + (
-                "frozen" if self.is_frozen else
-                "%d labels occurred" % self._true_labels.count(True))
+        return ("%d labels, " % self.num_labels) + (
+                "%d features" % self.num_features)
 
     def write(self, filename, sep="\t"):
         print("Writing model to '%s'..." % filename)

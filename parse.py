@@ -10,7 +10,7 @@ from parsing.action import Actions
 from parsing.config import Config
 from parsing.features import FeatureExtractor
 from parsing.oracle import Oracle
-from parsing.perceptron import Perceptron
+from parsing.sparse_perceptron import SparsePerceptron
 from parsing.state import State
 from ucca import diffutil, evaluation, layer0, layer1
 
@@ -33,7 +33,7 @@ class Parser(object):
         self.total_actions = 0
         self.total_correct = 0
 
-        self.model = Perceptron(Actions().all, min_update=Config().min_update)
+        self.model = SparsePerceptron(Actions().all, min_update=Config().min_update)
         self.model_file = model_file
         self.feature_extractor = FeatureExtractor()
 
