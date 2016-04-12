@@ -17,7 +17,7 @@ FEATURE_TEMPLATES = (
     "s0ruwe", "s0ulwe", "s0urwe", "s0uuwe", "s1llwe",
     "s1lrwe", "s1luwe", "s1rlwe", "s1rrwe", "s1ruwe",
     # parents:
-    "s0pwe", "s1pwe", "b0pwe",
+    "s0Uwe", "s1Uwe", "b0Uwe",
     # separator (Zhu et al. 2013):
     "s0wp", "s0wep", "s0wq", "s0weq", "s0es1ep", "s0es1eq",
     "s1wp", "s1wep", "s1wq", "s1weq",

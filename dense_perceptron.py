@@ -20,14 +20,15 @@ class DensePerceptron(Classifier):
         :param weights: if given, copy the weights (from a trained model)
         """
         super(DensePerceptron, self).__init__(labels=labels, weights=weights)
-        self._num_labels = self.num_labels
-        self.num_features = num_features
-        self.weights = np.zeros((self.num_features, self.num_labels), dtype=float)
-        self._totals = np.zeros((self.num_features, self.num_labels), dtype=float)
-        self._last_update = np.zeros(self.num_labels, dtype=int)
+        assert labels is not None and num_features is not None or weights is not None
         if self.is_frozen:
             self.weights = weights
         else:
+            self._num_labels = self.num_labels
+            self.num_features = num_features
+            self.weights = np.zeros((self.num_features, self.num_labels), dtype=float)
+            self._totals = np.zeros((self.num_features, self.num_labels), dtype=float)
+            self._last_update = np.zeros(self.num_labels, dtype=int)
             self._update_index = 0  # Counter for calls to update()
 
     def score(self, features):
@@ -38,7 +39,7 @@ class DensePerceptron(Classifier):
         """
         if not self.is_frozen:
             self._update_num_labels()
-        scores = self.weights.dot(features)
+        scores = self.weights.T.dot(features)
         return dict(enumerate(scores))
 
     def update(self, features, pred, true, learning_rate=1):

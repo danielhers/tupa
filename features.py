@@ -3,7 +3,7 @@ import re
 from ucca import layer0
 from ucca.layer1 import EdgeTags
 
-FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lrup]*)([wtepqxyPCIR]*)")
+FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lruLRU]*)([wtepqxyPCIR]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile("^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 
 
@@ -20,12 +20,15 @@ class FeatureTemplate(object):
         self.suffix = name[-1]
         self.elements = elements
 
+    def __str__(self):
+        return self.name
+
 
 class FeatureTemplateElement(object):
     """
     One element in the values of a feature, e.g. from one node
     """
-    def __init__(self, source, index, children, properties):
+    def __init__(self, source, index, relatives, properties):
         """
         :param source: where to take the data from:
                            s: stack nodes
@@ -33,16 +36,18 @@ class FeatureTemplateElement(object):
                            a: past actions
         :param index: non-negative integer, the index of the element in the stack, buffer or list
                            of past actions (in the case of stack and actions, indexing from the end)
-        :param children: string in [lrup]*, to select a descendant of the node instead:
+        :param relatives: string in [lruLRU]*, to select a descendant/parent of the node instead:
                            l: leftmost child
                            r: rightmost child
                            u: only child, if there is just one
-                           p: parent
+                           L: leftmost parent
+                           R: rightmost parent
+                           U: only parent, if there is just one
         :param properties: the actual values to choose, if available (else omit feature), out of:
                            w: node text / action type
                            t: node POS tag
                            e: tag of first incoming edge / action tag
-                           p: unique separator punctuation between nodes
+                           ,: unique separator punctuation between nodes
                            q: count of any separator punctuation between nodes
                            x: gap type
                            y: sum of gap lengths
@@ -56,8 +61,11 @@ class FeatureTemplateElement(object):
         """
         self.source = source
         self.index = int(index)
-        self.children = children
+        self.relatives = relatives
         self.properties = properties
+
+    def __str__(self):
+        return self.source + str(self.index) + self.relatives + self.properties
 
 
 class FeatureExtractor(object):
@@ -84,30 +92,31 @@ class FeatureExtractor(object):
     @staticmethod
     def calc_feature(feature_template, state, default=None):
         values = []
+        prev_elem = None
         prev_node = None
         for element in feature_template.elements:
             node = FeatureExtractor.get_node(element, state)
-            if node is None:
-                if default is None:
-                    return None
-                else:
-                    values.append(default)
-            else:
-                if not element.properties:
-                    if prev_node is not None:
+            if not element.properties:
+                if prev_elem is not None:
+                    if node is None or prev_node is None:
+                        if default is None:
+                            return None
+                        values.append(default)
+                    else:
                         values.append(int(prev_node in node.parents))
-                    prev_node = node
-                else:
-                    prev_node = None
-                    for p in element.properties:
-                        v = FeatureExtractor.get_prop(element, node, prev_node, p, state)
-                        if v is None:
-                            if default is None:
-                                return None
-                            else:
-                                values.append(default)
-                        else:
-                            values.append(v)
+                prev_elem = element
+                prev_node = node
+            else:
+                prev_elem = None
+                prev_node = None
+                for p in element.properties:
+                    v = FeatureExtractor.get_prop(element, node, prev_node, p, state)
+                    if v is None:
+                        if default is None:
+                            return None
+                        values.append(default)
+                    else:
+                        values.append(v)
         return values
 
     @staticmethod
@@ -137,22 +146,19 @@ class FeatureExtractor(object):
             if len(state.actions) <= element.index:
                 return None
             node = state.actions[-1 - element.index]
-        for child in element.children:
-            if child == "p":
-                if node.parents:
-                    node = node.parents[0]
-                else:
-                    return None
-            elif not node.children:
+        for relative in element.relatives:
+            nodes = node.parents if relative.isupper() else node.children
+            lower = relative.lower()
+            if not nodes:
                 return None
-            elif len(node.children) == 1:
-                if child == "u":
-                    node = node.children[0]
-            elif child == "l":
-                node = node.children[0]
-            elif child == "r":
-                node = node.children[-1]
-            else:  # child == "u" and len(node.children) > 1
+            elif len(nodes) == 1:
+                if lower == "u":
+                    node = nodes[0]
+            elif lower == "l":
+                node = nodes[0]
+            elif lower == "r":
+                node = nodes[-1]
+            else:  # lower == "u" and len(nodes) > 1
                 return None
         return node
 

@@ -66,6 +66,7 @@ class SparsePerceptron(Classifier):
         :param weights: if given, copy the weights (from a trained model)
         """
         super(SparsePerceptron, self).__init__(labels=labels, weights=weights)
+        assert labels is not None or weights is not None
         self.weights = defaultdict(lambda: FeatureWeights(self.num_labels))
         if self.is_frozen:
             self.weights.update(weights)
