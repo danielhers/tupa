@@ -9,9 +9,9 @@ from parsing import util
 from parsing.action import Actions
 from parsing.config import Config
 from parsing.oracle import Oracle
-from parsing.sparse_features import SparseFeatureExtractor
-from parsing.sparse_perceptron import SparsePerceptron
 from parsing.state import State
+from sparse_features import SparseFeatureExtractor
+from sparse_perceptron import SparsePerceptron
 from ucca import diffutil, evaluation, layer0, layer1
 
 
@@ -33,7 +33,11 @@ class Parser(object):
         self.total_actions = 0
         self.total_correct = 0
 
+        # self.feature_extractor = FeatureEmbedding(DenseFeatureExtractor(),
+        #                                           w=100, t=10, e=10, p=2, x=2)
         self.feature_extractor = SparseFeatureExtractor()
+        # self.model = DensePerceptron(Actions().all,
+        #                              num_features=self.feature_extractor.num_features())
         self.model = SparsePerceptron(Actions().all, min_update=Config().min_update)
         self.model_file = model_file
 

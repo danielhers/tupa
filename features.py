@@ -17,6 +17,7 @@ class FeatureTemplate(object):
         :param elements: collection of FeatureElement objects that represent the actual feature
         """
         self.name = name
+        self.suffix = name[-1]
         self.elements = elements
 
 
@@ -81,63 +82,82 @@ class FeatureExtractor(object):
         raise NotImplementedError()
 
     @staticmethod
-    def calc_feature(feature_template, state):
+    def calc_feature(feature_template, state, default=None):
         values = []
         prev_node = None
         for element in feature_template.elements:
-            if element.source == "s":
-                if len(state.stack) <= element.index:
+            node = FeatureExtractor.get_node(element, state)
+            if node is None:
+                if default is None:
                     return None
-                node = state.stack[-1 - element.index]
-            elif element.source == "b":
-                if len(state.buffer) <= element.index:
-                    return None
-                node = state.buffer[element.index]
-            else:  # source == "a"
-                if len(state.actions) <= element.index:
-                    return None
-                node = state.actions[-1 - element.index]
-            for child in element.children:
-                if child == "p":
-                    if node.parents:
-                        node = node.parents[0]
-                    else:
-                        return None
-                elif not node.children:
-                    return None
-                elif len(node.children) == 1:
-                    if child == "u":
-                        node = node.children[0]
-                elif child == "l":
-                    node = node.children[0]
-                elif child == "r":
-                    node = node.children[-1]
-                else:  # child == "u" and len(node.children) > 1
-                    return None
-            if not element.properties:
-                if prev_node is not None:
-                    values.append("1" if prev_node in node.parents else "0")
-                prev_node = node
+                else:
+                    values.append(default)
             else:
-                prev_node = None
-                for p in element.properties:
-                    try:
-                        if element.source == "a":
-                            v = FeatureExtractor.get_action_prop(node, p)
-                        elif p in "pq":
-                            v = FeatureExtractor.get_separator_prop(
-                                state.stack[-1:-3:-1], state.terminals, p)
+                if not element.properties:
+                    if prev_node is not None:
+                        values.append(int(prev_node in node.parents))
+                    prev_node = node
+                else:
+                    prev_node = None
+                    for p in element.properties:
+                        v = FeatureExtractor.get_prop(element, node, prev_node, p, state)
+                        if v is None:
+                            if default is None:
+                                return None
+                            else:
+                                values.append(default)
                         else:
-                            v = FeatureExtractor.get_prop(node, p, prev_node)
-                    except (AttributeError, StopIteration):
-                        v = None
-                    if v is None:
-                        return None
-                    values.append(str(v))
+                            values.append(v)
         return values
 
     @staticmethod
-    def get_prop(node, p, prev_node=None):
+    def get_prop(element, node, prev_node, p, state):
+        try:
+            if element.source == "a":
+                return FeatureExtractor.get_action_prop(node, p)
+            elif p in "pq":
+                return FeatureExtractor.get_separator_prop(
+                    state.stack[-1:-3:-1], state.terminals, p)
+            else:
+                return FeatureExtractor.get_node_prop(node, p, prev_node)
+        except (AttributeError, StopIteration):
+            return None
+
+    @staticmethod
+    def get_node(element, state):
+        if element.source == "s":
+            if len(state.stack) <= element.index:
+                return None
+            node = state.stack[-1 - element.index]
+        elif element.source == "b":
+            if len(state.buffer) <= element.index:
+                return None
+            node = state.buffer[element.index]
+        else:  # source == "a"
+            if len(state.actions) <= element.index:
+                return None
+            node = state.actions[-1 - element.index]
+        for child in element.children:
+            if child == "p":
+                if node.parents:
+                    node = node.parents[0]
+                else:
+                    return None
+            elif not node.children:
+                return None
+            elif len(node.children) == 1:
+                if child == "u":
+                    node = node.children[0]
+            elif child == "l":
+                node = node.children[0]
+            elif child == "r":
+                node = node.children[-1]
+            else:  # child == "u" and len(node.children) > 1
+                return None
+        return node
+
+    @staticmethod
+    def get_node_prop(node, p, prev_node=None):
         if p == "w":
             return FeatureExtractor.get_head_terminal(node).text
         if p == "t":

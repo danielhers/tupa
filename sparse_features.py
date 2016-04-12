@@ -63,5 +63,5 @@ class SparseFeatureExtractor(FeatureExtractor):
         for feature_template in self.feature_templates:
             values = self.calc_feature(feature_template, state)
             if values is not None:
-                features["%s=%s" % (feature_template.name, " ".join(values))] = 1
+                features["%s=%s" % (feature_template.name, " ".join(map(str, values)))] = 1
         return features
