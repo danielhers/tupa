@@ -336,7 +336,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
     if model_file is not None:
         model_base, model_ext = os.path.splitext(model_file)
         model_file = model_base + model_suffix + model_ext
-    p = Parser(model_file)
+    p = Parser(model_file=model_file, model_type=args.classifier)
     p.train(train_passages, dev=dev_passages, iterations=args.iterations, folds=args.folds)
     if test_passages:
         if args.train or args.folds:
