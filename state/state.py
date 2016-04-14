@@ -6,8 +6,8 @@ from operator import attrgetter
 from parsing.action import Actions
 from parsing.config import Config
 from parsing.constants import Constraints
-from parsing.state.edge import Edge
-from parsing.state.node import Node
+from state.edge import Edge
+from state.node import Node
 from ucca import core, layer0, layer1
 from ucca.layer1 import EdgeTags
 

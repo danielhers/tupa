@@ -5,16 +5,16 @@ from random import shuffle
 
 from nltk import pos_tag
 
+from classifiers.dense_perceptron import DensePerceptron
+from classifiers.sparse_perceptron import SparsePerceptron
+from features.dense_features import DenseFeatureExtractor
+from features.embedding import FeatureEmbedding
+from features.sparse_features import SparseFeatureExtractor
 from parsing import util
 from parsing.action import Actions
-from parsing.classifier.dense_perceptron import DensePerceptron
-from parsing.classifier.sparse_perceptron import SparsePerceptron
 from parsing.config import Config
-from parsing.features.dense_features import DenseFeatureExtractor
-from parsing.features.embedding import FeatureEmbedding
-from parsing.features.sparse_features import SparseFeatureExtractor
 from parsing.oracle import Oracle
-from parsing.state.state import State
+from state.state import State
 from ucca import diffutil, evaluation, layer0, layer1
 
 

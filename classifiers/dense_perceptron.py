@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 
-from parsing.classifier.classifier import Classifier
+from classifiers.classifier import Classifier
 
 
 class DensePerceptron(Classifier):

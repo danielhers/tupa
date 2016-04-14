@@ -2,7 +2,7 @@ from collections import defaultdict
 
 import numpy as np
 
-from parsing.features.features import FeatureExtractor
+from features.feature_extractor import FeatureExtractor
 
 
 class FeatureEmbedding(FeatureExtractor):

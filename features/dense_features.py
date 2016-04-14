@@ -1,4 +1,4 @@
-from parsing.features.features import FeatureExtractor
+from features.feature_extractor import FeatureExtractor
 
 NON_NUMERIC_FEATURE_SUFFIXES = "wtepx"
 FEATURE_TEMPLATES = (
