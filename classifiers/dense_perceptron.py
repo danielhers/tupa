@@ -95,6 +95,7 @@ class DensePerceptron(Classifier):
         :param io: module with 'save' function to write a dictionary to file
         """
         d = {
+            "type": "dense",
             "labels": self.labels,
             "weights": self.weights,
             "is_frozen": self.is_frozen,
@@ -112,6 +113,8 @@ class DensePerceptron(Classifier):
         :param io: module with 'load' function to read a dictionary from file
         """
         d = io.load(filename)
+        model_type = d.get("type")
+        assert model_type == "dense", "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])
         self.weights = d["weights"]
         self.is_frozen = d["is_frozen"]

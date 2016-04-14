@@ -142,6 +142,7 @@ class SparsePerceptron(Classifier):
         :param io: module with 'save' function to write a dictionary to file
         """
         d = {
+            "type": "sparse",
             "labels": self.labels,
             "weights": dict(self.weights),
             "is_frozen": self.is_frozen,
@@ -160,6 +161,9 @@ class SparsePerceptron(Classifier):
         :param io: module with 'load' function to read a dictionary from file
         """
         d = io.load(filename)
+        model_type = d.get("type")
+        assert model_type is None or model_type == "sparse", \
+            "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])
         self.weights.clear()
         self.weights.update(d["weights"])
