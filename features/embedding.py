@@ -10,15 +10,13 @@ class FeatureEmbedding(FeatureExtractor):
     Wrapper for DenseFeatureExtractor to replace non-numeric features with embeddings
     and return a list of numbers rather than (name, value) pairs.
     """
-    def __init__(self, feature_extractor, **kwargs):
+    def __init__(self, feature_extractor, **dims):
         self.feature_extractor = feature_extractor
-        self.sizes = kwargs
-        self.embedding = {f: defaultdict(self.vector_creator(s))
-                          for f, s in self.sizes.items()}
-
-    @staticmethod
-    def vector_creator(s):
-        return lambda: np.random.normal(size=s)
+        self.sizes = {}
+        self.embedding = {}
+        for suffix, dim in dims.items():
+            self.sizes[suffix] = dim
+            self.embedding[suffix] = defaultdict(lambda s=dim: np.random.normal(size=s))
 
     def extract_features(self, state):
         """
