@@ -7,11 +7,14 @@ from nltk import pos_tag
 
 from parsing import util
 from parsing.action import Actions
+from parsing.classifier.dense_perceptron import DensePerceptron
+from parsing.classifier.sparse_perceptron import SparsePerceptron
 from parsing.config import Config
+from parsing.features.dense_features import DenseFeatureExtractor
+from parsing.features.embedding import FeatureEmbedding
+from parsing.features.sparse_features import SparseFeatureExtractor
 from parsing.oracle import Oracle
-from parsing.state import State
-from sparse_features import SparseFeatureExtractor
-from sparse_perceptron import SparsePerceptron
+from parsing.state.state import State
 from ucca import diffutil, evaluation, layer0, layer1
 
 
@@ -24,7 +27,7 @@ class Parser(object):
     """
     Main class to implement transition-based UCCA parser
     """
-    def __init__(self, model_file=None):
+    def __init__(self, model_file=None, model_type="sparse"):
         self.state = None  # State object created at each parse
         self.oracle = None  # Oracle object created at each parse
         self.scores = None  # dict of action IDs -> model scores at each action
@@ -33,12 +36,16 @@ class Parser(object):
         self.total_actions = 0
         self.total_correct = 0
 
-        # self.feature_extractor = FeatureEmbedding(DenseFeatureExtractor(),
-        #                                           w=100, t=10, e=10, p=2, x=2)
-        self.feature_extractor = SparseFeatureExtractor()
-        # self.model = DensePerceptron(Actions().all,
-        #                              num_features=self.feature_extractor.num_features())
-        self.model = SparsePerceptron(Actions().all, min_update=Config().min_update)
+        if model_type == "sparse":
+            self.feature_extractor = SparseFeatureExtractor()
+            self.model = SparsePerceptron(Actions().all, min_update=Config().min_update)
+        elif model_type == "dense":
+            self.feature_extractor = FeatureEmbedding(DenseFeatureExtractor(),
+                                                      w=100, t=10, e=10, p=2, x=2)
+            self.model = DensePerceptron(Actions().all,
+                                         num_features=self.feature_extractor.num_features())
+        else:
+            raise ValueError("Invalid model type: %s" % model_type)
         self.model_file = model_file
 
         self.learning_rate = Config().learning_rate

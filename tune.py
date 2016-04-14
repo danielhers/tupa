@@ -2,9 +2,9 @@ import os
 
 import numpy as np
 
-from evaluation import Scores
 from parsing import parse
 from parsing.config import Config
+from ucca.evaluation import Scores
 
 
 class Hyperparams(object):

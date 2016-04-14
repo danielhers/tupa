@@ -1,4 +1,4 @@
-from features import FeatureExtractor
+from parsing.features.features import FeatureExtractor
 
 FEATURE_TEMPLATES = (
     # unigrams (Zhang and Clark 2009):

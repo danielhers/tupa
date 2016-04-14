@@ -5,7 +5,7 @@ import unittest
 from parsing.config import Config
 from parsing.oracle import Oracle
 from parsing.parse import Parser
-from parsing.state import State
+from parsing.state.state import State
 from ucca import convert
 from ucca.tests.test_ucca import TestUtil
 
