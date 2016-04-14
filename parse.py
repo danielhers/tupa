@@ -41,7 +41,8 @@ class Parser(object):
             self.model = SparsePerceptron(Actions().all, min_update=Config().min_update)
         elif model_type == "dense":
             self.feature_extractor = FeatureEmbedding(DenseFeatureExtractor(),
-                                                      w=100, t=10, e=10, p=2, x=2)
+                                                      w=Config().word_vectors,
+                                                      t=10, e=10, p=2, x=2)
             self.model = DensePerceptron(Actions().all,
                                          num_features=self.feature_extractor.num_features())
         else:

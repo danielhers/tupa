@@ -1,8 +1,18 @@
 from collections import defaultdict
 
 import numpy as np
+from gensim.models.word2vec import Word2Vec
 
 from features.feature_extractor import FeatureExtractor
+
+
+class Word2VecWrapper(object):
+    def __init__(self, w2v, default):
+        self.w2v = w2v
+        self.default = default
+
+    def __getitem__(self, item):
+        return self.w2v[item] if item in self.w2v else self.default
 
 
 class FeatureEmbedding(FeatureExtractor):
@@ -15,8 +25,15 @@ class FeatureEmbedding(FeatureExtractor):
         self.sizes = {}
         self.embedding = {}
         for suffix, dim in dims.items():
-            self.sizes[suffix] = dim
-            self.embedding[suffix] = defaultdict(lambda s=dim: np.random.normal(size=s))
+            if isinstance(dim, int):
+                self.sizes[suffix] = dim
+                self.embedding[suffix] = defaultdict(lambda s=dim: np.random.normal(size=s))
+            else:
+                print("Loading word vectors from '%s'..." % dim)
+                w2v = Word2Vec.load_word2vec_format(dim)
+                unk = np.random.normal(size=w2v.vector_size)
+                self.sizes[suffix] = w2v.vector_size
+                self.embedding[suffix] = Word2VecWrapper(w2v, unk)
 
     def extract_features(self, state):
         """

@@ -20,6 +20,7 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("-d", "--dev", nargs="+", default=(), help="passage files/directories to tune on")
         argparser.add_argument("-F", "--folds", type=int, choices=(3, 5, 10), help="#folds for cross validation")
         argparser.add_argument("-m", "--model", help="model file to load/save")
+        argparser.add_argument("-w", "--wordvectors", default=100, help="word vectors file to load for dense model")
         argparser.add_argument("-c", "--classifier", choices=("sparse", "dense"), default="sparse", help="model type")
         argparser.add_argument("-o", "--outdir", default=".", help="output directory for parsed files")
         argparser.add_argument("-f", "--format", choices=convert.CONVERTERS, help="output format for parsed files")
@@ -90,6 +91,7 @@ class Config(object, metaclass=Singleton):
         self.no_implicit = self.args.noimplicit
         self.no_remote = self.args.noremote
         self.constraints = self.args.constraints
+        self.word_vectors = self.args.wordvectors
 
     def log(self, message):
         if self._log_file is None:
