@@ -1,7 +1,5 @@
 import os
-import random
 import time
-from random import shuffle
 
 from nltk import pos_tag
 
@@ -92,7 +90,7 @@ class Parser(object):
                     del passages[:]
             else:
                 self.learning_rate *= self.decay_factor
-                shuffle(passages)
+                Config().random.shuffle(passages)
             if dev:
                 print("Evaluating on dev passages")
                 dev, scores = zip(*[(passage, evaluate_passage(predicted_passage, passage))
@@ -240,7 +238,7 @@ class Parser(object):
                 if Actions().all[best_true_action_id].is_swap:
                     rate *= Config().importance
                 self.model.update(features, predicted_action.id, best_true_action_id, rate)
-                action = random.choice(true_actions)
+                action = Config().random.choice(true_actions)
             self.action_count += 1
             try:
                 self.state.transition(action)
@@ -381,7 +379,7 @@ def main():
         all_passages = list(util.read_files_and_dirs(args.passages))
         assert len(all_passages) >= k,\
             "%d folds are not possible with only %d passages" % (k, len(all_passages))
-        shuffle(all_passages)
+        Config().random.shuffle(all_passages)
         folds = [all_passages[i::k] for i in range(k)]
         for i in range(k):
             print("Fold %d of %d:" % (i + 1, k))

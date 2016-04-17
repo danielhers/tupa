@@ -1,5 +1,7 @@
 import argparse
 
+import numpy as np
+
 from ucca import convert
 
 
@@ -49,6 +51,7 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("--compoundswap", action="store_true", help="enable compound swap")
         argparser.add_argument("--maxnodes", type=float, default=3.0, help="maximum non-terminal/terminal ratio")
         argparser.add_argument("--maxheight", type=int, default=20, help="maximum graph height")
+        argparser.add_argument("--seed", type=int, default=1, help="random number generator seed")
         self.args = argparser.parse_args(args if args else None)
 
         assert self.args.passages or self.args.train,\
@@ -92,6 +95,7 @@ class Config(object, metaclass=Singleton):
         self.no_remote = self.args.noremote
         self.constraints = self.args.constraints
         self.word_vectors = self.args.wordvectors
+        self.random = np.random.RandomState(self.args.seed)
 
     def log(self, message):
         if self._log_file is None:

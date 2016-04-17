@@ -4,6 +4,7 @@ import numpy as np
 from gensim.models.word2vec import Word2Vec
 
 from features.feature_extractor import FeatureExtractor
+from parsing.config import Config
 
 
 class Word2VecWrapper(object):
@@ -27,11 +28,12 @@ class FeatureEmbedding(FeatureExtractor):
         for suffix, dim in dims.items():
             if isinstance(dim, int):
                 self.sizes[suffix] = dim
-                self.embedding[suffix] = defaultdict(lambda s=dim: np.random.normal(size=s))
+                self.embedding[suffix] = defaultdict(lambda s=dim:
+                                                     Config().random.normal(size=s))
             else:
                 print("Loading word vectors from '%s'..." % dim)
                 w2v = Word2Vec.load_word2vec_format(dim)
-                unk = np.random.normal(size=w2v.vector_size)
+                unk = Config().random.normal(size=w2v.vector_size)
                 self.sizes[suffix] = w2v.vector_size
                 self.embedding[suffix] = Word2VecWrapper(w2v, unk)
 
