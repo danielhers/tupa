@@ -58,18 +58,18 @@ class SparsePerceptron(Classifier):
     Also allows adding new labels on-the-fly.
     """
 
-    def __init__(self, labels=None, min_update=1, weights=None):
+    def __init__(self, labels=None, min_update=1, model=None):
         """
         Create a new untrained Perceptron or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
         :param min_update: minimum number of updates to a feature required for consideration
-        :param weights: if given, copy the weights (from a trained model)
+        :param model: if given, copy the weights (from a trained model)
         """
-        super(SparsePerceptron, self).__init__(labels=labels, weights=weights)
-        assert labels is not None or weights is not None
-        self.weights = defaultdict(lambda: FeatureWeights(self.num_labels))
+        super(SparsePerceptron, self).__init__(labels=labels, model=model)
+        assert labels is not None or model is not None
+        self.model = defaultdict(lambda: FeatureWeights(self.num_labels))
         if self.is_frozen:
-            self.weights.update(weights)
+            self.model.update(model)
         else:
             self._min_update = min_update  # Minimum number of updates for a feature to be used in scoring
             self._update_index = 0  # Counter for calls to update()
@@ -86,7 +86,7 @@ class SparsePerceptron(Classifier):
         for feature, value in features.items():
             if not value:
                 continue
-            weights = self.weights.get(feature)
+            weights = self.model.get(feature)
             if weights is None or not self.is_frozen and weights.update_count < self._min_update:
                 continue
             scores += value * weights.weights
@@ -105,14 +105,14 @@ class SparsePerceptron(Classifier):
         for feature, value in features.items():
             if not value:
                 continue
-            weights = self.weights[feature]
+            weights = self.model[feature]
             weights.update(true, learning_rate * value, self._update_index)
             weights.update(pred, -learning_rate * value, self._update_index)
 
     def resize(self):
-        for weights in self.weights.values():
+        for weights in self.model.values():
             weights.resize(self.num_labels)
-        self.weights.default_factory = lambda: FeatureWeights(self.num_labels)
+        self.model.default_factory = lambda: FeatureWeights(self.num_labels)
 
     def finalize(self, average=True):
         """
@@ -124,15 +124,15 @@ class SparsePerceptron(Classifier):
         started = time.time()
         if average:
             print("Averaging weights... ", end="", flush=True)
-        weights = {f: w.finalize(self._update_index, average=average)
-                   for f, w in self.weights.items() if w.update_count >= self._min_update}
-        finalized = SparsePerceptron(list(self.labels), weights=weights)
+        model = {f: w.finalize(self._update_index, average=average)
+                 for f, w in self.model.items() if w.update_count >= self._min_update}
+        finalized = SparsePerceptron(list(self.labels), model=model)
         if average:
             print("Done (%.3fs)." % (time.time() - started))
         print("Labels: %d original, %d new" % (
             self._init_num_labels, self.num_labels - self._init_num_labels))
         print("Features: %d overall, %d occurred at least %d times" % (
-            self.num_features, len(weights), self._min_update))
+            self.num_features, len(model), self._min_update))
         return finalized
 
     def save(self, filename, io):
@@ -144,7 +144,7 @@ class SparsePerceptron(Classifier):
         d = {
             "type": "sparse",
             "labels": self.labels,
-            "weights": dict(self.weights),
+            "model": dict(self.model),
             "is_frozen": self.is_frozen,
         }
         if not self.is_frozen:
@@ -165,8 +165,8 @@ class SparsePerceptron(Classifier):
         assert model_type is None or model_type == "sparse", \
             "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])
-        self.weights.clear()
-        self.weights.update(d["weights"])
+        self.model.clear()
+        self.model.update(d["model"])
         self.is_frozen = d["is_frozen"]
         if not self.is_frozen:
             self._min_update = d["_min_update"]
@@ -174,7 +174,7 @@ class SparsePerceptron(Classifier):
 
     @property
     def num_features(self):
-        return len(self.weights)
+        return len(self.model)
 
     def __str__(self):
         return ("%d labels, " % self.num_labels) + (
@@ -184,6 +184,6 @@ class SparsePerceptron(Classifier):
         print("Writing model to '%s'..." % filename)
         with open(filename, "w") as f:
             print(sep.join(["feature"] + list(map(str, self.labels))), file=f)
-            for feature, weights in self.weights.items():
+            for feature, weights in self.model.items():
                 print(sep.join([feature] +
                                ["%.8f" % w for w in weights.weights]), file=f)

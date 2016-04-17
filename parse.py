@@ -1,10 +1,10 @@
 import os
 import time
-from _operator import attrgetter
 
 from nltk import pos_tag
 
 from classifiers.dense_perceptron import DensePerceptron
+from classifiers.neural_network import NeuralNetwork
 from classifiers.sparse_perceptron import SparsePerceptron
 from features.dense_features import DenseFeatureExtractor
 from features.embedding import FeatureEmbedding
@@ -38,12 +38,15 @@ class Parser(object):
         if model_type == "sparse":
             self.feature_extractor = SparseFeatureExtractor()
             self.model = SparsePerceptron(Actions().all, min_update=Config().min_update)
-        elif model_type == "dense":
+        elif model_type in ("dense", "nn"):
             self.feature_extractor = FeatureEmbedding(DenseFeatureExtractor(),
                                                       w=Config().word_vectors,
                                                       t=10, e=10, p=2, x=2)
-            self.model = DensePerceptron(Actions().all,
-                                         num_features=self.feature_extractor.num_features())
+            num_features = self.feature_extractor.num_features()
+            if model_type == "dense":
+                self.model = DensePerceptron(Actions().all, num_features=num_features)
+            else:  # "nn"
+                self.model = NeuralNetwork(Actions().all, input_dim=num_features)
         else:
             raise ValueError("Invalid model type: %s" % model_type)
         self.model_file = model_file
@@ -284,7 +287,7 @@ class Parser(object):
             return best_action
         # Usually the best action is valid, so max is enough to choose it in O(n) time
         # Otherwise, sort all the other scores to choose the best valid one in O(n lg n)
-        sorted_ids = self.scores.argsort()[::-1]
+        sorted_ids = self.scores[:len(Actions().all)].argsort()[::-1]
         actions = (self.select_action(i, true_actions) for i in sorted_ids)
         try:
             return next(a for a in actions if self.state.is_valid(a))

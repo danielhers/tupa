@@ -12,21 +12,21 @@ class DensePerceptron(Classifier):
     Allows adding new labels on-the-fly.
     """
 
-    def __init__(self, labels=None, num_features=None, weights=None):
+    def __init__(self, labels=None, num_features=None, model=None):
         """
         Create a new untrained Perceptron or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
         :param num_features: number of features that will be used for the matrix size
-        :param weights: if given, copy the weights (from a trained model)
+        :param model: if given, copy the weights (from a trained model)
         """
-        super(DensePerceptron, self).__init__(labels=labels, weights=weights)
-        assert labels is not None and num_features is not None or weights is not None
+        super(DensePerceptron, self).__init__(labels=labels, model=model)
+        assert labels is not None and num_features is not None or model is not None
         if self.is_frozen:
-            self.weights = weights
+            self.model = model
         else:
             self._num_labels = self.num_labels
             self.num_features = num_features
-            self.weights = np.zeros((self.num_features, self.num_labels), dtype=float)
+            self.model = np.zeros((self.num_features, self.num_labels), dtype=float)
             self._totals = np.zeros((self.num_features, self.num_labels), dtype=float)
             self._last_update = np.zeros(self.num_labels, dtype=int)
             self._update_index = 0  # Counter for calls to update()
@@ -39,7 +39,7 @@ class DensePerceptron(Classifier):
         """
         if not self.is_frozen:
             self._update_num_labels()
-        return self.weights.T.dot(features)
+        return self.model.T.dot(features)
 
     def update(self, features, pred, true, learning_rate=1):
         """
@@ -56,14 +56,14 @@ class DensePerceptron(Classifier):
 
     def _update(self, label, values):
         self._update_totals(label)
-        self.weights[:, label] += values
+        self.model[:, label] += values
 
     def _update_totals(self, label=None):
-        self._totals[:, label] += self.weights[:, label] * (self._update_index - self._last_update[label])
+        self._totals[:, label] += self.model[:, label] * (self._update_index - self._last_update[label])
         self._last_update[label] = self._update_index
 
     def resize(self):
-        self.weights.resize((self.num_features, self.num_labels), refcheck=False)
+        self.model.resize((self.num_features, self.num_labels), refcheck=False)
         self._totals.resize((self.num_features, self.num_labels), refcheck=False)
         self._last_update.resize(self.num_labels, refcheck=False)
 
@@ -78,8 +78,8 @@ class DensePerceptron(Classifier):
         if average:
             print("Averaging weights... ", end="", flush=True)
         self._update_totals()
-        weights = self._totals / self._update_index if average else self.weights
-        finalized = DensePerceptron(list(self.labels), weights=weights)
+        model = self._totals / self._update_index if average else self.model
+        finalized = DensePerceptron(list(self.labels), model=model)
         if average:
             print("Done (%.3fs)." % (time.time() - started))
         print("Labels: %d original, %d new" % (
@@ -96,7 +96,7 @@ class DensePerceptron(Classifier):
         d = {
             "type": "dense",
             "labels": self.labels,
-            "weights": self.weights,
+            "model": self.model,
             "is_frozen": self.is_frozen,
         }
         if not self.is_frozen:
@@ -115,7 +115,7 @@ class DensePerceptron(Classifier):
         model_type = d.get("type")
         assert model_type == "dense", "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])
-        self.weights = d["weights"]
+        self.model = d["model"]
         self.is_frozen = d["is_frozen"]
         if not self.is_frozen:
             self._update_index = d["_update_index"]
@@ -128,5 +128,5 @@ class DensePerceptron(Classifier):
         print("Writing model to '%s'..." % filename)
         with open(filename, "w") as f:
             print(list(map(str, self.labels)), file=f)
-            for row in self.weights:
+            for row in self.model:
                 print(sep.join(["%.8f" % w for w in row]), file=f)

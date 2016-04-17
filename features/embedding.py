@@ -54,7 +54,7 @@ class FeatureEmbedding(FeatureExtractor):
         assert sum(map(len, values)) == self.num_features(),\
             "Invalid total number of features: %d != %d " % (
                 sum(map(len, values)), self.num_features())
-        return np.hstack(values)
+        return np.hstack(values).reshape((-1, 1))
 
     def num_features(self):
         return self.feature_extractor.num_features_numeric() + \

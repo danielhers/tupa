@@ -13,6 +13,8 @@ class Singleton(type):
             cls.instance = super(Singleton, cls).__call__(*args, **kwargs)
         return cls.instance
 
+CLASSIFIERS = ("sparse", "dense", "nn")
+
 
 class Config(object, metaclass=Singleton):
     def __init__(self, *args):
@@ -23,7 +25,7 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("-F", "--folds", type=int, choices=(3, 5, 10), help="#folds for cross validation")
         argparser.add_argument("-m", "--model", help="model file to load/save")
         argparser.add_argument("-w", "--wordvectors", default=100, help="dimensions for random init, or file to load")
-        argparser.add_argument("-c", "--classifier", choices=("sparse", "dense"), default="sparse", help="model type")
+        argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=CLASSIFIERS[0], help="model type")
         argparser.add_argument("-o", "--outdir", default=".", help="output directory for parsed files")
         argparser.add_argument("-f", "--format", choices=convert.CONVERTERS, help="output format for parsed files")
         argparser.add_argument("-p", "--prefix", default="", help="output filename prefix")

@@ -3,15 +3,15 @@ class Classifier(object):
     Interface for classifier used by the parser.
     """
 
-    def __init__(self, labels=None, weights=None):
+    def __init__(self, labels=None, model=None):
         """
         :param labels: a list of labels that can be updated later to add a new label
-        :param weights: if given, copy the weights (from a trained model)
+        :param model: if given, copy the weights (from a trained model)
         """
         self.labels = labels or []
         self._init_num_labels = len(self.labels)
         self._num_labels = self._init_num_labels
-        self.is_frozen = weights is not None
+        self.is_frozen = model is not None
 
     @property
     def num_labels(self):
