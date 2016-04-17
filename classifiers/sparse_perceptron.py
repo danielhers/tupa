@@ -78,7 +78,7 @@ class SparsePerceptron(Classifier):
         """
         Calculate score for each label
         :param features: extracted feature values, in the form of a dict (name -> value)
-        :return: score for each label: dict (label -> score)
+        :return: array with score for each label
         """
         if not self.is_frozen:
             self._update_num_labels()
@@ -90,7 +90,7 @@ class SparsePerceptron(Classifier):
             if weights is None or not self.is_frozen and weights.update_count < self._min_update:
                 continue
             scores += value * weights.weights
-        return dict(enumerate(scores))
+        return scores
 
     def update(self, features, pred, true, learning_rate=1):
         """

@@ -35,12 +35,11 @@ class DensePerceptron(Classifier):
         """
         Calculate score for each label
         :param features: extracted feature values, of size num_features
-        :return: score for each label: dict (label -> score)
+        :return: array with score for each label
         """
         if not self.is_frozen:
             self._update_num_labels()
-        scores = self.weights.T.dot(features)
-        return dict(enumerate(scores))
+        return self.weights.T.dot(features)
 
     def update(self, features, pred, true, learning_rate=1):
         """
@@ -72,7 +71,7 @@ class DensePerceptron(Classifier):
         """
         Average all weights over all updates, as a form of regularization
         :param average: whether to really average the weights or just return them as they are now
-        :return new SparsePerceptron object with the weights averaged
+        :return new DensePerceptron object with the weights averaged
         """
         super(DensePerceptron, self).finalize(average=average)
         started = time.time()

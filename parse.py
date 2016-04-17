@@ -1,5 +1,6 @@
 import os
 import time
+from _operator import attrgetter
 
 from nltk import pos_tag
 
@@ -28,7 +29,7 @@ class Parser(object):
     def __init__(self, model_file=None, model_type="sparse"):
         self.state = None  # State object created at each parse
         self.oracle = None  # Oracle object created at each parse
-        self.scores = None  # dict of action IDs -> model scores at each action
+        self.scores = None  # NumPy array of action scores at each action
         self.action_count = 0
         self.correct_count = 0
         self.total_actions = 0
@@ -231,13 +232,12 @@ class Parser(object):
             elif predicted_action in true_actions:
                 self.correct_count += 1
             elif train:
-                best_true_action_id = max([true_action.id for true_action in true_actions],
-                                          key=self.scores.get) if len(true_actions) > 1 \
-                    else true_actions[0].id
+                best_true_action = true_actions[0] if len(true_actions) == 1 else \
+                    true_actions[self.scores[[a.id for a in true_actions]].argmax()]
                 rate = self.learning_rate
-                if Actions().all[best_true_action_id].is_swap:
+                if best_true_action.is_swap:
                     rate *= Config().importance
-                self.model.update(features, predicted_action.id, best_true_action_id, rate)
+                self.model.update(features, predicted_action.id, best_true_action.id, rate)
                 action = Config().random.choice(true_actions)
             self.action_count += 1
             try:
@@ -274,15 +274,15 @@ class Parser(object):
         :param true_actions: from the oracle, to copy orig_node if the same action is selected
         :return: valid action with maximum probability according to classifier
         """
-        self.scores = self.model.score(features)  # Returns dict of id -> score
-        if true_actions is not None:
-            self.scores.update({a.id: float("-inf") for a in true_actions if a.id not in self.scores})
-        best_action = self.select_action(max(self.scores, key=self.scores.get), true_actions)
+        self.scores = self.model.score(features)  # Returns a NumPy array
+        if true_actions:
+            self.scores.resize((1 + max(a.id for a in true_actions),))
+        best_action = self.select_action(self.scores.argmax(), true_actions)
         if self.state.is_valid(best_action):
             return best_action
         # Usually the best action is valid, so max is enough to choose it in O(n) time
         # Otherwise, sort all the other scores to choose the best valid one in O(n lg n)
-        sorted_ids = sorted(self.scores, key=self.scores.get, reverse=True)
+        sorted_ids = self.scores.argsort()[::-1]
         actions = (self.select_action(i, true_actions) for i in sorted_ids)
         try:
             return next(action for action in actions if self.state.is_valid(action))
