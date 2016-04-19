@@ -80,8 +80,7 @@ class SparsePerceptron(Classifier):
         :param features: extracted feature values, in the form of a dict (name -> value)
         :return: array with score for each label
         """
-        if not self.is_frozen:
-            self._update_num_labels()
+        super(SparsePerceptron, self).score(features)
         scores = np.zeros(self.num_labels)
         for feature, value in features.items():
             if not value:
@@ -129,8 +128,7 @@ class SparsePerceptron(Classifier):
         finalized = SparsePerceptron(list(self.labels), model=model)
         if average:
             print("Done (%.3fs)." % (time.time() - started))
-        print("Labels: %d original, %d new" % (
-            self._init_num_labels, self.num_labels - self._init_num_labels))
+        print("Labels: %d" % self.num_labels)
         print("Features: %d overall, %d occurred at least %d times" % (
             self.num_features, len(model), self._min_update))
         return finalized

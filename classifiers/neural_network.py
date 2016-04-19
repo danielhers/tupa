@@ -40,8 +40,7 @@ class NeuralNetwork(Classifier):
         :param features: extracted feature values, of size input_size
         :return: array with score for each label
         """
-        if not self.is_frozen:
-            self._update_num_labels()
+        super(NeuralNetwork, self).score(features)
         scores = self.model.predict(features.T, batch_size=1).reshape((-1,))
         return scores[:self.num_labels]
 
@@ -67,8 +66,7 @@ class NeuralNetwork(Classifier):
         """
         super(NeuralNetwork, self).finalize()
         finalized = NeuralNetwork(list(self.labels), model=self.model)
-        print("Labels: %d original, %d new" % (
-            self._init_num_labels, self.num_labels - self._init_num_labels))
+        print("Labels: %d" % self.num_labels)
         print("Features: %d" % self._input_dim)
         return finalized
 

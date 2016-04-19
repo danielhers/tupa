@@ -37,8 +37,7 @@ class DensePerceptron(Classifier):
         :param features: extracted feature values, of size num_features
         :return: array with score for each label
         """
-        if not self.is_frozen:
-            self._update_num_labels()
+        super(DensePerceptron, self).score(features)
         return self.model.T.dot(features).reshape((-1,))
 
     def update(self, features, pred, true, learning_rate=1):
@@ -82,8 +81,7 @@ class DensePerceptron(Classifier):
         finalized = DensePerceptron(list(self.labels), model=model)
         if average:
             print("Done (%.3fs)." % (time.time() - started))
-        print("Labels: %d original, %d new" % (
-            self._init_num_labels, self.num_labels - self._init_num_labels))
+        print("Labels: %d" % self.num_labels)
         print("Features: %d" % self.num_features)
         return finalized
 

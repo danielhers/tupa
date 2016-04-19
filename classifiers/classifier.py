@@ -9,8 +9,7 @@ class Classifier(object):
         :param model: if given, copy the weights (from a trained model)
         """
         self.labels = labels or []
-        self._init_num_labels = len(self.labels)
-        self._num_labels = self._init_num_labels
+        self._num_labels = len(self.labels)
         self.is_frozen = model is not None
 
     @property
@@ -18,7 +17,8 @@ class Classifier(object):
         return len(self.labels)
 
     def score(self, features):
-        raise NotImplementedError()
+        if not self.is_frozen:
+            self._update_num_labels()
 
     def update(self, features, pred, true, learning_rate=1):
         assert not self.is_frozen, "Cannot update a frozen model"
