@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 from keras.layers.core import Dense, Activation
 from keras.models import Sequential
@@ -30,7 +32,7 @@ class NeuralNetwork(Classifier):
             self.max_num_labels = max_num_labels
             self._num_labels = self.num_labels
             self._input_dim = input_dim
-            
+
             self.model = Sequential()
             self.model.add(Dense(self.max_num_labels, input_dim=input_dim, init="uniform"))
             self.model.add(Activation("softmax"))
@@ -47,7 +49,7 @@ class NeuralNetwork(Classifier):
         :return: array with score for each label
         """
         super(NeuralNetwork, self).score(features)
-        if self.iteration == 0:  # not fit yet
+        if not self.is_frozen and self.iteration == 0:  # not fit yet
             return np.zeros(self.num_labels)
         scores = self.model.predict(features.T, batch_size=1).reshape((-1,))
         return scores[:self.num_labels]
@@ -72,6 +74,8 @@ class NeuralNetwork(Classifier):
         :return new NeuralNetwork object with the same weights
         """
         super(NeuralNetwork, self).finalize()
+        started = time.time()
+        print("Fitting model... ", end="", flush=True)
         features, labels = zip(*self.samples)
         x = np.array(features)
         y = np_utils.to_categorical(labels, nb_classes=self.max_num_labels)
@@ -79,6 +83,7 @@ class NeuralNetwork(Classifier):
         self.samples = []
         self.iteration += 1
         finalized = NeuralNetwork(list(self.labels), model=self.model)
+        print("Done (%.3fs)." % (time.time() - started))
         print("Labels: %d" % self.num_labels)
         print("Features: %d" % self._input_dim)
         return finalized
