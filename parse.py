@@ -276,7 +276,9 @@ class Parser(object):
         """
         self.scores = self.model.score(features)  # Returns a NumPy array
         if true_actions:
-            self.scores.resize((1 + max(a.id for a in true_actions),))
+            new_size = 1 + max(a.id for a in true_actions)
+            if new_size > len(self.scores):
+                self.scores.resize((new_size,))
         best_action = self.select_action(self.scores.argmax(), true_actions)
         if self.state.is_valid(best_action):
             return best_action
