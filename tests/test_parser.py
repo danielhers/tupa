@@ -14,11 +14,11 @@ class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ParserTests, self).__init__(*args, **kwargs)
         Config("", "-m", "test")
+        self.passage = convert.from_standard(TestUtil.load_xml('test_files/standard3.xml'))
 
     def test_oracle(self):
-        passage = convert.from_standard(TestUtil.load_xml('test_files/standard3.xml'))
-        oracle = Oracle(passage)
-        state = State(passage)
+        oracle = Oracle(self.passage)
+        state = State(self.passage)
         actions_taken = []
         while True:
             actions = oracle.get_actions(state)
@@ -30,9 +30,26 @@ class ParserTests(unittest.TestCase):
         with open('test_files/standard3.oracle_actions.txt') as f:
             self.assertSequenceEqual(actions_taken, f.readlines())
 
-    def test_parser(self):
-        passages = [convert.from_standard(TestUtil.load_xml('test_files/standard3.xml'))]
-        p = Parser()
+    def test_parser_sparse(self):
+        passages = [self.passage]
+        parsed = ParserUtil.train_test(passages, model_type="sparse")
+        self.assertSequenceEqual(parsed, passages)
+
+    def test_parser_dense(self):
+        passages = [self.passage]
+        parsed = ParserUtil.train_test(passages, model_type="dense")
+        self.assertSequenceEqual(parsed, passages)
+
+    def test_parser_nn(self):
+        passages = [self.passage]
+        parsed = ParserUtil.train_test(passages, model_type="nn")
+        self.assertSequenceEqual(parsed, passages)
+
+
+class ParserUtil:
+    @staticmethod
+    def train_test(passages, *args, **kwargs):
+        p = Parser(*args, **kwargs)
         p.train(passages)
         _, parsed = zip(*p.parse(passages))
-        self.assertSequenceEqual(parsed, passages)
+        return parsed
