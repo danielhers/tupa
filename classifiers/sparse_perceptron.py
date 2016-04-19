@@ -91,22 +91,22 @@ class SparsePerceptron(Classifier):
             scores += value * weights.weights
         return scores
 
-    def update(self, features, pred, true, learning_rate=1):
+    def update(self, features, pred, true, importance=1):
         """
         Update classifier weights according to predicted and true labels
         :param features: extracted feature values, in the form of a dict (name: value)
         :param pred: label predicted by the classifier (non-negative integer less than num_labels)
         :param true: true label (non-negative integer less than num_labels)
-        :param learning_rate: how much to scale the feature vector for the weight update
+        :param importance: how much to scale the feature vector for the weight update
         """
-        super(SparsePerceptron, self).update(features, pred, true, learning_rate)
+        super(SparsePerceptron, self).update(features, pred, true, importance)
         self._update_index += 1
         for feature, value in features.items():
             if not value:
                 continue
             weights = self.model[feature]
-            weights.update(true, learning_rate * value, self._update_index)
-            weights.update(pred, -learning_rate * value, self._update_index)
+            weights.update(true, importance * value, self._update_index)
+            weights.update(pred, -importance * value, self._update_index)
 
     def resize(self):
         for weights in self.model.values():
@@ -119,7 +119,7 @@ class SparsePerceptron(Classifier):
         :param average: whether to really average the weights or just return them as they are now
         :return new SparsePerceptron object with the weights averaged
         """
-        super(SparsePerceptron, self).finalize(average=average)
+        super(SparsePerceptron, self).finalize()
         started = time.time()
         if average:
             print("Averaging weights... ", end="", flush=True)

@@ -40,18 +40,18 @@ class DensePerceptron(Classifier):
         super(DensePerceptron, self).score(features)
         return self.model.T.dot(features).reshape((-1,))
 
-    def update(self, features, pred, true, learning_rate=1):
+    def update(self, features, pred, true, importance=1):
         """
         Update classifier weights according to predicted and true labels
         :param features: extracted feature values, of size num_features
         :param pred: label predicted by the classifier (non-negative integer less than num_labels)
         :param true: true label (non-negative integer less than num_labels)
-        :param learning_rate: how much to scale the feature vector for the weight update
+        :param importance: how much to scale the feature vector for the weight update
         """
-        super(DensePerceptron, self).update(features, pred, true, learning_rate)
+        super(DensePerceptron, self).update(features, pred, true, importance)
         self._update_index += 1
-        self._update(pred, -learning_rate * features)
-        self._update(true, learning_rate * features)
+        self._update(pred, -importance * features)
+        self._update(true, importance * features)
 
     def _update(self, label, values):
         self._update_totals(label)
@@ -72,7 +72,7 @@ class DensePerceptron(Classifier):
         :param average: whether to really average the weights or just return them as they are now
         :return new DensePerceptron object with the weights averaged
         """
-        super(DensePerceptron, self).finalize(average=average)
+        super(DensePerceptron, self).finalize()
         started = time.time()
         if average:
             print("Averaging weights... ", end="", flush=True)

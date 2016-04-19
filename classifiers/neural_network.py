@@ -1,3 +1,4 @@
+import numpy as np
 from keras.layers.core import Dense, Activation
 from keras.models import Sequential
 from keras.optimizers import SGD
@@ -9,8 +10,8 @@ from classifiers.classifier import Classifier
 class NeuralNetwork(Classifier):
     """
     Neural network to be used by the parser for action classification. Uses dense features.
-    Keeps weights in a constant-size matrix. Does not allow adding new features on-the-fly.
-    Allows adding new labels on-the-fly.
+    Keeps weights in constant-size matrices. Does not allow adding new features on-the-fly.
+    Allows adding new labels on-the-fly, but requires pre-setting maximum number of labels.
     """
 
     def __init__(self, labels=None, input_dim=None, model=None, max_num_labels=100):
@@ -19,6 +20,7 @@ class NeuralNetwork(Classifier):
         :param labels: a list of labels that can be updated later to add a new label
         :param input_dim: number of features that will be used for the input matrix
         :param model: if given, copy the weights (from a trained model)
+        :param max_num_labels: since model size is fixed, set maximum output size
         """
         super(NeuralNetwork, self).__init__(labels=labels, model=model)
         assert labels is not None and input_dim is not None or model is not None
@@ -28,11 +30,15 @@ class NeuralNetwork(Classifier):
             self.max_num_labels = max_num_labels
             self._num_labels = self.num_labels
             self._input_dim = input_dim
+            
             self.model = Sequential()
             self.model.add(Dense(self.max_num_labels, input_dim=input_dim, init="uniform"))
             self.model.add(Activation("softmax"))
             sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
             self.model.compile(loss="categorical_crossentropy", optimizer=sgd)
+
+            self.samples = []
+            self.iteration = 0
 
     def score(self, features):
         """
@@ -41,20 +47,21 @@ class NeuralNetwork(Classifier):
         :return: array with score for each label
         """
         super(NeuralNetwork, self).score(features)
+        if self.iteration == 0:  # not fit yet
+            return np.zeros(self.num_labels)
         scores = self.model.predict(features.T, batch_size=1).reshape((-1,))
         return scores[:self.num_labels]
 
-    def update(self, features, pred, true, learning_rate=1):
+    def update(self, features, pred, true, importance=1):
         """
         Update classifier weights according to predicted and true labels
         :param features: extracted feature values, of size input_size
         :param pred: label predicted by the classifier (non-negative integer less than num_labels)
         :param true: true label (non-negative integer less than num_labels)
-        :param learning_rate: how much to scale the feature vector for the weight update
+        :param importance: how much to scale the feature vector for the weight update
         """
-        super(NeuralNetwork, self).update(features, pred, true, learning_rate)
-        y = np_utils.to_categorical((true,), nb_classes=self.max_num_labels)
-        self.model.fit(features.T, y, batch_size=1, nb_epoch=10, verbose=0)
+        super(NeuralNetwork, self).update(features, pred, true, importance)
+        self.samples.append((features.reshape((-1,)), true))
 
     def resize(self):
         assert self.num_labels <= self.max_num_labels, "Exceeded maximum number of labels"
@@ -65,6 +72,12 @@ class NeuralNetwork(Classifier):
         :return new NeuralNetwork object with the same weights
         """
         super(NeuralNetwork, self).finalize()
+        features, labels = zip(*self.samples)
+        x = np.array(features)
+        y = np_utils.to_categorical(labels, nb_classes=self.max_num_labels)
+        self.model.fit(x, y, batch_size=20, nb_epoch=100, verbose=0)
+        self.samples = []
+        self.iteration += 1
         finalized = NeuralNetwork(list(self.labels), model=self.model)
         print("Labels: %d" % self.num_labels)
         print("Features: %d" % self._input_dim)

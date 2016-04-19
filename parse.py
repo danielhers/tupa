@@ -48,7 +48,7 @@ class Parser(object):
                 from classifiers.neural_network import NeuralNetwork
                 self.model = NeuralNetwork(Actions().all, input_dim=num_features)
         else:
-            raise ValueError("Invalid model type: %s" % model_type)
+            raise ValueError("Invalid model type: '%s'" % model_type)
         self.model_file = model_file
 
         self.learning_rate = Config().learning_rate
