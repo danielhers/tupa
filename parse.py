@@ -161,7 +161,7 @@ class Parser(object):
             self.correct_count = 0
             self.state = State(passage, callback=self.pos_tag)
             self.state_hash_history = set()
-            self.oracle = Oracle(passage) if labeled else None
+            self.oracle = Oracle(passage) if train else None
             failed = False
             try:
                 self.parse_passage(train)  # This is where the actual parsing takes place
@@ -177,7 +177,7 @@ class Parser(object):
                 predicted_passage = self.state.create_passage(assert_proper=Config().verify)
             duration = time.time() - started
             total_duration += duration
-            if labeled:  # We have an oracle to verify by
+            if train:  # We have an oracle to verify by
                 if not failed and Config().verify:
                     self.verify_passage(passage, predicted_passage, train)
                 if self.action_count:
