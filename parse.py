@@ -287,7 +287,7 @@ class Parser(object):
         sorted_ids = self.scores.argsort()[::-1]
         actions = (self.select_action(i, true_actions) for i in sorted_ids)
         try:
-            return next(action for action in actions if self.state.is_valid(action))
+            return next(a for a in actions if self.state.is_valid(a))
         except StopIteration as e:
             raise ParserException("No valid actions available\n" +
                                   ("True actions: %s" % true_actions if true_actions
@@ -295,12 +295,17 @@ class Parser(object):
                                    else "")) from e
 
     @staticmethod
-    def select_action(i, true_actions):
-        action = Actions().all[i]
+    def select_action(i, true_actions=()):
+        """
+        Find action with the given ID in true actions (if exists) or in all actions
+        :param i: ID to lookup
+        :param true_actions: preferred set of actions to look in first
+        :return: Action with id=i
+        """
         try:
-            return next(true_action for true_action in true_actions if action == true_action)
+            return next(t for t in true_actions if t.id == i)
         except StopIteration:
-            return action
+            return Actions().all[i]
 
     def verify_passage(self, passage, predicted_passage, show_diff):
         """
