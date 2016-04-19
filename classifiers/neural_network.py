@@ -75,15 +75,15 @@ class NeuralNetwork(Classifier):
         """
         super(NeuralNetwork, self).finalize()
         started = time.time()
-        print("Fitting model... ", end="", flush=True)
+        print("Fitting model... ", flush=True)
         features, labels = zip(*self.samples)
         x = np.array(features)
         y = np_utils.to_categorical(labels, nb_classes=self.max_num_labels)
-        self.model.fit(x, y, batch_size=20, nb_epoch=100, verbose=0)
+        self.model.fit(x, y, batch_size=20, nb_epoch=5)
         self.samples = []
         self.iteration += 1
         finalized = NeuralNetwork(list(self.labels), model=self.model)
-        print("Done (%.3fs)." % (time.time() - started))
+        print("Done (%.3fs total)." % (time.time() - started))
         print("Labels: %d" % self.num_labels)
         print("Features: %d" % self._input_dim)
         return finalized
