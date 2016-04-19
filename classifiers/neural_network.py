@@ -43,8 +43,7 @@ class NeuralNetwork(Classifier):
         if not self.is_frozen:
             self._update_num_labels()
         scores = self.model.predict(features.T, batch_size=1).reshape((-1,))
-        scores[self.num_labels:] = float("-inf")
-        return scores
+        return scores[:self.num_labels]
 
     def update(self, features, pred, true, learning_rate=1):
         """

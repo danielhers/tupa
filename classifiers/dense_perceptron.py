@@ -39,7 +39,7 @@ class DensePerceptron(Classifier):
         """
         if not self.is_frozen:
             self._update_num_labels()
-        return self.model.T.dot(features)
+        return self.model.T.dot(features).reshape((-1,))
 
     def update(self, features, pred, true, learning_rate=1):
         """
@@ -56,7 +56,7 @@ class DensePerceptron(Classifier):
 
     def _update(self, label, values):
         self._update_totals(label)
-        self.model[:, label] += values
+        self.model[:, label] += values.reshape((-1,))
 
     def _update_totals(self, label=None):
         self._totals[:, label] += self.model[:, label] * (self._update_index - self._last_update[label])

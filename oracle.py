@@ -34,6 +34,7 @@ class Oracle(object):
         actions = []
         invalid = []
         for action in self.generate_actions(state):
+            action.generate_id()
             try:
                 state.assert_valid(action)
                 actions.append(action)

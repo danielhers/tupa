@@ -71,6 +71,10 @@ class Action(object):
 
     @property
     def id(self):
+        self.generate_id()
+        return self._id
+
+    def generate_id(self):
         if self._id is None:
             key = (self.type_id, self.tag)
             actions = Actions()
@@ -79,7 +83,6 @@ class Action(object):
                 self._id = len(actions.all)
                 actions.all.append(self)
                 actions.ids[key] = self._id
-        return self._id
 
 
 class Actions(object, metaclass=Singleton):

@@ -270,7 +270,7 @@ class Parser(object):
                       [self.oracle.str("\n")] if print_oracle else ())
         self.state_hash_history.add(h)
 
-    def predict_action(self, features, true_actions=None):
+    def predict_action(self, features, true_actions):
         """
         Choose action based on classifier
         :param features: extracted feature values
@@ -278,16 +278,12 @@ class Parser(object):
         :return: valid action with maximum probability according to classifier
         """
         self.scores = self.model.score(features)  # Returns a NumPy array
-        if true_actions:
-            new_size = 1 + max(a.id for a in true_actions)
-            if new_size > len(self.scores):
-                self.scores.resize((new_size,))
         best_action = self.select_action(self.scores.argmax(), true_actions)
         if self.state.is_valid(best_action):
             return best_action
         # Usually the best action is valid, so max is enough to choose it in O(n) time
         # Otherwise, sort all the other scores to choose the best valid one in O(n lg n)
-        sorted_ids = self.scores[:len(Actions().all)].argsort()[::-1]
+        sorted_ids = self.scores.argsort()[-2::-1]
         actions = (self.select_action(i, true_actions) for i in sorted_ids)
         try:
             return next(a for a in actions if self.state.is_valid(a))
@@ -298,7 +294,7 @@ class Parser(object):
                                    else "")) from e
 
     @staticmethod
-    def select_action(i, true_actions=()):
+    def select_action(i, true_actions):
         """
         Find action with the given ID in true actions (if exists) or in all actions
         :param i: ID to lookup
@@ -306,7 +302,7 @@ class Parser(object):
         :return: Action with id=i
         """
         try:
-            return next(t for t in true_actions if t.id == i)
+            return next(a for a in true_actions if a.id == i)
         except StopIteration:
             return Actions().all[i]
 
