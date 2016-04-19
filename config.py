@@ -97,7 +97,8 @@ class Config(object, metaclass=Singleton):
         self.no_remote = self.args.noremote
         self.constraints = self.args.constraints
         self.word_vectors = self.args.wordvectors
-        self.random = np.random.RandomState(self.args.seed)
+        np.random.seed(self.args.seed)
+        self.random = np.random
 
     def log(self, message):
         if self._log_file is None:
