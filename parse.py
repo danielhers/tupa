@@ -3,12 +3,6 @@ import time
 
 from nltk import pos_tag
 
-from classifiers.dense_perceptron import DensePerceptron
-from classifiers.neural_network import NeuralNetwork
-from classifiers.sparse_perceptron import SparsePerceptron
-from features.dense_features import DenseFeatureExtractor
-from features.embedding import FeatureEmbedding
-from features.sparse_features import SparseFeatureExtractor
 from parsing import util
 from parsing.action import Actions
 from parsing.config import Config
@@ -36,16 +30,22 @@ class Parser(object):
         self.total_correct = 0
 
         if model_type == "sparse":
+            from classifiers.sparse_perceptron import SparsePerceptron
+            from features.sparse_features import SparseFeatureExtractor
             self.feature_extractor = SparseFeatureExtractor()
             self.model = SparsePerceptron(Actions().all, min_update=Config().min_update)
         elif model_type in ("dense", "nn"):
+            from features.dense_features import DenseFeatureExtractor
+            from features.embedding import FeatureEmbedding
             self.feature_extractor = FeatureEmbedding(DenseFeatureExtractor(),
                                                       w=Config().word_vectors,
                                                       t=10, e=10, p=2, x=2)
             num_features = self.feature_extractor.num_features()
             if model_type == "dense":
+                from classifiers.dense_perceptron import DensePerceptron
                 self.model = DensePerceptron(Actions().all, num_features=num_features)
             else:  # "nn"
+                from classifiers.neural_network import NeuralNetwork
                 self.model = NeuralNetwork(Actions().all, input_dim=num_features)
         else:
             raise ValueError("Invalid model type: %s" % model_type)
