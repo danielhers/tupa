@@ -16,7 +16,9 @@ class NeuralNetwork(Classifier):
     Allows adding new labels on-the-fly, but requires pre-setting maximum number of labels.
     """
 
-    def __init__(self, labels=None, input_dim=None, model=None, max_num_labels=100):
+    def __init__(self, labels=None, input_dim=None, model=None,
+                 max_num_labels=100, batch_size=10000,
+                 minibatch_size=20, nb_epochs=5):
         """
         Create a new untrained NN or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
@@ -32,6 +34,9 @@ class NeuralNetwork(Classifier):
             self.max_num_labels = max_num_labels
             self._num_labels = self.num_labels
             self._input_dim = input_dim
+            self._batch_size = batch_size
+            self._minibatch_size = minibatch_size
+            self._nb_epochs = nb_epochs
 
             self.model = Sequential()
             self.model.add(Dense(self.max_num_labels, input_dim=input_dim, init="uniform"))
@@ -39,8 +44,9 @@ class NeuralNetwork(Classifier):
             sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
             self.model.compile(loss="categorical_crossentropy", optimizer=sgd)
 
-            self.samples = []
-            self.iteration = 0
+            self._samples = []
+            self._iteration = 0
+            self._update_index = 0  # Counter for calls to update()
 
     def score(self, features):
         """
@@ -49,7 +55,7 @@ class NeuralNetwork(Classifier):
         :return: array with score for each label
         """
         super(NeuralNetwork, self).score(features)
-        if not self.is_frozen and self.iteration == 0:  # not fit yet
+        if not self.is_frozen and self._iteration == 0:  # not fit yet
             return np.zeros(self.num_labels)
         scores = self.model.predict(features.T, batch_size=1).reshape((-1,))
         return scores[:self.num_labels]
@@ -63,26 +69,30 @@ class NeuralNetwork(Classifier):
         :param importance: how much to scale the feature vector for the weight update
         """
         super(NeuralNetwork, self).update(features, pred, true, importance)
-        self.samples.append((features.reshape((-1,)), true))
+        self._samples.append((features.reshape((-1,)), true))
+        self._update_index += 1
+        if self._update_index >= self._batch_size:
+            self.finalize()
 
     def resize(self):
         assert self.num_labels <= self.max_num_labels, "Exceeded maximum number of labels"
 
-    def finalize(self):
+    def finalize(self, freeze=True):
         """
-        Return a frozen model
-        :return new NeuralNetwork object with the same weights
+        Fit the model on collected samples, and return a frozen model
+        :return new NeuralNetwork object with the same weights, after fitting
         """
         super(NeuralNetwork, self).finalize()
         started = time.time()
         print("Fitting model... ", flush=True)
-        features, labels = zip(*self.samples)
+        features, labels = zip(*self._samples)
         x = np.array(features)
         y = np_utils.to_categorical(labels, nb_classes=self.max_num_labels)
-        self.model.fit(x, y, batch_size=20, nb_epoch=5)
-        self.samples = []
-        self.iteration += 1
-        finalized = NeuralNetwork(list(self.labels), model=self.model)
+        self.model.fit(x, y, batch_size=self._minibatch_size, nb_epoch=self._nb_epochs)
+        self._samples = []
+        self._iteration += 1
+        self._update_index = 0
+        finalized = NeuralNetwork(list(self.labels), model=self.model) if freeze else None
         print("Done (%.3fs total)." % (time.time() - started))
         print("Labels: %d" % self.num_labels)
         print("Features: %d" % self._input_dim)
