@@ -17,7 +17,7 @@ class NeuralNetwork(Classifier):
     """
 
     def __init__(self, labels=None, input_dim=None, model=None,
-                 max_num_labels=100, batch_size=10000,
+                 max_num_labels=100, batch_size=50000,
                  minibatch_size=20, nb_epochs=5):
         """
         Create a new untrained NN or copy the weights from an existing one
