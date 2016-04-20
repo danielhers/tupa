@@ -72,7 +72,7 @@ class NeuralNetwork(Classifier):
         self._samples.append((features.reshape((-1,)), true))
         self._update_index += 1
         if self._update_index >= self._batch_size:
-            self.finalize()
+            self.finalize(freeze=False)
 
     def resize(self):
         assert self.num_labels <= self.max_num_labels, "Exceeded maximum number of labels"
