@@ -84,18 +84,20 @@ class NeuralNetwork(Classifier):
         """
         super(NeuralNetwork, self).finalize()
         started = time.time()
-        print("Fitting model... ", flush=True)
+        print("\nFitting model... ", end="", flush=True)
         features, labels = zip(*self._samples)
         x = np.array(features)
         y = np_utils.to_categorical(labels, nb_classes=self.max_num_labels)
-        self.model.fit(x, y, batch_size=self._minibatch_size, nb_epoch=self._nb_epochs)
+        self.model.fit(x, y, batch_size=self._minibatch_size, nb_epoch=self._nb_epochs,
+                       verbose=0)
         self._samples = []
         self._iteration += 1
         self._update_index = 0
         finalized = NeuralNetwork(list(self.labels), model=self.model) if freeze else None
-        print("Done (%.3fs total)." % (time.time() - started))
-        print("Labels: %d" % self.num_labels)
-        print("Features: %d" % self._input_dim)
+        print("Done (%.3fs)." % (time.time() - started))
+        if freeze:
+            print("Labels: %d" % self.num_labels)
+            print("Features: %d" % self._input_dim)
         return finalized
 
     def save(self, filename, io):
