@@ -43,6 +43,7 @@ class NeuralNetwork(Classifier):
             self._batch_size = batch_size
             self._minibatch_size = minibatch_size
             self._nb_epochs = nb_epochs
+            self.feature_types = inputs
             self.model = self.build_model(inputs, max_num_labels)
             self.init_samples()
             self._iteration = 0
@@ -126,7 +127,7 @@ class NeuralNetwork(Classifier):
         print("Done (%.3fs)." % (time.time() - started))
         if freeze:
             print("Labels: %d" % self.num_labels)
-            print("Features: %d" % self._input_dim)
+            print("Features: %d" % sum(f.num * (f.dim or 1) for f in self.feature_types.values()))
         return finalized
 
     def save(self, filename, io):
