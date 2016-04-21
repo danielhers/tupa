@@ -119,7 +119,7 @@ class NeuralNetwork(Classifier):
             else:
                 x[name] = np.array(values)
         self.model.fit(x, y, batch_size=self._minibatch_size,
-                       nb_epoch=self._nb_epochs, verbose=0)
+                       nb_epoch=self._nb_epochs, verbose=1)
         self.init_samples()
         self._iteration += 1
         finalized = NeuralNetwork(list(self.labels), model=self.model) if freeze else None
