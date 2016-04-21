@@ -20,12 +20,15 @@ class FeatureEmbedding(FeatureExtractor):
     """
     Wrapper for DenseFeatureExtractor to replace non-numeric features with embeddings
     and return a list of numbers rather than (name, value) pairs.
+    To be used with DensePerceptron classifier.
+    Initialize with (dimensions,) singletons as keyword arguments.
     """
-    def __init__(self, feature_extractor, **dims):
+    def __init__(self, feature_extractor, **kwargs):
         self.feature_extractor = feature_extractor
         self.sizes = {}
         self.embedding = {}
-        for suffix, dim in dims.items():
+        for suffix, dims in kwargs.items():
+            dim = dims[0]
             if isinstance(dim, int):
                 self.sizes[suffix] = dim
                 self.embedding[suffix] = defaultdict(lambda s=dim:
@@ -41,20 +44,18 @@ class FeatureEmbedding(FeatureExtractor):
         """
         Calculate feature values according to current state
         :param state: current state of the parser
+        :return vector of concatenated numeric and embedding features
         """
         numeric_features, non_numeric_features = \
             self.feature_extractor.extract_features(state)
-        assert len(numeric_features) == self.feature_extractor.num_features_numeric(), \
-            "Invalid number of numeric features: %d != %d" % (
-                len(numeric_features), self.feature_extractor.num_features_numeric())
-        values = [np.array(numeric_features, dtype=float)]
-        for suffix, feature_values in non_numeric_features:
-            feature_embedding = self.embedding[suffix]
-            values += [feature_embedding[v] for v in feature_values]
-        assert sum(map(len, values)) == self.num_features(),\
+        features = [np.array(numeric_features, dtype=float)]
+        for suffix, values in non_numeric_features:
+            embedding = self.embedding[suffix]
+            features += [embedding[v] for v in values]
+        assert sum(map(len, features)) == self.num_features(),\
             "Invalid total number of features: %d != %d " % (
-                sum(map(len, values)), self.num_features())
-        return np.hstack(values).reshape((-1, 1))
+                sum(map(len, features)), self.num_features())
+        return np.hstack(features).reshape((-1, 1))
 
     def num_features(self):
         return self.feature_extractor.num_features_numeric() + \

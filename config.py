@@ -54,6 +54,10 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("--maxnodes", type=float, default=3.0, help="maximum non-terminal/terminal ratio")
         argparser.add_argument("--maxheight", type=int, default=20, help="maximum graph height")
         argparser.add_argument("--seed", type=int, default=1, help="random number generator seed")
+        argparser.add_argument("--tagdim", type=int, default=10, help="dimension for POS tag embeddings")
+        argparser.add_argument("--labeldim", type=int, default=10, help="dimension for edge label embeddings")
+        argparser.add_argument("--punctdim", type=int, default=2, help="dimension for separator punctuation embeddings")
+        argparser.add_argument("--gapdim", type=int, default=2, help="dimension for gap type embeddings")
         self.args = argparser.parse_args(args if args else None)
 
         assert self.args.passages or self.args.train,\
@@ -97,6 +101,10 @@ class Config(object, metaclass=Singleton):
         self.no_remote = self.args.noremote
         self.constraints = self.args.constraints
         self.word_vectors = self.args.wordvectors
+        self.tag_dim = self.args.tagdim
+        self.label_dim = self.args.labeldim
+        self.punct_dim = self.args.punctdim
+        self.gap_dim = self.args.gapdim
         np.random.seed(self.args.seed)
         self.random = np.random
 

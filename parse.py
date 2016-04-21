@@ -3,7 +3,7 @@ import time
 
 from nltk import pos_tag
 
-from parsing import util
+from parsing import util, models
 from parsing.action import Actions
 from parsing.config import Config
 from parsing.oracle import Oracle
@@ -28,36 +28,13 @@ class Parser(object):
         self.correct_count = 0
         self.total_actions = 0
         self.total_correct = 0
-
-        if model_type == "sparse":
-            from classifiers.sparse_perceptron import SparsePerceptron
-            from features.sparse_features import SparseFeatureExtractor
-            self.feature_extractor = SparseFeatureExtractor()
-            self.model = SparsePerceptron(Actions().all, min_update=Config().min_update)
-        elif model_type in ("dense", "nn"):
-            from features.dense_features import DenseFeatureExtractor
-            from features.embedding import FeatureEmbedding
-            self.feature_extractor = FeatureEmbedding(DenseFeatureExtractor(),
-                                                      w=Config().word_vectors,
-                                                      t=10, e=10, p=2, x=2)
-            num_features = self.feature_extractor.num_features()
-            if model_type == "dense":
-                from classifiers.dense_perceptron import DensePerceptron
-                self.model = DensePerceptron(Actions().all, num_features=num_features)
-            else:  # "nn"
-                from classifiers.neural_network import NeuralNetwork
-                self.model = NeuralNetwork(Actions().all, input_dim=num_features)
-        else:
-            raise ValueError("Invalid model type: '%s'" % model_type)
+        self.feature_extractor, self.model = models.create_model(model_type, Actions().all)
         self.model_file = model_file
-
         self.learning_rate = Config().learning_rate
         self.decay_factor = Config().decay_factor
-
-        # Used in verify_passage to optionally ignore a mismatch in linkage nodes
-        self.ignore_node = lambda n: n.tag == layer1.NodeTags.Linkage if Config().no_linkage else None
-
         self.state_hash_history = None  # For loop checking
+        # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
+        self.ignore_node = lambda n: n.tag == layer1.NodeTags.Linkage if Config().no_linkage else None
 
     def train(self, passages, dev=None, iterations=1, folds=None):
         """

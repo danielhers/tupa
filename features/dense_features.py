@@ -36,6 +36,8 @@ EXTRA_NUMERIC_FEATURES = 2  # bias, node ratio
 class DenseFeatureExtractor(FeatureExtractor):
     """
     Object to extract features from the parser state to be used in action classification
+    Requires wrapping by FeatureEmbedding.
+    To be used with DensePerceptron or NeuralNetwork classifier.
     """
     def __init__(self):
         super(DenseFeatureExtractor, self).__init__(FEATURE_TEMPLATES)
@@ -73,14 +75,17 @@ class DenseFeatureExtractor(FeatureExtractor):
             self.calc_feature(self.numeric_features_template, state, default=-1)
         non_numeric_features = [(f.suffix, self.calc_feature(f, state, default=""))
                                 for f in self.non_numeric_feature_templates]
+        assert len(numeric_features) == self.num_features_numeric(), \
+            "Invalid number of numeric features: %d != %d" % (
+                len(numeric_features), self.num_features_numeric())
         return numeric_features, non_numeric_features
 
     def num_features_numeric(self):
         assert self.numeric_features_template is not None, \
             "Missing numeric features template"
-        return sum(len(e.properties) for e in self.numeric_features_template.elements) + \
-               len([e for e in self.numeric_features_template.elements
-                    if not e.properties]) - 1 + EXTRA_NUMERIC_FEATURES
+        return sum([len(e.properties) for e in self.numeric_features_template.elements] +
+                   [len([e for e in self.numeric_features_template.elements
+                         if not e.properties])]) - 1 + EXTRA_NUMERIC_FEATURES
 
     def num_features_non_numeric(self, suffix):
         feature_template = self.non_numeric_by_suffix.get(suffix)

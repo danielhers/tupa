@@ -1,9 +1,12 @@
 import time
+from collections import defaultdict
 
 import numpy as np
-from keras.layers.core import Dense, Activation
-from keras.models import Sequential
-from keras.optimizers import SGD
+from keras.layers import Input, Dense, merge
+from keras.layers.core import Flatten
+from keras.layers.embeddings import Embedding
+from keras.layers.normalization import BatchNormalization
+from keras.models import Model
 from keras.utils import np_utils
 
 from classifiers.classifier import Classifier
@@ -14,39 +17,60 @@ class NeuralNetwork(Classifier):
     Neural network to be used by the parser for action classification. Uses dense features.
     Keeps weights in constant-size matrices. Does not allow adding new features on-the-fly.
     Allows adding new labels on-the-fly, but requires pre-setting maximum number of labels.
+    Expects features from FeatureIndexer.
     """
 
-    def __init__(self, labels=None, input_dim=None, model=None,
-                 max_num_labels=100, batch_size=50000,
+    def __init__(self, labels=None, inputs=None, model=None,
+                 max_num_labels=100, batch_size=None,
                  minibatch_size=20, nb_epochs=5):
         """
         Create a new untrained NN or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
-        :param input_dim: number of features that will be used for the input matrix
+        :param inputs: dict of feature type name -> FeatureInformation
         :param model: if given, copy the weights (from a trained model)
         :param max_num_labels: since model size is fixed, set maximum output size
+        :param batch_size: if given, fit model every this many samples
+        :param minibatch_size: batch size for SGD
+        :param nb_epochs: number of epochs for SGD
         """
         super(NeuralNetwork, self).__init__(labels=labels, model=model)
-        assert labels is not None and input_dim is not None or model is not None
+        assert inputs is not None or model is not None
         if self.is_frozen:
             self.model = model
         else:
             self.max_num_labels = max_num_labels
             self._num_labels = self.num_labels
-            self._input_dim = input_dim
             self._batch_size = batch_size
             self._minibatch_size = minibatch_size
             self._nb_epochs = nb_epochs
-
-            self.model = Sequential()
-            self.model.add(Dense(self.max_num_labels, input_dim=input_dim, init="uniform"))
-            self.model.add(Activation("softmax"))
-            sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
-            self.model.compile(loss="categorical_crossentropy", optimizer=sgd)
-
-            self._samples = []
+            self.model = self.build_model(inputs, max_num_labels)
+            self.init_samples()
             self._iteration = 0
-            self._update_index = 0  # Counter for calls to update()
+
+    def init_samples(self):
+        self._samples = defaultdict(list)
+        self._update_index = 0
+
+    @staticmethod
+    def build_model(feature_types, num_labels):
+        inputs = []
+        encoded = []
+        for name, feature_type in feature_types.items():
+            if feature_type.indices is None:  # numeric feature
+                i = Input(shape=(feature_type.num,), name=name)
+                x = BatchNormalization()(i)
+            else:  # index feature
+                i = Input(shape=(feature_type.num,), dtype="int32", name=name)
+                x = Embedding(output_dim=feature_type.dim, input_dim=feature_type.size,
+                              weights=feature_type.init, input_length=feature_type.num)(i)
+                x = Flatten()(x)
+            inputs.append(i)
+            encoded.append(x)
+        x = merge(encoded, mode="concat")
+        out = Dense(num_labels, activation="softmax", name="out")(x)
+        model = Model(input=inputs, output=[out])
+        model.compile(optimizer="adam", loss={"out": "categorical_crossentropy"})
+        return model
 
     def score(self, features):
         """
@@ -57,7 +81,8 @@ class NeuralNetwork(Classifier):
         super(NeuralNetwork, self).score(features)
         if not self.is_frozen and self._iteration == 0:  # not fit yet
             return np.zeros(self.num_labels)
-        scores = self.model.predict(features.T, batch_size=1).reshape((-1,))
+        features = {k: np.array(v) for k, v in features.items()}
+        scores = self.model.predict(features, batch_size=1).reshape((-1, 1))
         return scores[:self.num_labels]
 
     def update(self, features, pred, true, importance=1):
@@ -69,9 +94,11 @@ class NeuralNetwork(Classifier):
         :param importance: how much to scale the feature vector for the weight update
         """
         super(NeuralNetwork, self).update(features, pred, true, importance)
-        self._samples.append((features.reshape((-1,)), true))
+        for name, value in features.items():
+            self._samples[name].append(value)
+        self._samples["out"].append(true)
         self._update_index += 1
-        if self._update_index >= self._batch_size:
+        if self._batch_size is not None and self._update_index >= self._batch_size:
             self.finalize(freeze=False)
 
     def resize(self):
@@ -79,20 +106,22 @@ class NeuralNetwork(Classifier):
 
     def finalize(self, freeze=True):
         """
-        Fit the model on collected samples, and return a frozen model
+        Fit this model on collected samples, and return a frozen model
         :return new NeuralNetwork object with the same weights, after fitting
         """
         super(NeuralNetwork, self).finalize()
         started = time.time()
         print("\nFitting model... ", end="", flush=True)
-        features, labels = zip(*self._samples)
-        x = np.array(features)
-        y = np_utils.to_categorical(labels, nb_classes=self.max_num_labels)
-        self.model.fit(x, y, batch_size=self._minibatch_size, nb_epoch=self._nb_epochs,
-                       verbose=0)
-        self._samples = []
+        x = {}
+        for name, values in self._samples.items():
+            if name == "out":
+                y = np_utils.to_categorical(values, nb_classes=self.max_num_labels)
+            else:
+                x[name] = np.array(values)
+        self.model.fit(x, y, batch_size=self._minibatch_size,
+                       nb_epoch=self._nb_epochs, verbose=0)
+        self.init_samples()
         self._iteration += 1
-        self._update_index = 0
         finalized = NeuralNetwork(list(self.labels), model=self.model) if freeze else None
         print("Done (%.3fs)." % (time.time() - started))
         if freeze:

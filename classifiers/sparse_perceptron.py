@@ -56,6 +56,7 @@ class SparsePerceptron(Classifier):
     Multi-class averaged perceptron with min-update for sparse features.
     Keeps weights in a dictionary by feature name, allowing adding new features on-the-fly.
     Also allows adding new labels on-the-fly.
+    Expects features from SparseFeatureExtractor.
     """
 
     def __init__(self, labels=None, min_update=1, model=None):

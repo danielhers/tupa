@@ -10,6 +10,7 @@ class DensePerceptron(Classifier):
     Multi-class averaged perceptron for dense features.
     Keeps weights in a constant-size matrix. Does not allow adding new features on-the-fly.
     Allows adding new labels on-the-fly.
+    Expects features from FeatureEmbedding.
     """
 
     def __init__(self, labels=None, num_features=None, model=None):

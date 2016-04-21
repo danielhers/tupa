@@ -46,6 +46,7 @@ FEATURE_TEMPLATES = (
 class SparseFeatureExtractor(FeatureExtractor):
     """
     Object to extract features from the parser state to be used in action classification
+    To be used with SparsePerceptron classifier.
     """
     def __init__(self):
         super(SparseFeatureExtractor, self).__init__(FEATURE_TEMPLATES)
