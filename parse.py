@@ -260,7 +260,7 @@ class Parser(object):
             return best_action
         # Usually the best action is valid, so max is enough to choose it in O(n) time
         # Otherwise, sort all the other scores to choose the best valid one in O(n lg n)
-        sorted_ids = self.scores.argsort()[-2::-1]
+        sorted_ids = self.scores.argsort()[::-1]
         actions = (self.select_action(i, true_actions) for i in sorted_ids)
         try:
             return next(a for a in actions if self.state.is_valid(a))
@@ -268,10 +268,14 @@ class Parser(object):
             raise ParserException("No valid actions available\n" +
                                   ("True actions: %s" % true_actions if true_actions
                                    else self.oracle.log if self.oracle is not None
-                                   else "")) from e
+                                   else "") +
+                                  "\nReturned actions: %s" %
+                                  [self.select_action(i) for i in sorted_ids] +
+                                  "\nScores: %s" % self.scores
+                                  ) from e
 
     @staticmethod
-    def select_action(i, true_actions):
+    def select_action(i, true_actions=()):
         """
         Find action with the given ID in true actions (if exists) or in all actions
         :param i: ID to lookup

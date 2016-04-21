@@ -83,7 +83,7 @@ class NeuralNetwork(Classifier):
         if not self.is_frozen and self._iteration == 0:  # not fit yet
             return np.zeros(self.num_labels)
         features = {k: np.array(v).reshape((1, -1)) for k, v in features.items()}
-        scores = self.model.predict(features, batch_size=1).reshape((-1, 1))
+        scores = self.model.predict(features, batch_size=1).reshape((-1,))
         return scores[:self.num_labels]
 
     def update(self, features, pred, true, importance=1):
