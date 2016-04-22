@@ -22,7 +22,7 @@ class NeuralNetwork(Classifier):
 
     def __init__(self, labels=None, inputs=None, model=None,
                  max_num_labels=100, batch_size=None,
-                 minibatch_size=20, nb_epochs=5):
+                 minibatch_size=200, nb_epochs=5):
         """
         Create a new untrained NN or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
@@ -112,7 +112,7 @@ class NeuralNetwork(Classifier):
         """
         super(NeuralNetwork, self).finalize()
         started = time.time()
-        print("\nFitting model... ", end="", flush=True)
+        print("\nFitting model...", flush=True)
         x = {}
         for name, values in self._samples.items():
             if name == "out":
