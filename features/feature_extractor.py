@@ -229,13 +229,15 @@ class FeatureExtractor(object):
 
     @staticmethod
     def get_head_terminal(node):
+        height = 0
         while node.text is None:  # Not a terminal
             edges = [edge for edge in node.outgoing
                      if not edge.remote and not edge.child.implicit]
-            if not edges:
+            if not edges or height > 30:
                 return None
             node = min(edges, key=lambda edge: FeatureExtractor.EDGE_PRIORITY.get(
                 edge.tag, 0)).child
+            height += 1
         return node
 
     @staticmethod
