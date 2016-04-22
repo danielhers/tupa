@@ -86,11 +86,10 @@ class DensePerceptron(Classifier):
         print("Features: %d" % self.num_features)
         return finalized
 
-    def save(self, filename, io):
+    def save(self, filename):
         """
         Save all parameters to file
         :param filename: file to save to
-        :param io: module with 'save' function to write a dictionary to file
         """
         d = {
             "type": "dense",
@@ -102,15 +101,14 @@ class DensePerceptron(Classifier):
             d.update({
                 "_update_index": self._update_index,
             })
-        io.save(filename, d)
+        self.save_dict(filename, d)
 
-    def load(self, filename, io):
+    def load(self, filename):
         """
         Load all parameters from file
         :param filename: file to load from
-        :param io: module with 'load' function to read a dictionary from file
         """
-        d = io.load(filename)
+        d = self.load_dict(filename)
         model_type = d.get("type")
         assert model_type == "dense", "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])

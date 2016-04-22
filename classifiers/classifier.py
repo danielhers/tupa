@@ -1,3 +1,7 @@
+import os
+import shelve
+import time
+
 class Classifier(object):
     """
     Interface for classifier used by the parser.
@@ -40,10 +44,10 @@ class Classifier(object):
         assert not self.is_frozen, "Cannot freeze a frozen model"
         self._update_num_labels()
 
-    def save(self, filename, io):
+    def save(self, filename):
         raise NotImplementedError()
 
-    def load(self, filename, io):
+    def load(self, filename):
         raise NotImplementedError()
 
     def __str__(self):
@@ -51,3 +55,40 @@ class Classifier(object):
 
     def write(self, filename, sep="\t"):
         raise NotImplementedError()
+
+    @staticmethod
+    def save_dict(filename, d):
+        """
+        Save dictionary to file
+        :param filename: file to write to; the actual written file may have an additional suffix
+        :param d: dictionary to save
+        """
+        print("Saving model to '%s'... " % filename, end="", flush=True)
+        started = time.time()
+        with shelve.open(filename) as db:
+            db.update(d)
+        print("Done (%.3fs)." % (time.time() - started))
+
+    @staticmethod
+    def load_dict(filename):
+        """
+        Load dictionary from file
+        :param filename: file to read from; the actual read file may have an additional suffix
+        """
+        def try_open(*names):
+            exception = None
+            for f in names:
+                # noinspection PyBroadException
+                try:
+                    return shelve.open(f, flag="r")
+                except Exception as e:
+                    exception = e
+            if exception is not None:
+                raise IOError("Model file not found: " + filename) from exception
+
+        print("Loading model from '%s'... " % filename, end="", flush=True)
+        started = time.time()
+        with try_open(filename, os.path.splitext(filename)[0]) as db:
+            d = dict(db)
+        print("Done (%.3fs)." % (time.time() - started))
+        return d

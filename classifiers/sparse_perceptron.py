@@ -134,11 +134,10 @@ class SparsePerceptron(Classifier):
             self.num_features, len(model), self._min_update))
         return finalized
 
-    def save(self, filename, io):
+    def save(self, filename):
         """
         Save all parameters to file
         :param filename: file to save to
-        :param io: module with 'save' function to write a dictionary to file
         """
         d = {
             "type": "sparse",
@@ -151,15 +150,14 @@ class SparsePerceptron(Classifier):
                 "_min_update": self._min_update,
                 "_update_index": self._update_index,
             })
-        io.save(filename, d)
+        self.save_dict(filename, d)
 
-    def load(self, filename, io):
+    def load(self, filename):
         """
         Load all parameters from file
         :param filename: file to load from
-        :param io: module with 'load' function to read a dictionary from file
         """
-        d = io.load(filename)
+        d = self.load_dict(filename)
         model_type = d.get("type")
         assert model_type is None or model_type == "sparse", \
             "Model type does not match: %s" % model_type

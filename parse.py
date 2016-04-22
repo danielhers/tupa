@@ -47,7 +47,7 @@ class Parser(object):
         """
         if not passages:
             if self.model_file is not None:  # Nothing to train on; pre-trained model given
-                self.model.load(self.model_file, util)
+                self.model.load(self.model_file)
                 Actions().all = self.model.labels
             return self.model
 
@@ -98,7 +98,7 @@ class Parser(object):
             if save_model or best_model is None:
                 best_model = self.model  # This is the finalized model
                 if self.model_file is not None:
-                    best_model.save(self.model_file, util)
+                    best_model.save(self.model_file)
             if not last:
                 self.model = model  # Restore non-finalized model
 
