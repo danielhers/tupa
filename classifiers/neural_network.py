@@ -138,10 +138,10 @@ class NeuralNetwork(Classifier):
         d = {
             "type": "nn",
             "labels": self.labels,
-            "model": self.model,
             "is_frozen": self.is_frozen,
         }
         self.save_dict(filename, d)
+        self.model.save_weights(filename + ".h5")
 
     def load(self, filename):
         """
@@ -152,8 +152,8 @@ class NeuralNetwork(Classifier):
         model_type = d.get("type")
         assert model_type == "nn", "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])
-        self.model = d["model"]
         self.is_frozen = d["is_frozen"]
+        self.model.load_weights(filename + ".h5")
 
     def __str__(self):
         return ("%d labels, " % self.num_labels) + (
