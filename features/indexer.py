@@ -6,7 +6,7 @@ from features.feature_extractor import FeatureExtractor
 
 
 class FeatureInformation(object):
-    def __init__(self, num, dim=None, size=None, init=None, indices=None):
+    def __init__(self, num, dim=1, size=None, init=None, indices=None):
         self.num = num
         self.dim = dim
         self.size = size

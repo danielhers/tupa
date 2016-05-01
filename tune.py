@@ -45,7 +45,7 @@ class Hyperparams(object):
               file=file)
 
 
-def main():
+def main():  # TODO load passage files only once
     out_file = os.environ.get("HYPERPARAMS_FILE", "hyperparams.csv")
     num = int(os.environ.get("HYPERPARAMS_NUM", 30))
     dims = (num, 2)

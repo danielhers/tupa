@@ -6,7 +6,7 @@ from parsing.config import Config
 from parsing.oracle import Oracle
 from parsing.parse import Parser
 from parsing.state.state import State
-from ucca import convert
+from ucca import convert, evaluation
 from ucca.tests.test_ucca import TestUtil
 
 
@@ -14,7 +14,7 @@ class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ParserTests, self).__init__(*args, **kwargs)
         Config("", "-m", "test")
-        self.passage = convert.from_standard(TestUtil.load_xml('test_files/standard3.xml'))
+        self.passage = convert.from_standard(TestUtil.load_xml("test_files/standard3.xml"))
 
     def test_oracle(self):
         oracle = Oracle(self.passage)
@@ -27,29 +27,31 @@ class ParserTests(unittest.TestCase):
             actions_taken.append("%s\n" % action)
             if state.finished:
                 break
-        with open('test_files/standard3.oracle_actions.txt') as f:
+        with open("test_files/standard3.oracle_actions.txt") as f:
             self.assertSequenceEqual(actions_taken, f.readlines())
 
     def test_parser_sparse(self):
-        passages = [self.passage]
-        parsed = ParserUtil.train_test(passages, model_type="sparse")
-        self.assertSequenceEqual(parsed, passages)
+        self.train_test("sparse")
 
     def test_parser_dense(self):
-        passages = [self.passage]
-        parsed = ParserUtil.train_test(passages, model_type="dense")
-        self.assertSequenceEqual(parsed, passages)
+        self.train_test("dense")
 
     def test_parser_nn(self):
+        self.train_test("nn")
+
+    def train_test(self, model_type):
         passages = [self.passage]
-        parsed = ParserUtil.train_test(passages, model_type="nn")
-        self.assertSequenceEqual(parsed, passages)
-
-
-class ParserUtil:
-    @staticmethod
-    def train_test(passages, *args, **kwargs):
-        p = Parser(*args, **kwargs)
-        p.train(passages)
-        _, parsed = zip(*p.parse(passages))
-        return parsed
+        scores = []
+        for mode in "train", "load":
+            print("-- %sing %s" % (mode, model_type))
+            p = Parser(model_file="test_files/%s" % model_type, model_type=model_type)
+            p.train(passages if mode == "train" else None)
+            guess, ref = zip(*p.parse(passages))
+            print()
+            self.assertSequenceEqual(ref, passages)
+            score = evaluation.Scores.aggregate([evaluation.evaluate(
+                g, r, verbose=False, units=False, errors=False)
+                                                 for g, r in zip(guess, ref)])
+            scores.append(score.average_unlabeled_f1())
+        # self.assertEqual(*scores)
+        print("-- average unlabeled f1: %.3f" % scores[0])

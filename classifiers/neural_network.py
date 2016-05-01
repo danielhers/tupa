@@ -6,7 +6,7 @@ from keras.layers import Input, Dense, merge
 from keras.layers.core import Flatten
 from keras.layers.embeddings import Embedding
 from keras.layers.normalization import BatchNormalization
-from keras.models import Model
+from keras.models import Model, model_from_json
 from keras.utils import np_utils
 
 from classifiers.classifier import Classifier
@@ -44,13 +44,14 @@ class NeuralNetwork(Classifier):
             self._minibatch_size = minibatch_size
             self._nb_epochs = nb_epochs
             self.feature_types = inputs
-            self.model = self.build_model(inputs, max_num_labels)
-            self.init_samples()
+            self.model = None
+            self._samples = defaultdict(list)
+            self._update_index = 0
             self._iteration = 0
 
-    def init_samples(self):
-        self._samples = defaultdict(list)
-        self._update_index = 0
+    def init_model(self):
+        if self.model is None:
+            self.model = self.build_model(self.feature_types, self.max_num_labels)
 
     @staticmethod
     def build_model(feature_types, num_labels):
@@ -70,8 +71,16 @@ class NeuralNetwork(Classifier):
         x = merge(encoded, mode="concat")
         out = Dense(num_labels, activation="softmax", name="out")(x)
         model = Model(input=inputs, output=[out])
-        model.compile(optimizer="adam", loss={"out": "categorical_crossentropy"})
+        NeuralNetwork.compile(model)
         return model
+
+    @staticmethod
+    def compile(model):
+        model.compile(optimizer="adam", loss={"out": "categorical_crossentropy"})
+
+    @property
+    def input_dim(self):
+        return sum(f.num * f.dim for f in self.feature_types.values())
 
     def score(self, features):
         """
@@ -83,6 +92,7 @@ class NeuralNetwork(Classifier):
         if not self.is_frozen and self._iteration == 0:  # not fit yet
             return np.zeros(self.num_labels)
         features = {k: np.array(v).reshape((1, -1)) for k, v in features.items()}
+        self.init_model()
         scores = self.model.predict(features, batch_size=1).reshape((-1,))
         return scores[:self.num_labels]
 
@@ -114,14 +124,17 @@ class NeuralNetwork(Classifier):
         started = time.time()
         print("\nFitting model...", flush=True)
         x = {}
+        y = None
         for name, values in self._samples.items():
             if name == "out":
                 y = np_utils.to_categorical(values, nb_classes=self.max_num_labels)
             else:
                 x[name] = np.array(values)
+        self.init_model()
         self.model.fit(x, y, batch_size=self._minibatch_size,
                        nb_epoch=self._nb_epochs, verbose=2)
-        self.init_samples()
+        self._samples = defaultdict(list)
+        self._update_index = 0
         self._iteration += 1
         finalized = NeuralNetwork(list(self.labels), model=self.model) if freeze else None
         print("Done (%.3fs)." % (time.time() - started))
@@ -141,7 +154,10 @@ class NeuralNetwork(Classifier):
             "is_frozen": self.is_frozen,
         }
         self.save_dict(filename, d)
-        self.model.save_weights(filename + ".h5")
+        self.init_model()
+        with open(filename + ".json", "w") as f:
+            f.write(self.model.to_json())
+        self.model.save_weights(filename + ".h5", overwrite=True)
 
     def load(self, filename):
         """
@@ -153,15 +169,11 @@ class NeuralNetwork(Classifier):
         assert model_type == "nn", "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])
         self.is_frozen = d["is_frozen"]
+        with open(filename + ".json") as f:
+            self.model = model_from_json(f.read())
         self.model.load_weights(filename + ".h5")
+        self.compile(self.model)
 
     def __str__(self):
         return ("%d labels, " % self.num_labels) + (
-                "%d features" % self._input_dim)
-
-    def write(self, filename, sep="\t"):
-        print("Writing model to '%s'..." % filename)
-        with open(filename, "w") as f:
-            print(list(map(str, self.labels)), file=f)
-            for row in self.model:
-                print(sep.join(["%.8f" % w for w in row]), file=f)
+                "%d features" % self.input_dim)
