@@ -31,7 +31,7 @@ class FeatureEmbedding(FeatureExtractor):
         w2v = Word2Vec.load_word2vec_format(dim)
         unk = Config().random.normal(size=w2v.vector_size)
         self.dims[suffix] = w2v.vector_size
-        return UnknownDict(w2v, unk)
+        return UnknownDict(w2v.vocab, unk)
 
     def extract_features(self, state):
         """
@@ -51,8 +51,11 @@ class FeatureEmbedding(FeatureExtractor):
         return np.hstack(features).reshape((-1, 1))
 
     def num_features(self):
-        return self.feature_extractor.num_features_numeric() + \
-            sum(d * self.feature_extractor.num_features_non_numeric(s) for s, d in self.dims.items())
+        ret = self.feature_extractor.num_features_numeric()
+        for suffix in self.dims:
+            self.init_embedding(suffix)
+            ret += self.dims[suffix] * self.feature_extractor.num_features_non_numeric(suffix)
+        return ret
 
     def finalize(self):
         embedding = {s: UnknownDict(e) for s, e in self.embedding.items()}
