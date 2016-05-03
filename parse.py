@@ -6,7 +6,7 @@ from nltk import pos_tag
 from parsing import passage_util
 from parsing.action import Actions
 from parsing.config import Config
-from parsing.models import Model
+from parsing.model import Model
 from parsing.oracle import Oracle
 from state.state import State
 from ucca import diffutil, evaluation, layer0, layer1
