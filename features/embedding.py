@@ -5,15 +5,7 @@ from gensim.models.word2vec import Word2Vec
 
 from features.feature_extractor import FeatureExtractor
 from parsing.config import Config
-
-
-class Word2VecWrapper(object):
-    def __init__(self, w2v, default):
-        self.w2v = w2v
-        self.default = default
-
-    def __getitem__(self, item):
-        return self.w2v[item] if item in self.w2v else self.default
+from parsing.model_util import load_dict, save_dict, UnknownDict, KeyDefaultDict
 
 
 class FeatureEmbedding(FeatureExtractor):
@@ -23,22 +15,23 @@ class FeatureEmbedding(FeatureExtractor):
     To be used with DensePerceptron classifier.
     Initialize with (dimensions,) singletons as keyword arguments.
     """
-    def __init__(self, feature_extractor, **kwargs):
+    def __init__(self, feature_extractor, embedding=None, **kwargs):
         self.feature_extractor = feature_extractor
-        self.sizes = {}
-        self.embedding = {}
-        for suffix, dims in kwargs.items():
-            dim = dims[0]
-            if isinstance(dim, int):
-                self.sizes[suffix] = dim
-                self.embedding[suffix] = defaultdict(lambda s=dim:
-                                                     Config().random.normal(size=s))
-            else:
-                print("Loading word vectors from '%s'..." % dim)
-                w2v = Word2Vec.load_word2vec_format(dim)
-                unk = Config().random.normal(size=w2v.vector_size)
-                self.sizes[suffix] = w2v.vector_size
-                self.embedding[suffix] = Word2VecWrapper(w2v, unk)
+        self.dims = {s: d[0] if isinstance(d, (list, tuple)) else d for s, d in kwargs.items()}
+        self.embedding = KeyDefaultDict(self.init_embedding) if embedding is None else embedding
+
+    def init_embedding(self, suffix):
+        dim = self.dims[suffix]
+        if isinstance(dim, int):
+            embedding = defaultdict(lambda d=dim: Config().random.normal(size=d))
+            embedding[UnknownDict.UNKNOWN]  # Initialize unknown value
+            return embedding
+        # Otherwise, not a number but a string with path to word vectors file
+        print("Loading word vectors from '%s'..." % dim)
+        w2v = Word2Vec.load_word2vec_format(dim)
+        unk = Config().random.normal(size=w2v.vector_size)
+        self.dims[suffix] = w2v.vector_size
+        return UnknownDict(w2v, unk)
 
     def extract_features(self, state):
         """
@@ -59,5 +52,16 @@ class FeatureEmbedding(FeatureExtractor):
 
     def num_features(self):
         return self.feature_extractor.num_features_numeric() + \
-            sum(s * self.feature_extractor.num_features_non_numeric(f)
-                for f, s in self.sizes.items())
+            sum(d * self.feature_extractor.num_features_non_numeric(s) for s, d in self.dims.items())
+
+    def finalize(self):
+        embedding = {s: UnknownDict(e) for s, e in self.embedding.items()}
+        return FeatureEmbedding(self.feature_extractor, embedding, **self.dims)
+
+    def save(self, filename):
+        d = {s: dict(e) for s, e in self.embedding.items()}
+        save_dict(filename + "_embedding", d)
+
+    def load(self, filename):
+        d = load_dict(filename + "_embedding")
+        self.embedding.update({s: UnknownDict(e) for s, e in d.items()})

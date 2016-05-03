@@ -10,6 +10,7 @@ from keras.models import Model, model_from_json
 from keras.utils import np_utils
 
 from classifiers.classifier import Classifier
+from parsing.model_util import load_dict, save_dict
 
 
 class NeuralNetwork(Classifier):
@@ -153,7 +154,7 @@ class NeuralNetwork(Classifier):
             "labels": self.labels,
             "is_frozen": self.is_frozen,
         }
-        self.save_dict(filename, d)
+        save_dict(filename, d)
         self.init_model()
         with open(filename + ".json", "w") as f:
             f.write(self.model.to_json())
@@ -164,7 +165,7 @@ class NeuralNetwork(Classifier):
         Load all parameters from file
         :param filename: file to load from
         """
-        d = self.load_dict(filename)
+        d = load_dict(filename)
         model_type = d.get("type")
         assert model_type == "nn", "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])

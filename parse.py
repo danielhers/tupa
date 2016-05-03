@@ -3,9 +3,10 @@ import time
 
 from nltk import pos_tag
 
-from parsing import util, models
+from parsing import passage_util
 from parsing.action import Actions
 from parsing.config import Config
+from parsing.models import Model
 from parsing.oracle import Oracle
 from state.state import State
 from ucca import diffutil, evaluation, layer0, layer1
@@ -28,7 +29,7 @@ class Parser(object):
         self.correct_count = 0
         self.total_actions = 0
         self.total_correct = 0
-        self.feature_extractor, self.model = models.create_model(model_type, Actions().all)
+        self.model = Model(model_type, Actions().all)
         self.model_file = model_file
         self.learning_rate = Config().learning_rate
         self.decay_factor = Config().decay_factor
@@ -48,8 +49,7 @@ class Parser(object):
         if not passages:
             if self.model_file is not None:  # Nothing to train on; pre-trained model given
                 self.model.load(self.model_file)
-                Actions().all = self.model.labels
-            return self.model
+            return
 
         best_score = 0
         best_model = None
@@ -103,9 +103,7 @@ class Parser(object):
                 self.model = model  # Restore non-finalized model
 
         print("Trained %d iterations" % iterations)
-
         self.model = best_model
-        return self.model
 
     def parse(self, passages, mode="test"):
         """
@@ -204,7 +202,7 @@ class Parser(object):
                     if train:
                         raise ParserException("Error in oracle during training") from e
 
-            features = self.feature_extractor.extract_features(self.state)
+            features = self.model.extract_features(self.state)
             predicted_action = self.predict_action(features, true_actions)  # sets self.scores
             action = predicted_action
             if not true_actions:
@@ -333,7 +331,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 score = evaluate_passage(guessed_passage, ref_passage)
                 passage_scores.append(score)
             if guessed_passage is not None and not args.nowrite:
-                util.write_passage(guessed_passage, args)
+                passage_util.write_passage(guessed_passage, args)
         if passage_scores and (not args.verbose or len(passage_scores) > 1):
             scores = evaluation.Scores.aggregate(passage_scores)
             print("\nAverage F1 score on test: %.3f" % scores.average_unlabeled_f1())
@@ -363,7 +361,7 @@ def main():
     if args.folds is not None:
         k = args.folds
         fold_scores = []
-        all_passages = list(util.read_files_and_dirs(args.passages))
+        all_passages = list(passage_util.read_files_and_dirs(args.passages))
         assert len(all_passages) >= k,\
             "%d folds are not possible with only %d passages" % (k, len(all_passages))
         Config().random.shuffle(all_passages)
@@ -385,7 +383,7 @@ def main():
             print("Aggregated scores across folds:\n")
             scores.print()
     else:  # Simple train/dev/test by given arguments
-        train_passages, dev_passages, test_passages = [util.read_files_and_dirs(arg) for arg in
+        train_passages, dev_passages, test_passages = [passage_util.read_files_and_dirs(arg) for arg in
                                                        (args.train, args.dev, args.passages)]
         scores = train_test(train_passages, dev_passages, test_passages, args)
     return scores

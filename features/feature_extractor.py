@@ -89,6 +89,15 @@ class FeatureExtractor(object):
         """
         raise NotImplementedError()
 
+    def finalize(self):
+        return self
+
+    def save(self, filename):
+        pass
+
+    def load(self, filename):
+        pass
+
     @staticmethod
     def calc_feature(feature_template, state, default=None):
         values = []

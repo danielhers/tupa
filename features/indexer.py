@@ -1,8 +1,7 @@
-from collections import defaultdict
-
 from gensim.models.word2vec import Word2Vec
 
 from features.feature_extractor import FeatureExtractor
+from parsing.model_util import load_dict, save_dict, UnknownDict, AutoIncrementDict
 
 
 class FeatureInformation(object):
@@ -20,30 +19,25 @@ class FeatureIndexer(FeatureExtractor):
     To be used with NeuralNetwork classifier.
     Initialize with (dimensions, vocabulary_size) pairs as keyword arguments.
     """
-    def __init__(self, feature_extractor, **kwargs):
+    def __init__(self, feature_extractor, feature_types=None, **kwargs):
         self.feature_extractor = feature_extractor
-        self.feature_types = {"numeric": FeatureInformation(feature_extractor.num_features_numeric())}
-        for suffix, (dim, size) in kwargs.items():
-            if isinstance(dim, int):
-                init = None
-                indices = self.auto_increment_dict(size)
-            else:
-                print("Loading word vectors from '%s'..." % dim)
-                w2v = Word2Vec.load_word2vec_format(dim)
-                size = len(w2v.vocab) + 1
-                dim = w2v.vector_size
-                init = (w2v,)
-                indices = self.auto_increment_dict(size, w2v.vocab)
-            self.feature_types[suffix] = FeatureInformation(
-                feature_extractor.num_features_non_numeric(suffix), dim, size, init, indices)
-
-    @staticmethod
-    def auto_increment_dict(size, items=()):
-        d = defaultdict(lambda: len(d) if len(d) < size else 0)
-        d["<UNKNOWN>"] = 0
-        for item in items:
-            d[item]
-        return d
+        if feature_types is None:
+            self.feature_types = {"numeric": FeatureInformation(feature_extractor.num_features_numeric())}
+            for suffix, (dim, size) in kwargs.items():
+                if isinstance(dim, int):
+                    init = None
+                    indices = AutoIncrementDict(size)
+                else:
+                    print("Loading word vectors from '%s'..." % dim)
+                    w2v = Word2Vec.load_word2vec_format(dim)
+                    size = len(w2v.vocab) + 1
+                    dim = w2v.vector_size
+                    init = (w2v,)
+                    indices = AutoIncrementDict(size, w2v.vocab)
+                self.feature_types[suffix] = FeatureInformation(
+                    feature_extractor.num_features_non_numeric(suffix), dim, size, init, indices)
+        else:
+            self.feature_types = feature_types
 
     def extract_features(self, state):
         """
@@ -56,4 +50,25 @@ class FeatureIndexer(FeatureExtractor):
         for suffix, values in non_numeric_features:
             indices = self.feature_types[suffix].indices
             features[suffix] = [indices[v] for v in values]
+            assert all(isinstance(f, int) for f in features[suffix]),\
+                "Invalid feature indices for '%s': %s" % (suffix, features[suffix])
         return features
+
+    def finalize(self):
+        feature_types = {s: FeatureInformation(num=f.num, dim=f.dim, size=f.size, init=f.init,
+                                               indices=None if f.indices is None else UnknownDict(f.indices))
+                         for s, f in self.feature_types.items()}
+        return FeatureIndexer(self.feature_extractor, feature_types)
+
+    def save(self, filename):
+        d = {s: {"num": f.num, "dim": f.dim, "size": f.size, "init": f.init,
+                 "indices": None if f.indices is None else dict(f.indices)}
+             for s, f in self.feature_types.items()}
+        save_dict(filename + "_features", d)
+
+    def load(self, filename):
+        d = load_dict(filename + "_features")
+        feature_types = {s: FeatureInformation(num=f["num"], dim=f["dim"], size=f["size"], init=f["init"],
+                                               indices=None if f["indices"] is None else UnknownDict(f["indices"]))
+                         for s, f in d.items()}
+        self.feature_types.update(feature_types)

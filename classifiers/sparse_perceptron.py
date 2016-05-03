@@ -4,6 +4,7 @@ from collections import defaultdict
 import numpy as np
 
 from classifiers.classifier import Classifier
+from parsing.model_util import load_dict, save_dict
 
 
 class FeatureWeights(object):
@@ -150,14 +151,14 @@ class SparsePerceptron(Classifier):
                 "_min_update": self._min_update,
                 "_update_index": self._update_index,
             })
-        self.save_dict(filename, d)
+        save_dict(filename, d)
 
     def load(self, filename):
         """
         Load all parameters from file
         :param filename: file to load from
         """
-        d = self.load_dict(filename)
+        d = load_dict(filename)
         model_type = d.get("type")
         assert model_type is None or model_type == "sparse", \
             "Model type does not match: %s" % model_type

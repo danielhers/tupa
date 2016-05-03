@@ -3,6 +3,7 @@ import time
 import numpy as np
 
 from classifiers.classifier import Classifier
+from parsing.model_util import load_dict, save_dict
 
 
 class DensePerceptron(Classifier):
@@ -101,14 +102,14 @@ class DensePerceptron(Classifier):
             d.update({
                 "_update_index": self._update_index,
             })
-        self.save_dict(filename, d)
+        save_dict(filename, d)
 
     def load(self, filename):
         """
         Load all parameters from file
         :param filename: file to load from
         """
-        d = self.load_dict(filename)
+        d = load_dict(filename)
         model_type = d.get("type")
         assert model_type == "dense", "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])
