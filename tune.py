@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 from parsing import parse
-from parsing.config import Config
+from parsing.config import Config, OPTIMIZERS, OBJECTIVES
 from ucca.evaluation import Scores
 
 
@@ -17,7 +17,7 @@ class Params(object):
             "insufficient parameters given to parser"
         print("Running with %s" % self)
         for name, value in self.params.items():
-            setattr(Config(), name, value)
+            setattr(Config().args, name, value)
         self.scores = parse.main()
         assert self.score is not None, "parser failed to produce score"
 
@@ -39,12 +39,23 @@ class Params(object):
               file=file)
 
 
-def main():  # TODO load passage files only once
+def main():
+    Config().args.nowrite = True
     out_file = os.environ.get("PARAMS_FILE", "params.csv")
     num = int(os.environ.get("PARAMS_NUM", 30))
     param_values = {
-        "learning_rate": np.round(0.001 + np.random.exponential(0.8, (num, 1)), 3),
-        "decay_factor": np.round(0.001 + np.random.exponential(0.8, (num, 1)), 3),
+        # "learningrate": np.round(0.001 + np.random.exponential(0.8, (num, 1)), 3),
+        # "decayfactor": np.round(0.001 + np.random.exponential(0.8, (num, 1)), 3),
+        "classifier": num * ["nn"],
+        "tagdim": np.random.choice((5, 10, 20), num),
+        "labeldim": np.random.choice((5, 10, 20), num),
+        "punctdim": np.random.choice((1, 2, 3), num),
+        "gapdim": np.random.choice((1, 2, 3), num),
+        "layerdim": np.random.choice((50, 100, 200, 300, 500, 1000), num),
+        "minibatchsize": np.random.choice((50, 100, 200, 300, 500, 1000), num),
+        "nbepochs": np.random.choice((5, 10, 20, 30, 50, 100), num),
+        "optimizer": np.random.choice(OPTIMIZERS, num),
+        "loss": np.random.choice(OBJECTIVES, num),
     }
     params = list(set(Params(**{name: values[i]
                                 for name, values in param_values.items()})
