@@ -22,17 +22,22 @@ class NeuralNetwork(Classifier):
     """
 
     def __init__(self, labels=None, inputs=None, model=None,
+                 layer_dim=100,
                  max_num_labels=100, batch_size=None,
-                 minibatch_size=200, nb_epochs=5):
+                 minibatch_size=200, nb_epochs=5,
+                 optimizer="adam", loss="categorical_crossentropy"):
         """
         Create a new untrained NN or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
         :param inputs: dict of feature type name -> FeatureInformation
         :param model: if given, copy the weights (from a trained model)
+        :param layer_dim: size of hidden layer
         :param max_num_labels: since model size is fixed, set maximum output size
         :param batch_size: if given, fit model every this many samples
         :param minibatch_size: batch size for SGD
         :param nb_epochs: number of epochs for SGD
+        :param optimizer: algorithm to use for optimization
+        :param loss: objective function to use for optimization
         """
         super(NeuralNetwork, self).__init__(labels=labels, model=model)
         assert inputs is not None or model is not None
@@ -40,10 +45,13 @@ class NeuralNetwork(Classifier):
             self.model = model
         else:
             self.max_num_labels = max_num_labels
+            self._layer_dim = layer_dim
             self._num_labels = self.num_labels
             self._batch_size = batch_size
             self._minibatch_size = minibatch_size
             self._nb_epochs = nb_epochs
+            self._optimizer = optimizer
+            self._loss = loss
             self.feature_types = inputs
             self.model = None
             self._samples = defaultdict(list)
@@ -51,14 +59,11 @@ class NeuralNetwork(Classifier):
             self._iteration = 0
 
     def init_model(self):
-        if self.model is None:
-            self.model = self.build_model(self.feature_types, self.max_num_labels)
-
-    @staticmethod
-    def build_model(feature_types, num_labels):
+        if self.model is not None:
+            return
         inputs = []
         encoded = []
-        for name, feature_type in feature_types.items():
+        for name, feature_type in self.feature_types.items():
             if feature_type.indices is None:  # numeric feature
                 i = Input(shape=(feature_type.num,), name=name)
                 x = BatchNormalization()(i)
@@ -70,14 +75,13 @@ class NeuralNetwork(Classifier):
             inputs.append(i)
             encoded.append(x)
         x = merge(encoded, mode="concat")
-        out = Dense(num_labels, activation="softmax", name="out")(x)
-        model = Model(input=inputs, output=[out])
-        NeuralNetwork.compile(model)
-        return model
+        x = Dense(self._layer_dim, activation="tanh")(x)
+        out = Dense(self.max_num_labels, activation="softmax", name="out")(x)
+        self.model = Model(input=inputs, output=[out])
+        self.compile()
 
-    @staticmethod
-    def compile(model):
-        model.compile(optimizer="adam", loss={"out": "categorical_crossentropy"})
+    def compile(self):
+        self.model.compile(optimizer=self._optimizer, loss={"out": self._loss})
 
     @property
     def input_dim(self):
@@ -173,7 +177,7 @@ class NeuralNetwork(Classifier):
         with open(filename + ".json") as f:
             self.model = model_from_json(f.read())
         self.model.load_weights(filename + ".h5")
-        self.compile(self.model)
+        self.compile()
 
     def __str__(self):
         return ("%d labels, " % self.num_labels) + (
