@@ -14,6 +14,8 @@ class Singleton(type):
         return cls.instance
 
 CLASSIFIERS = ("sparse", "dense", "nn")
+OPTIMIZERS = ("sgd", "rmsprop", "adagrad", "adadelta", "adam", "adamax")
+OBJECTIVES = ("categorical_crossentropy", "hinge", "squared_hinge")
 
 
 class Config(object, metaclass=Singleton):
@@ -58,6 +60,13 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("--labeldim", type=int, default=10, help="dimension for edge label embeddings")
         argparser.add_argument("--punctdim", type=int, default=2, help="dimension for separator punctuation embeddings")
         argparser.add_argument("--gapdim", type=int, default=2, help="dimension for gap type embeddings")
+        argparser.add_argument("--layerdim", type=int, default=100, help="dimension for hideen layer")
+        argparser.add_argument("--maxlabels", type=int, default=100, help="maximum number of actions to allow")
+        argparser.add_argument("--batchsize", type=int, help="if given, fit model every this many updates")
+        argparser.add_argument("--minibatchsize", type=int, default=200, help="mini-batch size for optimization")
+        argparser.add_argument("--nbepochs", type=int, default=5, help="number of epochs for optimization")
+        argparser.add_argument("--optimizer", choices=OPTIMIZERS, default="adam", help="algorithm for optimization")
+        argparser.add_argument("--loss", choices=OBJECTIVES, default="categorical_crossentropy", help="loss function")
         self.args = argparser.parse_args(args if args else None)
 
         assert self.args.passages or self.args.train,\
@@ -100,11 +109,20 @@ class Config(object, metaclass=Singleton):
         self.no_implicit = self.args.noimplicit
         self.no_remote = self.args.noremote
         self.constraints = self.args.constraints
+
         self.word_vectors = self.args.wordvectors
         self.tag_dim = self.args.tagdim
         self.label_dim = self.args.labeldim
         self.punct_dim = self.args.punctdim
         self.gap_dim = self.args.gapdim
+        self.layer_dim = self.args.layerdim
+        self.max_num_labels = self.args.maxlabels
+        self.batch_size = self.args.batchsize
+        self.minibatch_size = self.args.minibatchsize
+        self.nb_epochs = self.args.nbepochs
+        self.optimizer = self.args.optimizer
+        self.loss = self.args.loss
+
         np.random.seed(self.args.seed)
         self.random = np.random
 

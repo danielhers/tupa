@@ -25,7 +25,15 @@ class Model(object):
             from features.indexer import FeatureIndexer
             from classifiers.neural_network import NeuralNetwork
             self.features = self.dense_features_wrapper(FeatureIndexer)
-            self.model = NeuralNetwork(labels, inputs=self.features.feature_types)
+            self.model = NeuralNetwork(labels, inputs=self.features.feature_types,
+                                       layer_dim=Config().layer_dim,
+                                       max_num_labels=Config().max_num_labels,
+                                       batch_size=Config().batch_size,
+                                       minibatch_size=Config().minibatch_size,
+                                       nb_epochs=Config().nb_epochs,
+                                       optimizer=Config().optimizer,
+                                       loss=Config().loss
+                                       )
         else:
             raise ValueError("Invalid model type: '%s'" % model_type)
 
