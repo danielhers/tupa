@@ -22,7 +22,7 @@ class NeuralNetwork(Classifier):
     """
 
     def __init__(self, labels=None, inputs=None, model=None,
-                 layer_dim=100,
+                 layers=1, layer_dim=100, activation="tanh",
                  max_num_labels=100, batch_size=None,
                  minibatch_size=200, nb_epochs=5,
                  optimizer="adam", loss="categorical_crossentropy"):
@@ -31,7 +31,9 @@ class NeuralNetwork(Classifier):
         :param labels: a list of labels that can be updated later to add a new label
         :param inputs: dict of feature type name -> FeatureInformation
         :param model: if given, copy the weights (from a trained model)
+        :param layers: number of hidden layers
         :param layer_dim: size of hidden layer
+        :param activation: activation function at hidden layers
         :param max_num_labels: since model size is fixed, set maximum output size
         :param batch_size: if given, fit model every this many samples
         :param minibatch_size: batch size for SGD
@@ -45,7 +47,9 @@ class NeuralNetwork(Classifier):
             self.model = model
         else:
             self.max_num_labels = max_num_labels
+            self._layers = layers
             self._layer_dim = layer_dim
+            self._activation = activation
             self._num_labels = self.num_labels
             self._batch_size = batch_size
             self._minibatch_size = minibatch_size
@@ -75,7 +79,8 @@ class NeuralNetwork(Classifier):
             inputs.append(i)
             encoded.append(x)
         x = merge(encoded, mode="concat")
-        x = Dense(self._layer_dim, activation="tanh")(x)
+        for _ in range(self._layers):
+            x = Dense(self._layer_dim, activation=self._activation)(x)
         out = Dense(self.max_num_labels, activation="softmax", name="out")(x)
         self.model = Model(input=inputs, output=[out])
         self.compile()

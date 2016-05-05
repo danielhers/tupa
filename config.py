@@ -15,6 +15,7 @@ class Singleton(type):
 
 # Multiple choice options: the first one is always the default
 CLASSIFIERS = ("sparse", "dense", "nn")
+ACTIVATIONS = ("tanh", "sigmoid", "relu")
 OPTIMIZERS = ("adam", "sgd", "rmsprop", "adagrad", "adadelta", "adamax")
 OBJECTIVES = ("categorical_crossentropy", "hinge", "squared_hinge")
 
@@ -70,7 +71,9 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--labeldim", type=int, default=10, help="dimension for edge label embeddings")
         group.add_argument("--punctdim", type=int, default=2, help="dimension for separator punctuation embeddings")
         group.add_argument("--gapdim", type=int, default=2, help="dimension for gap type embeddings")
-        group.add_argument("--layerdim", type=int, default=100, help="dimension for hideen layer")
+        group.add_argument("--layerdim", type=int, default=100, help="dimension for hidden layers")
+        group.add_argument("--layers", type=int, default=1, help="number of hidden layers")
+        group.add_argument("--activation", choices=ACTIVATIONS, default=ACTIVATIONS[0], help="activation function")
         group.add_argument("--maxlabels", type=int, default=100, help="maximum number of actions to allow")
         group.add_argument("--batchsize", type=int, help="if given, fit model every this many updates")
         group.add_argument("--minibatchsize", type=int, default=200, help="mini-batch size for optimization")
