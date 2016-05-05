@@ -26,7 +26,10 @@ class Model(object):
             from classifiers.neural_network import NeuralNetwork
             self.features = self.dense_features_wrapper(FeatureIndexer)
             self.model = NeuralNetwork(labels, inputs=self.features.feature_types,
+                                       layers=Config().layers,
                                        layer_dim=Config().layer_dim,
+                                       activation=Config().activation,
+                                       init=Config().init,
                                        max_num_labels=Config().max_num_labels,
                                        batch_size=Config().batch_size,
                                        minibatch_size=Config().minibatch_size,

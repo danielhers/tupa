@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 from parsing import parse
-from parsing.config import Config, ACTIVATIONS, OPTIMIZERS, OBJECTIVES
+from parsing.config import Config, ACTIVATIONS, INITIALIZATIONS, OPTIMIZERS, OBJECTIVES
 from ucca.evaluation import Scores
 
 
@@ -52,6 +52,7 @@ def main():
         ("layerdim",        (50, 100, 200, 300, 500, 1000)),
         ("layers",          (1, 2)),
         ("activation",      ACTIVATIONS),
+        ("init",            INITIALIZATIONS),
         ("minibatchsize",   (50, 100, 200, 300, 500, 1000)),
         ("nbepochs",        (5, 10, 20, 30, 50, 100)),
         ("optimizer",       OPTIMIZERS),

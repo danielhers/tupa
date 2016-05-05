@@ -16,6 +16,8 @@ class Singleton(type):
 # Multiple choice options: the first one is always the default
 CLASSIFIERS = ("sparse", "dense", "nn")
 ACTIVATIONS = ("tanh", "sigmoid", "relu")
+INITIALIZATIONS = ("glorot_normal", "glorot_uniform", "he_normal", "he_uniform",
+                   "normal", "uniform", "lecun_uniform")
 OPTIMIZERS = ("adam", "sgd", "rmsprop", "adagrad", "adadelta", "adamax")
 OBJECTIVES = ("categorical_crossentropy", "hinge", "squared_hinge")
 
@@ -74,6 +76,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--layerdim", type=int, default=100, help="dimension for hidden layers")
         group.add_argument("--layers", type=int, default=1, help="number of hidden layers")
         group.add_argument("--activation", choices=ACTIVATIONS, default=ACTIVATIONS[0], help="activation function")
+        group.add_argument("--init", choices=INITIALIZATIONS, default=INITIALIZATIONS[0], help="weight initialization")
         group.add_argument("--maxlabels", type=int, default=100, help="maximum number of actions to allow")
         group.add_argument("--batchsize", type=int, help="if given, fit model every this many updates")
         group.add_argument("--minibatchsize", type=int, default=200, help="mini-batch size for optimization")
@@ -120,6 +123,9 @@ class Config(object, metaclass=Singleton):
         self.punct_dim = self.args.punctdim
         self.gap_dim = self.args.gapdim
         self.layer_dim = self.args.layerdim
+        self.layers = self.args.layers
+        self.activation = self.args.activation
+        self.init = self.args.init
         self.max_num_labels = self.args.maxlabels
         self.batch_size = self.args.batchsize
         self.minibatch_size = self.args.minibatchsize
