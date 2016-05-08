@@ -1,11 +1,11 @@
 from collections import defaultdict
 
 import numpy as np
-from gensim.models.word2vec import Word2Vec
 
 from features.feature_extractor import FeatureExtractor
 from parsing.config import Config
 from parsing.model_util import load_dict, save_dict, UnknownDict, KeyDefaultDict
+from parsing.w2v_util import load_word2vec
 
 
 class FeatureEmbedding(FeatureExtractor):
@@ -27,8 +27,7 @@ class FeatureEmbedding(FeatureExtractor):
             embedding[UnknownDict.UNKNOWN]  # Initialize unknown value
             return embedding
         # Otherwise, not a number but a string with path to word vectors file
-        print("Loading word vectors from '%s'..." % dim)
-        w2v = Word2Vec.load_word2vec_format(dim)
+        w2v = load_word2vec(dim)
         unk = Config().random.normal(size=w2v.vector_size)
         self.dims[suffix] = w2v.vector_size
         return UnknownDict(w2v.vocab, unk)

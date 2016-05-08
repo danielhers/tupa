@@ -4,6 +4,7 @@ import numpy as np
 
 from parsing import parse, config
 from parsing.config import Config
+from parsing.w2v_util import load_word2vec
 from ucca.evaluation import Scores
 
 
@@ -42,9 +43,11 @@ class Params(object):
 def main():
     Config().args.nowrite = True
     out_file = os.environ.get("PARAMS_FILE", "params.csv")
+    w2v_file = os.environ.get("W2V_FILE")
     num = int(os.environ.get("PARAMS_NUM", 30))
     params = [Params(p) for p in zip(*[[(n, v) for v in np.random.choice(vs, num)] for n, vs in (
         ("classifier",      ("nn",)),
+        ("wordvectors",     (50, 100, 200, 300) if w2v_file is None else (load_word2vec(w2v_file),)),
         ("tagdim",          (5, 10, 20)),
         ("labeldim",        (5, 10, 20)),
         ("punctdim",        (1, 2, 3)),
@@ -58,8 +61,8 @@ def main():
         ("optimizer",       config.OPTIMIZERS),
         ("loss",            config.OBJECTIVES),
     )])]
-    print("\n".join(["All parameter combinations to try: "] +
-                    [str(h) for h in params]))
+    print("All parameter combinations to try:")
+    print("\n".join(map(str, params)))
     print("Saving results to '%s'" % out_file)
     with open(out_file, "w") as f:
         params[0].print_title(f)

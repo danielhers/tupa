@@ -1,7 +1,6 @@
-from gensim.models.word2vec import Word2Vec
-
 from features.feature_extractor import FeatureExtractor
 from parsing.model_util import load_dict, save_dict, UnknownDict, AutoIncrementDict
+from parsing.w2v_util import load_word2vec
 
 
 class FeatureInformation(object):
@@ -28,8 +27,7 @@ class FeatureIndexer(FeatureExtractor):
                     init = None
                     indices = AutoIncrementDict(size)
                 else:
-                    print("Loading word vectors from '%s'..." % dim)
-                    w2v = Word2Vec.load_word2vec_format(dim)
+                    w2v = load_word2vec(dim)
                     size = len(w2v.vocab) + 1
                     dim = w2v.vector_size
                     init = (w2v,)
