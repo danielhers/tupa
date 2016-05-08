@@ -1,3 +1,4 @@
+import csv
 import os
 
 import numpy as np
@@ -31,13 +32,11 @@ class Params(object):
             ret += ", average unlabeled f1: %.3f" % self.score()
         return ret
 
-    def print(self, file):
-        print(", ".join([str(p[1] for p in self.params)] + [str(self.score())] + self.scores.fields()),
-              file=file)
+    def get_fields(self):
+        return [str(p[1]) for p in self.params] + [str(self.score())] + self.scores.fields()
 
-    def print_title(self, file):
-        print(", ".join([p[0] for p in self.params] + ["average_unlabeled_f1"] + Scores.field_titles()),
-              file=file)
+    def get_field_titles(self):
+        return [p[0] for p in self.params] + ["average_unlabeled_f1"] + Scores.field_titles()
 
 
 def main():
@@ -65,11 +64,11 @@ def main():
     print("\n".join(map(str, params)))
     print("Saving results to '%s'" % out_file)
     with open(out_file, "w") as f:
-        params[0].print_title(f)
+        csv.writer(f).writerow(params[0].get_field_titles())
     for param in params:
         param.run()
         with open(out_file, "a") as f:
-            param.print(f)
+            csv.writer(f).writerow(param.get_fields())
         best = max(params, key=Params.score)
         print("Best parameters: %s" % best)
 
