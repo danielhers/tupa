@@ -4,9 +4,9 @@ from parsing.config import Config
 
 class Model(object):
     def __init__(self, model_type=None, labels=None, features=None, model=None):
-        if model_type is None or labels is None:
-            assert features is not None
-            assert model is not None
+        self._update_only_on_error = None
+        self.model_type = model_type
+        if features is not None and model is not None:
             self.features = features
             self.model = model
             return
@@ -60,8 +60,15 @@ class Model(object):
     def update(self, *args, **kwargs):
         self.model.update(*args, **kwargs)
 
+    @property
+    def update_only_on_error(self):
+        if self._update_only_on_error is None:
+            self._update_only_on_error = self.model_type in ("sparse", "dense")
+        return self._update_only_on_error
+
     def finalize(self, *args, **kwargs):
-        return Model(features=self.features.finalize(*args, **kwargs),
+        return Model(model_type=self.model_type,
+                     features=self.features.finalize(*args, **kwargs),
                      model=self.model.finalize(*args, **kwargs))
 
     def save(self, *args, **kwargs):

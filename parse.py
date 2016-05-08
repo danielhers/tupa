@@ -205,18 +205,21 @@ class Parser(object):
             features = self.model.extract_features(self.state)
             predicted_action = self.predict_action(features, true_actions)  # sets self.scores
             action = predicted_action
+            correct_action = False
             if not true_actions:
                 true_actions = "?"
             elif predicted_action in true_actions:
                 self.correct_count += 1
+                correct_action = True
             elif train:
+                action = Config().random.choice(true_actions)
+            if train and not (correct_action and self.model.update_only_on_error):
                 best_true_action = true_actions[0] if len(true_actions) == 1 else \
                     true_actions[self.scores[[a.id for a in true_actions]].argmax()]
                 rate = self.learning_rate
                 if best_true_action.is_swap:
                     rate *= Config().importance
                 self.model.update(features, predicted_action.id, best_true_action.id, rate)
-                action = Config().random.choice(true_actions)
             self.action_count += 1
             try:
                 self.state.transition(action)
@@ -227,11 +230,10 @@ class Parser(object):
                     print("  action: %-15s %s" % (action, self.state))
                 else:
                     print("  predicted: %-15s true: %-15s taken: %-15s %s" % (
-                        predicted_action, "|".join(str(true_action) for true_action in true_actions),
-                        action, self.state))
+                        predicted_action, "|".join(map(str, true_actions)), action, self.state))
                 for line in self.state.log:
                     print("    " + line)
-            if self.state.finished:
+            if self.state.finished or train and not correct_action and Config().early_update:
                 return  # action is FINISH
 
     def check_loop(self, print_oracle):

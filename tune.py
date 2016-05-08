@@ -61,6 +61,7 @@ def main():
         ("optimizer",       config.OPTIMIZERS),
         ("loss",            config.OBJECTIVES),
         ("importance",      (1, 2)),
+        ("earlyupdate",     3 * [False] + [True]),
     )])]
     print("All parameter combinations to try:")
     print("\n".join(map(str, params)))

@@ -62,10 +62,12 @@ class Config(object, metaclass=Singleton):
         group = group.add_mutually_exclusive_group()
         group.add_argument("-b", "--binary", action="store_true", help="read and write passages in Pickle")
         group.add_argument("-f", "--format", choices=convert.CONVERTERS, help="output format for parsed files")
+        group = argparser.add_argument_group(title="General classifier training parameters")
+        group.add_argument("--importance", type=int, default=2, help="learning rate factor for Swap")
+        group.add_argument("--earlyupdate", action="store_true", help="move to next example on incorrect prediction")
         group = argparser.add_argument_group(title="Perceptron parameters")
         group.add_argument("--learningrate", type=float, default=1.0, help="rate for model weight updates")
         group.add_argument("--decayfactor", type=float, default=1.0, help="learning rate decay per iteration")
-        group.add_argument("--importance", type=float, default=2.0, help="learning rate factor for Swap")
         group.add_argument("--minupdate", type=int, default=5, help="minimum #updates for using a feature")
         group = argparser.add_argument_group(title="Neural network parameters")
         group.add_argument("-w", "--wordvectors", default=100, help="dimensions for random init, or file to load")
@@ -106,6 +108,7 @@ class Config(object, metaclass=Singleton):
         self.learning_rate = self.args.learningrate
         self.decay_factor = self.args.decayfactor
         self.importance = self.args.importance
+        self.early_update = self.args.earlyupdate
         self.min_update = self.args.minupdate
         self.check_loops = self.args.checkloops
         self.verify = self.args.verify
