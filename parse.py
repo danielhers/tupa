@@ -155,6 +155,7 @@ class Parser(object):
                 predicted_passage = self.state.create_passage(assert_proper=Config().verify)
             duration = time.time() - started
             total_duration += duration
+            num_tokens -= len(self.state.buffer)
             if train:  # We have an oracle to verify by
                 if not failed and Config().verify:
                     self.verify_passage(passage, predicted_passage, train)
