@@ -45,7 +45,7 @@ def main():
     w2v_file = os.environ.get("W2V_FILE")
     num = int(os.environ.get("PARAMS_NUM", 30))
     params = [Params(p) for p in zip(*[[(n, v) for v in np.random.choice(vs, num)] for n, vs in (
-        ("classifier",      ("nn",)),
+        ("classifier",      10 * ["nn"] + ["sparse"]),
         ("wordvectors",     (50, 100, 200, 300) if w2v_file is None else (load_word2vec(w2v_file),)),
         ("tagdim",          (5, 10, 20)),
         ("labeldim",        (5, 10, 20)),
