@@ -114,13 +114,14 @@ class NeuralNetwork(Classifier):
         :param features: extracted feature values, of size input_size
         :param pred: label predicted by the classifier (non-negative integer less than num_labels)
         :param true: true label (non-negative integer less than num_labels)
-        :param importance: how much to scale the feature vector for the weight update
+        :param importance: add this many samples with the same features
         """
         super(NeuralNetwork, self).update(features, pred, true, importance)
-        for name, value in features.items():
-            self._samples[name].append(value)
-        self._samples["out"].append(true)
-        self._update_index += 1
+        for _ in range(int(importance)):
+            for name, value in features.items():
+                self._samples[name].append(value)
+            self._samples["out"].append(true)
+            self._update_index += 1
         if self._batch_size is not None and self._update_index >= self._batch_size:
             self.finalize(freeze=False)
 

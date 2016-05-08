@@ -55,10 +55,12 @@ def main():
         ("layers",          (1, 2)),
         ("activation",      config.ACTIVATIONS),
         ("init",            config.INITIALIZATIONS),
+        ("batchsize",       (None, 5000, 10000, 20000)),
         ("minibatchsize",   (50, 100, 200, 300, 500, 1000)),
         ("nbepochs",        (5, 10, 20, 30, 50, 100)),
         ("optimizer",       config.OPTIMIZERS),
         ("loss",            config.OBJECTIVES),
+        ("importance",      (1, 2)),
     )])]
     print("All parameter combinations to try:")
     print("\n".join(map(str, params)))
