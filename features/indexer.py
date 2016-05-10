@@ -1,3 +1,5 @@
+from numbers import Number
+
 import numpy as np
 
 from features.feature_extractor import FeatureExtractor
@@ -25,7 +27,7 @@ class FeatureIndexer(FeatureExtractor):
         if feature_types is None:
             self.feature_types = {"numeric": FeatureInformation(feature_extractor.num_features_numeric())}
             for suffix, (dim, size) in kwargs.items():
-                if isinstance(dim, int):
+                if isinstance(dim, Number):
                     init = None
                     indices = AutoIncrementDict(size)
                 else:
