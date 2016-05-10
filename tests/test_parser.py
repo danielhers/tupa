@@ -2,6 +2,7 @@
 
 import unittest
 
+from parsing import config
 from parsing.config import Config
 from parsing.oracle import Oracle
 from parsing.parse import Parser
@@ -31,13 +32,13 @@ class ParserTests(unittest.TestCase):
             self.assertSequenceEqual(actions_taken, f.readlines())
 
     def test_parser_sparse(self):
-        self.train_test("sparse")
+        self.train_test(config.SPARSE_PERCEPTRON)
 
     def test_parser_dense(self):
-        self.train_test("dense")
+        self.train_test(config.DENSE_PERCEPTRON)
 
     def test_parser_nn(self):
-        self.train_test("nn")
+        self.train_test(config.NEURAL_NETWORK)
 
     def train_test(self, model_type):
         passages = [self.passage]

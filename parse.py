@@ -3,7 +3,7 @@ import time
 
 from nltk import pos_tag
 
-from parsing import passage_util
+from parsing import config, passage_util
 from parsing.action import Actions
 from parsing.config import Config
 from parsing.model import Model
@@ -21,7 +21,7 @@ class Parser(object):
     """
     Main class to implement transition-based UCCA parser
     """
-    def __init__(self, model_file=None, model_type="sparse", beam=1):
+    def __init__(self, model_file=None, model_type=config.SPARSE_PERCEPTRON, beam=1):
         self.state = None  # State object created at each parse
         self.oracle = None  # Oracle object created at each parse
         self.scores = None  # NumPy array of action scores at each action

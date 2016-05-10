@@ -10,6 +10,7 @@ from keras.models import Model, model_from_json
 from keras.utils import np_utils
 
 from classifiers.classifier import Classifier
+from parsing import config
 from parsing.model_util import load_dict, save_dict
 
 
@@ -42,7 +43,7 @@ class NeuralNetwork(Classifier):
         :param optimizer: algorithm to use for optimization
         :param loss: objective function to use for optimization
         """
-        super(NeuralNetwork, self).__init__(labels=labels, model=model)
+        super(NeuralNetwork, self).__init__(model_type=config.NEURAL_NETWORK, labels=labels, model=model)
         assert inputs is not None or model is not None
         if self.is_frozen:
             self.model = model

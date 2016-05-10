@@ -16,8 +16,12 @@ class Singleton(type):
     def reload(cls):
         cls.instance = None
 
+SPARSE_PERCEPTRON = "sparse"
+DENSE_PERCEPTRON = "sparse"
+NEURAL_NETWORK = "nn"
+CLASSIFIERS = (SPARSE_PERCEPTRON, DENSE_PERCEPTRON, NEURAL_NETWORK)
+
 # Multiple choice options: the first one is always the default
-CLASSIFIERS = ("sparse", "dense", "nn")
 ACTIVATIONS = ("tanh", "sigmoid", "relu")
 INITIALIZATIONS = ("glorot_normal", "glorot_uniform", "he_normal", "he_uniform",
                    "normal", "uniform", "lecun_uniform")
@@ -30,7 +34,7 @@ class Config(object, metaclass=Singleton):
         argparser = argparse.ArgumentParser(description="""Transition-based parser for UCCA.""")
         argparser.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
         argparser.add_argument("-m", "--model", help="model file to load/save")
-        argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=CLASSIFIERS[0], help="model type")
+        argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=SPARSE_PERCEPTRON, help="model type")
         argparser.add_argument("-B", "--beam", type=int, default=1, help="beam size for beam search (1 for greedy)")
         argparser.add_argument("-e", "--evaluate", action="store_true", help="evaluate parsed passages")
         argparser.add_argument("-v", "--verbose", action="store_true", help="detailed parse output")
@@ -89,6 +93,11 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--nbepochs", type=int, default=5, help="number of epochs for optimization")
         group.add_argument("--optimizer", choices=OPTIMIZERS, default=OPTIMIZERS[0], help="algorithm for optimization")
         group.add_argument("--loss", choices=OBJECTIVES, default=OBJECTIVES[0], help="loss function for optimization")
+        group.add_argument("--maxwords", default=10000, help="maximum number of words to keep embeddings for")
+        group.add_argument("--maxtags", type=int, default=100, help="maximum number of POS tags to keep embeddings for")
+        group.add_argument("--maxedgelabels", type=int, default=15, help="maximum number of edge labels for embeddings")
+        group.add_argument("--maxpuncts", type=int, default=5, help="maximum number of punctuations for embeddings")
+        group.add_argument("--maxgaps", type=int, default=3, help="maximum number of gap types to keep embeddings for")
         self.args = argparser.parse_args(args if args else None)
 
         assert self.args.passages or self.args.train,\

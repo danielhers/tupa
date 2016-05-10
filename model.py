@@ -1,3 +1,4 @@
+from parsing import config
 from parsing.action import Actions
 from parsing.config import Config
 
@@ -11,17 +12,17 @@ class Model(object):
             self.model = model
             return
 
-        if model_type == "sparse":
+        if model_type == config.SPARSE_PERCEPTRON:
             from classifiers.sparse_perceptron import SparsePerceptron
             from features.sparse_features import SparseFeatureExtractor
             self.features = SparseFeatureExtractor()
             self.model = SparsePerceptron(labels, min_update=Config().args.minupdate)
-        elif model_type == "dense":
+        elif model_type == config.DENSE_PERCEPTRON:
             from features.embedding import FeatureEmbedding
             from classifiers.dense_perceptron import DensePerceptron
             self.features = self.dense_features_wrapper(FeatureEmbedding)
             self.model = DensePerceptron(labels, num_features=self.features.num_features())
-        elif model_type == "nn":
+        elif model_type == config.NEURAL_NETWORK:
             from features.indexer import FeatureIndexer
             from classifiers.neural_network import NeuralNetwork
             self.features = self.dense_features_wrapper(FeatureIndexer)
@@ -44,11 +45,11 @@ class Model(object):
     def dense_features_wrapper(wrapper):
         from features.dense_features import DenseFeatureExtractor
         return wrapper(DenseFeatureExtractor(),
-                       w=(Config().args.wordvectors, 10000),
-                       t=(Config().args.tagdim, 100),
-                       e=(Config().args.labeldim, 15),
-                       p=(Config().args.punctdim, 5),
-                       x=(Config().args.gapdim, 3),
+                       w=(Config().args.wordvectors,    Config().args.maxwords),
+                       t=(Config().args.tagdim,         Config().args.maxtags),
+                       e=(Config().args.labeldim,       Config().args.maxedgelabels),
+                       p=(Config().args.punctdim,       Config().args.maxpuncts),
+                       x=(Config().args.gapdim,         Config().args.maxgaps),
                        )
 
     def extract_features(self, *args, **kwargs):
@@ -63,7 +64,7 @@ class Model(object):
     @property
     def update_only_on_error(self):
         if self._update_only_on_error is None:
-            self._update_only_on_error = self.model_type in ("sparse", "dense")
+            self._update_only_on_error = self.model_type in (config.SPARSE_PERCEPTRON, config.DENSE_PERCEPTRON)
         return self._update_only_on_error
 
     def finalize(self, *args, **kwargs):

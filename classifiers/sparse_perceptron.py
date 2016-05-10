@@ -4,6 +4,7 @@ from collections import defaultdict
 import numpy as np
 
 from classifiers.classifier import Classifier
+from parsing import config
 from parsing.model_util import load_dict, save_dict
 
 
@@ -67,7 +68,7 @@ class SparsePerceptron(Classifier):
         :param min_update: minimum number of updates to a feature required for consideration
         :param model: if given, copy the weights (from a trained model)
         """
-        super(SparsePerceptron, self).__init__(labels=labels, model=model)
+        super(SparsePerceptron, self).__init__(model_type=config.SPARSE_PERCEPTRON, labels=labels, model=model)
         assert labels is not None or model is not None
         self.model = defaultdict(lambda: FeatureWeights(self.num_labels))
         if self.is_frozen:
@@ -141,7 +142,7 @@ class SparsePerceptron(Classifier):
         :param filename: file to save to
         """
         d = {
-            "type": "sparse",
+            "type": self.model_type,
             "labels": self.labels,
             "model": dict(self.model),
             "is_frozen": self.is_frozen,
@@ -160,7 +161,7 @@ class SparsePerceptron(Classifier):
         """
         d = load_dict(filename)
         model_type = d.get("type")
-        assert model_type is None or model_type == "sparse", \
+        assert model_type is None or model_type == self.model_type, \
             "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])
         self.model.clear()

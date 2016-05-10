@@ -3,6 +3,7 @@ import time
 import numpy as np
 
 from classifiers.classifier import Classifier
+from parsing import config
 from parsing.model_util import load_dict, save_dict
 
 
@@ -21,7 +22,7 @@ class DensePerceptron(Classifier):
         :param num_features: number of features that will be used for the matrix size
         :param model: if given, copy the weights (from a trained model)
         """
-        super(DensePerceptron, self).__init__(labels=labels, model=model)
+        super(DensePerceptron, self).__init__(model_type=config.DENSE_PERCEPTRON, labels=labels, model=model)
         assert labels is not None and num_features is not None or model is not None
         if self.is_frozen:
             self.model = model
