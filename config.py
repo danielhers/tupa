@@ -17,7 +17,7 @@ class Singleton(type):
         cls.instance = None
 
 SPARSE_PERCEPTRON = "sparse"
-DENSE_PERCEPTRON = "sparse"
+DENSE_PERCEPTRON = "dense"
 NEURAL_NETWORK = "nn"
 CLASSIFIERS = (SPARSE_PERCEPTRON, DENSE_PERCEPTRON, NEURAL_NETWORK)
 
