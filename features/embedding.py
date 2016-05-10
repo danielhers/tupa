@@ -1,4 +1,5 @@
 from collections import defaultdict
+from numbers import Number
 
 import numpy as np
 
@@ -22,7 +23,7 @@ class FeatureEmbedding(FeatureExtractor):
 
     def init_embedding(self, suffix):
         dim = self.dims[suffix]
-        if isinstance(dim, int):
+        if isinstance(dim, Number):
             embedding = defaultdict(lambda d=dim: Config().random.normal(size=d))
             embedding[UnknownDict.UNKNOWN]  # Initialize unknown value
             return embedding
