@@ -21,7 +21,7 @@ class Parser(object):
     """
     Main class to implement transition-based UCCA parser
     """
-    def __init__(self, model_file=None, model_type="sparse"):
+    def __init__(self, model_file=None, model_type="sparse", beam=1):
         self.state = None  # State object created at each parse
         self.oracle = None  # Oracle object created at each parse
         self.scores = None  # NumPy array of action scores at each action
@@ -31,11 +31,12 @@ class Parser(object):
         self.total_correct = 0
         self.model = Model(model_type, Actions().all)
         self.model_file = model_file
-        self.learning_rate = Config().learning_rate
-        self.decay_factor = Config().decay_factor
+        self.beam = beam
+        self.learning_rate = Config().args.learningrate
+        self.decay_factor = Config().args.decayfactor
         self.state_hash_history = None  # For loop checking
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
-        self.ignore_node = lambda n: n.tag == layer1.NodeTags.Linkage if Config().no_linkage else None
+        self.ignore_node = lambda n: n.tag == layer1.NodeTags.Linkage if Config().args.nolinkage else None
 
     def train(self, passages, dev=None, iterations=1, folds=None):
         """
@@ -55,8 +56,8 @@ class Parser(object):
         best_model = None
         save_model = True
         last = False
-        if Config().dev_scores:
-            with open(Config().dev_scores, "w") as f:
+        if Config().args.devscores:
+            with open(Config().args.devscores, "w") as f:
                 print(",".join(["iteration"] + evaluation.Scores.field_titles()), file=f)
         for iteration in range(iterations):
             if last:
@@ -81,8 +82,8 @@ class Parser(object):
                 scores = evaluation.Scores.aggregate(scores)
                 score = scores.average_unlabeled_f1()
                 print("Average unlabeled F1 score on dev: %.3f" % score)
-                if Config().dev_scores:
-                    with open(Config().dev_scores, "a") as f:
+                if Config().args.devscores:
+                    with open(Config().args.devscores, "a") as f:
                         print(",".join([str(iteration)] + scores.fields()), file=f)
                 if score >= best_score:
                     print("Better than previous best score (%.3f)" % best_score)
@@ -118,8 +119,8 @@ class Parser(object):
         dev = mode == "dev"
         test = mode == "test"
         assert train or dev or test, "Invalid parse mode: %s" % mode
-        passage_word = "sentence" if Config().sentences else \
-                       "paragraph" if Config().paragraphs else \
+        passage_word = "sentence" if Config().args.sentences else \
+                       "paragraph" if Config().args.paragraphs else \
                        "passage"
         self.total_actions = 0
         self.total_correct = 0
@@ -146,18 +147,18 @@ class Parser(object):
             except ParserException as e:
                 if train:
                     raise
-                Config().log("%s %s: %s" % (passage_word, passage.ID, e))
+                Config().args.log("%s %s: %s" % (passage_word, passage.ID, e))
                 if not test:
                     print("failed")
                 failed = True
             predicted_passage = passage
-            if not train or Config().verify:
-                predicted_passage = self.state.create_passage(assert_proper=Config().verify)
+            if not train or Config().args.verify:
+                predicted_passage = self.state.create_passage(assert_proper=Config().args.verify)
             duration = time.time() - started
             total_duration += duration
             num_tokens -= len(self.state.buffer)
             if train:  # We have an oracle to verify by
-                if not failed and Config().verify:
+                if not failed and Config().args.verify:
                     self.verify_passage(passage, predicted_passage, train)
                 if self.action_count:
                     print("%-16s" % ("%d%% (%d/%d)" %
@@ -189,10 +190,10 @@ class Parser(object):
         Internal method to parse a single passage
         :param train: use oracle to train on given passages, or just parse with classifier?
         """
-        if Config().verbose:
+        if Config().args.verbose:
             print("  initial state: %s" % self.state)
         while True:
-            if Config().check_loops:
+            if Config().args.checkloops:
                 self.check_loop(print_oracle=train)
 
             true_actions = []
@@ -219,14 +220,14 @@ class Parser(object):
                     true_actions[self.scores[[a.id for a in true_actions]].argmax()]
                 rate = self.learning_rate
                 if best_true_action.is_swap:
-                    rate *= Config().importance
+                    rate *= Config().args.importance
                 self.model.update(features, predicted_action.id, best_true_action.id, rate)
             self.action_count += 1
             try:
                 self.state.transition(action)
             except AssertionError as e:
                 raise ParserException("Invalid transition (%s): %s" % (action, e)) from e
-            if Config().verbose:
+            if Config().args.verbose:
                 if self.oracle is None:
                     print("  action: %-15s %s" % (action, self.state))
                 else:
@@ -234,7 +235,7 @@ class Parser(object):
                         predicted_action, "|".join(map(str, true_actions)), action, self.state))
                 for line in self.state.log:
                     print("    " + line)
-            if self.state.finished or train and not correct_action and Config().early_update:
+            if self.state.finished or train and not correct_action and Config().args.earlyupdate:
                 return  # action is FINISH
 
     def check_loop(self, print_oracle):
@@ -310,7 +311,7 @@ class Parser(object):
         """
         tokens = [token for tokens in state.tokens for token in tokens]
         tokens, tags = zip(*pos_tag(tokens))
-        if Config().verbose:
+        if Config().args.verbose:
             print(" ".join("%s/%s" % (token, tag) for (token, tag) in zip(tokens, tags)))
         for node, tag in zip(state.nodes, tags):
             node.pos_tag = tag
@@ -323,7 +324,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
     if model_file is not None:
         model_base, model_ext = os.path.splitext(model_file)
         model_file = model_base + model_suffix + model_ext
-    p = Parser(model_file=model_file, model_type=args.classifier)
+    p = Parser(model_file=model_file, model_type=args.classifier, beam=args.beam)
     p.train(train_passages, dev=dev_passages, iterations=args.iterations, folds=args.folds)
     if test_passages:
         if args.train or args.folds:
@@ -340,15 +341,15 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
             print("\nAverage F1 score on test: %.3f" % scores.average_unlabeled_f1())
             print("Aggregated scores:")
             scores.print()
-            if Config().test_scores:
-                with open(Config().test_scores, "a") as f:
+            if Config().args.testscores:
+                with open(Config().args.testscores, "a") as f:
                     print(",".join(scores.fields()), file=f)
     return scores
 
 
 def evaluate_passage(guessed_passage, ref_passage):
     score = evaluation.evaluate(guessed_passage, ref_passage,
-                                verbose=Config().verbose and guessed_passage is not None,
+                                verbose=Config().args.verbose and guessed_passage is not None,
                                 units=False, errors=False)
     print("F1=%.3f" % score.average_unlabeled_f1(), flush=True)
     return score
@@ -358,8 +359,8 @@ def main():
     args = Config().args
     print("Running parser with %s" % Config())
     scores = None
-    if Config().test_scores:
-        with open(Config().test_scores, "w") as f:
+    if Config().args.testscores:
+        with open(Config().args.testscores, "w") as f:
             print(",".join(evaluation.Scores.field_titles()), file=f)
     if args.folds is not None:
         k = args.folds
@@ -394,4 +395,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    Config().close()
+    Config().args.close()

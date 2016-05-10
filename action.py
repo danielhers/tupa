@@ -105,8 +105,8 @@ class Actions(object, metaclass=Singleton):
     def init(self):
         # edge and node action will be created as they are returned by the oracle
         self.all = [Actions.Reduce, Actions.Shift, Actions.Finish] + \
-                   (map(Actions.Swap, range(1, Action.MAX_SWAP)) if Config().compound_swap
-                    else [] if Config().no_swap else [Actions.Swap])
+                   (map(Actions.Swap, range(1, Action.MAX_SWAP)) if Config().args.compoundswap
+                    else [] if Config().args.noswap else [Actions.Swap])
 
     @property
     def all(self):

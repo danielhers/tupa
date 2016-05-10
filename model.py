@@ -15,7 +15,7 @@ class Model(object):
             from classifiers.sparse_perceptron import SparsePerceptron
             from features.sparse_features import SparseFeatureExtractor
             self.features = SparseFeatureExtractor()
-            self.model = SparsePerceptron(labels, min_update=Config().min_update)
+            self.model = SparsePerceptron(labels, min_update=Config().args.minupdate)
         elif model_type == "dense":
             from features.embedding import FeatureEmbedding
             from classifiers.dense_perceptron import DensePerceptron
@@ -26,16 +26,16 @@ class Model(object):
             from classifiers.neural_network import NeuralNetwork
             self.features = self.dense_features_wrapper(FeatureIndexer)
             self.model = NeuralNetwork(labels, inputs=self.features.feature_types,
-                                       layers=Config().layers,
-                                       layer_dim=Config().layer_dim,
-                                       activation=Config().activation,
-                                       init=Config().init,
-                                       max_num_labels=Config().max_num_labels,
-                                       batch_size=Config().batch_size,
-                                       minibatch_size=Config().minibatch_size,
-                                       nb_epochs=Config().nb_epochs,
-                                       optimizer=Config().optimizer,
-                                       loss=Config().loss
+                                       layers=Config().args.layers,
+                                       layer_dim=Config().args.layerdim,
+                                       activation=Config().args.activation,
+                                       init=Config().args.init,
+                                       max_num_labels=Config().args.maxlabels,
+                                       batch_size=Config().args.batchsize,
+                                       minibatch_size=Config().args.minibatchsize,
+                                       nb_epochs=Config().args.nbepochs,
+                                       optimizer=Config().args.optimizer,
+                                       loss=Config().args.loss
                                        )
         else:
             raise ValueError("Invalid model type: '%s'" % model_type)
@@ -44,11 +44,11 @@ class Model(object):
     def dense_features_wrapper(wrapper):
         from features.dense_features import DenseFeatureExtractor
         return wrapper(DenseFeatureExtractor(),
-                       w=(Config().word_vectors, 10000),
-                       t=(Config().tag_dim, 100),
-                       e=(Config().label_dim, 15),
-                       p=(Config().punct_dim, 5),
-                       x=(Config().gap_dim, 3),
+                       w=(Config().args.wordvectors, 10000),
+                       t=(Config().args.tagdim, 100),
+                       e=(Config().args.labeldim, 15),
+                       p=(Config().args.punctdim, 5),
+                       x=(Config().args.gapdim, 3),
                        )
 
     def extract_features(self, *args, **kwargs):

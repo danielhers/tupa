@@ -80,4 +80,4 @@ class Constraints:
 
     @classmethod
     def possible_multiple_incoming(cls):
-        return () if Config().no_linkage else cls.PossibleMultipleIncoming
+        return () if Config().args.nolinkage else cls.PossibleMultipleIncoming

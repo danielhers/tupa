@@ -14,7 +14,7 @@ class Edge(object):
     def add(self):
         assert self.tag is not None, "No tag given for new edge %s -> %s" % (self.parent, self.child)
         assert self.parent is not self.child, "Trying to create self-loop edge on %s" % self.parent
-        if Config().verify:
+        if Config().args.verify:
             assert self not in self.parent.outgoing, "Trying to create outgoing edge twice: %s" % self
             assert self not in self.child.incoming, "Trying to create incoming edge twice: %s" % self
             assert self.parent not in self.child.descendants, "Detected cycle created by edge: %s" % self

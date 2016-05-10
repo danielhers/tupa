@@ -63,7 +63,7 @@ class State(object):
         def assert_possible_parent(node):
             assert node.text is None, "Terminals may not have children: %s" % node.text
             assert not node.implicit, "Implicit nodes may not have children: %s" % s0
-            if Config().constraints:
+            if Config().args.constraints:
                 assert action.tag not in Constraints.UniqueOutgoing or action.tag not in node.outgoing_tags, \
                     "Outgoing edge tag %s must be unique, but %s already has one" % (
                         action.tag, node)
@@ -81,7 +81,7 @@ class State(object):
             assert (node.text is not None) == (action.tag == EdgeTags.Terminal), \
                 "Edge tag must be %s iff child is terminal, but node is %s and edge tag is %s" % (
                     EdgeTags.Terminal, node, action.tag)
-            if Config().constraints:
+            if Config().args.constraints:
                 assert action.tag not in Constraints.UniqueIncoming or \
                     action.tag not in node.incoming_tags, \
                     "Incoming edge tag %s must be unique, but %s already has one" % (
@@ -105,10 +105,10 @@ class State(object):
             parent, child = self.get_parent_child(action)
             assert_possible_parent(parent)
             assert_possible_child(child)
-            if parent is self.root and Config().constraints:
+            if parent is self.root and Config().args.constraints:
                 assert child.text is None, "Root may not have terminal children, but is being added '%s'" % child
                 assert action.tag in Constraints.TopLevel, "The root may not have %s edges" % action.tag
-            # if Config().multiple_edges:  # Removed this option because it is not useful right now
+            # if Config().args.multipleedges:  # Removed this option because it is not useful right now
             #     edge = Edge(parent, child, action.tag, remote=action.remote)
             #     assert edge not in parent.outgoing, "Edge must not already exist: %s" % edge
             # else:
@@ -116,7 +116,7 @@ class State(object):
             assert parent not in child.descendants, "Detected cycle created by edge: %s->%s" % (parent, child)
 
         if action.is_type(Actions.Finish):
-            if not Config().no_swap:  # Without swap, the oracle may be incapable even of single action
+            if not Config().args.noswap:  # Without swap, the oracle may be incapable even of single action
                 assert self.root.outgoing, \
                     "Root must have at least one child at the end of the parse, but has none"
         elif action.is_type(Actions.Shift):
@@ -200,7 +200,7 @@ class State(object):
             self.finished = True
         else:
             raise Exception("Invalid action: " + action)
-        if Config().verify:
+        if Config().args.verify:
             intersection = set(self.stack).intersection(self.buffer)
             assert not intersection, "Stack and buffer overlap: %s" % intersection
         self.assert_node_ratio()
@@ -213,7 +213,7 @@ class State(object):
         :param kwargs: keyword arguments for Node()
         """
         node = Node(len(self.nodes), *args, **kwargs)
-        if Config().verify:
+        if Config().args.verify:
             assert node not in self.nodes, "Node already exists"
         self.nodes.append(node)
         self.log.append("node: %s" % node)
@@ -297,7 +297,7 @@ class State(object):
     def fix_terminal_tags(self, terminals):
         for terminal, orig_terminal in zip(terminals, self.terminals):
             if terminal.tag != orig_terminal.tag:
-                if Config().verbose:
+                if Config().args.verbose:
                     print("%s is the wrong tag for terminal: %s" % (terminal.tag, terminal.text),
                           file=sys.stderr)
                 terminal.tag = orig_terminal.tag
@@ -338,12 +338,12 @@ class State(object):
         return (len(self.nodes) + extra) / len(self.terminals) - 1
 
     def assert_node_ratio(self, extra=0):
-        max_ratio = Config().max_nodes_ratio
+        max_ratio = Config().args.maxnodes
         assert self.node_ratio(extra=extra) <= max_ratio, \
             "Reached maximum ratio (%.3f) of non-terminals to terminals" % max_ratio
 
     def assert_height(self):
-        max_height = Config().max_height
+        max_height = Config().args.maxheight
         assert self.root.height <= max_height, \
             "Reached maximum graph height (%d)" % max_height
 

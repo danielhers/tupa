@@ -13,6 +13,9 @@ class Singleton(type):
             cls.instance = super(Singleton, cls).__call__(*args, **kwargs)
         return cls.instance
 
+    def reload(cls):
+        cls.instance = None
+
 # Multiple choice options: the first one is always the default
 CLASSIFIERS = ("sparse", "dense", "nn")
 ACTIVATIONS = ("tanh", "sigmoid", "relu")
@@ -28,6 +31,7 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
         argparser.add_argument("-m", "--model", help="model file to load/save")
         argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=CLASSIFIERS[0], help="model type")
+        argparser.add_argument("-B", "--beam", type=int, default=1, help="beam size for beam search (1 for greedy)")
         argparser.add_argument("-e", "--evaluate", action="store_true", help="evaluate parsed passages")
         argparser.add_argument("-v", "--verbose", action="store_true", help="detailed parse output")
         group = argparser.add_mutually_exclusive_group()
@@ -96,53 +100,23 @@ class Config(object, metaclass=Singleton):
         assert self.args.train or not self.args.dev,\
             "--dev is only possible together with --train"
 
-        self.verbose = self.args.verbose
-        self.line_end = "\n" if self.verbose else " "  # show all in one line unless verbose
         self._log_file = None
-        self.sentences = self.args.sentences
-        self.paragraphs = self.args.paragraphs
-        self.split = self.sentences or self.paragraphs
-        self.iterations = self.args.iterations
-        self.dev_scores = self.args.devscores
-        self.test_scores = self.args.testscores
-        self.learning_rate = self.args.learningrate
-        self.decay_factor = self.args.decayfactor
-        self.importance = self.args.importance
-        self.early_update = self.args.earlyupdate
-        self.min_update = self.args.minupdate
-        self.check_loops = self.args.checkloops
-        self.verify = self.args.verify
-        self.compound_swap = self.args.compoundswap
-        self.no_swap = self.args.noswap
-        self.max_nodes_ratio = self.args.maxnodes
-        self.max_height = self.args.maxheight
-        self.no_linkage = self.args.nolinkage
-        self.no_implicit = self.args.noimplicit
-        self.no_remote = self.args.noremote
-        self.constraints = self.args.constraints
-        self.word_vectors = self.args.wordvectors
-        self.tag_dim = self.args.tagdim
-        self.label_dim = self.args.labeldim
-        self.punct_dim = self.args.punctdim
-        self.gap_dim = self.args.gapdim
-        self.layer_dim = self.args.layerdim
-        self.layers = self.args.layers
-        self.activation = self.args.activation
-        self.init = self.args.init
-        self.max_num_labels = self.args.maxlabels
-        self.batch_size = self.args.batchsize
-        self.minibatch_size = self.args.minibatchsize
-        self.nb_epochs = self.args.nbepochs
-        self.optimizer = self.args.optimizer
-        self.loss = self.args.loss
         np.random.seed(self.args.seed)
         self.random = np.random
+
+    @property
+    def split(self):
+        return self.args.sentences or self.args.paragraphs
+
+    @property
+    def line_end(self):
+        return "\n" if self.args.verbose else " "  # show all in one line unless verbose
 
     def log(self, message):
         if self._log_file is None:
             self._log_file = open(self.args.log, "w")
         print(message, file=self._log_file, flush=True)
-        if self.verbose:
+        if self.args.verbose:
             print(message)
 
     def close(self):

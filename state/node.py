@@ -51,7 +51,7 @@ class Node(object):
         :param terminals: all terminals strings in the passage
         :param train: in training, so keep original node IDs in the "remarks" field
         """
-        if Config().verify:
+        if Config().args.verify:
             assert self.node is None or self.text is not None,\
                 "Trying to create the same node twice: %s, parent: %s" % (self.node.ID, parent)
         edge = self.outgoing[0] if len(self.outgoing) == 1 else None
@@ -60,7 +60,7 @@ class Node(object):
                 self.node = parent.node.add(EdgeTags.Terminal,
                                             terminals[self.index]).child
         elif edge and edge.child.text and layer0.is_punct(terminals[edge.child.index]):
-            if Config().verify:
+            if Config().args.verify:
                 assert tag == EdgeTags.Punctuation, "Tag for %s is %s" % (parent.node_id, tag)
                 assert edge.tag == EdgeTags.Terminal, "Tag for %s is %s" % (self.node_id, edge.tag)
             self.node = l1.add_punct(parent.node, terminals[edge.child.index])
