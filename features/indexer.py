@@ -1,3 +1,5 @@
+import numpy as np
+
 from features.feature_extractor import FeatureExtractor
 from parsing.model_util import load_dict, save_dict, UnknownDict, AutoIncrementDict
 from parsing.w2v_util import load_word2vec
@@ -30,7 +32,9 @@ class FeatureIndexer(FeatureExtractor):
                     w2v = load_word2vec(dim)
                     size = len(w2v.vocab) + 1
                     dim = w2v.vector_size
-                    init = (w2v,)
+                    weights = np.array([w2v[x] for x in w2v.vocab])
+                    unknown = weights.mean(axis=0)
+                    init = (np.vstack((unknown, weights)),)
                     indices = AutoIncrementDict(size, w2v.vocab)
                 self.feature_types[suffix] = FeatureInformation(
                     feature_extractor.num_features_non_numeric(suffix), dim, size, init, indices)
