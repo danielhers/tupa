@@ -147,7 +147,7 @@ class Parser(object):
             except ParserException as e:
                 if train:
                     raise
-                Config().args.log("%s %s: %s" % (passage_word, passage.ID, e))
+                Config().log("%s %s: %s" % (passage_word, passage.ID, e))
                 if not test:
                     print("failed")
                 failed = True
@@ -395,4 +395,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    Config().args.close()
+    Config().close()
