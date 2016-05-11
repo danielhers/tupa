@@ -36,7 +36,7 @@ FEATURE_TEMPLATES = (
     "s0s1", "s1s0", "s0b0", "b0s0",
     "s0b0e", "b0s0e",
     # past actions (Tokgöz and Eryiğit 2015):
-    "a0we", "a1we",
+    "a0Ae", "a1Ae",
     # UCCA-specific
     "s0I", "s0R", "s0wI", "s0wR",
     "b0I", "b0R", "b0wI", "b0wR",

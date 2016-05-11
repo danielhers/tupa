@@ -1,6 +1,6 @@
 from features.feature_extractor import FeatureExtractor
 
-NON_NUMERIC_FEATURE_SUFFIXES = "wtepx"
+NON_NUMERIC_FEATURE_SUFFIXES = "wtepxA"
 FEATURE_TEMPLATES = (
     # words
     "s0ws1ws2ws3w"  # stack
@@ -8,19 +8,20 @@ FEATURE_TEMPLATES = (
     "s0lws0rws0uws1lws1rws1uw"  # children
     "s0llws0lrws0luws0rlws0rrws0ruws0ulws0urw"
     "s0uuws1llws1lrws1luws1rlws1rrws1ruw"  # grandchildren
-    "s0Uws1Uwb0Uw"  # parents
-    "a0wa1w",  # past actions
+    "s0Uws1Uwb0Uw",  # parents
     # POS tags
     "s0ts1ts2ts3t"  # stack
     "b0tb1tb2tb3t",  # buffer
     # edge tags
     "s0es1es2es3e"  # stack
     "s0les0res0ues1les1res1ue"  # children
-    "s0lles0lres0lues0rles0rres0rues0ulws0ure"
+    "s0lles0lres0lues0rles0rres0rues0ules0ure"
     "s0uues1lles1lres1lues1rles1rres1rue"  # grandchildren
     "s0Ues1Ueb0Ue"  # parents
-    "a0ea1e"  # past actions
-    "s0b0eb0s0e",  # specific edges
+    "s0b0eb0s0e"  # specific edges
+    "a0ea1e",  # past actions edge tags
+    # past action labels
+    "a0Aa1A",
     # separators
     "s0ps1p",
     # gap types
@@ -57,6 +58,10 @@ class DenseFeatureExtractor(FeatureExtractor):
                 assert len(element.properties) <= 1,\
                     "Non-numeric element with %d properties: %s in feature %s" % (
                         len(element.properties), element, feature_template)
+                if element.properties:
+                    assert element.properties == feature_template.elements[0].properties, \
+                        "Non-uniform feature template element properties: %s, %s" % (
+                            element, feature_template.elements[0])
             assert feature_template.suffix not in self.non_numeric_by_suffix, \
                 "More than one non-numeric feature with '%s' suffix: %s and %s" % (
                     feature_template.suffix,
@@ -75,9 +80,16 @@ class DenseFeatureExtractor(FeatureExtractor):
             self.calc_feature(self.numeric_features_template, state, default=-1)
         non_numeric_features = [(f.suffix, self.calc_feature(f, state, default=""))
                                 for f in self.non_numeric_feature_templates]
-        assert len(numeric_features) == self.num_features_numeric(), \
-            "Invalid number of numeric features: %d != %d" % (
-                len(numeric_features), self.num_features_numeric())
+        # assert len(numeric_features) == self.num_features_numeric(), \
+        #     "Invalid number of numeric features: %d != %d" % (
+        #         len(numeric_features), self.num_features_numeric())
+        # for value, element in zip(numeric_features, self.numeric_features_template.elements):
+        #     assert isinstance(value, Number), \
+        #         "Non-numeric value %s for numeric feature element %s" % (value, element)
+        # for values, template in zip(non_numeric_features, self.non_numeric_feature_templates):
+        #     for value, element in zip(values, template.elements):
+        #         assert not isinstance(value, Number), \
+        #             "Numeric value %s for non-numeric feature element %s" % (value, element)
         return numeric_features, non_numeric_features
 
     def num_features_numeric(self):

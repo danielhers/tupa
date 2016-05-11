@@ -50,6 +50,7 @@ class Model(object):
                        e=(Config().args.labeldim,       Config().args.maxedgelabels),
                        p=(Config().args.punctdim,       Config().args.maxpuncts),
                        x=(Config().args.gapdim,         Config().args.maxgaps),
+                       A=(Config().args.actiondim,      Config().args.maxactions),
                        )
 
     def extract_features(self, *args, **kwargs):

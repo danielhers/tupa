@@ -83,6 +83,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--labeldim", type=int, default=10, help="dimension for edge label embeddings")
         group.add_argument("--punctdim", type=int, default=2, help="dimension for separator punctuation embeddings")
         group.add_argument("--gapdim", type=int, default=2, help="dimension for gap type embeddings")
+        group.add_argument("--actiondim", type=int, default=5, help="dimension for action type embeddings")
         group.add_argument("--layerdim", type=int, default=100, help="dimension for hidden layers")
         group.add_argument("--layers", type=int, default=1, help="number of hidden layers")
         group.add_argument("--activation", choices=ACTIVATIONS, default=ACTIVATIONS[0], help="activation function")
@@ -98,6 +99,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--maxedgelabels", type=int, default=15, help="maximum number of edge labels for embeddings")
         group.add_argument("--maxpuncts", type=int, default=5, help="maximum number of punctuations for embeddings")
         group.add_argument("--maxgaps", type=int, default=3, help="maximum number of gap types to keep embeddings for")
+        group.add_argument("--maxactions", type=int, default=10, help="maximum number of action types for embeddings")
         self.args = argparser.parse_args(args if args else None)
 
         assert self.args.passages or self.args.train,\

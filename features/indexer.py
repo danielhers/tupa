@@ -16,7 +16,8 @@ class FeatureInformation(object):
         self.indices = indices
 
     def __repr__(self):
-        return "%s(%d, %d, %s, %s, %s)" % (self.__class__.__name__, self.num, self.dim, self.size, self.init, self.indices)
+        return "%s(%d, %d, %s, %s, %s)" % (
+            self.__class__.__name__, self.num, self.dim, self.size, self.init, self.indices)
 
 
 class FeatureIndexer(FeatureExtractor):
