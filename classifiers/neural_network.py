@@ -68,6 +68,8 @@ class NeuralNetwork(Classifier):
     def init_model(self):
         if self.model is not None:
             return
+        if config.Config().args.verbose:
+            print("Input: " + self.feature_types)
         inputs = []
         encoded = []
         for name, feature_type in self.feature_types.items():
@@ -171,7 +173,10 @@ class NeuralNetwork(Classifier):
         self.init_model()
         with open(filename + ".json", "w") as f:
             f.write(self.model.to_json())
-        self.model.save_weights(filename + ".h5", overwrite=True)
+        try:
+            self.model.save_weights(filename + ".h5", overwrite=True)
+        except ValueError as e:
+            print("Failed saving model weights: %s" % e)
 
     def load(self, filename):
         """
@@ -185,7 +190,10 @@ class NeuralNetwork(Classifier):
         self.is_frozen = d["is_frozen"]
         with open(filename + ".json") as f:
             self.model = model_from_json(f.read())
-        self.model.load_weights(filename + ".h5")
+        try:
+            self.model.load_weights(filename + ".h5")
+        except KeyError as e:
+            print("Failed loading model weights: %s" % e)
         self.compile()
 
     def __str__(self):
