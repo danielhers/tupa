@@ -51,6 +51,7 @@ def main():
         ("labeldim",        (5, 10, 20)),
         ("punctdim",        (1, 2, 3)),
         ("gapdim",          (1, 2, 3)),
+        ("actiondim",       (3, 5, 10)),
         ("layerdim",        (50, 100, 200, 300, 500, 1000)),
         ("layers",          (1, 2)),
         ("activation",      config.ACTIVATIONS),
