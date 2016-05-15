@@ -46,7 +46,7 @@ def main():
     num = int(os.environ.get("PARAMS_NUM", 30))
     params = [Params(p) for p in zip(*[[(n, v) for v in np.random.choice(vs, num)] for n, vs in (
         ("classifier",      10 * [config.NEURAL_NETWORK] + list(config.CLASSIFIERS)),
-        ("wordvectors",     [50, 100, 200, 300] + ([] if w2v_file is None else 20 * [load_word2vec(w2v_file)])),
+        ("wordvectors",     [50, 100, 200, 300] + ([] if w2v_file is None else [load_word2vec(w2v_file)])),
         ("tagdim",          (5, 10, 20)),
         ("labeldim",        (5, 10, 20)),
         ("punctdim",        (1, 2, 3)),
@@ -56,9 +56,9 @@ def main():
         ("layers",          (1, 2)),
         ("activation",      config.ACTIVATIONS),
         ("init",            config.INITIALIZATIONS),
-        ("batchsize",       (None, 5000, 10000, 20000)),
+        ("batchsize",       (None, 10000, 20000, 50000)),
         ("minibatchsize",   (50, 100, 200, 300, 500, 1000)),
-        ("nbepochs",        (5, 10, 20, 30, 50, 100)),
+        ("nbepochs",        range(1, 11)),
         ("optimizer",       config.OPTIMIZERS),
         ("loss",            config.OBJECTIVES),
         ("importance",      (1, 2)),
