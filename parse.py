@@ -80,8 +80,8 @@ class Parser(object):
                                     self.parse(dev, mode="dev")])
                 dev = list(dev)
                 scores = evaluation.Scores.aggregate(scores)
-                score = scores.average_unlabeled_f1()
-                print("Average unlabeled F1 score on dev: %.3f" % score)
+                score = scores.average_f1()
+                print("Average labeled F1 score on dev: %.3f" % score)
                 if Config().args.devscores:
                     with open(Config().args.devscores, "a") as f:
                         print(",".join([str(iteration)] + scores.fields()), file=f)
@@ -338,7 +338,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 passage_util.write_passage(guessed_passage, args)
         if passage_scores and (not args.verbose or len(passage_scores) > 1):
             scores = evaluation.Scores.aggregate(passage_scores)
-            print("\nAverage F1 score on test: %.3f" % scores.average_unlabeled_f1())
+            print("\nAverage F1 score on test: %.3f" % scores.average_f1())
             print("Aggregated scores:")
             scores.print()
             if Config().args.testscores:
@@ -351,7 +351,7 @@ def evaluate_passage(guessed_passage, ref_passage):
     score = evaluation.evaluate(guessed_passage, ref_passage,
                                 verbose=Config().args.verbose and guessed_passage is not None,
                                 units=False, errors=False)
-    print("F1=%.3f" % score.average_unlabeled_f1(), flush=True)
+    print("F1=%.3f" % score.average_f1(), flush=True)
     return score
 
 
@@ -382,8 +382,8 @@ def main():
                 fold_scores.append(s)
         if fold_scores:
             scores = evaluation.Scores.aggregate(fold_scores)
-            print("Average unlabeled test F1 score for each fold: " + ", ".join(
-                "%.3f" % s.average_unlabeled_f1() for s in fold_scores))
+            print("Average labeled test F1 score for each fold: " + ", ".join(
+                "%.3f" % s.average_f1() for s in fold_scores))
             print("Aggregated scores across folds:\n")
             scores.print()
     else:  # Simple train/dev/test by given arguments

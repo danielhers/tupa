@@ -24,19 +24,19 @@ class Params(object):
         assert self.score is not None, "parser failed to produce score"
 
     def score(self):
-        return -float("inf") if self.scores is None else self.scores.average_unlabeled_f1()
+        return -float("inf") if self.scores is None else self.scores.average_f1()
 
     def __str__(self):
         ret = ", ".join("%s: %s" % (name, value) for name, value in self.params)
         if self.scores is not None:
-            ret += ", average unlabeled f1: %.3f" % self.score()
+            ret += ", average labeled f1: %.3f" % self.score()
         return ret
 
     def get_fields(self):
         return [str(p[1]) for p in self.params] + [str(self.score())] + self.scores.fields()
 
     def get_field_titles(self):
-        return [p[0] for p in self.params] + ["average_unlabeled_f1"] + Scores.field_titles()
+        return [p[0] for p in self.params] + ["average_labeled_f1"] + Scores.field_titles()
 
 
 def main():

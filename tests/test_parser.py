@@ -53,7 +53,7 @@ class ParserTests(unittest.TestCase):
             score = evaluation.Scores.aggregate([evaluation.evaluate(
                 g, r, verbose=False, units=False, errors=False)
                                                  for g, r in zip(guess, ref)])
-            scores.append(score.average_unlabeled_f1())
+            scores.append(score.average_f1())
         if compare:
             self.assertEqual(*scores)
-        print("-- average unlabeled f1: %.3f, %.3f" % tuple(scores))
+        print("-- average labeled f1: %.3f, %.3f" % tuple(scores))
