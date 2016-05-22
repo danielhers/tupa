@@ -36,12 +36,16 @@ class FeatureIndexer(FeatureExtractor):
                     indices = AutoIncrementDict(size)
                 else:
                     w2v = load_word2vec(dim)
-                    size = len(w2v.vocab) + 1
+                    vocab = w2v.vocab
+                    if size is None or size == 0:
+                        size = len(w2v.vocab) + 1
+                    else:
+                        vocab = list(vocab)[:size-1]
                     dim = w2v.vector_size
-                    weights = np.array([w2v[x] for x in w2v.vocab])
+                    weights = np.array([w2v[x] for x in vocab])
                     unknown = weights.mean(axis=0)
                     init = (np.vstack((unknown, weights)),)
-                    indices = AutoIncrementDict(size, w2v.vocab)
+                    indices = AutoIncrementDict(size, vocab)
                 self.feature_types[suffix] = FeatureInformation(
                     feature_extractor.num_features_non_numeric(suffix), dim, size, init, indices)
         else:
