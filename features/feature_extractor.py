@@ -172,36 +172,31 @@ class FeatureExtractor(object):
                 return None
         return node
 
+    NODE_PROP_GETTERS = {
+        "w": lambda node, _: FeatureExtractor.get_head_terminal(node).text,
+        "t": lambda node, _: FeatureExtractor.get_head_terminal(node).pos_tag,
+        "e": lambda node, prev_node: next(e.tag for e in node.incoming
+                                          if prev_node is None or e.parent == prev_node),
+        "x": lambda node, _: FeatureExtractor.gap_type(node),
+        "y": lambda node, _: FeatureExtractor.gap_length_sum(node),
+        "P": lambda node, _: len(node.incoming),
+        "C": lambda node, _: len(node.outgoing),
+        "I": lambda node, _: len([n for n in node.children if n.implicit]),
+        "R": lambda node, _: len([e for e in node.outgoing if e.remote]),
+    }
+
     @staticmethod
     def get_node_prop(node, p, prev_node=None):
-        if p == "w":
-            return FeatureExtractor.get_head_terminal(node).text
-        if p == "t":
-            return FeatureExtractor.get_head_terminal(node).pos_tag
-        if p == "e":
-            return next(e.tag for e in node.incoming
-                        if prev_node is None or e.parent == prev_node)
-        if p == "x":
-            return FeatureExtractor.gap_type(node)
-        if p == "y":
-            return FeatureExtractor.gap_length_sum(node)
-        if p == "P":
-            return len(node.incoming)
-        if p == "C":
-            return len(node.outgoing)
-        if p == "I":
-            return len([n for n in node.children if n.implicit])
-        if p == "R":
-            return len([e for e in node.outgoing if e.remote])
-        raise Exception("Unknown node property: " + p)
+        return FeatureExtractor.NODE_PROP_GETTERS[p](node, prev_node)
+
+    ACTION_PROPS = {
+        "A": "type",
+        "e": "tag",
+    }
 
     @staticmethod
     def get_action_prop(action, p):
-        if p == "A":
-            return action.type
-        if p == "e":
-            return action.tag
-        raise Exception("Unknown action property: " + p)
+        return getattr(action, FeatureExtractor.ACTION_PROPS[p])
 
     @staticmethod
     def get_separator_prop(nodes, terminals, p):
