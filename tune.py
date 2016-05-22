@@ -42,12 +42,12 @@ class Params(object):
 def main():
     Config().args.nowrite = True
     out_file = os.environ.get("PARAMS_FILE", "params.csv")
-    w2v_file = os.environ.get("W2V_FILE")
+    w2v_files = [os.environ[f] for f in os.environ if f.startswith("W2V_FILE")]
     num = int(os.environ.get("PARAMS_NUM", 30))
     params = [Params(p) for p in zip(*[[(n, v) for v in np.random.choice(vs, num)] for n, vs in (
         ("seed",            2147483647),
         ("classifier",      10 * [config.NEURAL_NETWORK] + list(config.CLASSIFIERS)),
-        ("wordvectors",     [50, 100, 200, 300] + ([] if w2v_file is None else [load_word2vec(w2v_file)])),
+        ("wordvectors",     [50, 100, 200, 300] + [load_word2vec(f) for f in w2v_files]),
         ("tagdim",          (5, 10, 20)),
         ("labeldim",        (5, 10, 20)),
         ("punctdim",        (1, 2, 3)),
@@ -60,10 +60,10 @@ def main():
         ("batchsize",       (None, 10000, 20000, 50000)),
         ("minibatchsize",   (50, 100, 200, 300, 500, 1000)),
         ("nbepochs",        range(1, 11)),
-        ("optimizer",       config.OPTIMIZERS),
+        ("optimizer",       10 * [config.OPTIMIZERS[0]] + list(config.OPTIMIZERS)),
         ("loss",            config.OBJECTIVES),
         ("importance",      (1, 2)),
-        ("earlyupdate",     3 * [False] + [True]),
+        ("earlyupdate",     10 * [False] + [True]),
     )])]
     print("All parameter combinations to try:")
     print("\n".join(map(str, params)))
