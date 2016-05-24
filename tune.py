@@ -44,6 +44,7 @@ def main():
     out_file = os.environ.get("PARAMS_FILE", "params.csv")
     w2v_files = [os.environ[f] for f in os.environ if f.startswith("W2V_FILE")]
     num = int(os.environ.get("PARAMS_NUM", 30))
+    np.random.seed()
     params = [Params(p) for p in zip(*[[(n, v) for v in np.random.choice(vs, num)] for n, vs in (
         ("seed",            2147483647),
         ("classifier",      10 * [config.NEURAL_NETWORK] + list(config.CLASSIFIERS)),
