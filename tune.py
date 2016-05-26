@@ -1,5 +1,6 @@
 import csv
 import os
+from collections import OrderedDict
 
 import numpy as np
 
@@ -11,7 +12,7 @@ from ucca.evaluation import Scores
 
 class Params(object):
     def __init__(self, params):
-        if not dict(params)["earlyupdate"]:
+        if not params["earlyupdate"]:
             params["iterations"] = 1
         self.params = params
         self.scores = None
@@ -20,7 +21,7 @@ class Params(object):
         assert Config().args.train and Config().args.passages or Config().args.folds, \
             "insufficient parameters given to parser"
         print("Running with %s" % self)
-        for name, value in self.params:
+        for name, value in self.params.items():
             setattr(Config().args, name, value)
         self.scores = parse.main()
         assert self.score is not None, "parser failed to produce score"
@@ -29,16 +30,16 @@ class Params(object):
         return -float("inf") if self.scores is None else self.scores.average_f1()
 
     def __str__(self):
-        ret = ", ".join("%s: %s" % (name, value) for name, value in self.params)
+        ret = ", ".join("%s: %s" % (name, value) for name, value in self.params.items())
         if self.scores is not None:
             ret += ", average labeled f1: %.3f" % self.score()
         return ret
 
     def get_fields(self):
-        return [str(p[1]) for p in self.params] + [str(self.score())] + self.scores.fields()
+        return [str(p) for p in self.params.values()] + [str(self.score())] + self.scores.fields()
 
     def get_field_titles(self):
-        return [p[0] for p in self.params] + ["average_labeled_f1"] + Scores.field_titles()
+        return [p for p in self.params.keys()] + ["average_labeled_f1"] + Scores.field_titles()
 
 
 def main():
@@ -47,8 +48,10 @@ def main():
     w2v_files = [os.environ[f] for f in os.environ if f.startswith("W2V_FILE")]
     num = int(os.environ.get("PARAMS_NUM", 30))
     np.random.seed()
-    params = [Params(p) for p in zip(*[[(n, v) for v in np.random.choice(vs, num)] for n, vs in (
-        ("seed",            2147483647),
+    params = [Params(OrderedDict(p))
+              for p in zip(*[[(n, v) for v in np.random.choice(vs, num)]
+                             for n, vs in (
+                                 ("seed", 2147483647),
         ("classifier",      10 * [config.NEURAL_NETWORK] + list(config.CLASSIFIERS)),
         ("wordvectors",     [50, 100, 200, 300] + [load_word2vec(f) for f in w2v_files]),
         ("tagdim",          (5, 10, 20)),
