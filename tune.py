@@ -11,7 +11,7 @@ from ucca.evaluation import Scores
 
 class Params(object):
     def __init__(self, params):
-        if not params["earlyupdate"]:
+        if not dict(params)["earlyupdate"]:
             params["iterations"] = 1
         self.params = params
         self.scores = None
