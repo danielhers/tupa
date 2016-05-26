@@ -1,3 +1,4 @@
+from collections import Counter
 from copy import copy
 
 
@@ -10,10 +11,11 @@ class FeatureParameters(object):
         self.num = num
         self.init = init
         self.data = data
+        self.counts = Counter() if self.dropout else None
 
     def __repr__(self):
-        return "%s(%s, %d, %d, %s, %s, %s)" % (
-            self.__class__.__name__, self.suffix, self.dim, self.size, self.num, self.init, self.data)
+        return "%s(%s, %d, %d, %f, %s, %s, %s)" % (
+            self.__class__.__name__, self.suffix, self.dim, self.size, self.dropout, self.num, self.init, self.data)
 
 
 class NumericFeatureParameters(FeatureParameters):

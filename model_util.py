@@ -1,7 +1,8 @@
 import os
 import shelve
 import time
-from collections import defaultdict
+from collections import defaultdict, Counter
+import numpy as np
 
 
 class UnknownDict(defaultdict):
@@ -29,12 +30,13 @@ class AutoIncrementDict(UnknownDict):
     """
     defaultdict that returns an auto-incrementing index for new keys
     """
-    def __init__(self, max_size=None, keys=()):
+    def __init__(self, max_size=None, keys=(), d=None):
         """
         :param max_size: maximum index to allow, after which 0 will be returned
         :param keys: initial sequence of keys
+        :param d: dictionary to initialize from
         """
-        super(AutoIncrementDict, self).__init__({}, unknown=0)
+        super(AutoIncrementDict, self).__init__({} if d is None else d, unknown=0)
         self.max = max_size
         for key in keys:
             self.__missing__(key)
@@ -42,6 +44,31 @@ class AutoIncrementDict(UnknownDict):
     def __missing__(self, key):
         ret = self[key] = len(self) if self.max is not None and len(self) < self.max else self.unknown
         return ret
+
+
+class DropoutDict(AutoIncrementDict):
+    """
+    UnknownDict that sometimes returns the unknown value even for existing keys
+    """
+    def __init__(self, d=None, dropout=0, max_size=None, keys=()):
+        """
+        :param d: base dict to initialize by
+        :param dropout: dropout parameter
+        """
+        super(DropoutDict, self).__init__(max_size, keys, d=d)
+        if d is not None and isinstance(d, DropoutDict):
+            self.dropout = d.dropout
+            self.counts = d.counts
+        else:
+            self.dropout = dropout
+            self.counts = Counter()
+
+    def __getitem__(self, item):
+        if item != self.UNKNOWN:
+            self.counts[item] += 1
+            if self.dropout / (self.counts[item] + self.dropout) > np.random.random_sample():
+                item = UnknownDict.UNKNOWN
+        return super(DropoutDict, self).__getitem__(item)
 
 
 def save_dict(filename, d):

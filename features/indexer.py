@@ -4,7 +4,7 @@ import numpy as np
 
 from features.feature_extractor_wrapper import FeatureExtractorWrapper
 from features.feature_params import NumericFeatureParameters
-from parsing.model_util import AutoIncrementDict
+from model_util import DropoutDict
 from parsing.w2v_util import load_word2vec
 
 
@@ -27,7 +27,7 @@ class FeatureIndexer(FeatureExtractorWrapper):
             return
         param.num = self.feature_extractor.num_features_non_numeric(param.suffix)
         if isinstance(param.dim, Number):
-            param.data = AutoIncrementDict(param.size)
+            param.data = DropoutDict(max_size=param.size, dropout=param.dropout)
         else:
             w2v = load_word2vec(param.dim)
             vocab = w2v.vocab
@@ -39,7 +39,7 @@ class FeatureIndexer(FeatureExtractorWrapper):
             weights = np.array([w2v[x] for x in vocab])
             unknown = weights.mean(axis=0)
             param.init = (np.vstack((unknown, weights)),)
-            param.data = AutoIncrementDict(param.size, vocab)
+            param.data = DropoutDict(max_size=param.size, keys=vocab, dropout=param.dropout)
 
     def extract_features(self, state, train):
         """
