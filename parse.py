@@ -204,7 +204,7 @@ class Parser(object):
                     if train:
                         raise ParserException("Error in oracle during training") from e
 
-            features = self.model.extract_features(self.state)
+            features = self.model.extract_features(self.state, train)
             predicted_action = self.predict_action(features, true_actions)  # sets self.scores
             action = predicted_action
             correct_action = False

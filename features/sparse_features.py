@@ -51,10 +51,11 @@ class SparseFeatureExtractor(FeatureExtractor):
     def __init__(self):
         super(SparseFeatureExtractor, self).__init__(FEATURE_TEMPLATES)
 
-    def extract_features(self, state):
+    def extract_features(self, state, train):
         """
         Calculate feature values according to current state
         :param state: current state of the parser
+        :param train: whether we are in training
         :return dict of feature name -> value
         """
         features = {

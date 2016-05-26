@@ -1,3 +1,4 @@
+from features.feature_params import FeatureParameters
 from parsing import config
 from parsing.action import Actions
 from parsing.config import Config
@@ -26,7 +27,7 @@ class Model(object):
             from features.indexer import FeatureIndexer
             from classifiers.neural_network import NeuralNetwork
             self.feature_extractor = self.dense_features_wrapper(FeatureIndexer)
-            self.model = NeuralNetwork(labels, inputs=self.feature_extractor.feature_types,
+            self.model = NeuralNetwork(labels, feature_params=self.feature_extractor.params,
                                        layers=Config().args.layers,
                                        layer_dim=Config().args.layerdim,
                                        activation=Config().args.activation,
@@ -44,14 +45,15 @@ class Model(object):
     @staticmethod
     def dense_features_wrapper(wrapper):
         from features.dense_features import DenseFeatureExtractor
-        return wrapper(DenseFeatureExtractor(),
-                       w=(Config().args.wordvectors,    Config().args.maxwords),
-                       t=(Config().args.tagdim,         Config().args.maxtags),
-                       e=(Config().args.labeldim,       Config().args.maxedgelabels),
-                       p=(Config().args.punctdim,       Config().args.maxpuncts),
-                       x=(Config().args.gapdim,         Config().args.maxgaps),
-                       A=(Config().args.actiondim,      Config().args.maxactions),
-                       )
+        params = [
+            FeatureParameters("w", Config().args.wordvectors, Config().args.maxwords, Config().args.worddropout),
+            FeatureParameters("t", Config().args.tagdim, Config().args.maxtags),
+            FeatureParameters("e", Config().args.labeldim, Config().args.maxedgelabels),
+            FeatureParameters("p", Config().args.punctdim, Config().args.maxpuncts),
+            FeatureParameters("x", Config().args.gapdim, Config().args.maxgaps),
+            FeatureParameters("A", Config().args.actiondim, Config().args.maxactions),
+        ]
+        return wrapper(DenseFeatureExtractor(), params)
 
     def extract_features(self, *args, **kwargs):
         return self.feature_extractor.extract_features(*args, **kwargs)

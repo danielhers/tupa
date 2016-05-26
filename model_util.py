@@ -25,15 +25,6 @@ class UnknownDict(defaultdict):
         return self.unknown
 
 
-class KeyDefaultDict(defaultdict):
-    """
-    defaultdict that allows the default_factory to use the key
-    """
-    def __missing__(self, key):
-        ret = self[key] = self.default_factory(key)
-        return ret
-
-
 class AutoIncrementDict(UnknownDict):
     """
     defaultdict that returns an auto-incrementing index for new keys

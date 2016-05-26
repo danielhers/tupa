@@ -83,10 +83,11 @@ class FeatureExtractor(object):
                                 for m in re.finditer(FEATURE_ELEMENT_PATTERN, feature_name)))
                                   for feature_name in feature_templates]
 
-    def extract_features(self, state):
+    def extract_features(self, state, train):
         """
         Calculate feature values according to current state
         :param state: current state of the parser
+        :param train: whether we are in training
         """
         raise NotImplementedError()
 

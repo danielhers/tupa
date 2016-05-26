@@ -22,7 +22,7 @@ class NeuralNetwork(Classifier):
     Expects features from FeatureIndexer.
     """
 
-    def __init__(self, labels=None, inputs=None, model=None,
+    def __init__(self, labels=None, feature_params=None, model=None,
                  layers=1, layer_dim=100, activation="tanh",
                  init="glorot_normal", max_num_labels=100, batch_size=None,
                  minibatch_size=200, nb_epochs=5,
@@ -30,7 +30,7 @@ class NeuralNetwork(Classifier):
         """
         Create a new untrained NN or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
-        :param inputs: dict of feature type name -> FeatureInformation
+        :param feature_params: dict of feature type name -> FeatureInformation
         :param model: if given, copy the weights (from a trained model)
         :param layers: number of hidden layers
         :param layer_dim: size of hidden layer
@@ -44,7 +44,7 @@ class NeuralNetwork(Classifier):
         :param loss: objective function to use for optimization
         """
         super(NeuralNetwork, self).__init__(model_type=config.NEURAL_NETWORK, labels=labels, model=model)
-        assert inputs is not None or model is not None
+        assert feature_params is not None or model is not None
         if self.is_frozen:
             self.model = model
         else:
@@ -59,7 +59,7 @@ class NeuralNetwork(Classifier):
             self._nb_epochs = nb_epochs
             self._optimizer = optimizer
             self._loss = loss
-            self.feature_types = inputs
+            self.feature_params = feature_params
             self.model = None
             self._samples = defaultdict(list)
             self._update_index = 0
@@ -69,17 +69,17 @@ class NeuralNetwork(Classifier):
         if self.model is not None:
             return
         if config.Config().args.verbose:
-            print("Input: " + self.feature_types)
+            print("Input: " + self.feature_params)
         inputs = []
         encoded = []
-        for name, feature_type in self.feature_types.items():
-            if feature_type.indices is None:  # numeric feature
-                i = Input(shape=(feature_type.num,), name=name)
+        for suffix, param in self.feature_params.items():
+            if param.data is None:  # numeric feature
+                i = Input(shape=(param.num,), name=suffix)
                 x = BatchNormalization()(i)
             else:  # index feature
-                i = Input(shape=(feature_type.num,), dtype="int32", name=name)
-                x = Embedding(output_dim=feature_type.dim, input_dim=feature_type.size,
-                              weights=feature_type.init, input_length=feature_type.num)(i)
+                i = Input(shape=(param.num,), dtype="int32", name=suffix)
+                x = Embedding(output_dim=param.dim, input_dim=param.size,
+                              weights=param.init, input_length=param.num)(i)
                 x = Flatten()(x)
             inputs.append(i)
             encoded.append(x)
@@ -95,7 +95,7 @@ class NeuralNetwork(Classifier):
 
     @property
     def input_dim(self):
-        return sum(f.num * f.dim for f in self.feature_types.values())
+        return sum(f.num * f.dim for f in self.feature_params.values())
 
     def score(self, features):
         """
@@ -156,7 +156,7 @@ class NeuralNetwork(Classifier):
         print("Done (%.3fs)." % (time.time() - started))
         if freeze:
             print("Labels: %d" % self.num_labels)
-            print("Features: %d" % sum(f.num * (f.dim or 1) for f in self.feature_types.values()))
+            print("Features: %d" % sum(f.num * (f.dim or 1) for f in self.feature_params.values()))
         return finalized
 
     def save(self, filename):

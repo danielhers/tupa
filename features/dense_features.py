@@ -69,10 +69,11 @@ class DenseFeatureExtractor(FeatureExtractor):
                     feature_template)
             self.non_numeric_by_suffix[feature_template.suffix] = feature_template
 
-    def extract_features(self, state):
+    def extract_features(self, state, train):
         """
         Calculate feature values according to current state
         :param state: current state of the parser
+        :param train: whether we are in training
         :return pair: (list of values for all numeric features,
                        list of (suffix, value) pairs for all non-numeric features)
         """

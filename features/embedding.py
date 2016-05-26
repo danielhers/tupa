@@ -3,68 +3,59 @@ from numbers import Number
 
 import numpy as np
 
-from features.feature_extractor import FeatureExtractor
+from features.feature_extractor_wrapper import FeatureExtractorWrapper
+from features.feature_params import NumericFeatureParameters
 from parsing.config import Config
-from parsing.model_util import load_dict, save_dict, UnknownDict, KeyDefaultDict
+from parsing.model_util import UnknownDict
 from parsing.w2v_util import load_word2vec
 
 
-class FeatureEmbedding(FeatureExtractor):
+class FeatureEmbedding(FeatureExtractorWrapper):
     """
     Wrapper for DenseFeatureExtractor to replace non-numeric features with embeddings
-    and return a list of numbers rather than (name, value) pairs.
+    and return an array of numbers rather than (name, value) pairs.
     To be used with DensePerceptron classifier.
-    Initialize with (dimensions,) singletons as keyword arguments.
     """
-    def __init__(self, feature_extractor, embedding=None, **kwargs):
-        self.feature_extractor = feature_extractor
-        self.dims = {s: d[0] if isinstance(d, (list, tuple)) else d for s, d in kwargs.items()}
-        self.embedding = KeyDefaultDict(self.init_embedding) if embedding is None else embedding
+    def __init__(self, feature_extractor, params):
+        super(FeatureEmbedding, self).__init__(feature_extractor, params)
 
-    def init_embedding(self, suffix):
-        dim = self.dims[suffix]
-        if isinstance(dim, Number):
-            embedding = defaultdict(lambda d=dim: Config().random.normal(size=d))
-            embedding[UnknownDict.UNKNOWN]  # Initialize unknown value
-            return embedding
-        # Otherwise, not a number but a string with path to word vectors file
-        w2v = load_word2vec(dim)
-        unk = Config().random.normal(size=w2v.vector_size)
-        self.dims[suffix] = w2v.vector_size
-        return UnknownDict(w2v.vocab, unk)
+    def init_data(self, param):
+        if param.data is not None or isinstance(param, NumericFeatureParameters):
+            return
+        param.num = self.feature_extractor.num_features_non_numeric(param.suffix)
+        if isinstance(param.dim, Number):  # Dimensions given as a number, not as a file to load
+            param.data = defaultdict(lambda d=param.dim: Config().random.normal(size=d))
+            param.data[UnknownDict.UNKNOWN]  # Initialize unknown value
+        else:  # Otherwise, not a number but a string with path to word vectors file
+            w2v = load_word2vec(param.dim)
+            unk = Config().random.normal(size=w2v.vector_size)
+            param.dim = w2v.vector_size
+            param.data = UnknownDict(w2v.vocab, unk)
 
-    def extract_features(self, state):
+    def extract_features(self, state, train):
         """
         Calculate feature values according to current state
         :param state: current state of the parser
-        :return vector of concatenated numeric and embedding features
+        :param train: whether we are in training
+        :return array of concatenated numeric and embedding features
         """
-        numeric_features, non_numeric_features = \
-            self.feature_extractor.extract_features(state)
+        numeric_features, non_numeric_features = self.feature_extractor.extract_features(state, train)
         features = [np.array(numeric_features, dtype=float)]
         for suffix, values in non_numeric_features:
-            embedding = self.embedding[suffix]
-            features += [embedding[v] for v in values]
+            param = self.params[suffix]
+            self.init_data(param)
+            features += [param.data[v] for v in values]
         assert sum(map(len, features)) == self.num_features(),\
             "Invalid total number of features: %d != %d " % (
                 sum(map(len, features)), self.num_features())
         return np.hstack(features).reshape((-1, 1))
 
     def num_features(self):
-        ret = self.feature_extractor.num_features_numeric()
-        for suffix in self.dims:
-            self.init_embedding(suffix)
-            ret += self.dims[suffix] * self.feature_extractor.num_features_non_numeric(suffix)
+        ret = 0
+        for param in self.params.values():
+            self.init_data(param)
+            ret += param.dim * param.num
         return ret
 
-    def finalize(self):
-        embedding = {s: UnknownDict(e) for s, e in self.embedding.items()}
-        return FeatureEmbedding(self.feature_extractor, embedding, **self.dims)
-
-    def save(self, filename):
-        d = {s: dict(e) for s, e in self.embedding.items()}
-        save_dict(filename + "_embedding", d)
-
-    def load(self, filename):
-        d = load_dict(filename + "_embedding")
-        self.embedding.update({s: UnknownDict(e) for s, e in d.items()})
+    def filename_suffix(self):
+        return "_embedding"
