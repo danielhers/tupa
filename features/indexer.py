@@ -4,7 +4,7 @@ import numpy as np
 
 from features.feature_extractor_wrapper import FeatureExtractorWrapper
 from features.feature_params import NumericFeatureParameters
-from model_util import DropoutDict
+from parsing.model_util import DropoutDict
 from parsing.w2v_util import load_word2vec
 
 
