@@ -30,7 +30,7 @@ class FeatureEmbedding(FeatureExtractorWrapper):
             w2v = load_word2vec(param.dim)
             unk = Config().random.normal(size=w2v.vector_size)
             param.dim = w2v.vector_size
-            param.data = UnknownDict(w2v.vocab, unk)
+            param.data = UnknownDict({x: w2v[x] for x in w2v.vocab}, unk)
 
     def extract_features(self, state, train):
         """
