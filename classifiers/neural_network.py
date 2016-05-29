@@ -125,6 +125,11 @@ class NeuralNetwork(Classifier):
                 self._samples[name].append(value)
             self._samples["out"].append(true)
             self._update_index += 1
+
+    def fit(self):
+        """
+        Fit the model if doing batch-based fitting (and not just at finalize)
+        """
         if self._batch_size is not None and self._update_index >= self._batch_size:
             self.finalize(freeze=False)
 
@@ -137,23 +142,24 @@ class NeuralNetwork(Classifier):
         :return new NeuralNetwork object with the same weights, after fitting
         """
         super(NeuralNetwork, self).finalize()
-        started = time.time()
-        print("\nFitting model...", flush=True)
-        x = {}
-        y = None
-        for name, values in self._samples.items():
-            if name == "out":
-                y = np_utils.to_categorical(values, nb_classes=self.max_num_labels)
-            else:
-                x[name] = np.array(values)
-        self.init_model()
-        self.model.fit(x, y, batch_size=self._minibatch_size,
-                       nb_epoch=self._nb_epochs, verbose=2)
-        self._samples = defaultdict(list)
-        self._update_index = 0
-        self._iteration += 1
+        if self._samples:
+            started = time.time()
+            print("Fitting model...", flush=True)
+            x = {}
+            y = None
+            for name, values in self._samples.items():
+                if name == "out":
+                    y = np_utils.to_categorical(values, nb_classes=self.max_num_labels)
+                else:
+                    x[name] = np.array(values)
+            self.init_model()
+            self.model.fit(x, y, batch_size=self._minibatch_size,
+                           nb_epoch=self._nb_epochs, verbose=2)
+            self._samples = defaultdict(list)
+            self._update_index = 0
+            self._iteration += 1
+            print("Done (%.3fs)." % (time.time() - started))
         finalized = NeuralNetwork(list(self.labels), model=self.model) if freeze else None
-        print("Done (%.3fs)." % (time.time() - started))
         if freeze:
             print("Labels: %d" % self.num_labels)
             print("Features: %d" % sum(f.num * (f.dim or 1) for f in self.feature_params.values()))

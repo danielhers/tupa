@@ -169,6 +169,7 @@ class Parser(object):
             print(Config().line_end, end="")
             if train:
                 print(Config().line_end, flush=True)
+                self.model.fit()
             self.total_correct += self.correct_count
             self.total_actions += self.action_count
             num_passages += 1

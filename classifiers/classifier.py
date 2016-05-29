@@ -34,6 +34,12 @@ class Classifier(object):
             self._num_labels = self.num_labels
             self.resize()
 
+    def fit(self):
+        """
+        Fit the model if doing batch-based fitting (and not just at finalize)
+        """
+        pass
+
     def resize(self):
         raise NotImplementedError()
 
