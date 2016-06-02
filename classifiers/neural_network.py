@@ -65,8 +65,12 @@ class NeuralNetwork(Classifier):
             self._nb_epochs = nb_epochs
             self._optimizer = optimizer
             self._loss = loss
-            self._regularizer = regularizer
-            self._regularization = regularization
+            if regularizer is None:
+                self._regularizer = None
+            elif regularizer == "l1l2":
+                self._regularizer = regularizers.l1l2(regularization, regularization)
+            else:
+                self._regularizer = regularizers.get(regularizer, {"l": regularization})
             self.feature_params = feature_params
             self.model = None
             self._samples = defaultdict(list)
@@ -87,7 +91,8 @@ class NeuralNetwork(Classifier):
             else:  # index feature
                 i = Input(shape=(param.num,), dtype="int32", name=suffix)
                 x = Embedding(output_dim=param.dim, input_dim=param.size, init=self._init,
-                              weights=param.init, input_length=param.num)(i)
+                              weights=param.init, input_length=param.num,
+                              W_regularizer=self._regularizer)(i)
                 x = Flatten()(x)
                 if self._normalize:
                     x = BatchNormalization()(x)
@@ -95,20 +100,14 @@ class NeuralNetwork(Classifier):
             encoded.append(x)
         x = merge(encoded, mode="concat")
         for _ in range(self._layers):
-            x = Dense(self._layer_dim, activation=self._activation, init=self._init)(x)
+            x = Dense(self._layer_dim, activation=self._activation, init=self._init,
+                      W_regularizer=self._regularizer, b_regularizer=self._regularizer)(x)
             if self._normalize:
                 x = BatchNormalization()(x)
-        out = Dense(self.max_num_labels, activation="softmax", init=self._init,
-                    activity_regularizer=self.regularizer(), name="out")(x)
+        out = Dense(self.max_num_labels, activation="softmax", init=self._init, name="out",
+                    W_regularizer=self._regularizer, b_regularizer=self._regularizer)(x)
         self.model = Model(input=inputs, output=[out])
         self.compile()
-
-    def regularizer(self):
-        if self._regularizer is None:
-            return None
-        if self._regularizer == "l1l2":
-            return regularizers.activity_l1l2(self._regularization, self._regularization)
-        return regularizers.get("activity_" + self._regularizer, {"l": self._regularization})
 
     def compile(self):
         self.model.compile(optimizer=self._optimizer, loss={"out": self._loss})
