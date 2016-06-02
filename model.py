@@ -31,6 +31,7 @@ class Model(object):
                                        layers=Config().args.layers,
                                        layer_dim=Config().args.layerdim,
                                        activation=Config().args.activation,
+                                       normalize=Config().args.normalize,
                                        init=Config().args.init,
                                        max_num_labels=Config().args.maxlabels,
                                        batch_size=Config().args.batchsize,

@@ -48,10 +48,8 @@ def main():
     w2v_files = [os.environ[f] for f in os.environ if f.startswith("W2V_FILE")]
     num = int(os.environ.get("PARAMS_NUM", 30))
     np.random.seed()
-    params = [Params(OrderedDict(p))
-              for p in zip(*[[(n, v) for v in np.random.choice(vs, num)]
-                             for n, vs in (
-                                 ("seed", 2147483647),
+    domains = (
+        ("seed", 2147483647),
         ("classifier",      10 * [config.NEURAL_NETWORK] + list(config.CLASSIFIERS)),
         ("wordvectors",     [50, 100, 200, 300] + [load_word2vec(f) for f in w2v_files]),
         ("tagdim",          (5, 10, 20)),
@@ -72,7 +70,10 @@ def main():
         ("earlyupdate",     6 * [False] + [True]),
         ("iterations",      range(1, 21)),
         ("worddropout",     (0, .1, .2, .25, .3)),
-    )])]
+        ("normalize",       (False, True)),
+    )
+    params = [Params(OrderedDict(p))
+              for p in zip(*[[(n, v) for v in np.random.choice(vs, num)] for n, vs in domains])]
     print("All parameter combinations to try:")
     print("\n".join(map(str, params)))
     print("Saving results to '%s'" % out_file)

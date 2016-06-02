@@ -23,7 +23,7 @@ class NeuralNetwork(Classifier):
     """
 
     def __init__(self, labels=None, feature_params=None, model=None,
-                 layers=1, layer_dim=100, activation="tanh",
+                 layers=1, layer_dim=100, activation="tanh", normalize=False,
                  init="glorot_normal", max_num_labels=100, batch_size=None,
                  minibatch_size=200, nb_epochs=5,
                  optimizer="adam", loss="categorical_crossentropy"):
@@ -35,6 +35,7 @@ class NeuralNetwork(Classifier):
         :param layers: number of hidden layers
         :param layer_dim: size of hidden layer
         :param activation: activation function at hidden layers
+        :param normalize: perform batch normalization after each layer?
         :param init: initialization type for hidden layers
         :param max_num_labels: since model size is fixed, set maximum output size
         :param batch_size: if given, fit model every this many samples
@@ -52,6 +53,7 @@ class NeuralNetwork(Classifier):
             self._layers = layers
             self._layer_dim = layer_dim
             self._activation = activation
+            self._normalize = normalize
             self._init = init
             self._num_labels = self.num_labels
             self._batch_size = batch_size
@@ -81,11 +83,15 @@ class NeuralNetwork(Classifier):
                 x = Embedding(output_dim=param.dim, input_dim=param.size,
                               weights=param.init, input_length=param.num)(i)
                 x = Flatten()(x)
+                if self._normalize:
+                    x = BatchNormalization()(x)
             inputs.append(i)
             encoded.append(x)
         x = merge(encoded, mode="concat")
         for _ in range(self._layers):
             x = Dense(self._layer_dim, activation=self._activation, init=self._init)(x)
+            if self._normalize:
+                x = BatchNormalization()(x)
         out = Dense(self.max_num_labels, activation="softmax", init=self._init, name="out")(x)
         self.model = Model(input=inputs, output=[out])
         self.compile()
