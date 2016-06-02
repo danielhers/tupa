@@ -106,6 +106,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--maxgaps", type=int, default=3, help="maximum number of gap types to keep embeddings for")
         group.add_argument("--maxactions", type=int, default=10, help="maximum number of action types for embeddings")
         group.add_argument("--worddropout", type=float, default=0, help="word dropout parameter")
+        group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter for all inputs")
         self.args = argparser.parse_args(args if args else None)
 
         assert self.args.passages or self.args.train,\

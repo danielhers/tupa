@@ -37,6 +37,7 @@ class Model(object):
                                        batch_size=Config().args.batchsize,
                                        minibatch_size=Config().args.minibatchsize,
                                        nb_epochs=Config().args.nbepochs,
+                                       dropout=Config().args.dropout,
                                        optimizer=Config().args.optimizer,
                                        loss=Config().args.loss,
                                        regularizer=Config().args.regularizer,

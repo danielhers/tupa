@@ -75,6 +75,7 @@ def main():
         ("normalize",       (False, True)),
         ("regularizer",     [None] + list(config.REGULARIZERS)),
         ("regularization",  (1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3)),
+        ("dropout",         (0, .1, .2, .3, .4, .5)),
     )
     params = [Params(OrderedDict(p))
               for p in zip(*[[(n, v) for v in np.random.choice(vs, num)] for n, vs in domains])]

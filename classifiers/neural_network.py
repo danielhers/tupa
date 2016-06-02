@@ -4,7 +4,7 @@ from collections import defaultdict
 import numpy as np
 from keras import regularizers
 from keras.layers import Input, Dense, merge
-from keras.layers.core import Flatten
+from keras.layers.core import Flatten, Dropout, Lambda
 from keras.layers.embeddings import Embedding
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model, model_from_json
@@ -26,7 +26,7 @@ class NeuralNetwork(Classifier):
     def __init__(self, labels=None, feature_params=None, model=None,
                  layers=1, layer_dim=100, activation="tanh", normalize=False,
                  init="glorot_normal", max_num_labels=100, batch_size=None,
-                 minibatch_size=200, nb_epochs=5,
+                 minibatch_size=200, nb_epochs=5, dropout=0,
                  optimizer="adam", loss="categorical_crossentropy",
                  regularizer="l2", regularization=1e-8):
         """
@@ -43,6 +43,7 @@ class NeuralNetwork(Classifier):
         :param batch_size: if given, fit model every this many samples
         :param minibatch_size: batch size for SGD
         :param nb_epochs: number of epochs for SGD
+        :param dropout: dropout to apply to input layer
         :param optimizer: algorithm to use for optimization
         :param loss: objective function to use for optimization
         :param regularizer: regularization type (None, l1, l2 or l1l2)
@@ -63,6 +64,7 @@ class NeuralNetwork(Classifier):
             self._batch_size = batch_size
             self._minibatch_size = minibatch_size
             self._nb_epochs = nb_epochs
+            self._dropout = dropout
             self._optimizer = optimizer
             self._loss = loss
             if regularizer is None:
@@ -99,6 +101,9 @@ class NeuralNetwork(Classifier):
             inputs.append(i)
             encoded.append(x)
         x = merge(encoded, mode="concat")
+        if self._dropout:
+            x = Dropout(self._dropout)(x)
+            x = Lambda(lambda a: a.astype("float32"))(x)
         for _ in range(self._layers):
             x = Dense(self._layer_dim, activation=self._activation, init=self._init,
                       W_regularizer=self._regularizer, b_regularizer=self._regularizer)(x)
