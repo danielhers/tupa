@@ -31,7 +31,8 @@ OBJECTIVES = ("categorical_crossentropy", "hinge", "squared_hinge")
 
 class Config(object, metaclass=Singleton):
     def __init__(self, *args):
-        argparser = argparse.ArgumentParser(description="""Transition-based parser for UCCA.""")
+        argparser = argparse.ArgumentParser(description="""Transition-based parser for UCCA.""",
+                                            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
         argparser.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
         argparser.add_argument("-m", "--model", help="model file to load/save")
         argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=SPARSE_PERCEPTRON, help="model type")
