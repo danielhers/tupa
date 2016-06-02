@@ -2,6 +2,7 @@ import time
 from collections import defaultdict
 
 import numpy as np
+from keras import regularizers
 from keras.layers import Input, Dense, merge
 from keras.layers.core import Flatten
 from keras.layers.embeddings import Embedding
@@ -26,7 +27,8 @@ class NeuralNetwork(Classifier):
                  layers=1, layer_dim=100, activation="tanh", normalize=False,
                  init="glorot_normal", max_num_labels=100, batch_size=None,
                  minibatch_size=200, nb_epochs=5,
-                 optimizer="adam", loss="categorical_crossentropy"):
+                 optimizer="adam", loss="categorical_crossentropy",
+                 regularizer="l2", regularization=1e-8):
         """
         Create a new untrained NN or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
@@ -43,6 +45,8 @@ class NeuralNetwork(Classifier):
         :param nb_epochs: number of epochs for SGD
         :param optimizer: algorithm to use for optimization
         :param loss: objective function to use for optimization
+        :param regularizer: regularization type (None, l1, l2 or l1l2)
+        :param regularization: regularization parameter lambda
         """
         super(NeuralNetwork, self).__init__(model_type=config.NEURAL_NETWORK, labels=labels, model=model)
         assert feature_params is not None or model is not None
@@ -61,6 +65,8 @@ class NeuralNetwork(Classifier):
             self._nb_epochs = nb_epochs
             self._optimizer = optimizer
             self._loss = loss
+            self._regularizer = regularizer
+            self._regularization = regularization
             self.feature_params = feature_params
             self.model = None
             self._samples = defaultdict(list)
@@ -80,7 +86,7 @@ class NeuralNetwork(Classifier):
                 x = BatchNormalization()(i)
             else:  # index feature
                 i = Input(shape=(param.num,), dtype="int32", name=suffix)
-                x = Embedding(output_dim=param.dim, input_dim=param.size,
+                x = Embedding(output_dim=param.dim, input_dim=param.size, init=self._init,
                               weights=param.init, input_length=param.num)(i)
                 x = Flatten()(x)
                 if self._normalize:
@@ -92,9 +98,17 @@ class NeuralNetwork(Classifier):
             x = Dense(self._layer_dim, activation=self._activation, init=self._init)(x)
             if self._normalize:
                 x = BatchNormalization()(x)
-        out = Dense(self.max_num_labels, activation="softmax", init=self._init, name="out")(x)
+        out = Dense(self.max_num_labels, activation="softmax", init=self._init,
+                    activity_regularizer=self.regularizer(), name="out")(x)
         self.model = Model(input=inputs, output=[out])
         self.compile()
+
+    def regularizer(self):
+        if self._regularizer is None:
+            return None
+        if self._regularizer == "l1l2":
+            return regularizers.activity_l1l2(self._regularization, self._regularization)
+        return regularizers.get("activity_" + self._regularizer, {"l": self._regularization})
 
     def compile(self):
         self.model.compile(optimizer=self._optimizer, loss={"out": self._loss})

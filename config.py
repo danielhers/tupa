@@ -27,6 +27,7 @@ INITIALIZATIONS = ("glorot_normal", "glorot_uniform", "he_normal", "he_uniform",
                    "normal", "uniform", "lecun_uniform")
 OPTIMIZERS = ("adam", "sgd", "rmsprop", "adagrad", "adadelta", "adamax")
 OBJECTIVES = ("categorical_crossentropy", "hinge", "squared_hinge")
+REGULARIZERS = ("l2", "l1", "l1l2")
 
 
 class Config(object, metaclass=Singleton):
@@ -96,6 +97,8 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--nbepochs", type=int, default=5, help="number of epochs for optimization")
         group.add_argument("--optimizer", choices=OPTIMIZERS, default=OPTIMIZERS[0], help="algorithm for optimization")
         group.add_argument("--loss", choices=OBJECTIVES, default=OBJECTIVES[0], help="loss function for optimization")
+        group.add_argument("--regularizer", choices=REGULARIZERS, default=REGULARIZERS[0], help="regularizer type")
+        group.add_argument("--regularization", type=float, default=1e-8, help="regularization parameter")
         group.add_argument("--maxwords", default=10000, help="maximum number of words to keep embeddings for")
         group.add_argument("--maxtags", type=int, default=100, help="maximum number of POS tags to keep embeddings for")
         group.add_argument("--maxedgelabels", type=int, default=15, help="maximum number of edge labels for embeddings")

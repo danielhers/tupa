@@ -14,6 +14,8 @@ class Params(object):
     def __init__(self, params):
         if not params["earlyupdate"]:
             params["iterations"] = 1
+        if params["regularizer"] is None:
+            params["regularization"] = None
         self.params = params
         self.scores = None
 
@@ -71,6 +73,8 @@ def main():
         ("iterations",      range(1, 21)),
         ("worddropout",     (0, .1, .2, .25, .3)),
         ("normalize",       (False, True)),
+        ("regularizer",     [None] + list(config.REGULARIZERS)),
+        ("regularization",  (1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3)),
     )
     params = [Params(OrderedDict(p))
               for p in zip(*[[(n, v) for v in np.random.choice(vs, num)] for n, vs in domains])]

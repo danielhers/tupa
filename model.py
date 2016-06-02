@@ -38,7 +38,9 @@ class Model(object):
                                        minibatch_size=Config().args.minibatchsize,
                                        nb_epochs=Config().args.nbepochs,
                                        optimizer=Config().args.optimizer,
-                                       loss=Config().args.loss
+                                       loss=Config().args.loss,
+                                       regularizer=Config().args.regularizer,
+                                       regularization=Config().args.regularization
                                        )
         else:
             raise ValueError("Invalid model type: '%s'" % model_type)
