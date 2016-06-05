@@ -102,8 +102,7 @@ class NeuralNetwork(Classifier):
             encoded.append(x)
         x = merge(encoded, mode="concat")
         if self._dropout:
-            x = Dropout(self._dropout)(x)
-            x = Lambda(lambda a: a.astype("float32"))(x)
+            x = Dropout(float(self._dropout))(x)
         for _ in range(self._layers):
             x = Dense(self._layer_dim, activation=self._activation, init=self._init,
                       W_regularizer=self._regularizer, b_regularizer=self._regularizer)(x)
