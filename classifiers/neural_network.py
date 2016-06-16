@@ -89,7 +89,7 @@ class NeuralNetwork(Classifier):
         for suffix, param in self.feature_params.items():
             if param.data is None:  # numeric feature
                 i = Input(shape=(param.num,), name=suffix)
-                x = BatchNormalization()(i)
+                x = BatchNormalization(mode=2)(i)  # mode=2 due to keras bug #2954; remove once fixed
             else:  # index feature
                 i = Input(shape=(param.num,), dtype="int32", name=suffix)
                 x = Embedding(output_dim=param.dim, input_dim=param.size, init=self._init,
@@ -97,7 +97,7 @@ class NeuralNetwork(Classifier):
                               W_regularizer=self._regularizer)(i)
                 x = Flatten()(x)
                 if self._normalize:
-                    x = BatchNormalization()(x)
+                    x = BatchNormalization(mode=2)(x)  # mode=2 due to keras bug #2954; remove once fixed
             inputs.append(i)
             encoded.append(x)
         x = merge(encoded, mode="concat")
@@ -107,7 +107,7 @@ class NeuralNetwork(Classifier):
             x = Dense(self._layer_dim, activation=self._activation, init=self._init,
                       W_regularizer=self._regularizer, b_regularizer=self._regularizer)(x)
             if self._normalize:
-                x = BatchNormalization()(x)
+                x = BatchNormalization(mode=2)(x)  # mode=2 due to keras bug #2954; remove once fixed
         out = Dense(self.max_num_labels, activation="softmax", init=self._init, name="out",
                     W_regularizer=self._regularizer, b_regularizer=self._regularizer)(x)
         self.model = Model(input=inputs, output=[out])
