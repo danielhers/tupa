@@ -22,7 +22,7 @@ NEURAL_NETWORK = "nn"
 CLASSIFIERS = (SPARSE_PERCEPTRON, DENSE_PERCEPTRON, NEURAL_NETWORK)
 
 # Multiple choice options: the first one is always the default
-ACTIVATIONS = ("tanh", "sigmoid", "relu")
+ACTIVATIONS = ("sigmoid", "tanh", "relu")
 INITIALIZATIONS = ("glorot_normal", "glorot_uniform", "he_normal", "he_uniform",
                    "normal", "uniform", "lecun_uniform")
 OPTIMIZERS = ("adam", "sgd", "rmsprop", "adagrad", "adadelta", "adamax")
@@ -82,12 +82,12 @@ class Config(object, metaclass=Singleton):
         group = argparser.add_argument_group(title="Neural network parameters")
         group.add_argument("-w", "--wordvectors", default=100, help="dimensions for random init, or file to load")
         group.add_argument("--tagdim", type=int, default=10, help="dimension for POS tag embeddings")
-        group.add_argument("--labeldim", type=int, default=10, help="dimension for edge label embeddings")
+        group.add_argument("--labeldim", type=int, default=20, help="dimension for edge label embeddings")
         group.add_argument("--punctdim", type=int, default=2, help="dimension for separator punctuation embeddings")
         group.add_argument("--gapdim", type=int, default=2, help="dimension for gap type embeddings")
         group.add_argument("--actiondim", type=int, default=5, help="dimension for action type embeddings")
-        group.add_argument("--layerdim", type=int, default=100, help="dimension for hidden layers")
-        group.add_argument("--layers", type=int, default=1, help="number of hidden layers")
+        group.add_argument("--layerdim", type=int, default=500, help="dimension for hidden layers")
+        group.add_argument("--layers", type=int, default=2, help="number of hidden layers")
         group.add_argument("--activation", choices=ACTIVATIONS, default=ACTIVATIONS[0], help="activation function")
         group.add_argument("--normalize", type=bool, default=True, help="batch normalization after each layer")
         group.add_argument("--init", choices=INITIALIZATIONS, default=INITIALIZATIONS[0], help="weight initialization")
@@ -105,7 +105,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--maxpuncts", type=int, default=5, help="maximum number of punctuations for embeddings")
         group.add_argument("--maxgaps", type=int, default=3, help="maximum number of gap types to keep embeddings for")
         group.add_argument("--maxactions", type=int, default=10, help="maximum number of action types for embeddings")
-        group.add_argument("--worddropout", type=float, default=0, help="word dropout parameter")
+        group.add_argument("--worddropout", type=float, default=0.3, help="word dropout parameter")
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter for all inputs")
         self.args = argparser.parse_args(args if args else None)
 
