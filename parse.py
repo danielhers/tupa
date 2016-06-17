@@ -339,7 +339,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 passage_util.write_passage(guessed_passage, args)
         if passage_scores and (not args.verbose or len(passage_scores) > 1):
             scores = evaluation.Scores.aggregate(passage_scores)
-            print("\nAverage F1 score on test: %.3f" % scores.average_f1())
+            print("\nAverage labeled F1 score on test: %.3f" % scores.average_f1())
             print("Aggregated scores:")
             scores.print()
             if Config().args.testscores:
