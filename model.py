@@ -23,26 +23,26 @@ class Model(object):
             from classifiers.dense_perceptron import DensePerceptron
             self.feature_extractor = self.dense_features_wrapper(FeatureEmbedding)
             self.model = DensePerceptron(labels, num_features=self.feature_extractor.num_features())
-        elif model_type == config.NEURAL_NETWORK:
-            from features.indexer import FeatureIndexer
-            from classifiers.neural_network import NeuralNetwork
-            self.feature_extractor = self.dense_features_wrapper(FeatureIndexer)
-            self.model = NeuralNetwork(labels, feature_params=self.feature_extractor.params,
-                                       layers=Config().args.layers,
-                                       layer_dim=Config().args.layerdim,
-                                       activation=Config().args.activation,
-                                       normalize=Config().args.normalize,
-                                       init=Config().args.init,
-                                       max_num_labels=Config().args.maxlabels,
-                                       batch_size=Config().args.batchsize,
-                                       minibatch_size=Config().args.minibatchsize,
-                                       nb_epochs=Config().args.nbepochs,
-                                       dropout=Config().args.dropout,
-                                       optimizer=Config().args.optimizer,
-                                       loss=Config().args.loss,
-                                       regularizer=Config().args.regularizer,
-                                       regularization=Config().args.regularization
-                                       )
+        elif model_type == config.FEEDFORWARD_NN:
+            from features.enumerator import FeatureEnumerator
+            from nn.feedforward import FeedforwardNeuralNetwork
+            self.feature_extractor = self.dense_features_wrapper(FeatureEnumerator)
+            self.model = FeedforwardNeuralNetwork(labels, feature_params=self.feature_extractor.params,
+                                                  layers=Config().args.layers,
+                                                  layer_dim=Config().args.layerdim,
+                                                  activation=Config().args.activation,
+                                                  normalize=Config().args.normalize,
+                                                  init=Config().args.init,
+                                                  max_num_labels=Config().args.maxlabels,
+                                                  batch_size=Config().args.batchsize,
+                                                  minibatch_size=Config().args.minibatchsize,
+                                                  nb_epochs=Config().args.nbepochs,
+                                                  dropout=Config().args.dropout,
+                                                  optimizer=Config().args.optimizer,
+                                                  loss=Config().args.loss,
+                                                  regularizer=Config().args.regularizer,
+                                                  regularization=Config().args.regularization
+                                                  )
         else:
             raise ValueError("Invalid model type: '%s'" % model_type)
 
@@ -68,8 +68,11 @@ class Model(object):
     def update(self, *args, **kwargs):
         self.model.update(*args, **kwargs)
 
-    def fit(self):
-        self.model.fit()
+    def finish(self):
+        self.model.finish()
+
+    def advance(self):
+        self.model.advance()
 
     @property
     def update_only_on_error(self):

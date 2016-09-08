@@ -34,9 +34,15 @@ class Classifier(object):
             self._num_labels = self.num_labels
             self.resize()
 
-    def fit(self):
+    def finish(self):
         """
-        Fit the model if doing batch-based fitting (and not just at finalize)
+        Mark the current item as finished.  Fit the model if reached the batch size.
+        """
+        pass
+
+    def advance(self):
+        """
+        Mark the current time step as finished.
         """
         pass
 

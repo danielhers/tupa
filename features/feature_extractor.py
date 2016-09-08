@@ -87,7 +87,6 @@ class FeatureExtractor(object):
         """
         Calculate feature values according to current state
         :param state: current state of the parser
-        :param train: whether we are in training
         """
         raise NotImplementedError()
 
@@ -133,7 +132,7 @@ class FeatureExtractor(object):
     @staticmethod
     def get_prop(element, node, prev_node, p, state):
         try:
-            if element.source == "a":
+            if element is not None and element.source == "a":
                 return FeatureExtractor.get_action_prop(node, p)
             elif p in "pq":
                 return FeatureExtractor.get_separator_prop(

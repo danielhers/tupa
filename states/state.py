@@ -6,8 +6,8 @@ from operator import attrgetter
 from parsing.action import Actions
 from parsing.config import Config
 from parsing.constants import Constraints
-from state.edge import Edge
-from state.node import Node
+from states.edge import Edge
+from states.node import Node
 from ucca import core, layer0, layer1
 from ucca.layer1 import EdgeTags
 
@@ -204,6 +204,7 @@ class State(object):
             intersection = set(self.stack).intersection(self.buffer)
             assert not intersection, "Stack and buffer overlap: %s" % intersection
         self.assert_node_ratio()
+        action.index = len(self.actions)
         self.actions.append(action)
 
     def add_node(self, *args, **kwargs):

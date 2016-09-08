@@ -17,6 +17,10 @@ class FeatureParameters(object):
         return "%s(%s, %d, %d, %f, %s, %s, %s)" % (
             self.__class__.__name__, self.suffix, self.dim, self.size, self.dropout, self.num, self.init, self.data)
 
+    @property
+    def numeric(self):
+        return False
+
 
 class NumericFeatureParameters(FeatureParameters):
     SUFFIX = "numeric"
@@ -27,6 +31,10 @@ class NumericFeatureParameters(FeatureParameters):
     def __repr__(self):
         return "%s(%d)" % (
             self.__class__.__name__, self.num)
+
+    @property
+    def numeric(self):
+        return True
 
 
 def copy_params(params, copy_dict=dict):

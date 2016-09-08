@@ -8,7 +8,7 @@ from parsing.action import Actions
 from parsing.config import Config
 from parsing.model import Model
 from parsing.oracle import Oracle
-from state.state import State
+from states.state import State
 from ucca import diffutil, evaluation, layer0, layer1
 
 
@@ -169,7 +169,7 @@ class Parser(object):
             print(Config().line_end, end="")
             if train:
                 print(Config().line_end, flush=True)
-                self.model.fit()
+            self.model.finish()
             self.total_correct += self.correct_count
             self.total_actions += self.action_count
             num_passages += 1
@@ -205,7 +205,7 @@ class Parser(object):
                     if train:
                         raise ParserException("Error in oracle during training") from e
 
-            features = self.model.extract_features(self.state, train)
+            features = self.model.extract_features(self.state)
             predicted_action = self.predict_action(features, true_actions)  # sets self.scores
             action = predicted_action
             correct_action = False
@@ -223,6 +223,7 @@ class Parser(object):
                 if best_true_action.is_swap:
                     rate *= Config().args.importance
                 self.model.update(features, predicted_action.id, best_true_action.id, rate)
+            self.model.advance()
             self.action_count += 1
             try:
                 self.state.transition(action)

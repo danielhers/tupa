@@ -17,6 +17,7 @@ class Action(object):
         self.orig_edge = orig_edge
         self.edge = None  # Will be set by State when the edge created by this action is known
         self.oracle = oracle
+        self.index = None
 
         self.type_id = Action.type_to_id.get(self.type)  # Allocate ID for fast comparison
         if self.type_id is None:

@@ -6,7 +6,7 @@ from parsing import config
 from parsing.config import Config
 from parsing.oracle import Oracle
 from parsing.parse import Parser
-from parsing.state.state import State
+from states.state import State
 from ucca import convert, evaluation
 from ucca.tests.test_ucca import TestUtil
 
@@ -38,7 +38,7 @@ class ParserTests(unittest.TestCase):
         self.train_test(config.DENSE_PERCEPTRON)
 
     def test_parser_nn(self):
-        self.train_test(config.NEURAL_NETWORK, compare=False)
+        self.train_test(config.FEEDFORWARD_NN, compare=False)
 
     def train_test(self, model_type, compare=True):
         passages = [self.passage]

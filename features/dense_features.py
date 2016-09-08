@@ -40,8 +40,8 @@ class DenseFeatureExtractor(FeatureExtractor):
     Requires wrapping by FeatureEmbedding.
     To be used with DensePerceptron or NeuralNetwork classifier.
     """
-    def __init__(self):
-        super(DenseFeatureExtractor, self).__init__(FEATURE_TEMPLATES)
+    def __init__(self, feature_templates=FEATURE_TEMPLATES):
+        super(DenseFeatureExtractor, self).__init__(feature_templates=feature_templates)
         self.numeric_features_template = None
         self.non_numeric_feature_templates = []
         for feature_template in self.feature_templates:
@@ -69,11 +69,11 @@ class DenseFeatureExtractor(FeatureExtractor):
                     feature_template)
             self.non_numeric_by_suffix[feature_template.suffix] = feature_template
 
-    def extract_features(self, state, train):
+    def extract_features(self, state, params=None):
         """
         Calculate feature values according to current state
         :param state: current state of the parser
-        :param train: whether we are in training
+        :param params: dict of FeatureParameters for each suffix
         :return pair: (list of values for all numeric features,
                        list of (suffix, value) pairs for all non-numeric features)
         """
@@ -105,3 +105,7 @@ class DenseFeatureExtractor(FeatureExtractor):
         assert feature_template is not None, \
             "Missing feature template for suffix '%s'" % suffix
         return sum(len(e.properties) for e in feature_template.elements)
+
+    def features_exist(self, suffix):
+        template = self.numeric_features_template if suffix == "numeric" else self.non_numeric_by_suffix.get(suffix)
+        return template is not None

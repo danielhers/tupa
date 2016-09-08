@@ -18,15 +18,15 @@ class Singleton(type):
 
 SPARSE_PERCEPTRON = "sparse"
 DENSE_PERCEPTRON = "dense"
-NEURAL_NETWORK = "nn"
-CLASSIFIERS = (SPARSE_PERCEPTRON, DENSE_PERCEPTRON, NEURAL_NETWORK)
+FEEDFORWARD_NN = "nn"
+CLASSIFIERS = (SPARSE_PERCEPTRON, DENSE_PERCEPTRON, FEEDFORWARD_NN)
 
 # Multiple choice options: the first one is always the default
 ACTIVATIONS = ("sigmoid", "tanh", "relu")
 INITIALIZATIONS = ("glorot_normal", "glorot_uniform", "he_normal", "he_uniform",
                    "normal", "uniform", "lecun_uniform")
 OPTIMIZERS = ("adam", "sgd", "rmsprop", "adagrad", "adadelta", "adamax")
-OBJECTIVES = ("categorical_crossentropy", "hinge", "squared_hinge")
+OBJECTIVES = ("categorical_crossentropy", "max_margin", "hinge", "squared_hinge")
 REGULARIZERS = ("l2", "l1", "l1l2")
 
 
@@ -92,7 +92,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--normalize", type=bool, default=True, help="batch normalization after each layer")
         group.add_argument("--init", choices=INITIALIZATIONS, default=INITIALIZATIONS[0], help="weight initialization")
         group.add_argument("--maxlabels", type=int, default=100, help="maximum number of actions to allow")
-        group.add_argument("--batchsize", type=int, help="if given, fit model every this many updates")
+        group.add_argument("--batchsize", type=int, default=10, help="fit model every this many passages")
         group.add_argument("--minibatchsize", type=int, default=200, help="mini-batch size for optimization")
         group.add_argument("--nbepochs", type=int, default=5, help="number of epochs for optimization")
         group.add_argument("--optimizer", choices=OPTIMIZERS, default=OPTIMIZERS[0], help="algorithm for optimization")

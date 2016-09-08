@@ -32,22 +32,21 @@ class FeatureEmbedding(FeatureExtractorWrapper):
             param.dim = w2v.vector_size
             param.data = UnknownDict({x: w2v[x] for x in w2v.vocab}, unk)
 
-    def extract_features(self, state, train):
+    def extract_features(self, state):
         """
         Calculate feature values according to current state
         :param state: current state of the parser
-        :param train: whether we are in training
         :return array of concatenated numeric and embedding features
         """
-        numeric_features, non_numeric_features = self.feature_extractor.extract_features(state, train)
+        numeric_features, non_numeric_features = self.feature_extractor.extract_features(state)
         features = [np.array(numeric_features, dtype=float)]
         for suffix, values in non_numeric_features:
             param = self.params[suffix]
             self.init_data(param)
             features += [param.data[v] for v in values]
-        assert sum(map(len, features)) == self.num_features(),\
-            "Invalid total number of features: %d != %d " % (
-                sum(map(len, features)), self.num_features())
+        # assert sum(map(len, features)) == self.num_features(),\
+        #     "Invalid total number of features: %d != %d " % (
+        #         sum(map(len, features)), self.num_features())
         return np.hstack(features).reshape((-1, 1))
 
     def num_features(self):

@@ -4,7 +4,6 @@ import time
 from collections import defaultdict, Counter
 import numpy as np
 
-
 class UnknownDict(defaultdict):
     """
     defaultdict that has a single default value for missing keys

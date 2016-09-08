@@ -48,14 +48,14 @@ class SparseFeatureExtractor(FeatureExtractor):
     Object to extract features from the parser state to be used in action classification
     To be used with SparsePerceptron classifier.
     """
+
     def __init__(self):
         super(SparseFeatureExtractor, self).__init__(FEATURE_TEMPLATES)
 
-    def extract_features(self, state, train):
+    def extract_features(self, state):
         """
         Calculate feature values according to current state
         :param state: current state of the parser
-        :param train: whether we are in training
         :return dict of feature name -> value
         """
         features = {

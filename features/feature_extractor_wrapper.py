@@ -18,7 +18,7 @@ class FeatureExtractorWrapper(FeatureExtractor):
         params[param.suffix] = param
         return params
 
-    def extract_features(self, state, train):
+    def extract_features(self, state):
         raise NotImplementedError()
 
     def finalize(self):
