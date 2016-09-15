@@ -63,7 +63,7 @@ def main():
         ("layers",          [1] + 5 * [2]),
         ("activation",      config.ACTIVATIONS),
         ("init",            5 * [config.INITIALIZATIONS[0]] + list(config.INITIALIZATIONS)),
-        ("batchsize",       (1, 3, 5, 10, 20, 50)),
+        ("batchsize",       (10, 30, 50, 100, 200, 500)),
         ("minibatchsize",   (50, 100, 200, 300, 500, 1000)),
         ("nbepochs",        range(10, 51)),
         ("optimizer",       10 * [config.OPTIMIZERS[0]] + list(config.OPTIMIZERS)),
