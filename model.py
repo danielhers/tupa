@@ -68,8 +68,8 @@ class Model(object):
     def update(self, *args, **kwargs):
         self.model.update(*args, **kwargs)
 
-    def finish(self):
-        self.model.finish()
+    def finish(self, train):
+        self.model.finish(train)
 
     def advance(self):
         self.model.advance()

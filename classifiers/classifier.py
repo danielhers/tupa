@@ -34,9 +34,10 @@ class Classifier(object):
             self._num_labels = self.num_labels
             self.resize()
 
-    def finish(self):
+    def finish(self, train=False):
         """
         Mark the current item as finished.  Fit the model if reached the batch size.
+        :param train: fit the model if batch size reached?
         """
         pass
 
