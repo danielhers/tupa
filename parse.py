@@ -336,6 +336,8 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
             if args.evaluate or train:
                 score = evaluate_passage(guessed_passage, ref_passage)
                 passage_scores.append(score)
+            else:
+                print()
             if guessed_passage is not None and not args.nowrite:
                 passage_util.write_passage(guessed_passage, args)
         if passage_scores and (not args.verbose or len(passage_scores) > 1):
