@@ -61,11 +61,11 @@ class NeuralNetwork(Classifier):
             else:
                 self._loss = loss
             if regularizer is None:
-                self._regularizer = None
+                self._regularizer = lambda: None
             elif regularizer == "l1l2":
-                self._regularizer = regularizers.l1l2(regularization, regularization)
+                self._regularizer = lambda: regularizers.l1l2(regularization, regularization)
             else:
-                self._regularizer = regularizers.get(regularizer, {"l": regularization})
+                self._regularizer = lambda: regularizers.get(regularizer, {"l": regularization})
             self.feature_params = feature_params
             self.model = None
         self._batch_size = batch_size

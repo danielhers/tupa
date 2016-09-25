@@ -29,7 +29,7 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             if not param.numeric:  # index feature
                 x = Embedding(output_dim=param.dim, input_dim=param.size, init=self._init,
                               weights=param.init, input_length=param.num,
-                              W_regularizer=self._regularizer)(x)
+                              W_regularizer=self._regularizer())(x)
                 x = Flatten()(x)
             if self._normalize or param.numeric:
                 x = BatchNormalization()(x)
@@ -39,13 +39,13 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             x = Dropout(float(self._dropout))(x)
         for _ in range(self._layers):
             x = Dense(self._layer_dim, activation=self._activation, init=self._init,
-                      W_regularizer=self._regularizer, b_regularizer=self._regularizer)(x)
+                      W_regularizer=self._regularizer(), b_regularizer=self._regularizer())(x)
             if self._normalize:
                 x = BatchNormalization()(x)
             if self._dropout:
                 x = Dropout(float(self._dropout))(x)
         out = Dense(self.max_num_labels, activation="softmax", init=self._init, name="out",
-                    W_regularizer=self._regularizer, b_regularizer=self._regularizer)(x)
+                    W_regularizer=self._regularizer(), b_regularizer=self._regularizer())(x)
         self.model = Model(input=inputs, output=[out])
         self.compile()
 
