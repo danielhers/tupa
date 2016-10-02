@@ -120,6 +120,12 @@ class Config(object, metaclass=Singleton):
             "--train and --dev are incompatible with --folds"
         assert self.args.train or not self.args.dev,\
             "--dev is only possible together with --train"
+        
+        if self.args.model:
+            if self.args.dev and not self.args.devscores:
+                self.args.devscores = self.args.model + ".dev_scores.csv"
+            if self.args.passages and not self.args.testscores:
+                self.args.testscores = self.args.model + ".test_scores.csv"
 
         self._log_file = None
         np.random.seed(self.args.seed)
