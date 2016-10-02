@@ -15,14 +15,15 @@ class DensePerceptron(Classifier):
     Expects features from FeatureEmbedding.
     """
 
-    def __init__(self, labels=None, num_features=None, model=None):
+    def __init__(self, filename, labels=None, num_features=None, model=None):
         """
         Create a new untrained Perceptron or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
         :param num_features: number of features that will be used for the matrix size
         :param model: if given, copy the weights (from a trained model)
         """
-        super(DensePerceptron, self).__init__(model_type=config.DENSE_PERCEPTRON, labels=labels, model=model)
+        super(DensePerceptron, self).__init__(model_type=config.DENSE_PERCEPTRON, filename=filename,
+                                              labels=labels, model=model)
         assert labels is not None and num_features is not None or model is not None
         if self.is_frozen:
             self.model = model
@@ -81,14 +82,14 @@ class DensePerceptron(Classifier):
             print("Averaging weights... ", end="", flush=True)
         self._update_totals()
         model = self._totals / self._update_index if average else self.model
-        finalized = DensePerceptron(list(self.labels), model=model)
+        finalized = DensePerceptron(self.filename, list(self.labels), model=model)
         if average:
             print("Done (%.3fs)." % (time.time() - started))
         print("Labels: %d" % self.num_labels)
         print("Features: %d" % self.num_features)
         return finalized
 
-    def save(self, filename):
+    def save(self):
         """
         Save all parameters to file
         :param filename: file to save to
@@ -103,14 +104,14 @@ class DensePerceptron(Classifier):
             d.update({
                 "_update_index": self._update_index,
             })
-        save_dict(filename, d)
+        save_dict(self.filename, d)
 
-    def load(self, filename):
+    def load(self):
         """
         Load all parameters from file
         :param filename: file to load from
         """
-        d = load_dict(filename)
+        d = load_dict(self.filename)
         model_type = d.get("type")
         assert model_type == "dense", "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])

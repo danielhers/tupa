@@ -5,9 +5,10 @@ from parsing.config import Config
 
 
 class Model(object):
-    def __init__(self, model_type=None, labels=None, feature_extractor=None, model=None):
+    def __init__(self, model_type, filename, labels=None, feature_extractor=None, model=None):
         self._update_only_on_error = None
         self.model_type = model_type
+        self.filename = filename
         if feature_extractor is not None and model is not None:
             self.feature_extractor = feature_extractor
             self.model = model
@@ -17,17 +18,17 @@ class Model(object):
             from classifiers.sparse_perceptron import SparsePerceptron
             from features.sparse_features import SparseFeatureExtractor
             self.feature_extractor = SparseFeatureExtractor()
-            self.model = SparsePerceptron(labels, min_update=Config().args.minupdate)
+            self.model = SparsePerceptron(filename, labels, min_update=Config().args.minupdate)
         elif model_type == config.DENSE_PERCEPTRON:
             from features.embedding import FeatureEmbedding
             from classifiers.dense_perceptron import DensePerceptron
             self.feature_extractor = self.dense_features_wrapper(FeatureEmbedding)
-            self.model = DensePerceptron(labels, num_features=self.feature_extractor.num_features())
+            self.model = DensePerceptron(filename, labels, num_features=self.feature_extractor.num_features())
         elif model_type == config.FEEDFORWARD_NN:
             from features.enumerator import FeatureEnumerator
             from nn.feedforward import FeedforwardNeuralNetwork
             self.feature_extractor = self.dense_features_wrapper(FeatureEnumerator)
-            self.model = FeedforwardNeuralNetwork(labels, feature_params=self.feature_extractor.params,
+            self.model = FeedforwardNeuralNetwork(filename, labels, feature_params=self.feature_extractor.params,
                                                   layers=Config().args.layers,
                                                   layer_dim=Config().args.layerdim,
                                                   activation=Config().args.activation,
@@ -82,14 +83,23 @@ class Model(object):
 
     def finalize(self, *args, **kwargs):
         return Model(model_type=self.model_type,
+                     filename=self.filename,
                      feature_extractor=self.feature_extractor.finalize(*args, **kwargs),
                      model=self.model.finalize(*args, **kwargs))
 
-    def save(self, *args, **kwargs):
-        self.feature_extractor.save(*args, **kwargs)
-        self.model.save(*args, **kwargs)
+    def save(self):
+        if self.filename is not None:
+            try:
+                self.feature_extractor.save(self.filename)
+                self.model.save()
+            except Exception as e:
+                raise IOError("Failed saving model to '%s'" % self.filename, e)
 
-    def load(self, *args, **kwargs):
-        self.feature_extractor.load(*args, **kwargs)
-        self.model.load(*args, **kwargs)
-        Actions().all = self.model.labels
+    def load(self):
+        if self.filename is not None:
+            try:
+                self.feature_extractor.load(self.filename)
+                self.model.load()
+                Actions().all = self.model.labels
+            except Exception as e:
+                raise IOError("Failed loading model from '%s'" % self.filename, e)

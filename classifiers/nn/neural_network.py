@@ -14,7 +14,7 @@ class NeuralNetwork(Classifier):
     Expects features from FeatureEnumerator.
     """
 
-    def __init__(self, labels, model_type, feature_params=None, model=None,
+    def __init__(self, filename, labels, model_type, feature_params=None, model=None,
                  layers=1, layer_dim=100, activation="tanh", normalize=False,
                  init="glorot_normal", max_num_labels=100, batch_size=10,
                  minibatch_size=200, nb_epochs=5, dropout=0,
@@ -40,7 +40,8 @@ class NeuralNetwork(Classifier):
         :param regularizer: regularization type (None, l1, l2 or l1l2)
         :param regularization: regularization parameter lambda
         """
-        super(NeuralNetwork, self).__init__(model_type=model_type, labels=labels, model=model)
+        super(NeuralNetwork, self).__init__(model_type=model_type, filename=filename,
+                                            labels=labels, model=model)
         assert feature_params is not None or model is not None
         if self.is_frozen:
             self.model = model
@@ -85,7 +86,7 @@ class NeuralNetwork(Classifier):
     def resize(self):
         assert self.num_labels <= self.max_num_labels, "Exceeded maximum number of labels"
 
-    def save(self, filename):
+    def save(self):
         """
         Save all parameters to file
         :param filename: file to save to
@@ -95,29 +96,29 @@ class NeuralNetwork(Classifier):
             "labels": self.labels,
             "is_frozen": self.is_frozen,
         }
-        save_dict(filename, d)
+        save_dict(self.filename, d)
         self.init_model()
-        with open(filename + ".json", "w") as f:
+        with open(self.filename + ".json", "w") as f:
             f.write(self.model.to_json())
         try:
-            self.model.save_weights(filename + ".h5", overwrite=True)
+            self.model.save_weights(self.filename + ".h5", overwrite=True)
         except ValueError as e:
             print("Failed saving model weights: %s" % e)
 
-    def load(self, filename):
+    def load(self):
         """
         Load all parameters from file
         :param filename: file to load from
         """
-        d = load_dict(filename)
+        d = load_dict(self.filename)
         model_type = d.get("type")
         assert model_type == self.model_type, "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])
         self.is_frozen = d["is_frozen"]
-        with open(filename + ".json") as f:
+        with open(self.filename + ".json") as f:
             self.model = model_from_json(f.read())
         try:
-            self.model.load_weights(filename + ".h5")
+            self.model.load_weights(self.filename + ".h5")
         except KeyError as e:
             print("Failed loading model weights: %s" % e)
         self.compile()

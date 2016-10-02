@@ -3,12 +3,13 @@ class Classifier(object):
     Interface for classifier used by the parser.
     """
 
-    def __init__(self, model_type, labels=None, model=None):
+    def __init__(self, model_type, filename=None, labels=None, model=None):
         """
         :param labels: a list of labels that can be updated later to add a new label
         :param model: if given, copy the weights (from a trained model)
         """
         self.model_type = model_type
+        self.filename = filename
         self.labels = labels or []
         self._num_labels = len(self.labels)
         self.is_frozen = model is not None
@@ -54,10 +55,10 @@ class Classifier(object):
         assert not self.is_frozen, "Cannot freeze a frozen model"
         self._update_num_labels()
 
-    def save(self, filename):
+    def save(self):
         raise NotImplementedError()
 
-    def load(self, filename):
+    def load(self):
         raise NotImplementedError()
 
     def __str__(self):

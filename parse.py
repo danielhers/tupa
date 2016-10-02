@@ -29,8 +29,7 @@ class Parser(object):
         self.correct_count = 0
         self.total_actions = 0
         self.total_correct = 0
-        self.model = Model(model_type, Actions().all)
-        self.model_file = model_file
+        self.model = Model(model_type, model_file, Actions().all)
         self.beam = beam
         self.learning_rate = Config().args.learningrate
         self.decay_factor = Config().args.decayfactor
@@ -49,8 +48,7 @@ class Parser(object):
         :return: trained model
         """
         if not passages:
-            if self.model_file is not None:  # Nothing to train on; pre-trained model given
-                self.model.load(self.model_file)
+            self.model.load()  # Nothing to train on; pre-trained model given
             return
 
         self.best_score = 0
@@ -111,8 +109,7 @@ class Parser(object):
                 last = True
         if save_model or self.best_model is None:
             self.best_model = self.model  # This is the finalized model
-            if self.model_file is not None:
-                self.best_model.save(self.model_file)
+            self.best_model.save()
         if not last:
             self.model = model  # Restore non-finalized model
         return last

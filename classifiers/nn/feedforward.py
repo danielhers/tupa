@@ -110,5 +110,5 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         if freeze:
             print("Labels: %d" % self.num_labels)
             print("Features: %d" % sum(f.num * (f.dim or 1) for f in self.feature_params.values()))
-            return FeedforwardNeuralNetwork(list(self.labels), model=self.model)
+            return FeedforwardNeuralNetwork(self.filename, list(self.labels), model=self.model)
         return None

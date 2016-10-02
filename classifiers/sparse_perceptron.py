@@ -61,14 +61,15 @@ class SparsePerceptron(Classifier):
     Expects features from SparseFeatureExtractor.
     """
 
-    def __init__(self, labels=None, min_update=1, model=None):
+    def __init__(self, filename, labels=None, min_update=1, model=None):
         """
         Create a new untrained Perceptron or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
         :param min_update: minimum number of updates to a feature required for consideration
         :param model: if given, copy the weights (from a trained model)
         """
-        super(SparsePerceptron, self).__init__(model_type=config.SPARSE_PERCEPTRON, labels=labels, model=model)
+        super(SparsePerceptron, self).__init__(model_type=config.SPARSE_PERCEPTRON, filename=filename,
+                                               labels=labels, model=model)
         assert labels is not None or model is not None
         self.model = defaultdict(lambda: FeatureWeights(self.num_labels))
         if self.is_frozen:
@@ -128,7 +129,7 @@ class SparsePerceptron(Classifier):
             print("Averaging weights... ", end="", flush=True)
         model = {f: w.finalize(self._update_index, average=average)
                  for f, w in self.model.items() if w.update_count >= self._min_update}
-        finalized = SparsePerceptron(list(self.labels), model=model)
+        finalized = SparsePerceptron(self.filename, list(self.labels), model=model)
         if average:
             print("Done (%.3fs)." % (time.time() - started))
         print("Labels: %d" % self.num_labels)
@@ -136,7 +137,7 @@ class SparsePerceptron(Classifier):
             self.num_features, len(model), self._min_update))
         return finalized
 
-    def save(self, filename):
+    def save(self):
         """
         Save all parameters to file
         :param filename: file to save to
@@ -152,14 +153,14 @@ class SparsePerceptron(Classifier):
                 "_min_update": self._min_update,
                 "_update_index": self._update_index,
             })
-        save_dict(filename, d)
+        save_dict(self.filename, d)
 
-    def load(self, filename):
+    def load(self):
         """
         Load all parameters from file
         :param filename: file to load from
         """
-        d = load_dict(filename)
+        d = load_dict(self.filename)
         model_type = d.get("type")
         assert model_type is None or model_type == self.model_type, \
             "Model type does not match: %s" % model_type
