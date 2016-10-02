@@ -79,9 +79,6 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--learningrate", type=float, default=1.0, help="rate for model weight updates")
         group.add_argument("--decayfactor", type=float, default=1.0, help="learning rate decay per iteration")
         group.add_argument("--minupdate", type=int, default=5, help="minimum #updates for using a feature")
-        group = argparser.add_mutually_exclusive_group()
-        group.add_argument("--saveeverybatches", type=int, default=None, help="save model every this many batches")
-        group.add_argument("--saveeveryepochs", type=int, default=None, help="save model every this many epochs")
         group = argparser.add_argument_group(title="Neural network parameters")
         group.add_argument("-w", "--wordvectors", default=100, help="dimensions for random init, or file to load")
         group.add_argument("--tagdim", type=int, default=10, help="dimension for POS tag embeddings")
@@ -110,6 +107,9 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--maxactions", type=int, default=10, help="maximum number of action types for embeddings")
         group.add_argument("--worddropout", type=float, default=0.3, help="word dropout parameter")
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter for all inputs")
+        group = argparser.add_mutually_exclusive_group()
+        group.add_argument("--saveeverybatches", type=int, default=None, help="save model every this many batches")
+        group.add_argument("--saveeveryepochs", type=int, default=None, help="save model every this many epochs")
         self.args = argparser.parse_args(args if args else None)
 
         assert self.args.passages or self.args.train,\

@@ -36,7 +36,7 @@ class Parser(object):
         self.state_hash_history = None  # For loop checking
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
         self.ignore_node = lambda n: n.tag == layer1.NodeTags.Linkage if Config().args.nolinkage else None
-        self.best_score = self.best_model = self.dev = self.iteration = self.batch = self.epoch = None
+        self.best_score = self.best_model = self.dev = self.iteration = self.batch = None
 
     def train(self, passages, dev=None, iterations=1, folds=None):
         """
@@ -62,6 +62,7 @@ class Parser(object):
             if last:
                 break
             last = self.iteration == iterations - 1
+            self.batch = 0
             print("Training iteration %d of %d: " % (self.iteration + 1, iterations))
             passages = [passage for _, passage in self.parse(passages, mode="train")]
             if last:
@@ -92,10 +93,8 @@ class Parser(object):
             print("Average labeled F1 score on dev: %.3f" % score)
             if Config().args.devscores:
                 prefix = [self.iteration]
-                if Config().saveeverybatches or Config().saveeveryepochs:
+                if Config().args.saveeverybatches:
                     prefix.append(self.batch)
-                if Config().saveeveryepochs:
-                    prefix.append(self.epoch)
                 with open(Config().args.devscores, "a") as f:
                     print(",".join([".".join(map(str, prefix))] + scores.fields()), file=f)
             if score >= self.best_score:
@@ -181,6 +180,10 @@ class Parser(object):
             self.total_correct += self.correct_count
             self.total_actions += self.action_count
             num_passages += 1
+            if train and Config().args.saveeverybatches is not None and \
+                    num_passages % (Config().args.saveeverybatches * Config().args.batchsize) == 0:
+                self.eval_dev_and_save_model()
+                self.batch += 1
             yield predicted_passage, passage
 
         if num_passages > 1:
