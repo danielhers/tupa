@@ -37,6 +37,7 @@ class Parser(object):
         self.state_hash_history = None  # For loop checking
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
         self.ignore_node = lambda n: n.tag == layer1.NodeTags.Linkage if Config().args.nolinkage else None
+        self.best_score = self.best_model = self.dev = self.iteration = self.batch = self.epoch = None
 
     def train(self, passages, dev=None, iterations=1, folds=None):
         """
@@ -52,59 +53,69 @@ class Parser(object):
                 self.model.load(self.model_file)
             return
 
-        best_score = 0
-        best_model = None
-        save_model = True
+        self.best_score = 0
+        self.best_model = None
+        self.dev = dev
         last = False
         if Config().args.devscores:
             with open(Config().args.devscores, "w") as f:
                 print(",".join(["iteration"] + evaluation.Scores.field_titles()), file=f)
-        for iteration in range(iterations):
+        for self.iteration in range(iterations):
             if last:
                 break
-            last = iteration == iterations - 1
-            print("Training iteration %d of %d: " % (iteration + 1, iterations))
+            last = self.iteration == iterations - 1
+            print("Training iteration %d of %d: " % (self.iteration + 1, iterations))
             passages = [passage for _, passage in self.parse(passages, mode="train")]
-            model = self.model  # Save non-finalize model
-            self.model = self.model.finalize()  # To evaluate finalized model on dev
             if last:
                 if folds is None:  # Free some memory, as these are not needed any more
                     del passages[:]
             else:
                 self.learning_rate *= self.decay_factor
                 Config().random.shuffle(passages)
-            if dev:
-                print("Evaluating on dev passages")
-                dev, scores = zip(*[(passage, evaluate_passage(predicted_passage, passage))
-                                    for predicted_passage, passage in
-                                    self.parse(dev, mode="dev")])
-                dev = list(dev)
-                scores = evaluation.Scores.aggregate(scores)
-                score = scores.average_f1()
-                print("Average labeled F1 score on dev: %.3f" % score)
-                if Config().args.devscores:
-                    with open(Config().args.devscores, "a") as f:
-                        print(",".join([str(iteration)] + scores.fields()), file=f)
-                if score >= best_score:
-                    print("Better than previous best score (%.3f)" % best_score)
-                    best_score = score
-                    save_model = True
-                else:
-                    print("Not better than previous best score (%.3f)" % best_score)
-                    save_model = False
-                if score >= 1:  # Score cannot go any better, so no point in more training
-                    last = True
-                if last and folds is None:  # Free more memory
-                    del dev[:]
-            if save_model or best_model is None:
-                best_model = self.model  # This is the finalized model
-                if self.model_file is not None:
-                    best_model.save(self.model_file)
-            if not last:
-                self.model = model  # Restore non-finalized model
+            last = self.eval_dev_and_save_model(last)
+            if self.dev and last and folds is None:  # Free more memory
+                del self.dev[:]
 
         print("Trained %d iterations" % iterations)
-        self.model = best_model
+        self.model = self.best_model
+
+    def eval_dev_and_save_model(self, last=False):
+        model = self.model  # Save non-finalize model
+        self.model = self.model.finalize()  # To evaluate finalized model on dev
+        save_model = True
+        if self.dev:
+            print("Evaluating on dev passages")
+            self.dev, scores = zip(*[(passage, evaluate_passage(predicted_passage, passage))
+                                     for predicted_passage, passage in
+                                     self.parse(self.dev, mode="dev")])
+            self.dev = list(self.dev)
+            scores = evaluation.Scores.aggregate(scores)
+            score = scores.average_f1()
+            print("Average labeled F1 score on dev: %.3f" % score)
+            if Config().args.devscores:
+                prefix = [self.iteration]
+                if Config().saveeverybatches or Config().saveeveryepochs:
+                    prefix.append(self.batch)
+                if Config().saveeveryepochs:
+                    prefix.append(self.epoch)
+                with open(Config().args.devscores, "a") as f:
+                    print(",".join([".".join(map(str, prefix))] + scores.fields()), file=f)
+            if score >= self.best_score:
+                print("Better than previous best score (%.3f)" % self.best_score)
+                self.best_score = score
+                save_model = True
+            else:
+                print("Not better than previous best score (%.3f)" % self.best_score)
+                save_model = False
+            if score >= 1:  # Score cannot go any better, so no point in more training
+                last = True
+        if save_model or self.best_model is None:
+            self.best_model = self.model  # This is the finalized model
+            if self.model_file is not None:
+                self.best_model.save(self.model_file)
+        if not last:
+            self.model = model  # Restore non-finalized model
+        return last
 
     def parse(self, passages, mode="test"):
         """
