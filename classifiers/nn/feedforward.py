@@ -111,7 +111,7 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
                 callbacks.append(ModelCheckpoint(self.filename + ".{epoch:02d}-{val_loss:.2f}.h5",
                                                  verbose=1, save_best_only=True, save_weights_only=True))
             log = self.model.fit(x, y, batch_size=self._minibatch_size, nb_epoch=self._nb_epochs,
-                                 validation_split=.1, verbose=2, callbacks=callbacks)
+                                 validation_split=config.Config().args.validationsplit, verbose=2, callbacks=callbacks)
             config.Config().log(log.history)
             self._samples = defaultdict(list)
             self._item_index = 0
