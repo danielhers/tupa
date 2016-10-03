@@ -52,10 +52,10 @@ class Config(object, metaclass=Singleton):
         group = argparser.add_argument_group(title="Output files")
         group.add_argument("-o", "--outdir", default=".", help="output directory for parsed files")
         group.add_argument("-p", "--prefix", default="", help="output filename prefix")
-        group.add_argument("-W", "--nowrite", action="store_true", help="do not write parsed passages to file")
-        group.add_argument("-O", "--log", default="parse.log", help="output log file")
-        group.add_argument("--devscores", help="output CSV file for dev scores")
-        group.add_argument("--testscores", help="output CSV file for test scores")
+        group.add_argument("-W", "--nowrite", action="store_true", help="do not write parsed passages to files")
+        group.add_argument("-l", "--log", help="output log file (default: model filename + .log)")
+        group.add_argument("--devscores", help="output CSV file for dev scores (default: model filename + .dev.csv)")
+        group.add_argument("--testscores", help="output CSV file for test scores (default: model filename + .test.csv)")
         group = argparser.add_argument_group(title="Structural constraints")
         group.add_argument("-L", "--nolinkage", action="store_true", help="ignore linkage nodes and edges")
         group.add_argument("-M", "--noimplicit", action="store_true", help="ignore implicit nodes and edges")
@@ -108,8 +108,8 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--worddropout", type=float, default=0.3, help="word dropout parameter")
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter for all inputs")
         group = argparser.add_mutually_exclusive_group()
-        group.add_argument("--saveeverybatches", type=int, default=None, help="save model every this many batches")
-        group.add_argument("--saveeveryepochs", type=int, default=None, help="save model every this many epochs")
+        group.add_argument("--saveeverybatches", type=int, help="save model every this many batches")
+        group.add_argument("--saveeveryepochs", type=int, help="save model every this many epochs")
         self.args = argparser.parse_args(args if args else None)
 
         assert self.args.passages or self.args.train,\
@@ -122,10 +122,14 @@ class Config(object, metaclass=Singleton):
             "--dev is only possible together with --train"
         
         if self.args.model:
+            if not self.args.log:
+                self.args.log = self.args.model + ".log"
             if self.args.dev and not self.args.devscores:
-                self.args.devscores = self.args.model + ".dev_scores.csv"
+                self.args.devscores = self.args.model + ".dev.csv"
             if self.args.passages and not self.args.testscores:
-                self.args.testscores = self.args.model + ".test_scores.csv"
+                self.args.testscores = self.args.model + ".test.csv"
+        elif not self.args.log:
+            self.args.log = "parse.log"
 
         self._log_file = None
         np.random.seed(self.args.seed)
