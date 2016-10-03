@@ -37,7 +37,7 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
         argparser.add_argument("-m", "--model", help="model file to load/save")
         argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=SPARSE_PERCEPTRON, help="model type")
-        argparser.add_argument("-B", "--beam", type=int, default=1, help="beam size for beam search (1 for greedy)")
+        argparser.add_argument("-B", "--beam", choices=(1,), default=1, help="beam size for beam search (1 for greedy)")
         argparser.add_argument("-e", "--evaluate", action="store_true", help="evaluate parsed passages")
         argparser.add_argument("-v", "--verbose", action="store_true", help="detailed parse output")
         group = argparser.add_mutually_exclusive_group()
