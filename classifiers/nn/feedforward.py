@@ -102,7 +102,8 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
                 else:
                     x[name] = np.array(values)
             self.init_model()
-            self.model.fit(x, y, batch_size=self._minibatch_size, nb_epoch=self._nb_epochs, verbose=2)
+            log = self.model.fit(x, y, batch_size=self._minibatch_size, nb_epoch=self._nb_epochs, verbose=2)
+            config.Config().log(log.history)
             self._samples = defaultdict(list)
             self._item_index = 0
             self._iteration += 1
