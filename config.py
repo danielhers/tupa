@@ -107,9 +107,8 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--maxactions", type=int, default=10, help="maximum number of action types for embeddings")
         group.add_argument("--worddropout", type=float, default=0.3, help="word dropout parameter")
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter for all inputs")
-        group = argparser.add_mutually_exclusive_group()
-        group.add_argument("--saveeverybatches", type=int, help="save model every this many batches")
-        group.add_argument("--saveeveryepochs", type=int, help="save model every this many epochs")
+        group.add_argument("--saveeverybatch", action="store_true", help="save model every training batch")
+        group.add_argument("--saveeveryepoch", action="store_true", help="save model every training epoch")
         self.args = argparser.parse_args(args if args else None)
 
         assert self.args.passages or self.args.train,\

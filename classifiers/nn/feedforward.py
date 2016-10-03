@@ -2,6 +2,8 @@ import time
 
 import numpy as np
 from collections import defaultdict
+
+from keras.callbacks import ModelCheckpoint
 from keras.layers import Input, Dense, merge, Flatten, Dropout, Embedding, BatchNormalization
 from keras.models import Model
 from keras.utils import np_utils
@@ -102,7 +104,12 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
                 else:
                     x[name] = np.array(values)
             self.init_model()
-            log = self.model.fit(x, y, batch_size=self._minibatch_size, nb_epoch=self._nb_epochs, verbose=2)
+            callbacks = []
+            if self.filename and config.Config().saveeveryepoch:
+                callbacks.append(ModelCheckpoint(self.filename + ".{epoch:02d}.h5",
+                                                 verbose=1, save_weights_only=True))
+            log = self.model.fit(x, y, batch_size=self._minibatch_size, nb_epoch=self._nb_epochs,
+                                 verbose=2, callbacks=callbacks)
             config.Config().log(log.history)
             self._samples = defaultdict(list)
             self._item_index = 0

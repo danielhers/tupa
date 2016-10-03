@@ -93,7 +93,7 @@ class Parser(object):
             print("Average labeled F1 score on dev: %.3f" % score)
             if Config().args.devscores:
                 prefix = [self.iteration]
-                if Config().args.saveeverybatches:
+                if Config().args.saveeverybatch:
                     prefix.append(self.batch)
                 with open(Config().args.devscores, "a") as f:
                     print(",".join([".".join(map(str, prefix))] + scores.fields()), file=f)
@@ -180,8 +180,7 @@ class Parser(object):
             self.total_correct += self.correct_count
             self.total_actions += self.action_count
             num_passages += 1
-            if train and Config().args.saveeverybatches is not None and \
-                    num_passages % (Config().args.saveeverybatches * Config().args.batchsize) == 0:
+            if train and Config().args.saveeverybatch and num_passages % Config().args.batchsize == 0:
                 self.eval_dev_and_save_model()
                 self.batch += 1
             yield predicted_passage, passage
