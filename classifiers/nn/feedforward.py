@@ -3,7 +3,7 @@ import time
 import numpy as np
 from collections import defaultdict
 
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import Input, Dense, merge, Flatten, Dropout, Embedding, BatchNormalization
 from keras.models import Model
 from keras.utils import np_utils
@@ -105,9 +105,10 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
                 else:
                     x[name] = np.array(values)
             self.init_model()
-            callbacks = []
+            callbacks = [EarlyStopping(patience=1, verbose=1)]
             if self.filename and config.Config().args.saveeveryepoch:
-                callbacks.append(ModelCheckpoint(self.filename + ".{epoch:02d}-{val_acc:.2f}.h5", monitor="val_acc",
+                # noinspection PyTypeChecker
+                callbacks.append(ModelCheckpoint(self.filename + ".{epoch:02d}-{val_loss:.2f}.h5",
                                                  verbose=1, save_best_only=True, save_weights_only=True))
             log = self.model.fit(x, y, batch_size=self._minibatch_size, nb_epoch=self._nb_epochs,
                                  validation_split=.1, verbose=2, callbacks=callbacks)
