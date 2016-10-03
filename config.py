@@ -26,7 +26,7 @@ ACTIVATIONS = ("sigmoid", "tanh", "relu")
 INITIALIZATIONS = ("glorot_normal", "glorot_uniform", "he_normal", "he_uniform",
                    "normal", "uniform", "lecun_uniform")
 OPTIMIZERS = ("nadam", "adam", "sgd", "rmsprop", "adagrad", "adadelta", "adamax")
-OBJECTIVES = ("categorical_crossentropy", "max_margin", "hinge", "squared_hinge")
+OBJECTIVES = ("sparse_categorical_crossentropy", "categorical_crossentropy", "max_margin", "hinge", "squared_hinge")
 REGULARIZERS = ("l2", "l1", "l1l2")
 
 

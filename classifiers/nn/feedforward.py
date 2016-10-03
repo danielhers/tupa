@@ -100,16 +100,17 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             y = None
             for name, values in self._samples.items():
                 if name == "out":
-                    y = np_utils.to_categorical(values, nb_classes=self.max_num_labels)
+                    y = values if self._loss == "sparse_categorical_crossentropy" else \
+                        np_utils.to_categorical(values, nb_classes=self.max_num_labels)
                 else:
                     x[name] = np.array(values)
             self.init_model()
             callbacks = []
-            if self.filename and config.Config().saveeveryepoch:
-                callbacks.append(ModelCheckpoint(self.filename + ".{epoch:02d}.h5",
-                                                 verbose=1, save_weights_only=True))
+            if self.filename and config.Config().args.saveeveryepoch:
+                callbacks.append(ModelCheckpoint(self.filename + ".{epoch:02d}-{val_acc:.2f}.h5", monitor="val_acc",
+                                                 verbose=1, save_best_only=True, save_weights_only=True))
             log = self.model.fit(x, y, batch_size=self._minibatch_size, nb_epoch=self._nb_epochs,
-                                 verbose=2, callbacks=callbacks)
+                                 validation_split=.1, verbose=2, callbacks=callbacks)
             config.Config().log(log.history)
             self._samples = defaultdict(list)
             self._item_index = 0
