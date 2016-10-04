@@ -49,7 +49,7 @@ class NeuralNetwork(Classifier):
             self.max_num_labels = max_num_labels
             self._layers = layers
             self._layer_dim = layer_dim
-            self._activation = activation
+            self._activation = (lambda x: x*x*x) if activation == "cube" else activation
             self._normalize = normalize
             self._init = init
             self._num_labels = self.num_labels
@@ -57,16 +57,10 @@ class NeuralNetwork(Classifier):
             self._nb_epochs = nb_epochs
             self._dropout = dropout
             self._optimizer = optimizer
-            if loss == "max_margin":
-                self._loss = lambda true, pred: K.sum(K.maximum(0., 1. - pred*true + pred*(1. - true)))
-            else:
-                self._loss = loss
-            if regularizer is None:
-                self._regularizer = lambda: None
-            elif regularizer == "l1l2":
-                self._regularizer = lambda: regularizers.l1l2(regularization, regularization)
-            else:
-                self._regularizer = lambda: regularizers.get(regularizer, {"l": regularization})
+            self._loss = (lambda t, p: K.sum(K.maximum(0., 1.-p*t+p*(1.-t)))) if loss == "max_margin" else loss
+            self._regularizer = (lambda: None) if regularizer is None else \
+                (lambda: regularizers.l1l2(regularization, regularization)) if regularizer == "l1l2" else \
+                (lambda: regularizers.get(regularizer, {"l": regularization}))
             self.feature_params = feature_params
             self.model = None
         self._batch_size = batch_size
