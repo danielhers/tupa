@@ -1,12 +1,7 @@
 import time
 
 import numpy as np
-from collections import defaultdict
-
-from keras.callbacks import ModelCheckpoint, EarlyStopping
-from keras.layers import Input, Dense, merge, Flatten, Dropout, Embedding, BatchNormalization
-from keras.models import Model
-from keras.utils import np_utils
+from dynet import *
 
 from nn.neural_network import NeuralNetwork
 from parsing import config
@@ -17,39 +12,48 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
     def __init__(self, *args, **kwargs):
         super(FeedforwardNeuralNetwork, self).__init__(*args, model_type=config.FEEDFORWARD_NN, **kwargs)
         self._samples = defaultdict(list)
+        self._inputs = {}
 
     def init_model(self):
         if self.model is not None:
             return
         if config.Config().args.verbose:
             print("Input: " + self.feature_params)
-        inputs = []
+        self.model = Model()
         encoded = []
         for suffix, param in self.feature_params.items():
-            x = Input(shape=(param.num,), dtype="float32" if param.numeric else "int32", name=suffix)
-            inputs.append(x)
+            x = self._inputs[suffix] = vecInput(param.num)
+            # x = Input(shape=(param.num,), dtype="float32" if param.numeric else "int32", name=suffix)
             if not param.numeric:  # index feature
-                x = Embedding(output_dim=param.dim, input_dim=param.size, init=self._init,
-                              weights=param.init, input_length=param.num,
-                              W_regularizer=self._regularizer())(x)
-                x = Flatten()(x)
-            if self._normalize or param.numeric:
-                x = BatchNormalization()(x)
+                p = self.model.add_lookup_parameters(suffix, (param.size, param.dim))
+                x = lookup(p, x)
+                # x = Embedding(output_dim=param.dim, input_dim=param.size, init=self._init,
+                #               weights=param.init, input_length=param.num,
+                #               W_regularizer=self._regularizer())(x)
             encoded.append(x)
-        x = merge(encoded, mode="concat")
-        if self._dropout:
-            x = Dropout(float(self._dropout))(x)
-        for _ in range(self._layers):
-            x = Dense(self._layer_dim, activation=self._activation, init=self._init,
-                      W_regularizer=self._regularizer(), b_regularizer=self._regularizer())(x)
-            if self._normalize:
-                x = BatchNormalization()(x)
-            if self._dropout:
-                x = Dropout(float(self._dropout))(x)
-        out = Dense(self.max_num_labels, activation="softmax", init=self._init, name="out",
-                    W_regularizer=self._regularizer(), b_regularizer=self._regularizer())(x)
-        self.model = Model(input=inputs, output=[out])
-        self.compile()
+        x = concatenate(encoded)
+        # if self._dropout:
+        #     x = Dropout(float(self._dropout))(x)
+        pW = self.model.add_parameters((x.dim, self._layer_dim))
+        pb = self.model.add_parameters((1, self._layer_dim))
+        W = parameter(pW)
+        b = parameter(pb)
+        x = self._activation(W * x + b)
+        for _ in range(self._layers - 2):
+            pW = self.model.add_parameters((self._layer_dim, self._layer_dim))
+            pb = self.model.add_parameters((1, self._layer_dim))
+            W = parameter(pW)
+            b = parameter(pb)
+            x = self._activation(W * x + b)
+            # x = Dense(self._layer_dim, activation=self._activation, init=self._init,
+            #           W_regularizer=self._regularizer(), b_regularizer=self._regularizer())(x)
+        pW = self.model.add_parameters((self._layer_dim, self.max_num_labels))
+        pb = self.model.add_parameters((1, self.max_num_labels))
+        W = parameter(pW)
+        b = parameter(pb)
+        x = softmax(W * x + b)
+        # out = Dense(self.max_num_labels, activation="softmax", init=self._init, name="out",
+        #             W_regularizer=self._regularizer(), b_regularizer=self._regularizer())(x)
 
     def score(self, features):
         """

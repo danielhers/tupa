@@ -1,6 +1,4 @@
-from keras import backend as K
-from keras import regularizers
-from keras.models import model_from_json
+from dynet import *
 
 from classifiers.classifier import Classifier
 from parsing.model_util import load_dict, save_dict
@@ -49,7 +47,12 @@ class NeuralNetwork(Classifier):
             self.max_num_labels = max_num_labels
             self._layers = layers
             self._layer_dim = layer_dim
-            self._activation = (lambda x: x*x*x) if activation == "cube" else activation
+            self._activation = {
+                "cube": (lambda x: x*x*x),
+                "tanh": tanh,
+                "sigmoid": logistic,
+                "relu": rectify,
+            }[activation]
             self._normalize = normalize
             self._init = init
             self._num_labels = self.num_labels
@@ -57,10 +60,10 @@ class NeuralNetwork(Classifier):
             self._nb_epochs = nb_epochs
             self._dropout = dropout
             self._optimizer = optimizer
-            self._loss = (lambda t, p: K.sum(K.maximum(0., 1.-p*t+p*(1.-t)))) if loss == "max_margin" else loss
-            self._regularizer = (lambda: None) if regularizer is None else \
-                (lambda: regularizers.l1l2(regularization, regularization)) if regularizer == "l1l2" else \
-                (lambda: regularizers.get(regularizer, {"l": regularization}))
+            # self._loss = (lambda t, p: K.sum(K.maximum(0., 1.-p*t+p*(1.-t)))) if loss == "max_margin" else loss
+            # self._regularizer = (lambda: None) if regularizer is None else \
+            #     (lambda: regularizers.l1l2(regularization, regularization)) if regularizer == "l1l2" else \
+            #     (lambda: regularizers.get(regularizer, {"l": regularization}))
             self.feature_params = feature_params
             self.model = None
         self._batch_size = batch_size
@@ -69,9 +72,6 @@ class NeuralNetwork(Classifier):
 
     def init_model(self):
         raise NotImplementedError()
-
-    def compile(self):
-        self.model.compile(optimizer=self._optimizer, loss={"out": self._loss})
 
     @property
     def input_dim(self):
