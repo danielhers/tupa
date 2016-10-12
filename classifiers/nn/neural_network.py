@@ -59,7 +59,7 @@ class NeuralNetwork(Classifier):
             self._minibatch_size = minibatch_size
             self._nb_epochs = nb_epochs
             self._dropout = dropout
-            self._optimizer = optimizer
+            self._optimizer = AdamTrainer
             # self._loss = (lambda t, p: K.sum(K.maximum(0., 1.-p*t+p*(1.-t)))) if loss == "max_margin" else loss
             # self._regularizer = (lambda: None) if regularizer is None else \
             #     (lambda: regularizers.l1l2(regularization, regularization)) if regularizer == "l1l2" else \

@@ -51,9 +51,12 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         pb = self.model.add_parameters((1, self.max_num_labels))
         W = parameter(pW)
         b = parameter(pb)
-        x = softmax(W * x + b)
+        self._output = softmax(W * x + b)
         # out = Dense(self.max_num_labels, activation="softmax", init=self._init, name="out",
         #             W_regularizer=self._regularizer(), b_regularizer=self._regularizer())(x)
+        self._correct_output = scalarInput(0)
+        self._loss = binary_log_loss(self._output, self._correct_output)
+        self._trainer = self._optimizer(self.model)
 
     def score(self, features):
         """
@@ -78,9 +81,11 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         """
         super(FeedforwardNeuralNetwork, self).update(features, pred, true, importance)
         for _ in range(int(importance)):
-            for name, value in features.items():
-                self._samples[name].append(value)
-            self._samples["out"].append(true)
+            for suffix, value in features.items():
+                self._inputs[suffix].set(value)
+            self._correct_output.set(true)
+            self._loss.backward()
+            self._trainer.update()
 
     def finish(self, train=False):
         """
