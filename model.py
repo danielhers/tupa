@@ -28,7 +28,7 @@ class Model(object):
             from features.enumerator import FeatureEnumerator
             from nn.feedforward import FeedforwardNeuralNetwork
             self.feature_extractor = self.dense_features_wrapper(FeatureEnumerator)
-            self.model = FeedforwardNeuralNetwork(filename, labels, feature_params=self.feature_extractor.params,
+            self.model = FeedforwardNeuralNetwork(filename, labels, input_params=self.feature_extractor.params,
                                                   layers=Config().args.layers,
                                                   layer_dim=Config().args.layerdim,
                                                   activation=Config().args.activation,

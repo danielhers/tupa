@@ -23,10 +23,9 @@ CLASSIFIERS = (SPARSE_PERCEPTRON, DENSE_PERCEPTRON, FEEDFORWARD_NN)
 
 # Multiple choice options: the first one is always the default
 ACTIVATIONS = ("sigmoid", "tanh", "relu", "cube")
-INITIALIZATIONS = ("glorot_normal", "glorot_uniform", "he_normal", "he_uniform",
-                   "normal", "uniform", "lecun_uniform")
-OPTIMIZERS = ("nadam", "adam", "sgd", "rmsprop", "adagrad", "adadelta", "adamax")
-OBJECTIVES = ("sparse_categorical_crossentropy", "categorical_crossentropy", "max_margin", "hinge", "squared_hinge")
+INITIALIZATIONS = ("glorot_uniform", "normal", "uniform", "const")
+OPTIMIZERS = ("adam", "sgd", "momentum", "adagrad", "adadelta")
+OBJECTIVES = ("categorical_crossentropy", "pairwise_rank", "poisson")
 REGULARIZERS = ("l2", "l1", "l1l2")
 
 
