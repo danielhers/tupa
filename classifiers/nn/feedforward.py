@@ -14,7 +14,8 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         super(FeedforwardNeuralNetwork, self).__init__(*args, model_type=config.FEEDFORWARD_NN, **kwargs)
         self._samples = defaultdict(list)
         self._inputs = {}
-        self._correct_output = self._loss_value = self._trainer = None
+        self._input_values = {}
+        self._label = self._loss_value = self._trainer = None
 
     def init_model(self):
         if self.model is not None:
@@ -24,33 +25,39 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         self.model = dy.Model()
         input_dim = 0
         for suffix, param in self._input_params.items():
-            self._inputs[suffix] = dy.vecInput(param.num)
             if not param.numeric:  # index feature
-                self._params[suffix] = self.model.add_lookup_parameters((param.size, param.dim))
+                p = self.model.add_lookup_parameters((param.size, param.dim))
+                if param.init:
+                    for i, row in enumerate(param.init):
+                        p.init_row(i, row)
+                self._params[suffix] = p
+            self._input_values[suffix] = dy.vecInput(param.num * param.dim)
             input_dim += param.num * param.dim
         for i in range(1, self._layers + 1):
             in_dim = input_dim if i == 1 else self._layer_dim
             out_dim = self._layer_dim if i < self._layers else self.max_num_labels
             self._params["W%d" % i] = self.model.add_parameters((out_dim, in_dim))
             self._params["b%d" % i] = self.model.add_parameters(out_dim)
-        self._correct_output = dy.scalarInput(0)
         self._trainer = self._optimizer(self.model)
 
     def _generate_inputs(self):
         for suffix, param in self._input_params.items():
-            value = self._inputs[suffix]
+            xs = self._inputs[suffix]
+            value = self._input_values[suffix]
             if not param.numeric:
-                value.set(np.array([dy.lookup(self._params[suffix], x) for x in value.value()]))
+                xs = dy.concatenate(list(self._params[suffix].batch(xs)))
+            value.set(xs)
             yield value
 
     def _eval(self):
+        dy.renew_cg()
         x = dy.concatenate(list(self._generate_inputs()))
         for i in range(1, self._layers + 1):
             W = dy.parameter(self._params["W%d" % i])
             b = dy.parameter(self._params["b%d" % i])
             f = self._activation if i < self._layers else dy.softmax
             x = f(W * x + b)
-        self._loss_value = self._loss(x, self._correct_output)
+        self._loss_value = self._loss(x, dy.scalarInput(self._label))
         return x
 
     def score(self, features):
@@ -80,8 +87,8 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         self.init_model()
         for _ in range(int(importance)):
             for suffix, value in features.items():
-                self._inputs[suffix].set(value)
-            self._correct_output.set(true)
+                self._inputs[suffix] = value
+            self._label = true
             self._eval()
             self._loss_value.backward()
             self._trainer.update()
