@@ -14,7 +14,6 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         super(FeedforwardNeuralNetwork, self).__init__(*args, model_type=config.FEEDFORWARD_NN, **kwargs)
         self._samples = defaultdict(list)
         self._inputs = {}
-        self._input_values = {}
         self._label = self._loss_value = self._trainer = None
 
     def init_model(self):
@@ -31,7 +30,6 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
                     for i, row in enumerate(param.init):
                         p.init_row(i, row)
                 self._params[suffix] = p
-            self._input_values[suffix] = dy.vecInput(param.num * param.dim)
             input_dim += param.num * param.dim
         for i in range(1, self._layers + 1):
             in_dim = input_dim if i == 1 else self._layer_dim
@@ -43,11 +41,19 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
     def _generate_inputs(self):
         for suffix, param in self._input_params.items():
             xs = self._inputs[suffix]
-            value = self._input_values[suffix]
-            if not param.numeric:
-                xs = dy.concatenate(list(self._params[suffix].batch(xs)))
-            value.set(xs)
+            if param.numeric:
+                value = dy.vecInput(param.num)
+                value.set(xs)
+            else:
+                value = dy.reshape(self._params[suffix].batch(xs), (param.num * param.dim,))
             yield value
+
+    def _get_label_value(self):
+        label = np.zeros((self.max_num_labels,))
+        label[self._label] = 1
+        label_value = dy.vecInput(self.max_num_labels)
+        label_value.set(label)
+        return label_value
 
     def _eval(self):
         dy.renew_cg()
@@ -57,7 +63,7 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             b = dy.parameter(self._params["b%d" % i])
             f = self._activation if i < self._layers else dy.softmax
             x = f(W * x + b)
-        self._loss_value = self._loss(x, dy.scalarInput(self._label))
+        self._loss_value = self._loss(x, self._get_label_value())
         return x
 
     def score(self, features):
