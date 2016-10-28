@@ -45,7 +45,7 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
                 vec = dy.reshape(vecs, (param.num * param.dim,))
             yield vec
 
-    def _eval(self):
+    def _eval(self, train=False):
         dy.renew_cg()
         x = dy.concatenate(list(self._generate_inputs()))
         for i in range(1, self._layers + 1):
@@ -54,6 +54,8 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             f = self._activation if i < self._layers else dy.softmax
             W.value()
             b.value()
+            if train and self._dropout:
+                x = dy.dropout(x, self._dropout)
             x = f(W * x + b)
             x.value()
         return x
@@ -86,7 +88,7 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         for _ in range(int(importance)):
             for suffix, value in features.items():
                 self._inputs[suffix] = value
-            scores = self._eval()
+            scores = self._eval(train=True)
             scores.value()
             label = np.zeros((self.max_num_labels,))
             label[true] = 1
