@@ -3,33 +3,33 @@ from features.feature_extractor import FeatureExtractor
 NON_NUMERIC_FEATURE_SUFFIXES = "wtepxA"
 FEATURE_TEMPLATES = (
     # words
-    "s0ws1ws2ws3w"  # stack
-    "b0wb1wb2wb3w"  # buffer
-    "s0lws0rws0uws1lws1rws1uw"  # children
-    "s0llws0lrws0luws0rlws0rrws0ruws0ulws0urw"
-    "s0uuws1llws1lrws1luws1rlws1rrws1ruw"  # grandchildren
-    "s0Uws1Uwb0Uw",  # parents
-    # POS tags
-    "s0ts1ts2ts3t"  # stack
-    "b0tb1tb2tb3t",  # buffer
-    # edge tags
-    "s0es1es2es3e"  # stack
-    "s0les0res0ues1les1res1ue"  # children
-    "s0lles0lres0lues0rles0rres0rues0ules0ure"
-    "s0uues1lles1lres1lues1rles1rres1rue"  # grandchildren
-    "s0Ues1Ueb0Ue"  # parents
-    "s0b0eb0s0e"  # specific edges
-    "a0ea1e",  # past actions edge tags
-    # past action labels
-    "a0Aa1A",
-    # separators
-    "s0ps1p",
-    # gap types
-    "s0xs1xs2xs3x",
+    # "s0ws1ws2ws3w"  # stack
+    # "b0wb1wb2wb3w"  # buffer
+    # "s0lws0rws0uws1lws1rws1uw"  # children
+    # "s0llws0lrws0luws0rlws0rrws0ruws0ulws0urw"
+    # "s0uuws1llws1lrws1luws1rlws1rrws1ruw"  # grandchildren
+    # "s0Uws1Uwb0Uw",  # parents
+    # # POS tags
+    # "s0ts1ts2ts3t"  # stack
+    # "b0tb1tb2tb3t",  # buffer
+    # # edge tags
+    # "s0es1es2es3e"  # stack
+    # "s0les0res0ues1les1res1ue"  # children
+    # "s0lles0lres0lues0rles0rres0rues0ules0ure"
+    # "s0uues1lles1lres1lues1rles1rres1rue"  # grandchildren
+    # "s0Ues1Ueb0Ue"  # parents
+    # "s0b0eb0s0e"  # specific edges
+    # "a0ea1e",  # past actions edge tags
+    # # past action labels
+    # "a0Aa1A",
+    # # separators
+    # "s0ps1p",
+    # # gap types
+    # "s0xs1xs2xs3x",
     # numeric
     "s0qyPCIRs1qys2ys3y"
     "b0PCIR"
-    "s0s1s0b0s0"
+    "s0s1s0b0s0",
 )
 EXTRA_NUMERIC_FEATURES = 2  # bias, node ratio
 

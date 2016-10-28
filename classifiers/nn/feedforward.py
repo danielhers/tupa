@@ -1,8 +1,7 @@
 import time
-from collections import defaultdict
 
-import numpy as np
 import dynet as dy
+import numpy as np
 
 from nn.neural_network import NeuralNetwork
 from parsing import config
@@ -12,9 +11,8 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
 
     def __init__(self, *args, **kwargs):
         super(FeedforwardNeuralNetwork, self).__init__(*args, model_type=config.FEEDFORWARD_NN, **kwargs)
-        self._samples = defaultdict(list)
         self._inputs = {}
-        self._label = self._loss_value = self._trainer = None
+        self._trainer = None
 
     def init_model(self):
         if self.model is not None:
@@ -48,13 +46,6 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
                 value = dy.reshape(self._params[suffix].batch(xs), (param.num * param.dim,))
             yield value
 
-    def _get_label_value(self):
-        label = np.zeros((self.max_num_labels,))
-        label[self._label] = 1
-        label_value = dy.vecInput(self.max_num_labels)
-        label_value.set(label)
-        return label_value
-
     def _eval(self):
         dy.renew_cg()
         x = dy.concatenate(list(self._generate_inputs()))
@@ -63,7 +54,6 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             b = dy.parameter(self._params["b%d" % i])
             f = self._activation if i < self._layers else dy.softmax
             x = f(W * x + b)
-        self._loss_value = self._loss(x, self._get_label_value())
         return x
 
     def score(self, features):
@@ -94,9 +84,12 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         for _ in range(int(importance)):
             for suffix, value in features.items():
                 self._inputs[suffix] = value
-            self._label = true
-            self._eval()
-            self._loss_value.backward()
+            scores = self._eval()
+            label = np.zeros((self.max_num_labels,))
+            label[true] = 1
+            label_value = dy.vecInput(self.max_num_labels)
+            label_value.set(label)
+            self._loss(scores, label_value).backward()
             self._trainer.update()
 
     def finish(self, train=False):
@@ -114,15 +107,9 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         :return new FeedforwardNeuralNetwork object with the same weights, after fitting
         """
         super(FeedforwardNeuralNetwork, self).finalize()
-        if self._samples:
-            started = time.time()
-            print("Fitting model...", flush=True)
-            self.init_model()
-            self._trainer.update_epoch()
-            self._samples = defaultdict(list)
-            self._item_index = 0
-            self._iteration += 1
-            print("Done (%.3fs)." % (time.time() - started))
+        self.init_model()
+        self._item_index = 0
+        self._iteration += 1
         if freeze:
             print("Labels: %d" % self.num_labels)
             print("Features: %d" % sum(f.num * (f.dim or 1) for f in self._input_params.values()))
