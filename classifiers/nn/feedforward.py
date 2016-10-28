@@ -38,11 +38,13 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         for suffix, param in self._input_params.items():
             xs = self._inputs[suffix]
             if param.numeric:
-                value = dy.vecInput(param.num)
-                value.set(xs)
+                vec = dy.vecInput(param.num)
+                vec.set(xs)
             else:
-                value = dy.reshape(self._params[suffix].batch(xs), (param.num * param.dim,))
-            yield value
+                vecs = self._params[suffix].batch(xs)
+                vecs.value()
+                vec = dy.reshape(vecs, (param.num * param.dim,))
+            yield vec
 
     def _eval(self):
         dy.renew_cg()
