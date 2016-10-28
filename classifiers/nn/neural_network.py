@@ -1,7 +1,7 @@
-import dynet as dy
+import time
 
+import dynet as dy
 from classifiers.classifier import Classifier
-from parsing import config
 from parsing.model_util import load_dict, save_dict
 
 
@@ -13,7 +13,7 @@ class NeuralNetwork(Classifier):
     Expects features from FeatureEnumerator.
     """
 
-    def __init__(self, filename, labels, model_type, input_params=None, model=None,
+    def __init__(self, filename, labels, model_type, input_params=None, params=None, model=None,
                  layers=1, layer_dim=100, activation="tanh", normalize=False,
                  init="glorot_uniform", max_num_labels=100, batch_size=10,
                  minibatch_size=200, nb_epochs=5, dropout=0,
@@ -43,44 +43,41 @@ class NeuralNetwork(Classifier):
                                             labels=labels, model=model)
         assert input_params is not None or model is not None
         # dy.init(config.Config().args.seed)
-        if self.is_frozen:
-            self.model = model
-        else:
-            self.max_num_labels = max_num_labels
-            self._layers = layers
-            self._layer_dim = layer_dim
-            self._activation = {
-                "cube": (lambda x: x*x*x),
-                "tanh": dy.tanh,
-                "sigmoid": dy.logistic,
-                "relu": dy.rectify,
-            }[activation]
-            self._normalize = normalize
-            self._init = {
-                "glorot_uniform": dy.GlorotInitializer(),
-                "normal": dy.NormalInitializer(),
-                "uniform": dy.UniformInitializer(1),
-                "const": dy.ConstInitializer(0),
-            }[init]
-            self._num_labels = self.num_labels
-            self._minibatch_size = minibatch_size
-            self._nb_epochs = nb_epochs
-            self._dropout = dropout
-            self._optimizer = {
-                "sgd": dy.SimpleSGDTrainer,
-                "momentum": dy.MomentumSGDTrainer,
-                "adagrad": dy.AdagradTrainer,
-                "adadelta": dy.AdadeltaTrainer,
-                "adam": dy.AdamTrainer,
-            }[optimizer]
-            self._loss = {
-                "categorical_crossentropy": dy.binary_log_loss,
-                "pairwise_rank": dy.pairwise_rank_loss,
-                "poisson": dy.poisson_loss,
-            }[loss]
-            self._input_params = input_params
-            self._params = {}
-            self.model = None
+        self.model = model
+        self.max_num_labels = max_num_labels
+        self._layers = layers
+        self._layer_dim = layer_dim
+        self._activation = {
+            "cube": (lambda x: x*x*x),
+            "tanh": dy.tanh,
+            "sigmoid": dy.logistic,
+            "relu": dy.rectify,
+        }[activation] if isinstance(activation, str) else activation
+        self._normalize = normalize
+        self._init = {
+            "glorot_uniform": dy.GlorotInitializer(),
+            "normal": dy.NormalInitializer(),
+            "uniform": dy.UniformInitializer(1),
+            "const": dy.ConstInitializer(0),
+        }[init] if isinstance(init, str) else init
+        self._num_labels = self.num_labels
+        self._minibatch_size = minibatch_size
+        self._nb_epochs = nb_epochs
+        self._dropout = dropout
+        self._optimizer = {
+            "sgd": dy.SimpleSGDTrainer,
+            "momentum": dy.MomentumSGDTrainer,
+            "adagrad": dy.AdagradTrainer,
+            "adadelta": dy.AdadeltaTrainer,
+            "adam": dy.AdamTrainer,
+        }[optimizer] if isinstance(optimizer, str) else optimizer
+        self._loss = {
+            "categorical_crossentropy": dy.binary_log_loss,
+            "pairwise_rank": dy.pairwise_rank_loss,
+            "poisson": dy.poisson_loss,
+        }[loss] if isinstance(loss, str) else loss
+        self._params = {} if params is None else params
+        self._input_params = input_params
         self._batch_size = batch_size
         self._item_index = 0
         self._iteration = 0
@@ -104,11 +101,19 @@ class NeuralNetwork(Classifier):
             "type": self.model_type,
             "labels": self.labels,
             "is_frozen": self.is_frozen,
+            "input_params": self._input_params,
+            "params": self._params,
+            "layers": self._layers,
+            "layer_dim": self._layer_dim,
         }
         save_dict(self.filename, d)
         self.init_model()
+        model_filename = self.filename + ".model"
+        print("Saving model to '%s'... " % model_filename, end="", flush=True)
+        started = time.time()
         try:
-            self.model.save(self._model_filename())
+            self.model.save(model_filename.encode())
+            print("Done (%.3fs)." % (time.time() - started))
         except ValueError as e:
             print("Failed saving model: %s" % e)
 
@@ -122,13 +127,19 @@ class NeuralNetwork(Classifier):
         assert model_type == self.model_type, "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])
         self.is_frozen = d["is_frozen"]
+        self._input_params = d["input_params"]
+        self._params = d["params"]
+        self._layers = d["layers"]
+        self._layer_dim = d["layer_dim"]
+        self.init_model()
+        model_filename = self.filename + ".model"
+        print("Loading model from '%s'... " % model_filename, end="", flush=True)
+        started = time.time()
         try:
-            self.model.load(self._model_filename())
+            self.model.load(model_filename.encode())
+            print("Done (%.3fs)." % (time.time() - started))
         except KeyError as e:
             print("Failed loading model: %s" % e)
-
-    def _model_filename(self):
-        return (self.filename + ".model").encode("utf-8")
 
     def __str__(self):
         return ("%d labels, " % self.num_labels) + (
