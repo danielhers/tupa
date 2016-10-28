@@ -109,6 +109,8 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--validationsplit", type=float, default=0.1, help="ratio of train set to use as validation")
         group.add_argument("--saveeverybatch", action="store_true", help="save model every training batch")
         group.add_argument("--saveeveryepoch", action="store_true", help="save model every training epoch")
+        group.add_argument("--dynet-seed", help="random seed for dynet", required=False, type=int)
+        group.add_argument("--dynet-mem", help="memory for dynet", required=False, type=int)
         self.args = argparser.parse_args(args if args else None)
 
         assert self.args.passages or self.args.train,\

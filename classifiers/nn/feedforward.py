@@ -22,9 +22,8 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         for suffix, param in self._input_params.items():
             if not param.numeric:  # index feature
                 p = self.model.add_lookup_parameters((param.size, param.dim))
-                if param.init:
-                    for i, row in enumerate(param.init):
-                        p.init_row(i, row)
+                if param.init is not None:
+                    p.init_from_array(param.init)
                 self._params[suffix] = p
             input_dim += param.num * param.dim
         for i in range(1, self._layers + 1):
@@ -53,7 +52,10 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             W = dy.parameter(self._params["W%d" % i])
             b = dy.parameter(self._params["b%d" % i])
             f = self._activation if i < self._layers else dy.softmax
+            W.value()
+            b.value()
             x = f(W * x + b)
+            x.value()
         return x
 
     def score(self, features):
@@ -85,12 +87,13 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             for suffix, value in features.items():
                 self._inputs[suffix] = value
             scores = self._eval()
+            scores.value()
             label = np.zeros((self.max_num_labels,))
             label[true] = 1
             label_value = dy.vecInput(self.max_num_labels)
             label_value.set(label)
             loss = self._loss(scores, label_value)
-            loss.scalar_value()
+            loss.value()
             loss.backward()
             self._trainer.update()
 

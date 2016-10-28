@@ -12,6 +12,8 @@ from ucca.evaluation import Scores
 
 class Params(object):
     def __init__(self, params):
+        params["dynet-mem"] = 2e9
+        params["dynet-seed"] = params["seed"]
         if not params["earlyupdate"]:
             params["iterations"] = 1
         if params["regularizer"] is None:

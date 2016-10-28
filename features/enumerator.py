@@ -42,7 +42,7 @@ class FeatureEnumerator(FeatureExtractorWrapper):
             param.dim = w2v.vector_size
             weights = np.array([w2v[x] for x in vocab])
             unknown = weights.mean(axis=0)
-            param.init = (np.vstack((unknown, weights)),)
+            param.init = np.vstack((unknown, weights))
             param.data = DropoutDict(max_size=param.size, keys=vocab, dropout=param.dropout)
 
     def extract_features(self, state):
