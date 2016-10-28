@@ -89,7 +89,9 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             label[true] = 1
             label_value = dy.vecInput(self.max_num_labels)
             label_value.set(label)
-            self._loss(scores, label_value).backward()
+            loss = self._loss(scores, label_value)
+            loss.scalar_value()
+            loss.backward()
             self._trainer.update()
 
     def finish(self, train=False):

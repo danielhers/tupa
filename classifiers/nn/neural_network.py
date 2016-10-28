@@ -108,7 +108,7 @@ class NeuralNetwork(Classifier):
         save_dict(self.filename, d)
         self.init_model()
         try:
-            self.model.save(self.filename + ".model")
+            self.model.save(self._model_filename())
         except ValueError as e:
             print("Failed saving model: %s" % e)
 
@@ -123,9 +123,12 @@ class NeuralNetwork(Classifier):
         self.labels = list(d["labels"])
         self.is_frozen = d["is_frozen"]
         try:
-            self.model.load(self.filename + ".model")
+            self.model.load(self._model_filename())
         except KeyError as e:
             print("Failed loading model: %s" % e)
+
+    def _model_filename(self):
+        return (self.filename + ".model").encode("utf-8")
 
     def __str__(self):
         return ("%d labels, " % self.num_labels) + (
