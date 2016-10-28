@@ -78,7 +78,9 @@ def main():
         ("dropout",         (0, .1, .2, .3, .4, .5)),
     )
     params = [Params(OrderedDict(p))
-              for p in zip(*[[(n, v) for v in np.random.choice(vs, num)] for n, vs in domains])]
+              for p in zip(*[[(n, v.item() if hasattr(v, "item") else v)
+                              for v in np.random.choice(vs, num)]
+                             for n, vs in domains])]
     print("All parameter combinations to try:")
     print("\n".join(map(str, params)))
     print("Saving results to '%s'" % out_file)
