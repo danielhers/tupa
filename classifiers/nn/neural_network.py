@@ -6,6 +6,34 @@ import dynet as dy
 from classifiers.classifier import Classifier
 from parsing.model_util import load_dict, save_dict
 
+LOSSES = {
+    "categorical_crossentropy": dy.binary_log_loss,
+    "pairwise_rank": dy.pairwise_rank_loss,
+    "poisson": dy.poisson_loss,
+}
+
+TRAINERS = {
+    "sgd": dy.SimpleSGDTrainer,
+    "momentum": dy.MomentumSGDTrainer,
+    "adagrad": dy.AdagradTrainer,
+    "adadelta": dy.AdadeltaTrainer,
+    "adam": dy.AdamTrainer,
+}
+
+INITIALIZERS = {
+    "glorot_uniform": dy.GlorotInitializer(),
+    "normal": dy.NormalInitializer(),
+    "uniform": dy.UniformInitializer(1),
+    "const": dy.ConstInitializer(0),
+}
+
+ACTIVATIONS = {
+    "cube": (lambda x: x * x * x),
+    "tanh": dy.tanh,
+    "sigmoid": dy.logistic,
+    "relu": dy.rectify,
+}
+
 
 class NeuralNetwork(Classifier):
     """
@@ -43,35 +71,19 @@ class NeuralNetwork(Classifier):
         self.model = None
         self._layers = layers
         self._layer_dim = layer_dim
-        self._activation = {
-            "cube": (lambda x: x*x*x),
-            "tanh": dy.tanh,
-            "sigmoid": dy.logistic,
-            "relu": dy.rectify,
-        }[activation] if isinstance(activation, str) else activation
+        self._activation_str = activation
+        self._activation = ACTIVATIONS[self._activation_str]
         self._normalize = normalize
-        self._init = {
-            "glorot_uniform": dy.GlorotInitializer(),
-            "normal": dy.NormalInitializer(),
-            "uniform": dy.UniformInitializer(1),
-            "const": dy.ConstInitializer(0),
-        }[init] if isinstance(init, str) else init
+        self._init_str = init
+        self._init = INITIALIZERS[self._init_str]
         self._num_labels = self.num_labels
         self._minibatch_size = minibatch_size
         self._nb_epochs = nb_epochs
         self._dropout = dropout
-        self._optimizer = {
-            "sgd": dy.SimpleSGDTrainer,
-            "momentum": dy.MomentumSGDTrainer,
-            "adagrad": dy.AdagradTrainer,
-            "adadelta": dy.AdadeltaTrainer,
-            "adam": dy.AdamTrainer,
-        }[optimizer] if isinstance(optimizer, str) else optimizer
-        self._loss = {
-            "categorical_crossentropy": dy.binary_log_loss,
-            "pairwise_rank": dy.pairwise_rank_loss,
-            "poisson": dy.poisson_loss,
-        }[loss] if isinstance(loss, str) else loss
+        self._optimizer_str = optimizer
+        self._optimizer = TRAINERS[self._optimizer_str]
+        self._loss_str = loss
+        self._loss = LOSSES[self._loss_str]
         self._params = OrderedDict()
         self._input_params = input_params
         self._batch_size = batch_size
@@ -101,6 +113,10 @@ class NeuralNetwork(Classifier):
             "param_keys": param_keys,
             "layers": self._layers,
             "layer_dim": self._layer_dim,
+            "activation": self._activation_str,
+            "init": self._init_str,
+            "optimizer": self._optimizer_str,
+            "loss": self._loss_str,
         }
         save_dict(self.filename, d)
         self.init_model()
@@ -127,6 +143,14 @@ class NeuralNetwork(Classifier):
         param_keys = d["param_keys"]
         self._layers = d["layers"]
         self._layer_dim = d["layer_dim"]
+        self._activation_str = d["activation"]
+        self._activation = ACTIVATIONS[self._activation_str]
+        self._init_str = d["init"]
+        self._init = INITIALIZERS[self._init_str]
+        self._optimizer_str = d["optimizer"]
+        self._optimizer = TRAINERS[self._optimizer_str]
+        self._loss_str = d["loss"]
+        self._loss = LOSSES[self._loss_str]
         self.init_model()
         model_filename = self.filename + ".model"
         print("Loading model from '%s'... " % model_filename, end="", flush=True)

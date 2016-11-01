@@ -125,16 +125,16 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
                                                  input_params=self._input_params,
                                                  layers=self._layers,
                                                  layer_dim=self._layer_dim,
-                                                 activation=self._activation,
+                                                 activation=self._activation_str,
                                                  normalize=self._normalize,
-                                                 init=self._init,
+                                                 init=self._init_str,
                                                  max_num_labels=self.max_num_labels,
                                                  batch_size=self._batch_size,
                                                  minibatch_size=self._minibatch_size,
                                                  nb_epochs=self._nb_epochs,
                                                  dropout=self._dropout,
-                                                 optimizer=self._optimizer,
-                                                 loss=self._loss,
+                                                 optimizer=self._optimizer_str,
+                                                 loss=self._loss_str,
                                                  )
             self.save()
             finalized.load()
