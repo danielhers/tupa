@@ -41,8 +41,6 @@ class Model(object):
                                                   dropout=Config().args.dropout,
                                                   optimizer=Config().args.optimizer,
                                                   loss=Config().args.loss,
-                                                  regularizer=Config().args.regularizer,
-                                                  regularization=Config().args.regularization
                                                   )
         else:
             raise ValueError("Invalid model type: '%s'" % model_type)

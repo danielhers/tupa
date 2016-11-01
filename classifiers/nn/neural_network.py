@@ -17,8 +17,7 @@ class NeuralNetwork(Classifier):
                  layers=1, layer_dim=100, activation="tanh", normalize=False,
                  init="glorot_uniform", max_num_labels=100, batch_size=10,
                  minibatch_size=200, nb_epochs=5, dropout=0,
-                 optimizer="adam", loss="categorical_crossentropy",
-                 regularizer="l2", regularization=1e-8):
+                 optimizer="adam", loss="categorical_crossentropy"):
         """
         Create a new untrained NN or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
@@ -36,8 +35,6 @@ class NeuralNetwork(Classifier):
         :param dropout: dropout to apply to input layer
         :param optimizer: algorithm to use for optimization
         :param loss: objective function to use for optimization
-        :param regularizer: regularization type (None, l1, l2 or l1l2)
-        :param regularization: regularization parameter lambda
         """
         super(NeuralNetwork, self).__init__(model_type=model_type, filename=filename,
                                             labels=labels, model=model)

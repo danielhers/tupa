@@ -16,8 +16,6 @@ class Params(object):
         params["dynet-seed"] = params["seed"]
         if not params["earlyupdate"]:
             params["iterations"] = 1
-        if params["regularizer"] is None:
-            params["regularization"] = None
         self.params = params
         self.scores = None
 
@@ -25,8 +23,7 @@ class Params(object):
         assert Config().args.train and Config().args.passages or Config().args.folds, \
             "insufficient parameters given to parser"
         print("Running with %s" % self)
-        for name, value in self.params.items():
-            setattr(Config().args, name, value)
+        Config().update(self.params)
         self.scores = parse.main()
         assert self.score is not None, "parser failed to produce score"
 
@@ -75,8 +72,7 @@ def main():
         ("iterations",      range(1, 21)),
         ("worddropout",     (0, .1, .2, .25, .3)),
         ("normalize",       (False, True)),
-        ("regularizer",     [None] + 3 * [config.REGULARIZERS[-1]] + list(config.REGULARIZERS)),
-        ("regularization",  (1e-7, 1e-6, 1e-5, 1e-4)),
+        ("dynet_l2",        (1e-7, 1e-6, 1e-5, 1e-4)),
         ("dropout",         (0, .1, .2, .3, .4, .5)),
     )
     params = [Params(OrderedDict(p))

@@ -136,7 +136,5 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
                                             dropout=self._dropout,
                                             optimizer=self._optimizer,
                                             loss=self._loss,
-                                            # regularizer=self._regularizer,
-                                            # regularization=self._regularization
                                             )
         return None

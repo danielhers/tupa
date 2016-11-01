@@ -1,6 +1,7 @@
 import argparse
 
 import numpy as np
+import sys
 
 from ucca import convert
 
@@ -96,8 +97,6 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--nbepochs", type=int, default=5, help="number of epochs for optimization")
         group.add_argument("--optimizer", choices=OPTIMIZERS, default=OPTIMIZERS[0], help="algorithm for optimization")
         group.add_argument("--loss", choices=OBJECTIVES, default=OBJECTIVES[0], help="loss function for optimization")
-        group.add_argument("--regularizer", choices=REGULARIZERS, default=REGULARIZERS[0], help="regularizer type")
-        group.add_argument("--regularization", type=float, default=1e-8, help="regularization parameter")
         group.add_argument("--maxwords", default=10000, help="maximum number of words to keep embeddings for")
         group.add_argument("--maxtags", type=int, default=100, help="maximum number of POS tags to keep embeddings for")
         group.add_argument("--maxedgelabels", type=int, default=15, help="maximum number of edge labels for embeddings")
@@ -109,8 +108,11 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--validationsplit", type=float, default=0.1, help="ratio of train set to use as validation")
         group.add_argument("--saveeverybatch", action="store_true", help="save model every training batch")
         group.add_argument("--saveeveryepoch", action="store_true", help="save model every training epoch")
-        group.add_argument("--dynet-seed", help="random seed for dynet", required=False, type=int)
-        group.add_argument("--dynet-mem", help="memory for dynet", required=False, type=int)
+        group = argparser.add_argument_group(title="DyNet parameters")
+        group.add_argument("--dynet-mem", help="memory for dynet")
+        group.add_argument("--dynet-l2", help="level of l2 regularization (default 1e-6)", type=float)
+        group.add_argument("--dynet-gpus", help="how many GPUs you want to use", type=int)
+        group.add_argument("--dynet-gpu-ids", help="the GPUs that you want to use by device ID")
         self.args = argparser.parse_args(args if args else None)
 
         assert self.args.passages or self.args.train,\
@@ -133,8 +135,25 @@ class Config(object, metaclass=Singleton):
             self.args.log = "parse.log"
 
         self._log_file = None
-        np.random.seed(self.args.seed)
+        self.set_external()
         self.random = np.random
+
+    def set_external(self):
+        np.random.seed(self.args.seed)
+        sys.argv += ["--dynet-seed", str(self.args.seed)]
+        if self.args.dynet_mem:
+            sys.argv += ["--dynet-mem", str(self.args.dynet_mem)]
+        if self.args.dynet_l2:
+            sys.argv += ["--dynet-l2", str(self.args.dynet_l2)]
+        if self.args.dynet_gpus:
+            sys.argv += ["--dynet-gpus", str(self.args.dynet_gpus)]
+        if self.args.dynet_gpu_ids:
+            sys.argv += ["--dynet-gpu-ids", str(self.args.dynet_gpu_ids)]
+
+    def update(self, params):
+        for name, value in params.items():
+            setattr(self.args, name, value)
+        self.set_external()
 
     @property
     def split(self):
