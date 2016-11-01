@@ -12,8 +12,6 @@ from ucca.evaluation import Scores
 
 class Params(object):
     def __init__(self, params):
-        params["dynet-mem"] = 2e9
-        params["dynet-seed"] = params["seed"]
         if not params["earlyupdate"]:
             params["iterations"] = 1
         self.params = params
@@ -50,7 +48,7 @@ def main():
     num = int(os.environ.get("PARAMS_NUM", 30))
     np.random.seed()
     domains = (
-        ("seed", 2147483647),
+        ("seed",            2147483647),
         ("classifier",      100 * [config.FEEDFORWARD_NN] + list(config.CLASSIFIERS)),
         ("wordvectors",     [50, 100, 200, 300] + [load_word2vec(f) for f in w2v_files]),
         ("tagdim",          (5, 10, 20)),
