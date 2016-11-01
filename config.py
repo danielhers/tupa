@@ -111,6 +111,7 @@ class Config(object, metaclass=Singleton):
         group = argparser.add_argument_group(title="DyNet parameters")
         group.add_argument("--dynet-mem", help="memory for dynet")
         group.add_argument("--dynet-l2", help="level of l2 regularization (default 1e-6)", type=float)
+        group.add_argument("--dynet-gpu", help="use the GPU", action="store_true")
         group.add_argument("--dynet-gpus", help="how many GPUs you want to use", type=int)
         group.add_argument("--dynet-gpu-ids", help="the GPUs that you want to use by device ID")
         self.args = argparser.parse_args(args if args else None)
@@ -145,6 +146,8 @@ class Config(object, metaclass=Singleton):
             sys.argv += ["--dynet-mem", str(self.args.dynet_mem)]
         if self.args.dynet_l2:
             sys.argv += ["--dynet-l2", str(self.args.dynet_l2)]
+        if self.args.dynet_gpu:
+            sys.argv += ["--dynet-gpu"]
         if self.args.dynet_gpus:
             sys.argv += ["--dynet-gpus", str(self.args.dynet_gpus)]
         if self.args.dynet_gpu_ids:
