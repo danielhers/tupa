@@ -15,7 +15,7 @@ class NeuralNetwork(Classifier):
     Expects features from FeatureEnumerator.
     """
 
-    def __init__(self, filename, labels, model_type, input_params=None, params=None, model=None,
+    def __init__(self, filename, labels, model_type, input_params=None,
                  layers=1, layer_dim=100, activation="tanh", normalize=False,
                  init="glorot_uniform", max_num_labels=100, batch_size=10,
                  minibatch_size=200, nb_epochs=5, dropout=0,
@@ -24,7 +24,6 @@ class NeuralNetwork(Classifier):
         Create a new untrained NN or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
         :param input_params: dict of feature type name -> FeatureInformation
-        :param model: if given, copy the weights (from a trained model)
         :param layers: number of hidden layers
         :param layer_dim: size of hidden layer
         :param activation: activation function at hidden layers
@@ -38,11 +37,10 @@ class NeuralNetwork(Classifier):
         :param optimizer: algorithm to use for optimization
         :param loss: objective function to use for optimization
         """
-        super(NeuralNetwork, self).__init__(model_type=model_type, filename=filename,
-                                            labels=labels, model=model)
-        assert input_params is not None or model is not None
-        self.model = model
+        super(NeuralNetwork, self).__init__(model_type=model_type, filename=filename, labels=labels)
+        assert input_params is not None
         self.max_num_labels = max_num_labels
+        self.model = None
         self._layers = layers
         self._layer_dim = layer_dim
         self._activation = {
@@ -74,7 +72,7 @@ class NeuralNetwork(Classifier):
             "pairwise_rank": dy.pairwise_rank_loss,
             "poisson": dy.poisson_loss,
         }[loss] if isinstance(loss, str) else loss
-        self._params = OrderedDict() if params is None else params
+        self._params = OrderedDict()
         self._input_params = input_params
         self._batch_size = batch_size
         self._item_index = 0
@@ -93,7 +91,6 @@ class NeuralNetwork(Classifier):
     def save(self):
         """
         Save all parameters to file
-        :param filename: file to save to
         """
         param_keys, param_values = zip(*self._params.items())
         d = {
@@ -119,7 +116,7 @@ class NeuralNetwork(Classifier):
     def load(self):
         """
         Load all parameters from file
-        :param filename: file to load from
+        :param suffix: extra suffix to append to filename
         """
         d = load_dict(self.filename)
         model_type = d.get("type")

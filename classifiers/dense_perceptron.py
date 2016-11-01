@@ -92,7 +92,6 @@ class DensePerceptron(Classifier):
     def save(self):
         """
         Save all parameters to file
-        :param filename: file to save to
         """
         d = {
             "type": "dense",
@@ -109,7 +108,6 @@ class DensePerceptron(Classifier):
     def load(self):
         """
         Load all parameters from file
-        :param filename: file to load from
         """
         d = load_dict(self.filename)
         model_type = d.get("type")

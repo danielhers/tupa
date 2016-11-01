@@ -140,7 +140,6 @@ class SparsePerceptron(Classifier):
     def save(self):
         """
         Save all parameters to file
-        :param filename: file to save to
         """
         d = {
             "type": self.model_type,
@@ -158,7 +157,6 @@ class SparsePerceptron(Classifier):
     def load(self):
         """
         Load all parameters from file
-        :param filename: file to load from
         """
         d = load_dict(self.filename)
         model_type = d.get("type")

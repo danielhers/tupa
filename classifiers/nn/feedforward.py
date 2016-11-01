@@ -119,21 +119,26 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         if freeze:
             print("Labels: %d" % self.num_labels)
             print("Features: %d" % sum(f.num * (f.dim or 1) for f in self._input_params.values()))
-            return FeedforwardNeuralNetwork(self.filename, list(self.labels),
-                                            model=self.model,
-                                            input_params=self._input_params,
-                                            params=self._params,
-                                            layers=self._layers,
-                                            layer_dim=self._layer_dim,
-                                            activation=self._activation,
-                                            normalize=self._normalize,
-                                            init=self._init,
-                                            max_num_labels=self.max_num_labels,
-                                            batch_size=self._batch_size,
-                                            minibatch_size=self._minibatch_size,
-                                            nb_epochs=self._nb_epochs,
-                                            dropout=self._dropout,
-                                            optimizer=self._optimizer,
-                                            loss=self._loss,
-                                            )
+            filename = self.filename
+            self.filename = "tmp"
+            finalized = FeedforwardNeuralNetwork(self.filename, list(self.labels),
+                                                 input_params=self._input_params,
+                                                 layers=self._layers,
+                                                 layer_dim=self._layer_dim,
+                                                 activation=self._activation,
+                                                 normalize=self._normalize,
+                                                 init=self._init,
+                                                 max_num_labels=self.max_num_labels,
+                                                 batch_size=self._batch_size,
+                                                 minibatch_size=self._minibatch_size,
+                                                 nb_epochs=self._nb_epochs,
+                                                 dropout=self._dropout,
+                                                 optimizer=self._optimizer,
+                                                 loss=self._loss,
+                                                 )
+            self.save()
+            finalized.load()
+            self.filename = filename
+            finalized.filename = filename
+            return finalized
         return None
