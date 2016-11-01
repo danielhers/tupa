@@ -26,7 +26,7 @@ CLASSIFIERS = (SPARSE_PERCEPTRON, DENSE_PERCEPTRON, FEEDFORWARD_NN)
 ACTIVATIONS = ("sigmoid", "tanh", "relu", "cube")
 INITIALIZATIONS = ("glorot_uniform", "normal", "uniform", "const")
 OPTIMIZERS = ("adam", "sgd", "momentum", "adagrad", "adadelta")
-OBJECTIVES = ("categorical_crossentropy", "pairwise_rank", "poisson")
+OBJECTIVES = ("categorical_crossentropy", "pairwise_rank")
 REGULARIZERS = ("l2", "l1", "l1l2")
 
 
