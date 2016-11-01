@@ -1,5 +1,7 @@
 import time
 
+from collections import OrderedDict
+
 import dynet as dy
 from classifiers.classifier import Classifier
 from parsing.model_util import load_dict, save_dict
@@ -39,7 +41,6 @@ class NeuralNetwork(Classifier):
         super(NeuralNetwork, self).__init__(model_type=model_type, filename=filename,
                                             labels=labels, model=model)
         assert input_params is not None or model is not None
-        # dy.init(config.Config().args.seed)
         self.model = model
         self.max_num_labels = max_num_labels
         self._layers = layers
@@ -73,7 +74,7 @@ class NeuralNetwork(Classifier):
             "pairwise_rank": dy.pairwise_rank_loss,
             "poisson": dy.poisson_loss,
         }[loss] if isinstance(loss, str) else loss
-        self._params = {} if params is None else params
+        self._params = OrderedDict() if params is None else params
         self._input_params = input_params
         self._batch_size = batch_size
         self._item_index = 0
@@ -94,12 +95,13 @@ class NeuralNetwork(Classifier):
         Save all parameters to file
         :param filename: file to save to
         """
+        param_keys, param_values = zip(*self._params.items())
         d = {
             "type": self.model_type,
             "labels": self.labels,
             "is_frozen": self.is_frozen,
             "input_params": self._input_params,
-            "params": self._params,
+            "param_keys": param_keys,
             "layers": self._layers,
             "layer_dim": self._layer_dim,
         }
@@ -109,7 +111,7 @@ class NeuralNetwork(Classifier):
         print("Saving model to '%s'... " % model_filename, end="", flush=True)
         started = time.time()
         try:
-            self.model.save(model_filename.encode())
+            self.model.save(model_filename, param_values)
             print("Done (%.3fs)." % (time.time() - started))
         except ValueError as e:
             print("Failed saving model: %s" % e)
@@ -125,7 +127,7 @@ class NeuralNetwork(Classifier):
         self.labels = list(d["labels"])
         self.is_frozen = d["is_frozen"]
         self._input_params = d["input_params"]
-        self._params = d["params"]
+        param_keys = d["param_keys"]
         self._layers = d["layers"]
         self._layer_dim = d["layer_dim"]
         self.init_model()
@@ -133,10 +135,11 @@ class NeuralNetwork(Classifier):
         print("Loading model from '%s'... " % model_filename, end="", flush=True)
         started = time.time()
         try:
-            self.model.load(model_filename.encode())
+            param_values = self.model.load(model_filename)
             print("Done (%.3fs)." % (time.time() - started))
         except KeyError as e:
             print("Failed loading model: %s" % e)
+        self._params = OrderedDict(zip(param_keys, param_values))
 
     def __str__(self):
         return ("%d labels, " % self.num_labels) + (

@@ -19,8 +19,8 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             print("Input: " + self._input_params)
         self.model = dy.Model()
         input_dim = 0
-        for suffix, param in self._input_params.items():
-            if not param.numeric:  # index feature
+        for suffix, param in sorted(self._input_params.items()):
+            if not param.numeric and param.dim > 0:  # index feature
                 p = self.model.add_lookup_parameters((param.size, param.dim))
                 if param.init is not None:
                     p.init_from_array(param.init)
@@ -34,15 +34,17 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         self._trainer = self._optimizer(self.model)
 
     def _generate_inputs(self):
-        for suffix, param in self._input_params.items():
+        for suffix, param in sorted(self._input_params.items()):
             xs = self._inputs[suffix]
             if param.numeric:
                 vec = dy.vecInput(param.num)
                 vec.set(xs)
-            else:
+            elif param.dim > 0:
                 vecs = self._params[suffix].batch(xs)
                 vecs.value()
                 vec = dy.reshape(vecs, (param.num * param.dim,))
+            else:
+                continue
             yield vec
 
     def _eval(self, train=False):
@@ -52,12 +54,9 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             W = dy.parameter(self._params["W%d" % i])
             b = dy.parameter(self._params["b%d" % i])
             f = self._activation if i < self._layers else dy.softmax
-            W.value()
-            b.value()
             if train and self._dropout:
                 x = dy.dropout(x, self._dropout)
             x = f(W * x + b)
-            x.value()
         return x
 
     def score(self, features):
