@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 
 import dynet as dy
@@ -97,6 +99,9 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             loss.value()
             loss.backward()
             self._trainer.update()
+            if config.Config().args.dynet_viz:
+                dy.print_graphviz()
+                sys.exit(0)
 
     def finish(self, train=False):
         """

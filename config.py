@@ -110,10 +110,11 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--saveeveryepoch", action="store_true", help="save model every training epoch")
         group = argparser.add_argument_group(title="DyNet parameters")
         group.add_argument("--dynet-mem", help="memory for dynet")
-        group.add_argument("--dynet-l2", help="level of l2 regularization (default 1e-6)", type=float)
-        group.add_argument("--dynet-gpu", help="use the GPU", action="store_true")
-        group.add_argument("--dynet-gpus", help="how many GPUs you want to use", type=int)
+        group.add_argument("--dynet-l2", type=float, help="level of l2 regularization (default 1e-6)")
+        group.add_argument("--dynet-gpu", action="store_true", help="use the GPU")
+        group.add_argument("--dynet-gpus", type=int, help="how many GPUs you want to use")
         group.add_argument("--dynet-gpu-ids", help="the GPUs that you want to use by device ID")
+        group.add_argument("--dynet-viz", action="store_true", help="visualize NN and exit")
         self.args = argparser.parse_args(args if args else None)
 
         assert self.args.passages or self.args.train,\
@@ -152,6 +153,8 @@ class Config(object, metaclass=Singleton):
             sys.argv += ["--dynet-gpus", str(self.args.dynet_gpus)]
         if self.args.dynet_gpu_ids:
             sys.argv += ["--dynet-gpu-ids", str(self.args.dynet_gpu_ids)]
+        if self.args.dynet_viz:
+            sys.argv += ["--dynet-viz"]
 
     def update(self, params):
         for name, value in params.items():
