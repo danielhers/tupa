@@ -49,11 +49,10 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         for i in range(1, self._layers + 1):
             W = dy.parameter(self._params["W%d" % i])
             b = dy.parameter(self._params["b%d" % i])
-            f = self._activation if i < self._layers else dy.softmax
             if train and self._dropout:
                 x = dy.dropout(x, self._dropout)
-            x = f(W * x + b)
-        return x
+            x = self._activation(W * x + b)
+        return dy.log_softmax(x, restrict=list(range(self.num_labels)))
 
     def score(self, features):
         """
