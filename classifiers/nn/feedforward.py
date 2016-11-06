@@ -39,15 +39,9 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         for suffix, param in sorted(self._input_params.items()):
             xs = self._inputs[suffix]
             if param.numeric:
-                vec = dy.vecInput(param.num)
-                vec.set(xs)
+                yield dy.inputVector(xs)
             elif param.dim > 0:
-                vecs = self._params[suffix].batch(xs)
-                vecs.value()
-                vec = dy.reshape(vecs, (param.num * param.dim,))
-            else:
-                continue
-            yield vec
+                yield dy.reshape(self._params[suffix].batch(xs), (param.num * param.dim,))
 
     def _eval(self, train=False):
         dy.renew_cg()
@@ -71,10 +65,8 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         if not self.is_frozen and self._iteration == 0:  # not fit yet
             return np.zeros(self.num_labels)
         self.init_model()
-        for suffix, value in features.items():
-            self._inputs[suffix] = value
-        scores = self._eval()
-        return scores.npvalue()[:self.num_labels]
+        self._inputs.update(features)
+        return self._eval().npvalue()[:self.num_labels]
 
     def update(self, features, pred, true, importance=1):
         """
@@ -86,16 +78,9 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         """
         super(FeedforwardNeuralNetwork, self).update(features, pred, true, importance)
         self.init_model()
+        self._inputs.update(features)
         for _ in range(int(importance)):
-            for suffix, value in features.items():
-                self._inputs[suffix] = value
-            scores = self._eval(train=True)
-            scores.value()
-            label = np.zeros((self.max_num_labels,))
-            label[true] = 1
-            label_value = dy.vecInput(self.max_num_labels)
-            label_value.set(label)
-            loss = self._loss(scores, label_value)
+            loss = self._loss(self._eval(train=True), dy.inputVector(np.eye(self.max_num_labels)[true]))
             loss.value()
             loss.backward()
             self._trainer.update()
