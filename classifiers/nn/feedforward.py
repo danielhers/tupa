@@ -29,8 +29,8 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         for i in range(1, self._layers + 1):
             in_dim = input_dim if i == 1 else self._layer_dim
             out_dim = self._layer_dim if i < self._layers else self.max_num_labels
-            self._params["W%d" % i] = self.model.add_parameters((out_dim, in_dim))
-            self._params["b%d" % i] = self.model.add_parameters(out_dim)
+            self._params["W%d" % i] = self.model.add_parameters((out_dim, in_dim), init=self._init)
+            self._params["b%d" % i] = self.model.add_parameters(out_dim, init=self._init)
         self._trainer = self._optimizer(self.model)
 
     def _generate_inputs(self):
