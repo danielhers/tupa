@@ -28,7 +28,8 @@ INITIALIZERS = {
 }
 
 ACTIVATIONS = {
-    "cube": (lambda x: x * x * x),
+    "square": dy.square,
+    "cube": dy.cube,
     "tanh": dy.tanh,
     "sigmoid": dy.logistic,
     "relu": dy.rectify,
