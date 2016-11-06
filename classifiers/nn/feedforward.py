@@ -81,7 +81,7 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         self._inputs.update(features)
         for _ in range(int(importance)):
             loss = self._loss(self._eval(train=True), dy.inputVector(np.eye(self.max_num_labels)[true]))
-            loss.value()
+            loss.forward()
             loss.backward()
             self._trainer.update()
             if config.Config().args.dynet_viz:
