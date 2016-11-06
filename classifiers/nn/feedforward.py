@@ -20,6 +20,7 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         if config.Config().args.verbose:
             print("Input: " + self._input_params)
         self.model = dy.Model()
+        self._trainer = self._optimizer(self.model)
         input_dim = 0
         for suffix, param in sorted(self._input_params.items()):
             if not param.numeric and param.dim > 0:  # index feature
@@ -33,7 +34,6 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             out_dim = self._layer_dim if i < self._layers else self.max_num_labels
             self._params["W%d" % i] = self.model.add_parameters((out_dim, in_dim), init=self._init)
             self._params["b%d" % i] = self.model.add_parameters(out_dim, init=self._init)
-        self._trainer = self._optimizer(self.model)
 
     def _generate_inputs(self):
         for suffix, param in sorted(self._input_params.items()):
@@ -106,28 +106,4 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         self.init_model()
         self._item_index = 0
         self._iteration += 1
-        if freeze:
-            print("Labels: %d" % self.num_labels)
-            print("Features: %d" % sum(f.num * (f.dim or 1) for f in self._input_params.values()))
-            filename = self.filename
-            self.filename = "tmp"
-            finalized = FeedforwardNeuralNetwork(self.filename, list(self.labels),
-                                                 input_params=self._input_params,
-                                                 layers=self._layers,
-                                                 layer_dim=self._layer_dim,
-                                                 activation=self._activation_str,
-                                                 init=self._init_str,
-                                                 max_num_labels=self.max_num_labels,
-                                                 batch_size=self._batch_size,
-                                                 minibatch_size=self._minibatch_size,
-                                                 nb_epochs=self._nb_epochs,
-                                                 dropout=self._dropout,
-                                                 optimizer=self._optimizer_str,
-                                                 loss=self._loss_str,
-                                                 )
-            self.save()
-            finalized.load()
-            self.filename = filename
-            finalized.filename = filename
-            return finalized
-        return None
+        return self
