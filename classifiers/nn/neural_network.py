@@ -1,5 +1,7 @@
+import os
 import time
 
+import sys
 from collections import OrderedDict
 
 import dynet as dy
@@ -112,6 +114,7 @@ class NeuralNetwork(Classifier):
         print("Saving model to '%s'... " % model_filename, end="", flush=True)
         started = time.time()
         try:
+            os.remove(model_filename)
             self.model.save(model_filename, param_values)
             print("Done (%.3fs)." % (time.time() - started))
         except ValueError as e:
