@@ -8,8 +8,6 @@ from parsing.model_util import load_dict, save_dict
 
 LOSSES = {
     "categorical_crossentropy": dy.binary_log_loss,
-    "pairwise_rank": dy.pairwise_rank_loss,
-    "poisson": dy.poisson_loss,
 }
 
 TRAINERS = {
@@ -45,7 +43,7 @@ class NeuralNetwork(Classifier):
     """
 
     def __init__(self, filename, labels, model_type, input_params=None,
-                 layers=1, layer_dim=100, activation="tanh", normalize=False,
+                 layers=1, layer_dim=100, activation="tanh",
                  init="glorot_uniform", max_num_labels=100, batch_size=10,
                  minibatch_size=200, nb_epochs=5, dropout=0,
                  optimizer="adam", loss="categorical_crossentropy"):
@@ -56,7 +54,6 @@ class NeuralNetwork(Classifier):
         :param layers: number of hidden layers
         :param layer_dim: size of hidden layer
         :param activation: activation function at hidden layers
-        :param normalize: perform batch normalization after each layer?
         :param init: initialization type for hidden layers
         :param max_num_labels: since model size is fixed, set maximum output size
         :param batch_size: fit model every this many items
@@ -74,7 +71,6 @@ class NeuralNetwork(Classifier):
         self._layer_dim = layer_dim
         self._activation_str = activation
         self._activation = ACTIVATIONS[self._activation_str]
-        self._normalize = normalize
         self._init_str = init
         self._init = INITIALIZERS[self._init_str]
         self._num_labels = self.num_labels

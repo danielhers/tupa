@@ -26,8 +26,7 @@ CLASSIFIERS = (SPARSE_PERCEPTRON, DENSE_PERCEPTRON, FEEDFORWARD_NN)
 ACTIVATIONS = ("sigmoid", "tanh", "relu", "cube")
 INITIALIZATIONS = ("glorot_uniform", "normal", "uniform", "const")
 OPTIMIZERS = ("adam", "sgd", "momentum", "adagrad", "adadelta")
-OBJECTIVES = ("categorical_crossentropy", "pairwise_rank")
-REGULARIZERS = ("l2", "l1", "l1l2")
+OBJECTIVES = ("categorical_crossentropy",)
 
 
 class Config(object, metaclass=Singleton):
@@ -89,7 +88,6 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--layerdim", type=int, default=500, help="dimension for hidden layers")
         group.add_argument("--layers", type=int, default=2, help="number of hidden layers")
         group.add_argument("--activation", choices=ACTIVATIONS, default=ACTIVATIONS[0], help="activation function")
-        group.add_argument("--normalize", type=bool, default=True, help="batch normalization after each layer")
         group.add_argument("--init", choices=INITIALIZATIONS, default=INITIALIZATIONS[0], help="weight initialization")
         group.add_argument("--maxlabels", type=int, default=100, help="maximum number of actions to allow")
         group.add_argument("--batchsize", type=int, default=10, help="fit model every this many passages")

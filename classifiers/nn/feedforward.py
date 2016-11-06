@@ -131,7 +131,6 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
                                                  layers=self._layers,
                                                  layer_dim=self._layer_dim,
                                                  activation=self._activation_str,
-                                                 normalize=self._normalize,
                                                  init=self._init_str,
                                                  max_num_labels=self.max_num_labels,
                                                  batch_size=self._batch_size,
