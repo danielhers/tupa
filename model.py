@@ -39,7 +39,6 @@ class Model(object):
                                                   nb_epochs=Config().args.nbepochs,
                                                   dropout=Config().args.dropout,
                                                   optimizer=Config().args.optimizer,
-                                                  loss=Config().args.loss,
                                                   )
         else:
             raise ValueError("Invalid model type: '%s'" % model_type)

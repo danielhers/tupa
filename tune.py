@@ -64,7 +64,6 @@ def main():
         ("minibatchsize",   (50, 100, 200, 300, 500, 1000)),
         ("nbepochs",        range(10, 51)),
         ("optimizer",       10 * [config.OPTIMIZERS[0]] + list(config.OPTIMIZERS)),
-        ("loss",            20 * [config.OBJECTIVES[0]] + list(config.OBJECTIVES)),
         ("importance",      (1, 2)),
         ("earlyupdate",     6 * [False] + [True]),
         ("iterations",      range(1, 21)),

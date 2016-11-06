@@ -6,10 +6,6 @@ import dynet as dy
 from classifiers.classifier import Classifier
 from parsing.model_util import load_dict, save_dict
 
-LOSSES = {
-    "categorical_crossentropy": dy.binary_log_loss,
-}
-
 TRAINERS = {
     "sgd": dy.SimpleSGDTrainer,
     "momentum": dy.MomentumSGDTrainer,
@@ -45,8 +41,7 @@ class NeuralNetwork(Classifier):
     def __init__(self, filename, labels, model_type, input_params=None,
                  layers=1, layer_dim=100, activation="tanh",
                  init="glorot_uniform", max_num_labels=100, batch_size=10,
-                 minibatch_size=200, nb_epochs=5, dropout=0,
-                 optimizer="adam", loss="categorical_crossentropy"):
+                 minibatch_size=200, nb_epochs=5, dropout=0, optimizer="adam"):
         """
         Create a new untrained NN or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
@@ -61,7 +56,6 @@ class NeuralNetwork(Classifier):
         :param nb_epochs: number of epochs for SGD
         :param dropout: dropout to apply to input layer
         :param optimizer: algorithm to use for optimization
-        :param loss: objective function to use for optimization
         """
         super(NeuralNetwork, self).__init__(model_type=model_type, filename=filename, labels=labels)
         assert input_params is not None
@@ -79,8 +73,6 @@ class NeuralNetwork(Classifier):
         self._dropout = dropout
         self._optimizer_str = optimizer
         self._optimizer = TRAINERS[self._optimizer_str]
-        self._loss_str = loss
-        self._loss = LOSSES[self._loss_str]
         self._params = OrderedDict()
         self._input_params = input_params
         self._batch_size = batch_size
@@ -113,7 +105,6 @@ class NeuralNetwork(Classifier):
             "activation": self._activation_str,
             "init": self._init_str,
             "optimizer": self._optimizer_str,
-            "loss": self._loss_str,
         }
         save_dict(self.filename, d)
         self.init_model()
@@ -146,8 +137,6 @@ class NeuralNetwork(Classifier):
         self._init = INITIALIZERS[self._init_str]
         self._optimizer_str = d["optimizer"]
         self._optimizer = TRAINERS[self._optimizer_str]
-        self._loss_str = d["loss"]
-        self._loss = LOSSES[self._loss_str]
         self.init_model()
         model_filename = self.filename + ".model"
         print("Loading model from '%s'... " % model_filename, end="", flush=True)
