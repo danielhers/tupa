@@ -35,7 +35,6 @@ class Model(object):
                                                   init=Config().args.init,
                                                   max_num_labels=Config().args.maxlabels,
                                                   minibatch_size=Config().args.minibatchsize,
-                                                  nb_epochs=Config().args.nbepochs,
                                                   dropout=Config().args.dropout,
                                                   optimizer=Config().args.optimizer,
                                                   )

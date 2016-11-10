@@ -12,8 +12,6 @@ from ucca.evaluation import Scores
 
 class Params(object):
     def __init__(self, params):
-        if not params["earlyupdate"]:
-            params["iterations"] = 1
         self.params = params
         self.scores = None
 
@@ -62,13 +60,11 @@ def main():
         ("init",            5 * [config.INITIALIZATIONS[0]] + list(config.INITIALIZATIONS)),
         ("batchsize",       (10, 30, 50, 100, 200, 500)),
         ("minibatchsize",   (50, 100, 200, 300, 500, 1000)),
-        ("nbepochs",        range(10, 51)),
-        ("optimizer",       10 * [config.OPTIMIZERS[0]] + list(config.OPTIMIZERS)),
+        ("optimizer",       5 * [config.OPTIMIZERS[0]] + list(config.OPTIMIZERS)),
         ("importance",      (1, 2)),
         ("earlyupdate",     6 * [False] + [True]),
         ("iterations",      range(1, 21)),
         ("worddropout",     (0, .1, .2, .25, .3)),
-        ("normalize",       (False, True)),
         ("dynet_l2",        (1e-7, 1e-6, 1e-5, 1e-4)),
         ("dropout",         (0, .1, .2, .3, .4, .5)),
     )

@@ -43,7 +43,7 @@ class NeuralNetwork(Classifier):
     def __init__(self, filename, labels, model_type, input_params=None,
                  layers=1, layer_dim=100, activation="tanh",
                  init="glorot_uniform", max_num_labels=100,
-                 minibatch_size=200, nb_epochs=5, dropout=0, optimizer="adam"):
+                 minibatch_size=200, dropout=0, optimizer="adam"):
         """
         Create a new untrained NN or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
@@ -53,9 +53,8 @@ class NeuralNetwork(Classifier):
         :param activation: activation function at hidden layers
         :param init: initialization type for hidden layers
         :param max_num_labels: since model size is fixed, set maximum output size
-        :param minibatch_size: batch size for SGD
-        :param nb_epochs: number of epochs for SGD
-        :param dropout: dropout to apply to input layer
+        :param minibatch_size: batch size for training
+        :param dropout: dropout to apply to each layer
         :param optimizer: algorithm to use for optimization
         """
         super(NeuralNetwork, self).__init__(model_type=model_type, filename=filename, labels=labels)
@@ -70,7 +69,6 @@ class NeuralNetwork(Classifier):
         self._init = INITIALIZERS[self._init_str]
         self._num_labels = self.num_labels
         self._minibatch_size = minibatch_size
-        self._nb_epochs = nb_epochs
         self._dropout = dropout
         self._optimizer_str = optimizer
         self._optimizer = TRAINERS[self._optimizer_str]
