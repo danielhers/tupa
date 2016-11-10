@@ -115,6 +115,9 @@ class NeuralNetwork(Classifier):
         started = time.time()
         try:
             os.remove(model_filename)
+        except OSError:
+            pass
+        try:
             self.model.save(model_filename, param_values)
             print("Done (%.3fs)." % (time.time() - started))
         except ValueError as e:
