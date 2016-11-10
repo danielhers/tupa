@@ -102,7 +102,6 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter for all inputs")
         group.add_argument("--validationsplit", type=float, default=0.1, help="ratio of train set to use as validation")
         group.add_argument("--saveeverybatch", action="store_true", help="save model every training batch")
-        group.add_argument("--saveeveryepoch", action="store_true", help="save model every training epoch")
         group = argparser.add_argument_group(title="DyNet parameters")
         group.add_argument("--dynet-mem", help="memory for dynet")
         group.add_argument("--dynet-l2", type=float, help="level of l2 regularization (default 1e-6)")
