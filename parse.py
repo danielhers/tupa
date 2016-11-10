@@ -38,13 +38,12 @@ class Parser(object):
         self.ignore_node = lambda n: n.tag == layer1.NodeTags.Linkage if Config().args.nolinkage else None
         self.best_score = self.dev = self.iteration = self.batch = None
 
-    def train(self, passages, dev=None, iterations=1, folds=None):
+    def train(self, passages, dev=None, iterations=1):
         """
         Train parser on given passages
         :param passages: iterable of passages to train on
         :param dev: iterable of passages to tune on
         :param iterations: number of iterations to perform
-        :param folds: whether we are inside cross-validation with this many folds
         :return: trained model
         """
         if passages:
@@ -53,18 +52,20 @@ class Parser(object):
             if Config().args.devscores:
                 with open(Config().args.devscores, "w") as f:
                     print(",".join(["iteration"] + evaluation.Scores.field_titles()), file=f)
-            for self.iteration in range(iterations):
+            for self.iteration in range(1, iterations + 1):
                 self.batch = 0
-                print("Training iteration %d of %d: " % (self.iteration + 1, iterations))
+                print("Training iteration %d of %d: " % (self.iteration, iterations))
                 passages = [passage for _, passage in self.parse(passages, mode="train")]
-                self.learning_rate *= self.decay_factor
-                Config().random.shuffle(passages)
-                self.eval_and_save()
+                last = self.iteration == iterations
+                self.eval_and_save(last)
+                if not last:
+                    self.learning_rate *= self.decay_factor
+                    Config().random.shuffle(passages)
             print("Trained %d iterations" % iterations)
-        if dev:
+        if dev or not passages:
             self.model.load()
 
-    def eval_and_save(self):
+    def eval_and_save(self, last=False):
         model = self.model
         self.model = self.model.finalize()
         if self.dev:
@@ -86,9 +87,10 @@ class Parser(object):
                 self.model.save()
             else:
                 print("Not better than previous best score (%.3f)" % self.best_score)
-        elif Config().args.saveeverybatch:
+        elif last or Config().args.saveeverybatch:
             self.model.save()
-        self.model = model  # Restore non-finalized model
+        if not last:
+            self.model = model  # Restore non-finalized model
 
     def parse(self, passages, mode="test"):
         """
@@ -311,7 +313,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
     train = bool(train_passages)
     model_base, model_ext = os.path.splitext(args.model)
     p = Parser(model_file=model_base + model_suffix + model_ext, model_type=args.classifier, beam=args.beam)
-    p.train(train_passages, dev=dev_passages, iterations=args.iterations, folds=args.folds)
+    p.train(train_passages, dev=dev_passages, iterations=args.iterations)
     if test_passages:
         if args.train or args.folds:
             print("Evaluating on test passages")
