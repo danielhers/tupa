@@ -38,7 +38,7 @@ class ParserTests(unittest.TestCase):
         self.train_test(config.DENSE_PERCEPTRON)
 
     def test_parser_nn(self):
-        self.train_test(config.FEEDFORWARD_NN, compare=False)
+        self.train_test(config.FEEDFORWARD_NN)
 
     def train_test(self, model_type, compare=True):
         passages = [self.passage]
@@ -54,6 +54,6 @@ class ParserTests(unittest.TestCase):
                 g, r, verbose=False, units=False, errors=False)
                                                  for g, r in zip(guess, ref)])
             scores.append(score.average_f1())
+        print("-- average labeled f1: %.3f, %.3f\n" % tuple(scores))
         if compare:
             self.assertEqual(*scores)
-        print("-- average labeled f1: %.3f, %.3f" % tuple(scores))
