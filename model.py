@@ -34,7 +34,6 @@ class Model(object):
                                                   activation=Config().args.activation,
                                                   init=Config().args.init,
                                                   max_num_labels=Config().args.maxlabels,
-                                                  batch_size=Config().args.batchsize,
                                                   minibatch_size=Config().args.minibatchsize,
                                                   nb_epochs=Config().args.nbepochs,
                                                   dropout=Config().args.dropout,

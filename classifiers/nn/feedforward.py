@@ -11,14 +11,11 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
 
     def __init__(self, *args, **kwargs):
         super(FeedforwardNeuralNetwork, self).__init__(*args, model_type=config.FEEDFORWARD_NN, **kwargs)
-        self._inputs = {}
         self._trainer = None
+        self._losses = []
+        self._iteration = 0
 
     def init_model(self):
-        if self.model is not None:
-            return
-        if config.Config().args.verbose:
-            print("Input: " + self._input_params)
         self.model = dy.Model()
         self._trainer = self._optimizer(self.model)
         input_dim = 0
@@ -35,17 +32,20 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             self._params["W%d" % i] = self.model.add_parameters((out_dim, in_dim), init=self._init)
             self._params["b%d" % i] = self.model.add_parameters(out_dim, init=self._init)
 
-    def _generate_inputs(self):
+    def _generate_inputs(self, features):
         for suffix, param in sorted(self._input_params.items()):
-            xs = self._inputs[suffix]
+            xs = features[suffix]
             if param.numeric:
                 yield dy.inputVector(xs)
             elif param.dim > 0:
                 yield dy.reshape(self._params[suffix].batch(xs), (param.num * param.dim,))
 
-    def _eval(self, train=False):
-        dy.renew_cg()
-        x = dy.concatenate(list(self._generate_inputs()))
+    def _eval(self, features, train=False):
+        if self.model is None:
+            self.init_model()
+        if not self._losses:
+            dy.renew_cg()
+        x = dy.concatenate(list(self._generate_inputs(features)))
         for i in range(1, self._layers + 1):
             W = dy.parameter(self._params["W%d" % i])
             b = dy.parameter(self._params["b%d" % i])
@@ -61,11 +61,7 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         :return: array with score for each label
         """
         super(FeedforwardNeuralNetwork, self).score(features)
-        if not self.is_frozen and self._iteration == 0:  # not fit yet
-            return np.zeros(self.num_labels)
-        self.init_model()
-        self._inputs.update(features)
-        return self._eval().npvalue()[:self.num_labels]
+        return self._eval(features).npvalue()[:self.num_labels] if self._iteration > 0 else np.zeros(self.num_labels)
 
     def update(self, features, pred, true, importance=1):
         """
@@ -76,33 +72,25 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         :param importance: add this many samples with the same features
         """
         super(FeedforwardNeuralNetwork, self).update(features, pred, true, importance)
-        self.init_model()
-        self._inputs.update(features)
         for _ in range(int(importance)):
-            loss = -dy.log(dy.pick(self._eval(train=True), true))
-            loss.forward()
-            loss.backward()
-            self._trainer.update()
+            self._losses.append(dy.pick(self._eval(features, train=True), true))
+            if len(self._losses) >= self._minibatch_size:
+                self.finalize()
             if config.Config().args.dynet_viz:
                 dy.print_graphviz()
                 sys.exit(0)
 
-    def finish(self, train=False):
+    def finalize(self):
         """
-        Mark the current item as finished.  Fit the model if reached the batch size.
-        :param train: fit the model if batch size reached?
-        """
-        self._item_index += 1
-        if train and self._batch_size is not None and self._item_index >= self._batch_size:
-            self.finalize(freeze=False)
-
-    def finalize(self, freeze=True):
-        """
-        Fit this model on collected samples, and return a frozen model
-        :return new FeedforwardNeuralNetwork object with the same weights, after fitting
+        Fit this model on collected samples
+        :return self
         """
         super(FeedforwardNeuralNetwork, self).finalize()
-        self.init_model()
-        self._item_index = 0
-        self._iteration += 1
+        if self._losses:
+            loss = -dy.esum(self._losses)
+            loss.forward()
+            loss.backward()
+            self._trainer.update()
+            self._losses = []
+            self._iteration += 1
         return self

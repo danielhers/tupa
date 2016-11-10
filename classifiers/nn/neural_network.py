@@ -42,7 +42,7 @@ class NeuralNetwork(Classifier):
 
     def __init__(self, filename, labels, model_type, input_params=None,
                  layers=1, layer_dim=100, activation="tanh",
-                 init="glorot_uniform", max_num_labels=100, batch_size=10,
+                 init="glorot_uniform", max_num_labels=100,
                  minibatch_size=200, nb_epochs=5, dropout=0, optimizer="adam"):
         """
         Create a new untrained NN or copy the weights from an existing one
@@ -53,7 +53,6 @@ class NeuralNetwork(Classifier):
         :param activation: activation function at hidden layers
         :param init: initialization type for hidden layers
         :param max_num_labels: since model size is fixed, set maximum output size
-        :param batch_size: fit model every this many items
         :param minibatch_size: batch size for SGD
         :param nb_epochs: number of epochs for SGD
         :param dropout: dropout to apply to input layer
@@ -77,12 +76,6 @@ class NeuralNetwork(Classifier):
         self._optimizer = TRAINERS[self._optimizer_str]
         self._params = OrderedDict()
         self._input_params = input_params
-        self._batch_size = batch_size
-        self._item_index = 0
-        self._iteration = 0
-
-    def init_model(self):
-        raise NotImplementedError()
 
     @property
     def input_dim(self):
@@ -91,15 +84,18 @@ class NeuralNetwork(Classifier):
     def resize(self):
         assert self.num_labels <= self.max_num_labels, "Exceeded maximum number of labels"
 
+    def init_model(self):
+        raise NotImplementedError()
+
     def save(self):
         """
         Save all parameters to file
         """
+        self.finalize()
         param_keys, param_values = zip(*self._params.items())
         d = {
             "type": self.model_type,
             "labels": self.labels,
-            "is_frozen": self.is_frozen,
             "input_params": self._input_params,
             "param_keys": param_keys,
             "layers": self._layers,
@@ -109,14 +105,14 @@ class NeuralNetwork(Classifier):
             "optimizer": self._optimizer_str,
         }
         save_dict(self.filename, d)
-        self.init_model()
         model_filename = self.filename + ".model"
-        print("Saving model to '%s'... " % model_filename, end="", flush=True)
         started = time.time()
         try:
             os.remove(model_filename)
+            print("Removed existing '%s'." % model_filename)
         except OSError:
             pass
+        print("Saving model to '%s'... " % model_filename, end="", flush=True)
         try:
             self.model.save(model_filename, param_values)
             print("Done (%.3fs)." % (time.time() - started))
@@ -128,11 +124,11 @@ class NeuralNetwork(Classifier):
         Load all parameters from file
         :param suffix: extra suffix to append to filename
         """
+        self.init_model()
         d = load_dict(self.filename)
         model_type = d.get("type")
         assert model_type == self.model_type, "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])
-        self.is_frozen = d["is_frozen"]
         self._input_params = d["input_params"]
         param_keys = d["param_keys"]
         self._layers = d["layers"]
@@ -143,7 +139,6 @@ class NeuralNetwork(Classifier):
         self._init = INITIALIZERS[self._init_str]
         self._optimizer_str = d["optimizer"]
         self._optimizer = TRAINERS[self._optimizer_str]
-        self.init_model()
         model_filename = self.filename + ".model"
         print("Loading model from '%s'... " % model_filename, end="", flush=True)
         started = time.time()
