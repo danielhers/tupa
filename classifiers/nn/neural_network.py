@@ -60,7 +60,6 @@ class NeuralNetwork(Classifier):
         super(NeuralNetwork, self).__init__(model_type=model_type, filename=filename, labels=labels)
         assert input_params is not None
         self.max_num_labels = max_num_labels
-        self.model = None
         self._layers = layers
         self._layer_dim = layer_dim
         self._activation_str = activation
@@ -74,6 +73,10 @@ class NeuralNetwork(Classifier):
         self._optimizer = TRAINERS[self._optimizer_str]
         self._params = OrderedDict()
         self._input_params = input_params
+        self._losses = []
+        self._iteration = 0
+        self.model = None
+        self._trainer = None
 
     @property
     def input_dim(self):
@@ -146,6 +149,21 @@ class NeuralNetwork(Classifier):
         except KeyError as e:
             print("Failed loading model: %s" % e)
         self._params = OrderedDict(zip(param_keys, param_values))
+
+    def finalize(self):
+        """
+        Fit this model on collected samples
+        :return self
+        """
+        super(NeuralNetwork, self).finalize()
+        if self._losses:
+            loss = -dy.esum(self._losses)
+            loss.forward()
+            loss.backward()
+            self._trainer.update()
+            self._losses = []
+            self._iteration += 1
+        return self
 
     def __str__(self):
         return ("%d labels, " % self.num_labels) + (

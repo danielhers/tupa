@@ -7,13 +7,10 @@ from nn.neural_network import NeuralNetwork
 from parsing import config
 
 
-class FeedforwardNeuralNetwork(NeuralNetwork):
+class MLP(NeuralNetwork):
 
     def __init__(self, *args, **kwargs):
-        super(FeedforwardNeuralNetwork, self).__init__(*args, model_type=config.FEEDFORWARD_NN, **kwargs)
-        self._trainer = None
-        self._losses = []
-        self._iteration = 0
+        super(MLP, self).__init__(*args, model_type=config.MLP, **kwargs)
 
     def init_model(self):
         self.model = dy.Model()
@@ -60,7 +57,7 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         :param features: extracted feature values, of size input_size
         :return: array with score for each label
         """
-        super(FeedforwardNeuralNetwork, self).score(features)
+        super(MLP, self).score(features)
         return self._eval(features).npvalue()[:self.num_labels] if self._iteration > 0 else np.zeros(self.num_labels)
 
     def update(self, features, pred, true, importance=1):
@@ -71,7 +68,7 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         :param true: true label (non-negative integer less than num_labels)
         :param importance: add this many samples with the same features
         """
-        super(FeedforwardNeuralNetwork, self).update(features, pred, true, importance)
+        super(MLP, self).update(features, pred, true, importance)
         for _ in range(int(importance)):
             self._losses.append(dy.pick(self._eval(features, train=True), true))
             if len(self._losses) >= self._minibatch_size:
@@ -79,18 +76,3 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             if config.Config().args.dynet_viz:
                 dy.print_graphviz()
                 sys.exit(0)
-
-    def finalize(self):
-        """
-        Fit this model on collected samples
-        :return self
-        """
-        super(FeedforwardNeuralNetwork, self).finalize()
-        if self._losses:
-            loss = -dy.esum(self._losses)
-            loss.forward()
-            loss.backward()
-            self._trainer.update()
-            self._losses = []
-            self._iteration += 1
-        return self

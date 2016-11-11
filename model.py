@@ -24,20 +24,11 @@ class Model(object):
             from classifiers.dense_perceptron import DensePerceptron
             self.feature_extractor = self.dense_features_wrapper(FeatureEmbedding)
             self.model = DensePerceptron(filename, labels, num_features=self.feature_extractor.num_features())
-        elif model_type == config.FEEDFORWARD_NN:
+        elif model_type == config.MLP:
             from features.enumerator import FeatureEnumerator
-            from nn.feedforward import FeedforwardNeuralNetwork
+            from nn.feedforward import MLP
             self.feature_extractor = self.dense_features_wrapper(FeatureEnumerator)
-            self.model = FeedforwardNeuralNetwork(filename, labels, input_params=self.feature_extractor.params,
-                                                  layers=Config().args.layers,
-                                                  layer_dim=Config().args.layerdim,
-                                                  activation=Config().args.activation,
-                                                  init=Config().args.init,
-                                                  max_num_labels=Config().args.maxlabels,
-                                                  minibatch_size=Config().args.minibatchsize,
-                                                  dropout=Config().args.dropout,
-                                                  optimizer=Config().args.optimizer,
-                                                  )
+            self.model = MLP(filename, labels, **self.nn_kwargs())
         else:
             raise ValueError("Invalid model type: '%s'" % model_type)
 
@@ -53,6 +44,19 @@ class Model(object):
             FeatureParameters("A", Config().args.actiondim, Config().args.maxactions),
         ]
         return wrapper(DenseFeatureExtractor(), params)
+
+    def nn_kwargs(self):
+        return {
+            "input_params": self.feature_extractor.params,
+            "layers": Config().args.layers,
+            "layer_dim": Config().args.layerdim,
+            "activation": Config().args.activation,
+            "init": Config().args.init,
+            "max_num_labels": Config().args.maxlabels,
+            "minibatch_size": Config().args.minibatchsize,
+            "dropout": Config().args.dropout,
+            "optimizer": Config().args.optimizer
+        }
 
     def extract_features(self, *args, **kwargs):
         return self.feature_extractor.extract_features(*args, **kwargs)
