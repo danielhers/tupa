@@ -37,8 +37,11 @@ class ParserTests(unittest.TestCase):
     def test_parser_dense(self):
         self.train_test(config.DENSE_PERCEPTRON)
 
-    def test_parser_nn(self):
+    def test_parser_mlp(self):
         self.train_test(config.MLP_NN)
+
+    def test_parser_bilstm(self):
+        self.train_test(config.BILSTM_NN)
 
     def train_test(self, model_type, compare=True):
         passages = [self.passage]
