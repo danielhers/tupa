@@ -83,12 +83,20 @@ class FeatureExtractor(object):
                                 for m in re.finditer(FEATURE_ELEMENT_PATTERN, feature_name)))
                                   for feature_name in feature_templates]
 
-    def extract_features(self, state, train):
+    def extract_features(self, state, params):
         """
         Calculate feature values according to current state
         :param state: current state of the parser
+        :param params: dict of FeatureParameters for each suffix
         """
         raise NotImplementedError()
+
+    def init_features(self, state):
+        """
+        Calculate feature values for initial state
+        :param state: initial state of the parser
+        """
+        pass
 
     def finalize(self):
         return self
@@ -100,7 +108,7 @@ class FeatureExtractor(object):
         pass
 
     @staticmethod
-    def calc_feature(feature_template, state, default=None):
+    def calc_feature(feature_template, state, default=None, indexed=False):
         values = []
         prev_elem = None
         prev_node = None
@@ -116,6 +124,8 @@ class FeatureExtractor(object):
                         values.append(int(prev_node in node.parents))
                 prev_elem = element
                 prev_node = node
+            elif indexed:
+                values.append(default if node is None or node.index >= len(state.terminals) else node.index)
             else:
                 prev_elem = None
                 prev_node = None

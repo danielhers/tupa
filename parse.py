@@ -30,7 +30,7 @@ class Parser(object):
         self.total_actions = 0
         self.total_correct = 0
         self.model = Model(model_type, model_file, Actions().all)
-        self.beam = beam
+        self.beam = beam  # Currently unused
         self.learning_rate = Config().args.learningrate
         self.decay_factor = Config().args.decayfactor
         self.state_hash_history = None  # For loop checking
@@ -127,6 +127,7 @@ class Parser(object):
             self.state_hash_history = set()
             self.oracle = Oracle(passage) if train else None
             failed = False
+            self.model.init_features(self.state)
             try:
                 self.parse_passage(train)  # This is where the actual parsing takes place
             except ParserException as e:

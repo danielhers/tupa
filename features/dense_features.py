@@ -79,8 +79,11 @@ class DenseFeatureExtractor(FeatureExtractor):
         """
         numeric_features = [1, state.node_ratio()] + \
             self.calc_feature(self.numeric_features_template, state, default=-1)
-        non_numeric_features = [(f.suffix, self.calc_feature(f, state, default=""))
-                                for f in self.non_numeric_feature_templates]
+        non_numeric_features = []
+        for f in self.non_numeric_feature_templates:
+            indexed = params is not None and params[f.suffix].indexed
+            non_numeric_features.append((f.suffix, self.calc_feature(
+                f, state, default=-1 if indexed else "", indexed=indexed)))
         # assert len(numeric_features) == self.num_features_numeric(), \
         #     "Invalid number of numeric features: %d != %d" % (
         #         len(numeric_features), self.num_features_numeric())
@@ -92,6 +95,12 @@ class DenseFeatureExtractor(FeatureExtractor):
         #         assert not isinstance(value, Number), \
         #             "Numeric value %s for non-numeric feature element %s" % (value, element)
         return numeric_features, non_numeric_features
+
+    def init_features(self, state):
+        properties = set(p for t in self.non_numeric_feature_templates
+                         for e in t.elements for p in e.properties if p != "A")
+        return {p: [self.get_prop(None, n, None, p, state)
+                    for n in state.terminals] for p in properties}
 
     def num_features_numeric(self):
         assert self.numeric_features_template is not None, \

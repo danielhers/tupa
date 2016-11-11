@@ -22,6 +22,9 @@ class Classifier(object):
         if not self.is_frozen:
             self._update_num_labels()
 
+    def init_features(self, features):
+        pass
+
     def update(self, features, pred, true, importance=1):
         assert not self.is_frozen, "Cannot update a frozen model"
         self._update_num_labels()

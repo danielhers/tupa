@@ -49,6 +49,16 @@ class FeatureEmbedding(FeatureExtractorWrapper):
         #         sum(map(len, features)), self.num_features())
         return np.hstack(features).reshape((-1, 1))
 
+    def init_features(self, state):
+        features = {}
+        for suffix, values in self.feature_extractor.init_features(state).items():
+            if values is None:
+                continue
+            param = self.params[suffix]
+            self.init_data(param)
+            features[suffix] = np.array([param.data[v] for v in values])
+        return features
+
     def num_features(self):
         ret = 0
         for param in self.params.values():

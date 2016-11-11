@@ -19,8 +19,9 @@ class Singleton(type):
 
 SPARSE_PERCEPTRON = "sparse"
 DENSE_PERCEPTRON = "dense"
-MLP = "mlp"
-CLASSIFIERS = (SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP)
+MLP_NN = "mlp"
+BILSTM_NN = "bilstm"
+CLASSIFIERS = (SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP_NN, BILSTM_NN)
 
 # Multiple choice options: the first one is always the default
 ACTIVATIONS = ("sigmoid", "tanh", "relu", "cube")

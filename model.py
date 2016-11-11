@@ -24,11 +24,17 @@ class Model(object):
             from classifiers.dense_perceptron import DensePerceptron
             self.feature_extractor = self.dense_features_wrapper(FeatureEmbedding)
             self.model = DensePerceptron(filename, labels, num_features=self.feature_extractor.num_features())
-        elif model_type == config.MLP:
+        elif model_type == config.MLP_NN:
             from features.enumerator import FeatureEnumerator
             from nn.feedforward import MLP
             self.feature_extractor = self.dense_features_wrapper(FeatureEnumerator)
             self.model = MLP(filename, labels, **self.nn_kwargs())
+        elif model_type == config.BILSTM_NN:
+            from features.enumerator import FeatureEnumerator
+            from features.indexer import FeatureIndexer
+            from nn.bilstm import BiLSTM
+            self.feature_extractor = FeatureIndexer(self.dense_features_wrapper(FeatureEnumerator))
+            self.model = BiLSTM(filename, labels, **self.nn_kwargs())
         else:
             raise ValueError("Invalid model type: '%s'" % model_type)
 
@@ -60,6 +66,11 @@ class Model(object):
 
     def extract_features(self, *args, **kwargs):
         return self.feature_extractor.extract_features(*args, **kwargs)
+
+    def init_features(self, *args, **kwargs):
+        features = self.feature_extractor.init_features(*args, **kwargs)
+        if features is not None:
+            self.model.init_features(features)
 
     def score(self, *args, **kwargs):
         return self.model.score(*args, **kwargs)

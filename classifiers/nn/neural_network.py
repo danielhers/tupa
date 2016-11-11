@@ -1,11 +1,13 @@
 import os
-import time
-
 import sys
+import time
 from collections import OrderedDict
 
 import dynet as dy
+import numpy as np
+
 from classifiers.classifier import Classifier
+from parsing import config
 from parsing.model_util import load_dict, save_dict
 
 TRAINERS = {
@@ -88,6 +90,50 @@ class NeuralNetwork(Classifier):
     def init_model(self):
         raise NotImplementedError()
 
+    def evaluate(self, features):
+        raise NotImplementedError
+
+    def score(self, features):
+        """
+        Calculate score for each label
+        :param features: extracted feature values, of size input_size
+        :return: array with score for each label
+        """
+        super(NeuralNetwork, self).score(features)
+        return self.evaluate(features).npvalue()[:self.num_labels] if self._iteration > 0 else np.zeros(self.num_labels)
+
+    def update(self, features, pred, true, importance=1):
+        """
+        Update classifier weights according to predicted and true labels
+        :param features: extracted feature values, of size input_size
+        :param pred: label predicted by the classifier (non-negative integer less than num_labels)
+        :param true: true label (non-negative integer less than num_labels)
+        :param importance: add this many samples with the same features
+        """
+        super(NeuralNetwork, self).update(features, pred, true, importance)
+        for _ in range(int(importance)):
+            self._losses.append(dy.pick(self.evaluate(features, train=True), true))
+            if len(self._losses) >= self._minibatch_size:
+                self.finalize()
+            if config.Config().args.dynet_viz:
+                dy.print_graphviz()
+                sys.exit(0)
+
+    def finalize(self):
+        """
+        Fit this model on collected samples
+        :return self
+        """
+        super(NeuralNetwork, self).finalize()
+        if self._losses:
+            loss = -dy.esum(self._losses)
+            loss.forward()
+            loss.backward()
+            self._trainer.update()
+            self._losses = []
+            self._iteration += 1
+        return self
+
     def save(self):
         """
         Save all parameters to file
@@ -149,21 +195,6 @@ class NeuralNetwork(Classifier):
         except KeyError as e:
             print("Failed loading model: %s" % e)
         self._params = OrderedDict(zip(param_keys, param_values))
-
-    def finalize(self):
-        """
-        Fit this model on collected samples
-        :return self
-        """
-        super(NeuralNetwork, self).finalize()
-        if self._losses:
-            loss = -dy.esum(self._losses)
-            loss.forward()
-            loss.backward()
-            self._trainer.update()
-            self._losses = []
-            self._iteration += 1
-        return self
 
     def __str__(self):
         return ("%d labels, " % self.num_labels) + (

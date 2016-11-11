@@ -55,9 +55,27 @@ class FeatureEnumerator(FeatureExtractorWrapper):
         features = {NumericFeatureParameters.SUFFIX: numeric_features}
         for suffix, values in non_numeric_features:
             param = self.params[suffix]
-            features[suffix] = [param.data[v] for v in values]
+            features[suffix] = values if param.indexed else [param.data[v] for v in values]
             # assert all(isinstance(f, int) for f in features[suffix]),\
             #     "Invalid feature numbers for '%s': %s" % (suffix, features[suffix])
+        return features
+
+    def init_features(self, state):
+        """
+        Calculates feature values for all items in initial state
+        :param state: initial state of the parser
+        :return dict of property name -> list of values
+        """
+        features = {}
+        for suffix, values in self.feature_extractor.init_features(state).items():
+            if values is None:
+                continue
+            param = self.params[suffix]
+            if not param.indexed:
+                continue
+            features[suffix] = [param.data[v] for v in values]
+            assert all(isinstance(f, int) for f in features[suffix]),\
+                "Invalid feature numbers for '%s': %s" % (suffix, features[suffix])
         return features
 
     def filename_suffix(self):
