@@ -312,7 +312,7 @@ class Parser(object):
 def train_test(train_passages, dev_passages, test_passages, args, model_suffix=""):
     scores = None
     train = bool(train_passages)
-    model_base, model_ext = os.path.splitext(args.model)
+    model_base, model_ext = os.path.splitext(args.model or "ucca_" + args.classifier)
     p = Parser(model_file=model_base + model_suffix + model_ext, model_type=args.classifier, beam=args.beam)
     p.train(train_passages, dev=dev_passages, iterations=args.iterations)
     if test_passages:
