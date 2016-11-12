@@ -14,7 +14,7 @@ from ucca.tests.test_ucca import TestUtil
 class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ParserTests, self).__init__(*args, **kwargs)
-        Config("", "-m", "test")
+        Config("", "-m", "test", "--layerdim", "100", "layers", "1")
         self.passage = convert.from_standard(TestUtil.load_xml("test_files/standard3.xml"))
 
     def test_oracle(self):
