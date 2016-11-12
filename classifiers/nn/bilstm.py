@@ -10,15 +10,6 @@ class BiLSTM(NeuralNetwork):
         super(BiLSTM, self).__init__(*args, model_type=config.BILSTM_NN, **kwargs)
         self._input_reps = {}
 
-    def init_features(self, features):
-        if self.model is None:
-            self.init_model()
-        if not self._losses:
-            dy.renew_cg()
-        for suffix, values in sorted(features.items()):
-            # TODO feed through BiLSTM
-            self._input_reps[suffix] = [self._params[suffix][v] for v in values]
-
     def init_model(self):
         self.model = dy.Model()
         self._trainer = self._optimizer(self.model)
@@ -29,12 +20,27 @@ class BiLSTM(NeuralNetwork):
                 if param.init is not None:
                     p.init_from_array(param.init)
                 self._params[suffix] = p
-            input_dim += param.num * param.dim
+            if param.indexed:
+                self._params["BiLSTM_%s" % suffix] = dy.BiRNNBuilder(self._layers, param.dim, self._layer_dim,
+                                                                     self.model, dy.LSTMBuilder)
+            input_dim += param.num * (self._layer_dim if param.indexed else param.dim)
         for i in range(1, self._layers + 1):
             in_dim = input_dim if i == 1 else self._layer_dim
             out_dim = self._layer_dim if i < self._layers else self.max_num_labels
             self._params["W%d" % i] = self.model.add_parameters((out_dim, in_dim), init=self._init)
             self._params["b%d" % i] = self.model.add_parameters(out_dim, init=self._init)
+
+    def init_features(self, features, train=False):
+        if self.model is None:
+            self.init_model()
+        if not self._losses:
+            dy.renew_cg()
+        for suffix, values in sorted(features.items()):
+            bilstm = self._params["BiLSTM_%s" % suffix]
+            if train:
+                bilstm.set_dropout(self._dropout)
+            embeddings = [self._params[suffix][v] for v in values]
+            self._input_reps[suffix] = bilstm.transduce(embeddings)
 
     def _generate_inputs(self, features):
         for suffix, values in sorted(features.items()):

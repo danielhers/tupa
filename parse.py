@@ -127,7 +127,7 @@ class Parser(object):
             self.state_hash_history = set()
             self.oracle = Oracle(passage) if train else None
             failed = False
-            self.model.init_features(self.state)
+            self.model.init_features(self.state, train)
             try:
                 self.parse_passage(train)  # This is where the actual parsing takes place
             except ParserException as e:

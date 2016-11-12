@@ -67,10 +67,10 @@ class Model(object):
     def extract_features(self, *args, **kwargs):
         return self.feature_extractor.extract_features(*args, **kwargs)
 
-    def init_features(self, *args, **kwargs):
-        features = self.feature_extractor.init_features(*args, **kwargs)
+    def init_features(self, state, train):
+        features = self.feature_extractor.init_features(state)
         if features is not None:
-            self.model.init_features(features)
+            self.model.init_features(features, train)
 
     def score(self, *args, **kwargs):
         return self.model.score(*args, **kwargs)

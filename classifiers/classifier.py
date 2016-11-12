@@ -22,7 +22,7 @@ class Classifier(object):
         if not self.is_frozen:
             self._update_num_labels()
 
-    def init_features(self, features):
+    def init_features(self, features, train=False):
         pass
 
     def update(self, features, pred, true, importance=1):
