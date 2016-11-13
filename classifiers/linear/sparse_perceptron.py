@@ -1,11 +1,9 @@
-import time
+import numpy as np
 from collections import defaultdict
 
-import numpy as np
-
-from classifiers.classifier import Classifier
+from linear.perceptron import Perceptron
 from parsing import config
-from parsing.model_util import load_dict, save_dict
+from parsing.config import Config
 
 
 class FeatureWeights(object):
@@ -53,7 +51,7 @@ class FeatureWeights(object):
         self._last_update.resize(num_labels, refcheck=False)
 
 
-class SparsePerceptron(Classifier):
+class SparsePerceptron(Perceptron):
     """
     Multi-class averaged perceptron with min-update for sparse features.
     Keeps weights in a dictionary by feature name, allowing adding new features on-the-fly.
@@ -61,22 +59,19 @@ class SparsePerceptron(Classifier):
     Expects features from SparseFeatureExtractor.
     """
 
-    def __init__(self, filename, labels=None, min_update=1, model=None):
+    def __init__(self, *args, model=None):
         """
         Create a new untrained Perceptron or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
         :param min_update: minimum number of updates to a feature required for consideration
         :param model: if given, copy the weights (from a trained model)
         """
-        super(SparsePerceptron, self).__init__(model_type=config.SPARSE_PERCEPTRON, filename=filename,
-                                               labels=labels, model=model)
-        assert labels is not None or model is not None
-        self.model = defaultdict(lambda: FeatureWeights(self.num_labels))
+        super(SparsePerceptron, self).__init__(config.SPARSE_PERCEPTRON, *args, model=model)
+        model = defaultdict(lambda: FeatureWeights(self.num_labels))
         if self.is_frozen:
-            self.model.update(model)
-        else:
-            self._min_update = min_update  # Minimum number of updates for a feature to be used in scoring
-            self._update_index = 0  # Counter for calls to update()
+            model.update(self.model)
+        self.model = model
+        self._min_update = Config().args.minupdate  # Minimum number of updates for a feature to be used in scoring
 
     def score(self, features):
         """
@@ -104,84 +99,41 @@ class SparsePerceptron(Classifier):
         :param importance: how much to scale the feature vector for the weight update
         """
         super(SparsePerceptron, self).update(features, pred, true, importance)
-        self._update_index += 1
         for feature, value in features.items():
             if not value:
                 continue
             weights = self.model[feature]
-            weights.update(true, importance * value, self._update_index)
-            weights.update(pred, -importance * value, self._update_index)
+            weights.update(true, importance * self.learning_rate * value, self._update_index)
+            weights.update(pred, -importance * self.learning_rate * value, self._update_index)
 
     def resize(self):
         for weights in self.model.values():
             weights.resize(self.num_labels)
         self.model.default_factory = lambda: FeatureWeights(self.num_labels)
 
-    def finalize(self, average=True):
-        """
-        Average all weights over all updates, as a form of regularization
-        :param average: whether to really average the weights or just return them as they are now
-        :return new SparsePerceptron object with the weights averaged
-        """
-        super(SparsePerceptron, self).finalize()
-        started = time.time()
-        if average:
-            print("Averaging weights... ", end="", flush=True)
+    def _finalize_model(self, average):
         model = {f: w.finalize(self._update_index, average=average)
                  for f, w in self.model.items() if w.update_count >= self._min_update}
-        finalized = SparsePerceptron(self.filename, list(self.labels), model=model)
-        if average:
-            print("Done (%.3fs)." % (time.time() - started))
-        print("Labels: %d" % self.num_labels)
-        print("Features: %d overall, %d occurred at least %d times" % (
-            self.num_features, len(model), self._min_update))
-        return finalized
+        print("%d features occurred at least %d times" % (len(model), self._min_update))
+        return SparsePerceptron(self.filename, list(self.labels), model=model)
 
-    def save(self):
-        """
-        Save all parameters to file
-        """
-        d = {
-            "type": self.model_type,
-            "labels": self.labels,
+    def save_model(self):
+        return {
             "model": dict(self.model),
-            "is_frozen": self.is_frozen,
+            "_min_update": self._min_update,
         }
-        if not self.is_frozen:
-            d.update({
-                "_min_update": self._min_update,
-                "_update_index": self._update_index,
-            })
-        save_dict(self.filename, d)
 
-    def load(self):
-        """
-        Load all parameters from file
-        """
-        d = load_dict(self.filename)
-        model_type = d.get("type")
-        assert model_type is None or model_type == self.model_type, \
-            "Model type does not match: %s" % model_type
-        self.labels = list(d["labels"])
+    def load_model(self, d):
         self.model.clear()
         self.model.update(d["model"])
-        self.is_frozen = d["is_frozen"]
-        if not self.is_frozen:
-            self._min_update = d["_min_update"]
-            self._update_index = d["_update_index"]
+        self._min_update = d["_min_update"]
 
     @property
     def num_features(self):
         return len(self.model)
 
-    def __str__(self):
-        return ("%d labels, " % self.num_labels) + (
-                "%d features" % self.num_features)
-
-    def write(self, filename, sep="\t"):
-        print("Writing model to '%s'..." % filename)
-        with open(filename, "w") as f:
-            print(sep.join(["feature"] + list(map(str, self.labels))), file=f)
-            for feature, weights in self.model.items():
-                print(sep.join([feature] +
-                               ["%.8f" % w for w in weights.weights]), file=f)
+    def write_model(self, f, sep):
+        print(sep.join(["feature"] + list(map(str, self.labels))), file=f)
+        for feature, weights in self.model.items():
+            print(sep.join([feature] +
+                           ["%.8f" % w for w in weights.weights]), file=f)

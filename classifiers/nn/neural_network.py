@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 import dynet as dy
 from classifiers.classifier import Classifier
-from parsing import config
+from parsing.config import Config
 from parsing.model_util import load_dict, save_dict
 
 TRAINERS = {
@@ -42,37 +42,25 @@ class NeuralNetwork(Classifier):
     Expects features from FeatureEnumerator.
     """
 
-    def __init__(self, filename, labels, model_type, input_params=None,
-                 layers=1, layer_dim=100, activation="tanh",
-                 init="glorot_uniform", max_num_labels=100,
-                 minibatch_size=200, dropout=0, optimizer="adam"):
+    def __init__(self, *args, input_params):
         """
-        Create a new untrained NN or copy the weights from an existing one
+        Create a new untrained NN
         :param labels: a list of labels that can be updated later to add a new label
         :param input_params: dict of feature type name -> FeatureInformation
-        :param layers: number of hidden layers
-        :param layer_dim: size of hidden layer
-        :param activation: activation function at hidden layers
-        :param init: initialization type for hidden layers
-        :param max_num_labels: since model size is fixed, set maximum output size
-        :param minibatch_size: batch size for training
-        :param dropout: dropout to apply to each layer
-        :param optimizer: algorithm to use for optimization
         """
-        super(NeuralNetwork, self).__init__(model_type=model_type, filename=filename, labels=labels)
-        assert input_params is not None
-        self.max_num_labels = max_num_labels
-        self._layers = layers
-        self._layer_dim = layer_dim
-        self._activation_str = activation
+        super(NeuralNetwork, self).__init__(*args)
+        self.max_num_labels = Config().args.maxlabels
+        self._layers = Config().args.layers
+        self._layer_dim = Config().args.layerdim
+        self._activation_str = Config().args.activation
+        self._init_str = Config().args.init
+        self._minibatch_size = Config().args.minibatchsize
+        self._dropout = Config().args.dropout
+        self._optimizer_str = Config().args.optimizer
         self._activation = ACTIVATIONS[self._activation_str]
-        self._init_str = init
         self._init = INITIALIZERS[self._init_str]
-        self._num_labels = self.num_labels
-        self._minibatch_size = minibatch_size
-        self._dropout = dropout
-        self._optimizer_str = optimizer
         self._optimizer = TRAINERS[self._optimizer_str]
+        self._num_labels = self.num_labels
         self._params = OrderedDict()
         self._input_params = input_params
         self._losses = []
@@ -87,15 +75,12 @@ class NeuralNetwork(Classifier):
     def resize(self):
         assert self.num_labels <= self.max_num_labels, "Exceeded maximum number of labels"
 
-    def evaluate(self, features):
-        raise NotImplementedError
-
-    def generate_inputs(self, features):
-        raise NotImplementedError
+    def evaluate(self, features, train=False):
+        raise NotImplementedError()
 
     def init_model(self):
         self.model = dy.Model()
-        self._trainer = self._optimizer(self.model)
+        self._trainer = self._optimizer(self.model, )
         input_dim = self.init_inputs()
         self.init_mlp(input_dim)
 
@@ -171,11 +156,11 @@ class NeuralNetwork(Classifier):
             self._losses.append(dy.pick(self.evaluate(features, train=True), true))
             if len(self._losses) >= self._minibatch_size:
                 self.finalize()
-            if config.Config().args.dynet_viz:
+            if Config().args.dynet_viz:
                 dy.print_graphviz()
                 sys.exit(0)
 
-    def finalize(self):
+    def finalize(self, finished_epoch=False):
         """
         Fit this model on collected samples
         :return self
@@ -188,6 +173,8 @@ class NeuralNetwork(Classifier):
             self._trainer.update()
             self._losses = []
             self._iteration += 1
+        if finished_epoch:
+            self._trainer.update_epoch()
         return self
 
     def save(self):
@@ -229,7 +216,6 @@ class NeuralNetwork(Classifier):
     def load(self):
         """
         Load all parameters from file
-        :param suffix: extra suffix to append to filename
         """
         self.init_model()
         d = load_dict(self.filename)
@@ -253,9 +239,9 @@ class NeuralNetwork(Classifier):
         try:
             param_values = self.model.load(model_filename)
             print("Done (%.3fs)." % (time.time() - started))
+            self._params = OrderedDict(zip(param_keys, param_values))
         except KeyError as e:
             print("Failed loading model: %s" % e)
-        self._params = OrderedDict(zip(param_keys, param_values))
 
     def load_extra(self, d):
         pass

@@ -2,18 +2,15 @@ import dynet as dy
 
 from nn.neural_network import NeuralNetwork
 from parsing import config
+from parsing.config import Config
 
 
 class BiLSTM(NeuralNetwork):
 
-    def __init__(self, *args, lstm_layers=1, lstm_layer_dim=100, **kwargs):
-        """
-        :param layers: number of LSTM hidden layers
-        :param layer_dim: size of LSTM hidden layer
-        """
-        super(BiLSTM, self).__init__(*args, model_type=config.BILSTM_NN, **kwargs)
-        self._lstm_layers = lstm_layers
-        self._lstm_layer_dim = lstm_layer_dim
+    def __init__(self, *args, **kwargs):
+        super(BiLSTM, self).__init__(config.BILSTM_NN, *args, **kwargs)
+        self._lstm_layers = Config().args.lstmlayers
+        self._lstm_layer_dim = Config().args.lstmlayerdim
         self._input_reps = {}
 
     def init_extra_inputs(self, suffix, param):

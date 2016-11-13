@@ -15,26 +15,26 @@ class Model(object):
             return
 
         if model_type == config.SPARSE_PERCEPTRON:
-            from classifiers.sparse_perceptron import SparsePerceptron
             from features.sparse_features import SparseFeatureExtractor
+            from linear.sparse_perceptron import SparsePerceptron
             self.feature_extractor = SparseFeatureExtractor()
-            self.model = SparsePerceptron(filename, labels, min_update=Config().args.minupdate)
+            self.model = SparsePerceptron(filename, labels)
         elif model_type == config.DENSE_PERCEPTRON:
             from features.embedding import FeatureEmbedding
-            from classifiers.dense_perceptron import DensePerceptron
+            from linear.dense_perceptron import DensePerceptron
             self.feature_extractor = self.dense_features_wrapper(FeatureEmbedding)
             self.model = DensePerceptron(filename, labels, num_features=self.feature_extractor.num_features())
         elif model_type == config.MLP_NN:
             from features.enumerator import FeatureEnumerator
             from nn.feedforward import MLP
             self.feature_extractor = self.dense_features_wrapper(FeatureEnumerator)
-            self.model = MLP(filename, labels, **self.nn_kwargs())
+            self.model = MLP(filename, labels, input_params=self.feature_extractor.params)
         elif model_type == config.BILSTM_NN:
             from features.enumerator import FeatureEnumerator
             from features.indexer import FeatureIndexer
             from nn.bilstm import BiLSTM
             self.feature_extractor = FeatureIndexer(self.dense_features_wrapper(FeatureEnumerator))
-            self.model = BiLSTM(filename, labels, **self.nn_kwargs())
+            self.model = BiLSTM(filename, labels, input_params=self.feature_extractor.params)
         else:
             raise ValueError("Invalid model type: '%s'" % model_type)
 
@@ -50,19 +50,6 @@ class Model(object):
             FeatureParameters("A", Config().args.actiondim, Config().args.maxactions),
         ]
         return wrapper(DenseFeatureExtractor(), params)
-
-    def nn_kwargs(self):
-        return {
-            "input_params": self.feature_extractor.params,
-            "layers": Config().args.layers,
-            "layer_dim": Config().args.layerdim,
-            "activation": Config().args.activation,
-            "init": Config().args.init,
-            "max_num_labels": Config().args.maxlabels,
-            "minibatch_size": Config().args.minibatchsize,
-            "dropout": Config().args.dropout,
-            "optimizer": Config().args.optimizer
-        }
 
     def extract_features(self, *args, **kwargs):
         return self.feature_extractor.extract_features(*args, **kwargs)
@@ -90,11 +77,11 @@ class Model(object):
             self._update_only_on_error = self.model_type in (config.SPARSE_PERCEPTRON, config.DENSE_PERCEPTRON)
         return self._update_only_on_error
 
-    def finalize(self, *args, **kwargs):
+    def finalize(self, finished_epoch):
         return Model(model_type=self.model_type,
                      filename=self.filename,
-                     feature_extractor=self.feature_extractor.finalize(*args, **kwargs),
-                     model=self.model.finalize(*args, **kwargs))
+                     feature_extractor=self.feature_extractor.finalize(),
+                     model=self.model.finalize(finished_epoch))
 
     def save(self):
         if self.filename is not None:

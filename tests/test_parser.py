@@ -14,7 +14,7 @@ from ucca.tests.test_ucca import TestUtil
 class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ParserTests, self).__init__(*args, **kwargs)
-        Config("", "-m", "test", "--layerdim", "100", "--layers", "1")
+        Config("", "-m", "test", "--layerdim", "100", "--layers", "1", "--lstmlayerdim", "100", "--lstmlayers", "1")
         self.passage = convert.from_standard(TestUtil.load_xml("test_files/standard3.xml"))
 
     def test_oracle(self):
@@ -56,7 +56,7 @@ class ParserTests(unittest.TestCase):
             score = evaluation.Scores.aggregate([evaluation.evaluate(
                 g, r, verbose=False, units=False, errors=False)
                                                  for g, r in zip(guess, ref)])
-            scores.append(round(score.average_f1(), 2))
-        print("-- average labeled f1: %.2f, %.2f\n" % tuple(scores))
+            scores.append(round(score.average_f1(), 1))
+        print("-- average labeled f1: %.1f, %.1f\n" % tuple(scores))
         if compare:
             self.assertEqual(*scores)
