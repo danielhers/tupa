@@ -70,6 +70,8 @@ class Classifier(object):
             "type": self.model_type,
             "labels": self.labels,
             "is_frozen": self.is_frozen,
+            "learning_rate": self.learning_rate,
+            "learning_rate_decay": self.learning_rate_decay,
         }
         d.update(self.save_model())
         save_dict(self.filename, d)
@@ -90,6 +92,8 @@ class Classifier(object):
             "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])
         self.is_frozen = d["is_frozen"]
+        self.learning_rate = d["learning_rate"]
+        self.learning_rate_decay = d["learning_rate_decay"]
         self.load_model(d)
 
     def load_model(self, d):

@@ -12,14 +12,14 @@ class DensePerceptron(Perceptron):
     Expects features from FeatureEmbedding.
     """
 
-    def __init__(self, *args, model=None, num_features=None):
+    def __init__(self, *args, model=None, num_features=None, epoch=0):
         """
         Create a new untrained Perceptron or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
         :param num_features: number of features that will be used for the matrix size
         :param model: if given, copy the weights (from a trained model)
         """
-        super(DensePerceptron, self).__init__(config.DENSE_PERCEPTRON, *args, model=model)
+        super(DensePerceptron, self).__init__(config.DENSE_PERCEPTRON, *args, model=model, epoch=epoch)
         if not self.is_frozen:
             self._num_labels = self.num_labels
             self.input_dim = num_features
@@ -63,7 +63,7 @@ class DensePerceptron(Perceptron):
 
     def _finalize_model(self, average):
         model = self._totals / self._update_index if average else self.model
-        return DensePerceptron(self.filename, list(self.labels), model=model)
+        return DensePerceptron(self.filename, list(self.labels), model=model, epoch=self.epoch)
 
     def write_model(self, f, sep):
         print(list(map(str, self.labels)), file=f)

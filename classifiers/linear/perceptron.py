@@ -8,7 +8,7 @@ class Perceptron(Classifier):
     Abstract multi-class averaged perceptron.
     """
 
-    def __init__(self, *args, model=None):
+    def __init__(self, *args, model=None, epoch=0):
         """
         Create a new untrained Perceptron or copy the weights from an existing one
         :param model: if given, copy the weights (from a trained model)
@@ -17,6 +17,9 @@ class Perceptron(Classifier):
         if self.is_frozen:
             self.model = model
         self._update_index = 0  # Counter for calls to update()
+        self.initial_learning_rate = self.learning_rate
+        self.epoch = epoch
+        self.update_learning_rate()
 
     def update(self, features, pred, true, importance=1):
         """
@@ -38,6 +41,8 @@ class Perceptron(Classifier):
         """
         super(Perceptron, self).finalize()
         started = time.time()
+        if finished_epoch:
+            self.epochs += 1
         if average:
             print("Averaging weights... ", end="", flush=True)
         finalized = self._finalize_model(average)
@@ -50,6 +55,9 @@ class Perceptron(Classifier):
     def _finalize_model(self, average):
         raise NotImplementedError()
 
+    def update_learning_rate(self):
+        self.learning_rate = self.initial_learning_rate / (1.0 + self.epoch * self.learning_rate_decay)
+
     def resize(self):
         raise NotImplementedError()
 
@@ -58,7 +66,9 @@ class Perceptron(Classifier):
         Save all parameters to file
         """
         d = {
-            "_update_index": self._update_index
+            "_update_index": self._update_index,
+            "initial_learning_rate": self.initial_learning_rate,
+            "epoch": self.epoch,
         }
         d.update(self.save_extra())
         return d
@@ -68,6 +78,8 @@ class Perceptron(Classifier):
 
     def load_model(self, d):
         self._update_index = d["_update_index"]
+        self.initial_learning_rate = d["initial_learning_rate"]
+        self.epoch = d["epoch"]
         self.load_extra(d)
 
     def load_extra(self, d):

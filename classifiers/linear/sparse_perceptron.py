@@ -59,14 +59,14 @@ class SparsePerceptron(Perceptron):
     Expects features from SparseFeatureExtractor.
     """
 
-    def __init__(self, *args, model=None):
+    def __init__(self, *args, model=None, epoch=0):
         """
         Create a new untrained Perceptron or copy the weights from an existing one
         :param labels: a list of labels that can be updated later to add a new label
         :param min_update: minimum number of updates to a feature required for consideration
         :param model: if given, copy the weights (from a trained model)
         """
-        super(SparsePerceptron, self).__init__(config.SPARSE_PERCEPTRON, *args, model=model)
+        super(SparsePerceptron, self).__init__(config.SPARSE_PERCEPTRON, *args, model=model, epoch=epoch)
         model = defaultdict(lambda: FeatureWeights(self.num_labels))
         if self.is_frozen:
             model.update(self.model)
@@ -115,7 +115,7 @@ class SparsePerceptron(Perceptron):
         model = {f: w.finalize(self._update_index, average=average)
                  for f, w in self.model.items() if w.update_count >= self._min_update}
         print("%d features occurred at least %d times" % (len(model), self._min_update))
-        return SparsePerceptron(self.filename, list(self.labels), model=model)
+        return SparsePerceptron(self.filename, list(self.labels), model=model, epoch=self.epoch)
 
     def save_extra(self):
         return {
