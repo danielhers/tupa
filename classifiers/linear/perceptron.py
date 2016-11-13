@@ -1,9 +1,6 @@
 import time
 
-import os
-
 from classifiers.classifier import Classifier
-from parsing.model_util import load_dict, save_dict
 
 
 class Perceptron(Classifier):
@@ -47,7 +44,7 @@ class Perceptron(Classifier):
         if average:
             print("Done (%.3fs)." % (time.time() - started))
         print("Labels: %d" % self.num_labels)
-        print("Features: %d" % self.num_features)
+        print("Features: %d" % self.input_dim)
         return finalized
 
     def _finalize_model(self, average):
@@ -56,43 +53,30 @@ class Perceptron(Classifier):
     def resize(self):
         raise NotImplementedError()
 
-    def save(self):
+    def save_model(self):
         """
         Save all parameters to file
         """
         d = {
-            "type": self.model_type,
-            "labels": self.labels,
-            "is_frozen": self.is_frozen,
             "_update_index": self._update_index
         }
-        d.update(self.save_model())
-        save_dict(self.filename, d)
+        d.update(self.save_extra())
+        return d
 
-    def save_model(self):
+    def save_extra(self):
         return {"model": self.model}
 
-    def load(self):
-        """
-        Load all parameters from file
-        """
-        d = load_dict(self.filename)
-        model_type = d.get("type")
-        assert model_type is None or model_type == self.model_type, \
-            "Model type does not match: %s" % model_type
-        self.labels = list(d["labels"])
-        self.is_frozen = d["is_frozen"]
-        self._update_index = d["_update_index"]
-        self.load_model(d)
-
     def load_model(self, d):
-        self.model = d["model"]
+        self._update_index = d["_update_index"]
+        self.load_extra(d)
 
-    def __str__(self):
-        return ("%d labels, " % self.num_labels) + (
-                "%d features" % self.num_features)
+    def load_extra(self, d):
+        self.model = d["model"]
 
     def write(self, filename, sep="\t"):
         print("Writing model to '%s'..." % filename)
         with open(filename, "w") as f:
             self.write_model(f, sep)
+
+    def write_model(self, f, sep):
+        raise NotImplementedError()

@@ -117,19 +117,19 @@ class SparsePerceptron(Perceptron):
         print("%d features occurred at least %d times" % (len(model), self._min_update))
         return SparsePerceptron(self.filename, list(self.labels), model=model)
 
-    def save_model(self):
+    def save_extra(self):
         return {
             "model": dict(self.model),
             "_min_update": self._min_update,
         }
 
-    def load_model(self, d):
+    def load_extra(self, d):
         self.model.clear()
         self.model.update(d["model"])
         self._min_update = d["_min_update"]
 
     @property
-    def num_features(self):
+    def input_dim(self):
         return len(self.model)
 
     def write_model(self, f, sep):

@@ -8,7 +8,6 @@ from collections import OrderedDict
 import dynet as dy
 from classifiers.classifier import Classifier
 from parsing.config import Config
-from parsing.model_util import load_dict, save_dict
 
 TRAINERS = {
     "sgd": dy.SimpleSGDTrainer,
@@ -65,7 +64,6 @@ class NeuralNetwork(Classifier):
         self._input_params = input_params
         self._losses = []
         self._iteration = 0
-        self.model = None
         self._trainer = None
 
     @property
@@ -177,15 +175,10 @@ class NeuralNetwork(Classifier):
             self._trainer.update_epoch()
         return self
 
-    def save(self):
-        """
-        Save all parameters to file
-        """
+    def save_model(self):
         self.finalize()
         param_keys, param_values = zip(*self._params.items())
         d = {
-            "type": self.model_type,
-            "labels": self.labels,
             "input_params": self._input_params,
             "param_keys": param_keys,
             "layers": self._layers,
@@ -195,7 +188,6 @@ class NeuralNetwork(Classifier):
             "optimizer": self._optimizer_str,
         }
         d.update(self.save_extra())
-        save_dict(self.filename, d)
         model_filename = self.filename + ".model"
         started = time.time()
         try:
@@ -209,19 +201,10 @@ class NeuralNetwork(Classifier):
             print("Done (%.3fs)." % (time.time() - started))
         except ValueError as e:
             print("Failed saving model: %s" % e)
+        return d
 
-    def save_extra(self):
-        return {}
-
-    def load(self):
-        """
-        Load all parameters from file
-        """
+    def load_model(self, d):
         self.init_model()
-        d = load_dict(self.filename)
-        model_type = d.get("type")
-        assert model_type == self.model_type, "Model type does not match: %s" % model_type
-        self.labels = list(d["labels"])
         self._input_params = d["input_params"]
         param_keys = d["param_keys"]
         self._layers = d["layers"]
@@ -242,10 +225,3 @@ class NeuralNetwork(Classifier):
             self._params = OrderedDict(zip(param_keys, param_values))
         except KeyError as e:
             print("Failed loading model: %s" % e)
-
-    def load_extra(self, d):
-        pass
-
-    def __str__(self):
-        return ("%d labels, " % self.num_labels) + (
-                "%d features" % self.input_dim)

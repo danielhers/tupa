@@ -1,4 +1,5 @@
 from parsing.config import Config
+from parsing.model_util import load_dict, save_dict
 
 
 class Classifier(object):
@@ -11,6 +12,7 @@ class Classifier(object):
         :param labels: a list of labels that can be updated later to add a new label
         :param model: if given, copy the weights (from a trained model)
         """
+        self.model = None
         self.model_type = model_type
         self.filename = filename
         self.labels = labels or []
@@ -51,10 +53,41 @@ class Classifier(object):
         self._update_num_labels()
 
     def save(self):
-        raise NotImplementedError()
+        """
+        Save all parameters to file
+        """
+        d = {
+            "type": self.model_type,
+            "labels": self.labels,
+            "is_frozen": self.is_frozen,
+        }
+        d.update(self.save_model())
+        save_dict(self.filename, d)
+
+    def save_model(self):
+        return self.save_extra()
+
+    def save_extra(self):
+        return {}
 
     def load(self):
-        raise NotImplementedError()
+        """
+        Load all parameters from file
+        """
+        d = load_dict(self.filename)
+        model_type = d.get("type")
+        assert model_type is None or model_type == self.model_type, \
+            "Model type does not match: %s" % model_type
+        self.labels = list(d["labels"])
+        self.is_frozen = d["is_frozen"]
+        self.load_model(d)
+
+    def load_model(self, d):
+        self.load_extra(d)
+
+    def load_extra(self, d):
+        pass
 
     def __str__(self):
-        raise NotImplementedError()
+        return ("%d labels, " % self.num_labels) + (
+                "%d features" % self.input_dim)
