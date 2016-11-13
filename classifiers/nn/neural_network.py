@@ -1,11 +1,11 @@
-import os
 import sys
 import time
+
+import numpy as np
+import os
 from collections import OrderedDict
 
 import dynet as dy
-import numpy as np
-
 from classifiers.classifier import Classifier
 from parsing import config
 from parsing.model_util import load_dict, save_dict
@@ -87,11 +87,67 @@ class NeuralNetwork(Classifier):
     def resize(self):
         assert self.num_labels <= self.max_num_labels, "Exceeded maximum number of labels"
 
-    def init_model(self):
-        raise NotImplementedError()
-
     def evaluate(self, features):
         raise NotImplementedError
+
+    def generate_inputs(self, features):
+        raise NotImplementedError
+
+    def init_model(self):
+        self.model = dy.Model()
+        self._trainer = self._optimizer(self.model)
+        input_dim = self.init_inputs()
+        self.init_mlp(input_dim)
+
+    def init_inputs(self):
+        input_dim = 0
+        for suffix, param in sorted(self._input_params.items()):
+            if not param.numeric and param.dim > 0:  # index feature
+                p = self.model.add_lookup_parameters((param.size, param.dim))
+                if param.init is not None:
+                    p.init_from_array(param.init)
+                self._params[suffix] = p
+            input_dim += self.init_extra_inputs(suffix, param)
+        return input_dim
+
+    def init_extra_inputs(self, suffix, param):
+        return param.num * param.dim
+
+    def init_mlp(self, input_dim):
+        for i in range(1, self._layers + 1):
+            in_dim = input_dim if i == 1 else self._layer_dim
+            out_dim = self._layer_dim if i < self._layers else self.max_num_labels
+            self._params["W%d" % i] = self.model.add_parameters((out_dim, in_dim), init=self._init)
+            self._params["b%d" % i] = self.model.add_parameters(out_dim, init=self._init)
+
+    def init_cg(self):
+        if self.model is None:
+            self.init_model()
+        if not self._losses:
+            dy.renew_cg()
+
+    def generate_inputs(self, features):
+        for suffix, values in sorted(features.items()):
+            param = self._input_params[suffix]
+            if param.numeric:
+                yield dy.inputVector(values)
+            elif param.dim > 0:
+                v = self.index_input(suffix, param, values)
+                yield dy.reshape(self._params[suffix].batch(values),
+                                 (param.num * param.dim,)) if v is None else v
+
+    def index_input(self, suffix, param, values):
+        pass
+
+    def evaluate_mlp(self, features, train=False):
+        x = dy.concatenate(list(self.generate_inputs(features)))
+        for i in range(1, self._layers + 1):
+            W = dy.parameter(self._params["W%d" % i])
+            b = dy.parameter(self._params["b%d" % i])
+            if train and self._dropout:
+                x = dy.dropout(x, self._dropout)
+            x = self._activation(W * x + b)
+        return dy.log_softmax(x, restrict=list(range(self.num_labels)))
 
     def score(self, features):
         """
@@ -151,6 +207,7 @@ class NeuralNetwork(Classifier):
             "init": self._init_str,
             "optimizer": self._optimizer_str,
         }
+        d.update(self.save_extra())
         save_dict(self.filename, d)
         model_filename = self.filename + ".model"
         started = time.time()
@@ -165,6 +222,9 @@ class NeuralNetwork(Classifier):
             print("Done (%.3fs)." % (time.time() - started))
         except ValueError as e:
             print("Failed saving model: %s" % e)
+
+    def save_extra(self):
+        return {}
 
     def load(self):
         """
@@ -186,6 +246,7 @@ class NeuralNetwork(Classifier):
         self._init = INITIALIZERS[self._init_str]
         self._optimizer_str = d["optimizer"]
         self._optimizer = TRAINERS[self._optimizer_str]
+        self.load_extra(d)
         model_filename = self.filename + ".model"
         print("Loading model from '%s'... " % model_filename, end="", flush=True)
         started = time.time()
@@ -195,6 +256,9 @@ class NeuralNetwork(Classifier):
         except KeyError as e:
             print("Failed loading model: %s" % e)
         self._params = OrderedDict(zip(param_keys, param_values))
+
+    def load_extra(self, d):
+        pass
 
     def __str__(self):
         return ("%d labels, " % self.num_labels) + (

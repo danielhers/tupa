@@ -6,58 +6,43 @@ from parsing import config
 
 class BiLSTM(NeuralNetwork):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, lstm_layers=1, lstm_layer_dim=100, **kwargs):
+        """
+        :param layers: number of LSTM hidden layers
+        :param layer_dim: size of LSTM hidden layer
+        """
         super(BiLSTM, self).__init__(*args, model_type=config.BILSTM_NN, **kwargs)
+        self._lstm_layers = lstm_layers
+        self._lstm_layer_dim = lstm_layer_dim
         self._input_reps = {}
 
-    def init_model(self):
-        self.model = dy.Model()
-        self._trainer = self._optimizer(self.model)
-        input_dim = 0
-        for suffix, param in sorted(self._input_params.items()):
-            if not param.numeric and param.dim > 0:  # index feature
-                p = self.model.add_lookup_parameters((param.size, param.dim))
-                if param.init is not None:
-                    p.init_from_array(param.init)
-                self._params[suffix] = p
-            if param.indexed:
-                self._params["BiLSTM_%s" % suffix] = dy.BiRNNBuilder(self._layers, param.dim, self._layer_dim,
-                                                                     self.model, dy.LSTMBuilder)
-            input_dim += param.num * (self._layer_dim if param.indexed else param.dim)
-        for i in range(1, self._layers + 1):
-            in_dim = input_dim if i == 1 else self._layer_dim
-            out_dim = self._layer_dim if i < self._layers else self.max_num_labels
-            self._params["W%d" % i] = self.model.add_parameters((out_dim, in_dim), init=self._init)
-            self._params["b%d" % i] = self.model.add_parameters(out_dim, init=self._init)
+    def init_extra_inputs(self, suffix, param):
+        if param.indexed:
+            self._params["bilstm_%s" % suffix] = dy.BiRNNBuilder(self._lstm_layers, param.dim, self._lstm_layer_dim,
+                                                                 self.model, dy.LSTMBuilder)
+        return param.num * (self._lstm_layer_dim if param.indexed else param.dim)
 
     def init_features(self, features, train=False):
-        if self.model is None:
-            self.init_model()
-        if not self._losses:
-            dy.renew_cg()
+        self.init_cg()
         for suffix, values in sorted(features.items()):
-            bilstm = self._params["BiLSTM_%s" % suffix]
+            bilstm = self._params["bilstm_%s" % suffix]
             if train:
                 bilstm.set_dropout(self._dropout)
             embeddings = [self._params[suffix][v] for v in values]
             self._input_reps[suffix] = bilstm.transduce(embeddings)
 
-    def _generate_inputs(self, features):
-        for suffix, values in sorted(features.items()):
-            param = self._input_params[suffix]
-            if param.numeric:
-                yield dy.inputVector(values)
-            elif param.indexed:
-                yield dy.concatenate([self._input_reps[suffix][v] for v in values])
-            elif param.dim > 0:
-                yield dy.reshape(self._params[suffix].batch(values), (param.num * param.dim,))
+    def index_input(self, suffix, param, values):
+        return dy.concatenate([self._input_reps[suffix][v] for v in values]) if param.indexed else None
 
     def evaluate(self, features, train=False):
-        x = dy.concatenate(list(self._generate_inputs(features)))
-        for i in range(1, self._layers + 1):
-            W = dy.parameter(self._params["W%d" % i])
-            b = dy.parameter(self._params["b%d" % i])
-            if train and self._dropout:
-                x = dy.dropout(x, self._dropout)
-            x = self._activation(W * x + b)
-        return dy.log_softmax(x, restrict=list(range(self.num_labels)))
+        return self.evaluate_mlp(features, train)
+
+    def save_extra(self):
+        return {
+            "lstm_layers": self._lstm_layers,
+            "lstm_layer_dim": self._lstm_layer_dim,
+        }
+
+    def load_extra(self, d):
+        self._lstm_layers = d["lstm_layers"]
+        self._lstm_layer_dim = d["lstm_layer_dim"]
