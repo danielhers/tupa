@@ -4,7 +4,6 @@ from keras.models import model_from_json
 
 from classifiers.classifier import Classifier
 from parsing.config import Config
-from parsing.model_util import load_dict, save_dict
 
 
 class NeuralNetwork(Classifier):

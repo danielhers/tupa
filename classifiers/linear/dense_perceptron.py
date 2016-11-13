@@ -22,9 +22,9 @@ class DensePerceptron(Perceptron):
         super(DensePerceptron, self).__init__(config.DENSE_PERCEPTRON, *args, model=model)
         if not self.is_frozen:
             self._num_labels = self.num_labels
-            self.num_features = num_features
-            self.model = np.zeros((self.num_features, self.num_labels), dtype=float)
-            self._totals = np.zeros((self.num_features, self.num_labels), dtype=float)
+            self.input_dim = num_features
+            self.model = np.zeros((self.input_dim, self.num_labels), dtype=float)
+            self._totals = np.zeros((self.input_dim, self.num_labels), dtype=float)
             self._last_update = np.zeros(self.num_labels, dtype=int)
 
     def score(self, features):
@@ -57,8 +57,8 @@ class DensePerceptron(Perceptron):
         self._last_update[label] = self._update_index
 
     def resize(self):
-        self.model.resize((self.num_features, self.num_labels), refcheck=False)
-        self._totals.resize((self.num_features, self.num_labels), refcheck=False)
+        self.model.resize((self.input_dim, self.num_labels), refcheck=False)
+        self._totals.resize((self.input_dim, self.num_labels), refcheck=False)
         self._last_update.resize(self.num_labels, refcheck=False)
 
     def _finalize_model(self, average):
