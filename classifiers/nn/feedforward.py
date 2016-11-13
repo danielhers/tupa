@@ -9,13 +9,13 @@ from keras.models import Model
 from keras.utils import np_utils
 
 from nn.neural_network import NeuralNetwork
-from parsing import config
+from parsing.config import FEEDFORWARD_NN
 
 
 class FeedforwardNeuralNetwork(NeuralNetwork):
 
     def __init__(self, *args, **kwargs):
-        super(FeedforwardNeuralNetwork, self).__init__(*args, model_type=config.FEEDFORWARD_NN, **kwargs)
+        super(FeedforwardNeuralNetwork, self).__init__(*args, model_type=FEEDFORWARD_NN, **kwargs)
         self._samples = defaultdict(list)
 
     def init_model(self):

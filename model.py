@@ -15,35 +15,20 @@ class Model(object):
             return
 
         if model_type == config.SPARSE_PERCEPTRON:
-            from classifiers.sparse_perceptron import SparsePerceptron
             from features.sparse_features import SparseFeatureExtractor
+            from linear.sparse_perceptron import SparsePerceptron
             self.feature_extractor = SparseFeatureExtractor()
-            self.model = SparsePerceptron(filename, labels, min_update=Config().args.minupdate)
+            self.model = SparsePerceptron(filename, labels)
         elif model_type == config.DENSE_PERCEPTRON:
             from features.embedding import FeatureEmbedding
-            from classifiers.dense_perceptron import DensePerceptron
+            from linear.dense_perceptron import DensePerceptron
             self.feature_extractor = self.dense_features_wrapper(FeatureEmbedding)
             self.model = DensePerceptron(filename, labels, num_features=self.feature_extractor.num_features())
         elif model_type == config.FEEDFORWARD_NN:
             from features.enumerator import FeatureEnumerator
             from nn.feedforward import FeedforwardNeuralNetwork
             self.feature_extractor = self.dense_features_wrapper(FeatureEnumerator)
-            self.model = FeedforwardNeuralNetwork(filename, labels, feature_params=self.feature_extractor.params,
-                                                  layers=Config().args.layers,
-                                                  layer_dim=Config().args.layerdim,
-                                                  activation=Config().args.activation,
-                                                  normalize=Config().args.normalize,
-                                                  init=Config().args.init,
-                                                  max_num_labels=Config().args.maxlabels,
-                                                  batch_size=Config().args.batchsize,
-                                                  minibatch_size=Config().args.minibatchsize,
-                                                  nb_epochs=Config().args.nbepochs,
-                                                  dropout=Config().args.dropout,
-                                                  optimizer=Config().args.optimizer,
-                                                  loss=Config().args.loss,
-                                                  regularizer=Config().args.regularizer,
-                                                  regularization=Config().args.regularization
-                                                  )
+            self.model = FeedforwardNeuralNetwork(filename, labels, input_params=self.feature_extractor.params)
         else:
             raise ValueError("Invalid model type: '%s'" % model_type)
 
@@ -81,11 +66,11 @@ class Model(object):
             self._update_only_on_error = self.model_type in (config.SPARSE_PERCEPTRON, config.DENSE_PERCEPTRON)
         return self._update_only_on_error
 
-    def finalize(self, *args, **kwargs):
+    def finalize(self, finished_epoch):
         return Model(model_type=self.model_type,
                      filename=self.filename,
-                     feature_extractor=self.feature_extractor.finalize(*args, **kwargs),
-                     model=self.model.finalize(*args, **kwargs))
+                     feature_extractor=self.feature_extractor.finalize(),
+                     model=self.model.finalize(finished_epoch))
 
     def save(self):
         if self.filename is not None:

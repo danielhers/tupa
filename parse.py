@@ -30,9 +30,7 @@ class Parser(object):
         self.total_actions = 0
         self.total_correct = 0
         self.model = Model(model_type, model_file, Actions().all)
-        self.beam = beam
-        self.learning_rate = Config().args.learningrate
-        self.decay_factor = Config().args.decayfactor
+        self.beam = beam  # Currently unused
         self.state_hash_history = None  # For loop checking
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
         self.ignore_node = lambda n: n.tag == layer1.NodeTags.Linkage if Config().args.nolinkage else None
@@ -56,18 +54,15 @@ class Parser(object):
                 self.batch = 0
                 print("Training iteration %d of %d: " % (self.iteration, iterations))
                 passages = [passage for _, passage in self.parse(passages, mode="train")]
-                last = self.iteration == iterations
-                self.eval_and_save(last)
-                if not last:
-                    self.learning_rate *= self.decay_factor
-                    Config().random.shuffle(passages)
+                self.eval_and_save(self.iteration == iterations, finished_epoch=True)
+                Config().random.shuffle(passages)
             print("Trained %d iterations" % iterations)
         if dev or not passages:
             self.model.load()
 
-    def eval_and_save(self, last=False):
+    def eval_and_save(self, last=False, finished_epoch=False):
         model = self.model
-        self.model = self.model.finalize()
+        self.model = self.model.finalize(finished_epoch=finished_epoch)
         if self.dev:
             print("Evaluating on dev passages")
             self.dev, scores = zip(*[(p, evaluate_passage(pred, p))
@@ -208,10 +203,8 @@ class Parser(object):
             if train and not (correct_action and self.model.update_only_on_error):
                 best_true_action = true_actions[0] if len(true_actions) == 1 else \
                     true_actions[self.scores[[a.id for a in true_actions]].argmax()]
-                rate = self.learning_rate
-                if best_true_action.is_swap:
-                    rate *= Config().args.importance
-                self.model.update(features, predicted_action.id, best_true_action.id, rate)
+                self.model.update(features, predicted_action.id, best_true_action.id,
+                                  Config().args.importance if best_true_action.is_swap else 1)
             self.model.advance()
             self.action_count += 1
             try:

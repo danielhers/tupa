@@ -3,6 +3,7 @@ from keras import regularizers
 from keras.models import model_from_json
 
 from classifiers.classifier import Classifier
+from parsing.config import Config
 from parsing.model_util import load_dict, save_dict
 
 
@@ -14,56 +15,35 @@ class NeuralNetwork(Classifier):
     Expects features from FeatureEnumerator.
     """
 
-    def __init__(self, filename, labels, model_type, feature_params=None, model=None,
-                 layers=1, layer_dim=100, activation="tanh", normalize=False,
-                 init="glorot_normal", max_num_labels=100, batch_size=10,
-                 minibatch_size=200, nb_epochs=5, dropout=0,
-                 optimizer="adam", loss="categorical_crossentropy",
-                 regularizer="l2", regularization=1e-8):
+    def __init__(self, *args, input_params):
         """
-        Create a new untrained NN or copy the weights from an existing one
-        :param labels: a list of labels that can be updated later to add a new label
-        :param feature_params: dict of feature type name -> FeatureInformation
-        :param model: if given, copy the weights (from a trained model)
-        :param layers: number of hidden layers
-        :param layer_dim: size of hidden layer
-        :param activation: activation function at hidden layers
-        :param normalize: perform batch normalization after each layer?
-        :param init: initialization type for hidden layers
-        :param max_num_labels: since model size is fixed, set maximum output size
-        :param batch_size: fit model every this many items
-        :param minibatch_size: batch size for SGD
-        :param nb_epochs: number of epochs for SGD
-        :param dropout: dropout to apply to input layer
-        :param optimizer: algorithm to use for optimization
-        :param loss: objective function to use for optimization
-        :param regularizer: regularization type (None, l1, l2 or l1l2)
-        :param regularization: regularization parameter lambda
+        Create a new untrained NN
+        :param input_params: dict of feature type name -> FeatureInformation
         """
         super(NeuralNetwork, self).__init__(model_type=model_type, filename=filename,
                                             labels=labels, model=model)
-        assert feature_params is not None or model is not None
+        assert input_params is not None or model is not None
         if self.is_frozen:
             self.model = model
         else:
-            self.max_num_labels = max_num_labels
-            self._layers = layers
-            self._layer_dim = layer_dim
-            self._activation = (lambda x: x*x*x) if activation == "cube" else activation
-            self._normalize = normalize
-            self._init = init
+            self.max_num_labels = Config().args.maxlabels
+            self._layers = Config().args.layers
+            self._layer_dim = Config().args.layerdim
+            self._activation = (lambda x: x*x*x) if Config().args.activation == "cube" else Config().args.activation
+            self._normalize = Config().args.normalize
+            self._init = Config().args.init
             self._num_labels = self.num_labels
-            self._minibatch_size = minibatch_size
-            self._nb_epochs = nb_epochs
-            self._dropout = dropout
-            self._optimizer = optimizer
-            self._loss = (lambda t, p: K.sum(K.maximum(0., 1.-p*t+p*(1.-t)))) if loss == "max_margin" else loss
-            self._regularizer = (lambda: None) if regularizer is None else \
-                (lambda: regularizers.l1l2(regularization, regularization)) if regularizer == "l1l2" else \
-                (lambda: regularizers.get(regularizer, {"l": regularization}))
-            self.feature_params = feature_params
+            self._minibatch_size = Config().args.minibatchsize
+            self._nb_epochs = Config().args.nbepochs
+            self._dropout = Config().args.dropout
+            self._optimizer = Config().args.optimizer
+            self._loss = (lambda t, p: K.sum(K.maximum(0., 1.-p*t+p*(1.-t)))) if Config().args.loss == "max_margin" else Config().args.loss
+            self._regularizer = (lambda: None) if Config().args.regularizer is None else \
+                (lambda: regularizers.l1l2(Config().args.regularization, Config().args.regularization)) if Config().args.regularizer == "l1l2" else \
+                (lambda: regularizers.get(Config().args.regularizer, {"l": Config().args.regularization}))
+            self.input_params = input_params
             self.model = None
-        self._batch_size = batch_size
+        self._batch_size = Config().args.batchsize
         self._item_index = 0
         self._iteration = 0
 
@@ -75,7 +55,7 @@ class NeuralNetwork(Classifier):
 
     @property
     def input_dim(self):
-        return sum(f.num * f.dim for f in self.feature_params.values())
+        return sum(f.num * f.dim for f in self.input_params.values())
 
     def resize(self):
         assert self.num_labels <= self.max_num_labels, "Exceeded maximum number of labels"
@@ -102,7 +82,6 @@ class NeuralNetwork(Classifier):
     def load(self):
         """
         Load all parameters from file
-        :param filename: file to load from
         """
         d = load_dict(self.filename)
         model_type = d.get("type")
