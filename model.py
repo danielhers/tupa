@@ -65,12 +65,6 @@ class Model(object):
     def update(self, *args, **kwargs):
         self.model.update(*args, **kwargs)
 
-    def finish(self, train):
-        self.model.finish(train)
-
-    def advance(self):
-        self.model.advance()
-
     @property
     def update_only_on_error(self):
         if self._update_only_on_error is None:
