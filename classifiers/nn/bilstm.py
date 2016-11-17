@@ -1,5 +1,5 @@
 import dynet as dy
-from classifier import ClassifierProperty
+from classifiers.classifier import ClassifierProperty
 
 from nn.neural_network import NeuralNetwork
 from parsing import config

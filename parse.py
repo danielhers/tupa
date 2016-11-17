@@ -3,7 +3,7 @@ import time
 
 from nltk import pos_tag
 
-from classifier import ClassifierProperty
+from classifiers.classifier import ClassifierProperty
 from parsing import config, passage_util
 from parsing.action import Actions
 from parsing.config import Config
