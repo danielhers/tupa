@@ -1,5 +1,12 @@
+from enum import Enum
+
 from parsing.config import Config
 from parsing.model_util import load_dict, save_dict
+
+
+class ClassifierProperty(Enum):
+    update_only_on_error = 1
+    require_init_features = 2
 
 
 class Classifier(object):
@@ -101,6 +108,9 @@ class Classifier(object):
 
     def load_extra(self, d):
         pass
+
+    def get_classifier_properties(self):
+        raise NotImplementedError()
 
     def __str__(self):
         return ("%d labels, " % self.num_labels) + (

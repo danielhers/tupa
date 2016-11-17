@@ -98,3 +98,7 @@ class NeuralNetwork(Classifier):
     def __str__(self):
         return ("%d labels, " % self.num_labels) + (
                 "%d features" % self.input_dim)
+
+    def get_classifier_properties(self):
+        return ()
+

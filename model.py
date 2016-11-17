@@ -6,7 +6,6 @@ from parsing.config import Config
 
 class Model(object):
     def __init__(self, model_type, filename, labels=None, feature_extractor=None, model=None):
-        self._update_only_on_error = None
         self.model_type = model_type
         self.filename = filename
         if feature_extractor is not None and model is not None:
@@ -45,26 +44,8 @@ class Model(object):
         ]
         return wrapper(DenseFeatureExtractor(), params)
 
-    def extract_features(self, *args, **kwargs):
-        return self.feature_extractor.extract_features(*args, **kwargs)
-
-    def score(self, *args, **kwargs):
-        return self.model.score(*args, **kwargs)
-
-    def update(self, *args, **kwargs):
-        self.model.update(*args, **kwargs)
-
-    def finish(self, train):
-        self.model.finish(train)
-
-    def advance(self):
-        self.model.advance()
-
-    @property
-    def update_only_on_error(self):
-        if self._update_only_on_error is None:
-            self._update_only_on_error = self.model_type in (config.SPARSE_PERCEPTRON, config.DENSE_PERCEPTRON)
-        return self._update_only_on_error
+    def init_features(self, state, train):
+        self.model.init_features(self.feature_extractor.init_features(state), train)
 
     def finalize(self, finished_epoch):
         return Model(model_type=self.model_type,
