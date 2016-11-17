@@ -1,8 +1,10 @@
-import os
 import shelve
 import time
-from collections import defaultdict, Counter
+
 import numpy as np
+import os
+from collections import defaultdict, Counter
+
 
 class UnknownDict(defaultdict):
     """

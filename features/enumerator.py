@@ -1,5 +1,3 @@
-from numbers import Number
-
 import numpy as np
 
 from features.feature_extractor_wrapper import FeatureExtractorWrapper
@@ -30,9 +28,10 @@ class FeatureEnumerator(FeatureExtractorWrapper):
         if param.data is not None or isinstance(param, NumericFeatureParameters):
             return
         param.num = self.feature_extractor.num_features_non_numeric(param.suffix)
-        if isinstance(param.dim, Number):
-            param.data = DropoutDict(max_size=param.size, dropout=param.dropout)
-        else:
+        vocab = ()
+        try:
+            param.dim = int(param.dim)
+        except ValueError | TypeError:
             w2v = load_word2vec(param.dim)
             vocab = w2v.vocab
             if param.size is None or param.size == 0:
@@ -43,7 +42,7 @@ class FeatureEnumerator(FeatureExtractorWrapper):
             weights = np.array([w2v[x] for x in vocab])
             unknown = weights.mean(axis=0)
             param.init = np.vstack((unknown, weights))
-            param.data = DropoutDict(max_size=param.size, keys=vocab, dropout=param.dropout)
+        param.data = DropoutDict(max_size=param.size, keys=vocab, dropout=param.dropout)
 
     def extract_features(self, state):
         """
