@@ -84,17 +84,23 @@ class NeuralNetwork(Classifier):
 
     def init_inputs(self):
         input_dim = 0
+        indexed_dim = 0
+        indexed_num = 0
         for suffix, param in sorted(self._input_params.items()):
-            if not param.numeric and param.dim > 0:  # index feature
+            if not param.numeric and param.dim > 0:  # lookup feature
                 p = self.model.add_lookup_parameters((param.size, param.dim))
                 if param.init is not None:
                     p.init_from_array(param.init)
                 self._params[suffix] = p
-            input_dim += self.init_extra_inputs(suffix, param)
-        return input_dim
+            if param.indexed:
+                indexed_dim += param.dim
+                indexed_num = max(indexed_num, param.num)  # indices to be looked up are collected
+            else:
+                input_dim += param.num * param.dim
+        return input_dim + self.init_extra_inputs(indexed_dim, indexed_num)
 
-    def init_extra_inputs(self, suffix, param):
-        return param.num * param.dim
+    def init_extra_inputs(self, dim, num):
+        return dim * num
 
     def init_mlp(self, input_dim):
         for i in range(1, self._layers + 1):
@@ -110,16 +116,20 @@ class NeuralNetwork(Classifier):
             dy.renew_cg()
 
     def generate_inputs(self, features):
+        indices = []  # list, not set, in order to maintain consistent order
         for suffix, values in sorted(features.items()):
             param = self._input_params[suffix]
             if param.numeric:
                 yield dy.inputVector(values)
             elif param.dim > 0:
-                v = self.index_input(suffix, param, values)
-                yield dy.reshape(self._params[suffix].batch(values),
-                                 (param.num * param.dim,)) if v is None else v
+                if param.indexed:  # collect indices to be looked up
+                    indices += [i for i in values if i not in indices]  # TODO handle missing values (do not add)
+                else:
+                    yield dy.reshape(self._params[suffix].batch(values), (param.num * param.dim,))
+        if indices:
+            yield self.index_input(indices)
 
-    def index_input(self, suffix, param, values):
+    def index_input(self, values):
         pass
 
     def evaluate_mlp(self, features, train=False):
