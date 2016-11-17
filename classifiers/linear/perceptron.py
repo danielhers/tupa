@@ -1,5 +1,6 @@
 import time
 
+from classifier import ClassifierProperty
 from classifiers.classifier import Classifier
 
 
@@ -42,7 +43,7 @@ class Perceptron(Classifier):
         super(Perceptron, self).finalize()
         started = time.time()
         if finished_epoch:
-            self.epochs += 1
+            self.epoch += 1
         if average:
             print("Averaging weights... ", end="", flush=True)
         finalized = self._finalize_model(average)
@@ -92,3 +93,6 @@ class Perceptron(Classifier):
 
     def write_model(self, f, sep):
         raise NotImplementedError()
+
+    def get_classifier_properties(self):
+        return ClassifierProperty.update_only_on_error,

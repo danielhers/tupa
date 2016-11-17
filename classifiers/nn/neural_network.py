@@ -225,3 +225,6 @@ class NeuralNetwork(Classifier):
             self._params = OrderedDict(zip(param_keys, param_values))
         except KeyError as e:
             print("Failed loading model: %s" % e)
+
+    def get_classifier_properties(self):
+        return ()

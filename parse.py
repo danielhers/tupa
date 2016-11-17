@@ -3,6 +3,7 @@ import time
 
 from nltk import pos_tag
 
+from classifier import ClassifierProperty
 from parsing import config, passage_util
 from parsing.action import Actions
 from parsing.config import Config
@@ -122,7 +123,8 @@ class Parser(object):
             self.state_hash_history = set()
             self.oracle = Oracle(passage) if train else None
             failed = False
-            self.model.init_features(self.state, train)
+            if ClassifierProperty.require_init_features in self.model.model.get_classifier_properties():
+                self.model.init_features(self.state, train)
             try:
                 self.parse_passage(train)  # This is where the actual parsing takes place
             except ParserException as e:
@@ -189,7 +191,7 @@ class Parser(object):
                     if train:
                         raise ParserException("Error in oracle during training") from e
 
-            features = self.model.extract_features(self.state)
+            features = self.model.feature_extractor.extract_features(self.state)
             predicted_action = self.predict_action(features, true_actions)  # sets self.scores
             action = predicted_action
             correct_action = False
@@ -200,11 +202,12 @@ class Parser(object):
                 correct_action = True
             elif train:
                 action = Config().random.choice(true_actions)
-            if train and not (correct_action and self.model.update_only_on_error):
+            if train and not (correct_action and
+                              ClassifierProperty.update_only_on_error in self.model.model.get_classifier_properties()):
                 best_true_action = true_actions[0] if len(true_actions) == 1 else \
                     true_actions[self.scores[[a.id for a in true_actions]].argmax()]
-                self.model.update(features, predicted_action.id, best_true_action.id,
-                                  Config().args.importance if best_true_action.is_swap else 1)
+                self.model.model.update(features, predicted_action.id, best_true_action.id,
+                                        Config().args.importance if best_true_action.is_swap else 1)
             self.action_count += 1
             try:
                 self.state.transition(action)
@@ -239,7 +242,7 @@ class Parser(object):
         :param true_actions: from the oracle, to copy orig_node if the same action is selected
         :return: valid action with maximum probability according to classifier
         """
-        self.scores = self.model.score(features)  # Returns a NumPy array
+        self.scores = self.model.model.score(features)  # Returns a NumPy array
         best_action = self.select_action(self.scores.argmax(), true_actions)
         if self.state.is_valid(best_action):
             return best_action

@@ -1,4 +1,5 @@
 import dynet as dy
+from classifier import ClassifierProperty
 
 from nn.neural_network import NeuralNetwork
 from parsing import config
@@ -43,3 +44,6 @@ class BiLSTM(NeuralNetwork):
     def load_extra(self, d):
         self._lstm_layers = d["lstm_layers"]
         self._lstm_layer_dim = d["lstm_layer_dim"]
+
+    def get_classifier_properties(self):
+        return ClassifierProperty.require_init_features,
