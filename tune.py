@@ -46,8 +46,8 @@ def main():
     num = int(os.environ.get("PARAMS_NUM", 30))
     np.random.seed()
     domains = (
-        ("seed",            2147483647),
-        ("classifier",      50 * [config.MLP_NN, config.BILSTM_NN] + list(config.CLASSIFIERS)),
+        ("seed",            2147483647),  # max value for int
+        ("classifier",      (config.MLP_NN, config.BILSTM_NN)),
         ("wordvectors",     [50, 100, 200, 300] + [load_word2vec(f) for f in w2v_files]),
         ("tagdim",          (5, 10, 20)),
         ("labeldim",        (5, 10, 20)),
@@ -65,7 +65,7 @@ def main():
         ("optimizer",       5 * [config.OPTIMIZERS[0]] + list(config.OPTIMIZERS)),
         ("importance",      (1, 2)),
         ("earlyupdate",     6 * [False] + [True]),
-        ("iterations",      range(1, 21)),
+        ("iterations",      range(1, 31)),
         ("worddropout",     (0, .1, .2, .25, .3)),
         ("dynet_l2",        (1e-7, 1e-6, 1e-5, 1e-4)),
         ("dropout",         (0, .1, .2, .3, .4, .5)),
