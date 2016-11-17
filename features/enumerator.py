@@ -44,21 +44,6 @@ class FeatureEnumerator(FeatureExtractorWrapper):
             param.init = np.vstack((unknown, weights))
         param.data = DropoutDict(max_size=param.size, keys=vocab, dropout=param.dropout)
 
-    def extract_features(self, state):
-        """
-        Calculate feature values according to current state
-        :param state: current state of the parser
-        :return dict of feature name -> numeric value
-        """
-        numeric_features, non_numeric_features = self.feature_extractor.extract_features(state, self.params)
-        features = {NumericFeatureParameters.SUFFIX: numeric_features}
-        for suffix, values in non_numeric_features:
-            param = self.params[suffix]
-            features[suffix] = values if param.indexed else [param.data[v] for v in values]
-            # assert all(isinstance(f, int) for f in features[suffix]),\
-            #     "Invalid feature numbers for '%s': %s" % (suffix, features[suffix])
-        return features
-
     def init_features(self, state):
         """
         Calculates feature values for all items in initial state
@@ -75,6 +60,21 @@ class FeatureEnumerator(FeatureExtractorWrapper):
             features[suffix] = [param.data[v] for v in values]
             assert all(isinstance(f, int) for f in features[suffix]),\
                 "Invalid feature numbers for '%s': %s" % (suffix, features[suffix])
+        return features
+
+    def extract_features(self, state):
+        """
+        Calculate feature values according to current state
+        :param state: current state of the parser
+        :return dict of feature name -> numeric value
+        """
+        numeric_features, non_numeric_features = self.feature_extractor.extract_features(state, self.params)
+        features = {NumericFeatureParameters.SUFFIX: numeric_features}
+        for suffix, values in non_numeric_features:
+            param = self.params[suffix]
+            features[suffix] = values if param.indexed else [param.data[v] for v in values]
+            # assert all(isinstance(f, int) for f in features[suffix]),\
+            #     "Invalid feature numbers for '%s': %s" % (suffix, features[suffix])
         return features
 
     def filename_suffix(self):

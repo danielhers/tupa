@@ -17,19 +17,9 @@ class FeatureIndexer(FeatureExtractorWrapper):
             feature_extractor.params = params
 
     def extract_features(self, state):
-        """
-        Calculate feature values according to current state
-        :param state: current state of the parser
-        :return dict of feature name -> numeric value
-        """
         return self.feature_extractor.extract_features(state)
 
     def init_features(self, state):
-        """
-        Calculates feature values for all items in initial state
-        :param state: initial state of the parser
-        :return dict of property name -> sequence of values
-        """
         return self.feature_extractor.init_features(state)
 
     def filename_suffix(self):

@@ -6,6 +6,8 @@ from ucca.layer1 import EdgeTags
 FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lruLRU]*)([wtepqxyAPCIR]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile("^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 
+MISSING_VALUE = -1
+
 
 class FeatureTemplate(object):
     """
