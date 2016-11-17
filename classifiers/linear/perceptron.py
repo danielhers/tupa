@@ -1,7 +1,6 @@
 import time
 
-from classifier import ClassifierProperty
-from classifiers.classifier import Classifier
+from classifiers.classifier import Classifier, ClassifierProperty
 
 
 class Perceptron(Classifier):
