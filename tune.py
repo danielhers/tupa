@@ -66,7 +66,7 @@ def main():
         ("importance",      (1, 2)),
         ("earlyupdate",     6 * [False] + [True]),
         ("iterations",      range(1, 31)),
-        ("worddropout",     (0, .1, .2, .25, .3)),
+        # ("worddropout",     (0, .1, .2, .25, .3)),
         ("dynet_l2",        (1e-7, 1e-6, 1e-5, 1e-4)),
         ("dropout",         (0, .1, .2, .3, .4, .5)),
     )

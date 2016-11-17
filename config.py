@@ -101,7 +101,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--maxpuncts", type=int, default=5, help="maximum number of punctuations for embeddings")
         group.add_argument("--maxgaps", type=int, default=3, help="maximum number of gap types to keep embeddings for")
         group.add_argument("--maxactions", type=int, default=10, help="maximum number of action types for embeddings")
-        group.add_argument("--worddropout", type=float, default=0.3, help="word dropout parameter")
+        group.add_argument("--worddropout", type=float, default=0, help="word dropout parameter")
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter for all inputs")
         group.add_argument("--saveeverybatch", action="store_true", help="save model every training batch")
         group = argparser.add_argument_group(title="DyNet parameters")
