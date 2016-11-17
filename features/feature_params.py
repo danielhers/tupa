@@ -3,7 +3,7 @@ from copy import copy
 
 
 class FeatureParameters(object):
-    def __init__(self, suffix, dim, size, dropout=0, num=1, init=None, data=None):
+    def __init__(self, suffix, dim, size, dropout=0, num=1, init=None, data=None, indexed=False):
         self.suffix = suffix
         self.dim = dim
         self.size = size
@@ -11,6 +11,7 @@ class FeatureParameters(object):
         self.num = num
         self.init = init
         self.data = data
+        self.indexed = indexed
         self.counts = Counter() if self.dropout else None
 
     def __repr__(self):

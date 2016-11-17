@@ -1,4 +1,5 @@
-from features.feature_extractor import FeatureExtractor
+from features.feature_extractor import FeatureExtractor, MISSING_VALUE
+
 
 NON_NUMERIC_FEATURE_SUFFIXES = "wtepxA"
 FEATURE_TEMPLATES = (
@@ -78,9 +79,12 @@ class DenseFeatureExtractor(FeatureExtractor):
                        list of (suffix, value) pairs for all non-numeric features)
         """
         numeric_features = [1, state.node_ratio()] + \
-            self.calc_feature(self.numeric_features_template, state, default=-1)
-        non_numeric_features = [(f.suffix, self.calc_feature(f, state, default=""))
-                                for f in self.non_numeric_feature_templates]
+            self.calc_feature(self.numeric_features_template, state, default=MISSING_VALUE)
+        non_numeric_features = []
+        for f in self.non_numeric_feature_templates:
+            indexed = params is not None and params[f.suffix].indexed
+            non_numeric_features.append((f.suffix, self.calc_feature(
+                f, state, default=MISSING_VALUE if indexed else "", indexed=indexed)))
         # assert len(numeric_features) == self.num_features_numeric(), \
         #     "Invalid number of numeric features: %d != %d" % (
         #         len(numeric_features), self.num_features_numeric())
