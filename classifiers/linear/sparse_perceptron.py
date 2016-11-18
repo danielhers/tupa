@@ -1,9 +1,9 @@
-import numpy as np
 from collections import defaultdict
 
+import numpy as np
+
 from linear.perceptron import Perceptron
-from parsing import config
-from parsing.config import Config
+from parsing.config import Config, SPARSE_PERCEPTRON
 
 
 class FeatureWeights(object):
@@ -66,7 +66,7 @@ class SparsePerceptron(Perceptron):
         :param min_update: minimum number of updates to a feature required for consideration
         :param model: if given, copy the weights (from a trained model)
         """
-        super(SparsePerceptron, self).__init__(config.SPARSE_PERCEPTRON, *args, model=model, epoch=epoch)
+        super(SparsePerceptron, self).__init__(SPARSE_PERCEPTRON, *args, model=model, epoch=epoch)
         model = defaultdict(lambda: FeatureWeights(self.num_labels))
         if self.is_frozen:
             model.update(self.model)
