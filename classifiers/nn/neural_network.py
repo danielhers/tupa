@@ -32,6 +32,8 @@ ACTIVATIONS = {
     "relu": dy.rectify,
 }
 
+EMPTY_INDEX = 1  # used as index into lookup table for "padding" when a feature is missing
+
 
 class NeuralNetwork(Classifier):
     """

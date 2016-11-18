@@ -1,11 +1,12 @@
 from features.feature_params import FeatureParameters
-from parsing import config
 from parsing.action import Actions
-from parsing.config import Config
+from parsing.config import Config, SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP_NN, BILSTM_NN
 
 
 class Model(object):
     def __init__(self, model_type, filename, labels=None, feature_extractor=None, model=None):
+        if model_type is None:
+            model_type = SPARSE_PERCEPTRON
         self.model_type = model_type
         self.filename = filename
         if feature_extractor is not None and model is not None:
@@ -13,22 +14,22 @@ class Model(object):
             self.model = model
             return
 
-        if model_type == config.SPARSE_PERCEPTRON:
+        if model_type == SPARSE_PERCEPTRON:
             from features.sparse_features import SparseFeatureExtractor
             from linear.sparse_perceptron import SparsePerceptron
             self.feature_extractor = SparseFeatureExtractor()
             self.model = SparsePerceptron(filename, labels)
-        elif model_type == config.DENSE_PERCEPTRON:
+        elif model_type == DENSE_PERCEPTRON:
             from features.embedding import FeatureEmbedding
             from linear.dense_perceptron import DensePerceptron
             self.feature_extractor = self.dense_features_wrapper(FeatureEmbedding)
             self.model = DensePerceptron(filename, labels, num_features=self.feature_extractor.num_features())
-        elif model_type == config.MLP_NN:
+        elif model_type == MLP_NN:
             from features.enumerator import FeatureEnumerator
             from nn.feedforward import MLP
             self.feature_extractor = self.dense_features_wrapper(FeatureEnumerator)
             self.model = MLP(filename, labels, input_params=self.feature_extractor.params)
-        elif model_type == config.BILSTM_NN:
+        elif model_type == BILSTM_NN:
             from features.enumerator import FeatureEnumerator
             from features.indexer import FeatureIndexer
             from nn.bilstm import BiLSTM

@@ -1,18 +1,14 @@
 import dynet as dy
 from classifiers.classifier import ClassifierProperty
 
-from nn.neural_network import NeuralNetwork
-from parsing import config
-from parsing.config import Config
-
-
-EMPTY_INDEX = 1  # used as index into lookup table for "padding" when a feature is missing
+from nn.neural_network import NeuralNetwork, EMPTY_INDEX
+from parsing.config import Config, BILSTM_NN
 
 
 class BiLSTM(NeuralNetwork):
 
     def __init__(self, *args, **kwargs):
-        super(BiLSTM, self).__init__(config.BILSTM_NN, *args, **kwargs)
+        super(BiLSTM, self).__init__(BILSTM_NN, *args, **kwargs)
         self._lstm_layers = Config().args.lstmlayers
         self._lstm_layer_dim = Config().args.lstmlayerdim
         self._input_reps = None
@@ -26,7 +22,8 @@ class BiLSTM(NeuralNetwork):
     def init_features(self, features, train=False):
         self.init_cg()
         # TODO add e.g. 2 to x so as to skip the unknown and EMPTY_INDEX?
-        embeddings = [[self._params[s][x] for s, xs in sorted(features.items()) for x in xs]]  # time-lists of vectors
+        embeddings = [[self._params[s][x]
+                       for s, xs in sorted(features.items()) for x in xs]]  # list of time-lists of vectors
         embeddings = [dy.concatenate(list(e)) for e in zip(*embeddings)]  # one list: join each time step to one vector
         bilstm = self._params["bilstm"]
         if train:

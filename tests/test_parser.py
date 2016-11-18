@@ -2,8 +2,7 @@
 
 import unittest
 
-from parsing import config
-from parsing.config import Config
+from parsing.config import Config, SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP_NN, BILSTM_NN
 from parsing.oracle import Oracle
 from parsing.parse import Parser
 from states.state import State
@@ -32,16 +31,16 @@ class ParserTests(unittest.TestCase):
             self.assertSequenceEqual(actions_taken, f.readlines())
 
     def test_parser_sparse(self):
-        self.train_test(config.SPARSE_PERCEPTRON)
+        self.train_test(SPARSE_PERCEPTRON)
 
     def test_parser_dense(self):
-        self.train_test(config.DENSE_PERCEPTRON)
+        self.train_test(DENSE_PERCEPTRON)
 
     def test_parser_mlp(self):
-        self.train_test(config.MLP_NN)
+        self.train_test(MLP_NN)
 
     def test_parser_bilstm(self):
-        self.train_test(config.BILSTM_NN)
+        self.train_test(BILSTM_NN)
 
     def train_test(self, model_type, compare=True):
         passages = [self.passage]

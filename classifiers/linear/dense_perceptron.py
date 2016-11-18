@@ -1,7 +1,7 @@
 import numpy as np
 
 from linear.perceptron import Perceptron
-from parsing import config
+from parsing.config import DENSE_PERCEPTRON
 
 
 class DensePerceptron(Perceptron):
@@ -19,7 +19,7 @@ class DensePerceptron(Perceptron):
         :param num_features: number of features that will be used for the matrix size
         :param model: if given, copy the weights (from a trained model)
         """
-        super(DensePerceptron, self).__init__(config.DENSE_PERCEPTRON, *args, model=model, epoch=epoch)
+        super(DensePerceptron, self).__init__(DENSE_PERCEPTRON, *args, model=model, epoch=epoch)
         if not self.is_frozen:
             self._num_labels = self.num_labels
             self.input_dim = num_features
