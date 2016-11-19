@@ -31,7 +31,7 @@ class FeatureEnumerator(FeatureExtractorWrapper):
         vocab = ()
         try:
             param.dim = int(param.dim)
-        except ValueError | TypeError:
+        except (ValueError, TypeError):
             w2v = load_word2vec(param.dim)
             vocab = w2v.vocab
             if param.size is None or param.size == 0:
@@ -44,22 +44,15 @@ class FeatureEnumerator(FeatureExtractorWrapper):
             param.init = np.vstack((unknown, weights))
         param.data = DropoutDict(max_size=param.size, keys=vocab, dropout=param.dropout)
 
-    def init_features(self, state):
-        """
-        Calculates feature values for all items in initial state
-        :param state: initial state of the parser
-        :return dict of property name -> list of values
-        """
+    def init_features(self, state, suffixes):
         features = {}
-        for suffix, values in self.feature_extractor.init_features(state).items():
-            if values is None:
-                continue
-            param = self.params[suffix]
-            if not param.indexed:
-                continue
-            features[suffix] = [param.data[v] for v in values]
-            assert all(isinstance(f, int) for f in features[suffix]),\
-                "Invalid feature numbers for '%s': %s" % (suffix, features[suffix])
+        for suffix, values in self.feature_extractor.init_features(state, suffixes).items():
+            if values is not None:
+                param = self.params[suffix]
+                assert param.indexed, "Cannot initialize non-indexed parameter '%s'" % suffix
+                features[suffix] = [param.data[v] for v in values]
+                assert all(isinstance(f, int) for f in features[suffix]),\
+                    "Invalid feature numbers for '%s': %s" % (suffix, features[suffix])
         return features
 
     def extract_features(self, state):
@@ -76,6 +69,9 @@ class FeatureEnumerator(FeatureExtractorWrapper):
             # assert all(isinstance(f, int) for f in features[suffix]),\
             #     "Invalid feature numbers for '%s': %s" % (suffix, features[suffix])
         return features
+
+    def collapse_features(self, suffixes):
+        self.feature_extractor.collapse_features(suffixes)
 
     def filename_suffix(self):
         return "_enum"

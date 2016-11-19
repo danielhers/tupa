@@ -7,6 +7,7 @@ from collections import OrderedDict
 
 import dynet as dy
 from classifiers.classifier import Classifier
+from features.feature_params import MISSING_VALUE
 from parsing.config import Config
 
 TRAINERS = {
@@ -31,8 +32,6 @@ ACTIVATIONS = {
     "sigmoid": dy.logistic,
     "relu": dy.rectify,
 }
-
-EMPTY_INDEX = 1  # used as index into lookup table for "padding" when a feature is missing
 
 
 class NeuralNetwork(Classifier):
@@ -63,7 +62,10 @@ class NeuralNetwork(Classifier):
         self._optimizer = TRAINERS[self._optimizer_str]
         self._num_labels = self.num_labels
         self._params = OrderedDict()
+        self._empty_values = OrderedDict()
         self._input_params = input_params
+        self._indexed_num = None
+        self._indexed_dim = None
         self._losses = []
         self._iteration = 0
         self._trainer = None
@@ -75,19 +77,24 @@ class NeuralNetwork(Classifier):
     def resize(self):
         assert self.num_labels <= self.max_num_labels, "Exceeded maximum number of labels"
 
-    def evaluate(self, features, train=False):
-        raise NotImplementedError()
+    def evaluate(self, *args, **kwargs):
+        self.init_cg()
+        return self.evaluate_mlp(*args, **kwargs)
 
     def init_model(self):
         self.model = dy.Model()
         self._trainer = self._optimizer(self.model, )
-        input_dim = self.init_inputs()
-        self.init_mlp(input_dim)
+        input_dim = self.init_input_params()
+        self.init_mlp_params(input_dim)
 
-    def init_inputs(self):
+    def init_input_params(self):
+        """
+        Initialize lookup parameters and any other parameters that process the input (e.g. LSTMs)
+        :return: total output dimension of inputs
+        """
         input_dim = 0
-        indexed_dim = 0
-        indexed_num = 0
+        self._indexed_dim = 0
+        self._indexed_num = 0
         for suffix, param in sorted(self._input_params.items()):
             if not param.numeric and param.dim > 0:  # lookup feature
                 p = self.model.add_lookup_parameters((param.size, param.dim))
@@ -95,16 +102,19 @@ class NeuralNetwork(Classifier):
                     p.init_from_array(param.init)
                 self._params[suffix] = p
             if param.indexed:
-                indexed_dim += param.dim
-                indexed_num = max(indexed_num, param.num)  # indices to be looked up are collected
+                self._indexed_dim += param.dim
+                self._indexed_num = max(self._indexed_num, param.num)  # indices to be looked up are collected
             else:
                 input_dim += param.num * param.dim
-        return input_dim + self.init_extra_inputs(indexed_dim, indexed_num)
+        return input_dim + self.init_indexed_input_params()
 
-    def init_extra_inputs(self, dim, num):
-        return dim * num
+    def init_indexed_input_params(self):
+        """
+        :return: total output dimension of indexed features
+        """
+        return self._indexed_dim * self._indexed_num
 
-    def init_mlp(self, input_dim):
+    def init_mlp_params(self, input_dim):
         for i in range(1, self._layers + 1):
             in_dim = input_dim if i == 1 else self._layer_dim
             out_dim = self._layer_dim if i < self._layers else self.max_num_labels
@@ -116,6 +126,18 @@ class NeuralNetwork(Classifier):
             self.init_model()
         if not self._losses:
             dy.renew_cg()
+        for suffix, param in sorted(self._input_params.items()):
+            if not param.numeric and param.dim > 0:  # lookup feature
+                self._empty_values[suffix] = self.empty_rep(param.dim)
+
+    @staticmethod
+    def empty_rep(dim):
+        """
+        Representation for missing elements
+        :param dim: dimension of vector to return
+        :return: zero vector (an alternative could be to learn this value, as in e.g. Kiperwasser and Goldberg 2016)
+        """
+        return dy.inputVector(np.zeros(dim, dtype=float))
 
     def generate_inputs(self, features):
         indices = []  # list, not set, in order to maintain consistent order
@@ -125,17 +147,24 @@ class NeuralNetwork(Classifier):
                 yield dy.inputVector(values)
             elif param.dim > 0:
                 if param.indexed:  # collect indices to be looked up
-                    indices += [i for i in values if i not in indices]  # TODO handle missing values (do not add)
+                    indices += values  # FeatureIndexer collapsed the features so there are no repetitions between them
                 else:
-                    yield dy.reshape(self._params[suffix].batch(values), (param.num * param.dim,))
+                    yield dy.concatenate([self._empty_values[suffix] if x == MISSING_VALUE else self._params[suffix][x]
+                                          for x in values])
         if indices:
+            assert len(indices) == self._indexed_num, "Wrong number of index features: %d != %d" % (
+                len(indices), self._indexed_num)
             yield self.index_input(indices)
 
-    def index_input(self, values):
-        pass
+    def index_input(self, indices):
+        """
+        :param indices: indices of inputs
+        :return: feature values at given indices
+        """
+        raise Exception("Input representations not initialized, cannot evaluate indexed features")
 
     def evaluate_mlp(self, features, train=False):
-        x = dy.concatenate(list(self.generate_inputs(features)))
+        x = dy.concatenate(list(self.generate_inputs(features)))  # FIXME why 'A', 'x', 'p', 'e' are all 1? and why does 'numeric' contain -1?
         for i in range(1, self._layers + 1):
             W = dy.parameter(self._params["W%d" % i])
             b = dy.parameter(self._params["b%d" % i])

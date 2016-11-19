@@ -1,6 +1,9 @@
 from collections import Counter
 from copy import copy
 
+MISSING_VALUE = -1
+UNKNOWN_VALUE = 0
+
 
 class FeatureParameters(object):
     def __init__(self, suffix, dim, size, dropout=0, num=1, init=None, data=None, indexed=False):

@@ -1,5 +1,5 @@
-from features.feature_extractor import FeatureExtractor, MISSING_VALUE
-
+from features.feature_extractor import FeatureExtractor
+from features.feature_params import MISSING_VALUE
 
 NON_NUMERIC_FEATURE_SUFFIXES = "wtepxA"
 FEATURE_TEMPLATES = (
@@ -70,6 +70,9 @@ class DenseFeatureExtractor(FeatureExtractor):
                     feature_template)
             self.non_numeric_by_suffix[feature_template.suffix] = feature_template
 
+    def init_features(self, state, suffixes):
+        return {s: [self.get_prop(None, n, None, s, state) for n in state.terminals] for s in suffixes}
+
     def extract_features(self, state, params=None):
         """
         Calculate feature values according to current state
@@ -97,11 +100,14 @@ class DenseFeatureExtractor(FeatureExtractor):
         #             "Numeric value %s for non-numeric feature element %s" % (value, element)
         return numeric_features, non_numeric_features
 
-    def init_features(self, state):
-        properties = set(p for t in self.non_numeric_feature_templates
-                         for e in t.elements for p in e.properties if p != "A")
-        return {p: [self.get_prop(None, n, None, p, state)
-                    for n in state.terminals] for p in properties}
+    def collapse_features(self, suffixes):
+        longest_suffix = max(suffixes, key=lambda s: len(self.non_numeric_by_suffix[s].elements))
+        longest = self.non_numeric_by_suffix[longest_suffix]
+        for suffix in suffixes:
+            if suffix != longest_suffix:
+                template = self.non_numeric_by_suffix.get(suffix)
+                if template is not None:
+                    template.elements = [e for e in template.elements if e not in longest.elements]
 
     def num_features_numeric(self):
         assert self.numeric_features_template is not None, \

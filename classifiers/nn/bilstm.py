@@ -1,7 +1,9 @@
+import numpy as np
+
 import dynet as dy
 from classifiers.classifier import ClassifierProperty
-
-from nn.neural_network import NeuralNetwork, EMPTY_INDEX
+from features.feature_params import MISSING_VALUE
+from nn.neural_network import NeuralNetwork
 from parsing.config import Config, BILSTM_NN
 
 
@@ -14,28 +16,34 @@ class BiLSTM(NeuralNetwork):
         self._input_reps = None
         self._empty_rep = None
 
-    def init_extra_inputs(self, dim, num):
-        self._params["bilstm"] = dy.BiRNNBuilder(self._lstm_layers, dim, self._lstm_layer_dim, self.model,
+    def init_indexed_input_params(self):
+        """
+        Initialize BiLSTM builder
+        :return: total output dimension of BiLSTM
+        """
+        self._params["bilstm"] = dy.BiRNNBuilder(self._lstm_layers, self._indexed_dim, self._lstm_layer_dim, self.model,
                                                  dy.LSTMBuilder)
-        return num * self._lstm_layer_dim
+        return self._indexed_num * self._lstm_layer_dim
 
     def init_features(self, features, train=False):
         self.init_cg()
-        # TODO add e.g. 2 to x so as to skip the unknown and EMPTY_INDEX?
-        embeddings = [[self._params[s][x]
-                       for s, xs in sorted(features.items()) for x in xs]]  # list of time-lists of vectors
+        embeddings = [[self._params[s][x] for x in xs] for s, xs in sorted(features.items())]  # time-lists of vectors
         embeddings = [dy.concatenate(list(e)) for e in zip(*embeddings)]  # one list: join each time step to one vector
         bilstm = self._params["bilstm"]
         if train:
             bilstm.set_dropout(self._dropout)
         self._input_reps = bilstm.transduce(embeddings)
-        self._empty_rep = dy.concatenate([self._params[s][EMPTY_INDEX] for s in sorted(features.keys())])
+        self._empty_rep = self.empty_rep(self._lstm_layer_dim)
 
     def index_input(self, indices):
-        return dy.concatenate([self._input_reps[i] if i > 0 else self._empty_rep for i in indices])
+        """
+        :param indices: indices of inputs
+        :return: BiLSTM outputs at given indices
+        """
+        return dy.concatenate([self._empty_rep if i == MISSING_VALUE else self._input_reps[i] for i in indices])
 
-    def evaluate(self, features, train=False):
-        return self.evaluate_mlp(features, train)
+    def evaluate(self, *args, **kwargs):
+        return self.evaluate_mlp(*args, **kwargs)  # no init_cg here since it is performed in init_features
 
     def save_extra(self):
         return {

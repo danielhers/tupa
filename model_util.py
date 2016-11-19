@@ -5,6 +5,8 @@ import numpy as np
 import os
 from collections import defaultdict, Counter
 
+from features.feature_params import UNKNOWN_VALUE
+
 
 class UnknownDict(defaultdict):
     """
@@ -33,11 +35,11 @@ class AutoIncrementDict(UnknownDict):
     """
     def __init__(self, max_size=None, keys=(), d=None):
         """
-        :param max_size: maximum index to allow, after which 0 will be returned
+        :param max_size: maximum index to allow, after which `unknown' will be returned
         :param keys: initial sequence of keys
         :param d: dictionary to initialize from
         """
-        super(AutoIncrementDict, self).__init__({} if d is None else d, unknown=0)
+        super(AutoIncrementDict, self).__init__({} if d is None else d, unknown=UNKNOWN_VALUE)
         self.max = max_size
         for key in keys:
             self.__missing__(key)
