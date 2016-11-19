@@ -6,8 +6,6 @@ from ucca.layer1 import EdgeTags
 FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lruLRU]*)([wtepqxyAPCIR]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile("^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 
-MISSING_VALUE = -1
-
 
 class FeatureTemplate(object):
     """
@@ -70,6 +68,9 @@ class FeatureTemplateElement(object):
     def __str__(self):
         return self.source + str(self.index) + self.relatives + self.properties
 
+    def __eq__(self, other):
+        return self.source == other.source and self.index == other.index and self.relatives == other.relatives
+
 
 class FeatureExtractor(object):
     """
@@ -93,10 +94,18 @@ class FeatureExtractor(object):
         """
         raise NotImplementedError()
 
-    def init_features(self, state):
+    def init_features(self, state, suffixes=None):
         """
         Calculate feature values for initial state
         :param state: initial state of the parser
+        :param suffixes: feature suffixes to include
+        """
+        pass
+
+    def collapse_features(self, suffixes):
+        """
+        For each set of features referring to the same node, with the given properties,
+         leave only one of them.
         """
         pass
 

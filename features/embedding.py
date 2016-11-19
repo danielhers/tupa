@@ -28,9 +28,9 @@ class FeatureEmbedding(FeatureExtractorWrapper):
             param.data[UnknownDict.UNKNOWN]  # Initialize unknown value
         else:  # Otherwise, not a number but a string with path to word vectors file
             w2v = load_word2vec(param.dim)
-            unk = Config().random.normal(size=w2v.vector_size)
+            unknown = np.mean([w2v[x] for x in w2v.vocab], axis=0)
             param.dim = w2v.vector_size
-            param.data = UnknownDict({x: w2v[x] for x in w2v.vocab}, unk)
+            param.data = UnknownDict({x: w2v[x] for x in w2v.vocab}, unknown)
 
     def extract_features(self, state):
         """

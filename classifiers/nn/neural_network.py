@@ -3,6 +3,7 @@ from keras import regularizers
 from keras.models import model_from_json
 
 from classifiers.classifier import Classifier
+from features.feature_params import MISSING_VALUE
 from parsing.config import Config
 
 
