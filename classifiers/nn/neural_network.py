@@ -214,6 +214,8 @@ class NeuralNetwork(Classifier):
             self._iteration += 1
         if finished_epoch:
             self._trainer.update_epoch()
+        if Config().args.verbose:
+            self._trainer.status()
         return self
 
     def save_model(self):
