@@ -164,7 +164,7 @@ class NeuralNetwork(Classifier):
         raise Exception("Input representations not initialized, cannot evaluate indexed features")
 
     def evaluate_mlp(self, features, train=False):
-        x = dy.concatenate(list(self.generate_inputs(features)))  # FIXME why 'A', 'x', 'p', 'e' are all 1? and why does 'numeric' contain -1?
+        x = dy.concatenate(list(self.generate_inputs(features)))
         for i in range(1, self._layers + 1):
             W = dy.parameter(self._params["W%d" % i])
             b = dy.parameter(self._params["b%d" % i])

@@ -1,6 +1,7 @@
 import numpy as np
 
 from features.feature_extractor_wrapper import FeatureExtractorWrapper
+from features.feature_params import MISSING_VALUE
 from features.feature_params import NumericFeatureParameters
 from parsing.model_util import DropoutDict
 from parsing.w2v_util import load_word2vec
@@ -50,6 +51,7 @@ class FeatureEnumerator(FeatureExtractorWrapper):
             if values is not None:
                 param = self.params[suffix]
                 assert param.indexed, "Cannot initialize non-indexed parameter '%s'" % suffix
+                assert MISSING_VALUE not in values, "Missing value occurred in feature initialization: '%s'" % suffix
                 features[suffix] = [param.data[v] for v in values]
                 assert all(isinstance(f, int) for f in features[suffix]),\
                     "Invalid feature numbers for '%s': %s" % (suffix, features[suffix])
@@ -65,7 +67,7 @@ class FeatureEnumerator(FeatureExtractorWrapper):
         features = {NumericFeatureParameters.SUFFIX: numeric_features}
         for suffix, values in non_numeric_features:
             param = self.params[suffix]
-            features[suffix] = values if param.indexed else [param.data[v] for v in values]
+            features[suffix] = values if param.indexed else [v if v == MISSING_VALUE else param.data[v] for v in values]
             # assert all(isinstance(f, int) for f in features[suffix]),\
             #     "Invalid feature numbers for '%s': %s" % (suffix, features[suffix])
         return features

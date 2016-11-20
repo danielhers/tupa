@@ -82,7 +82,7 @@ class DenseFeatureExtractor(FeatureExtractor):
                        list of (suffix, value) pairs for all non-numeric features)
         """
         numeric_features = [1, state.node_ratio()] + \
-            self.calc_feature(self.numeric_features_template, state, default=MISSING_VALUE)
+            self.calc_feature(self.numeric_features_template, state, default=0)
         non_numeric_features = []
         for f in self.non_numeric_feature_templates:
             indexed = params is not None and params[f.suffix].indexed

@@ -1,9 +1,10 @@
-from collections import defaultdict
 from numbers import Number
 
 import numpy as np
+from collections import defaultdict
 
 from features.feature_extractor_wrapper import FeatureExtractorWrapper
+from features.feature_params import MISSING_VALUE
 from features.feature_params import NumericFeatureParameters
 from parsing.config import Config
 from parsing.model_util import UnknownDict
@@ -31,6 +32,7 @@ class FeatureEmbedding(FeatureExtractorWrapper):
             unknown = np.mean([w2v[x] for x in w2v.vocab], axis=0)
             param.dim = w2v.vector_size
             param.data = UnknownDict({x: w2v[x] for x in w2v.vocab}, unknown)
+        param.empty = np.zeros(param.dim, dtype=float)
 
     def extract_features(self, state):
         """
@@ -43,7 +45,7 @@ class FeatureEmbedding(FeatureExtractorWrapper):
         for suffix, values in non_numeric_features:
             param = self.params[suffix]
             self.init_data(param)
-            features += [param.data[v] for v in values]
+            features += [param.empty if v == MISSING_VALUE else param.data[v] for v in values]
         # assert sum(map(len, features)) == self.num_features(),\
         #     "Invalid total number of features: %d != %d " % (
         #         sum(map(len, features)), self.num_features())
