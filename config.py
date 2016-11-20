@@ -154,5 +154,9 @@ class Config(object, metaclass=Singleton):
         if self._log_file is not None:
             self._log_file.close()
 
+    def update(self, params):
+        for name, value in params.items():
+            setattr(self.args, name, value)
+
     def __str__(self):
         return " ".join("%s=%s" % item for item in sorted(vars(self.args).items()))

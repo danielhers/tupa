@@ -36,6 +36,7 @@ class Parser(object):
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
         self.ignore_node = lambda n: n.tag == layer1.NodeTags.Linkage if Config().args.nolinkage else None
         self.best_score = self.dev = self.iteration = self.batch = None
+        self.dev_scores = []
 
     def train(self, passages, dev=None, iterations=1):
         """
@@ -69,6 +70,7 @@ class Parser(object):
             self.dev, scores = zip(*[(p, evaluate_passage(pred, p))
                                      for pred, p in list(self.parse(self.dev, mode="dev"))])
             scores = evaluation.Scores.aggregate(scores)
+            self.dev_scores.append(scores)
             score = scores.average_f1()
             print("Average labeled F1 score on dev: %.3f" % score)
             if Config().args.devscores:
@@ -306,7 +308,16 @@ class Parser(object):
 
 
 def train_test(train_passages, dev_passages, test_passages, args, model_suffix=""):
-    scores = None
+    """
+    Train and test parser on given passage
+    :param train_passages: passage to train on
+    :param dev_passages: passages to evaluate on every iteration
+    :param test_passages: passages to test on after training
+    :param args: extra argument
+    :param model_suffix: string to append to model filename before file extension
+    :return: pair of (test scores, list of dev scores per iteration) where each one is a Scores object
+    """
+    test_scores = None
     train = bool(train_passages)
     model_base, model_ext = os.path.splitext(args.model or "ucca_" + args.classifier)
     p = Parser(model_file=model_base + model_suffix + model_ext, model_type=args.classifier, beam=args.beam)
@@ -324,14 +335,14 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
             if guessed_passage is not None and not args.nowrite:
                 passage_util.write_passage(guessed_passage, args)
         if passage_scores and (not args.verbose or len(passage_scores) > 1):
-            scores = evaluation.Scores.aggregate(passage_scores)
-            print("\nAverage labeled F1 score on test: %.3f" % scores.average_f1())
+            test_scores = evaluation.Scores.aggregate(passage_scores)
+            print("\nAverage labeled F1 score on test: %.3f" % test_scores.average_f1())
             print("Aggregated scores:")
-            scores.print()
+            test_scores.print()
             if Config().args.testscores:
                 with open(Config().args.testscores, "a") as f:
-                    print(",".join(scores.fields()), file=f)
-    return scores
+                    print(",".join(test_scores.fields()), file=f)
+    return test_scores, p.dev_scores
 
 
 def evaluate_passage(guessed_passage, ref_passage):
@@ -345,7 +356,8 @@ def evaluate_passage(guessed_passage, ref_passage):
 def main():
     args = Config().args
     print("Running parser with %s" % Config())
-    scores = None
+    test_scores = None
+    dev_scores = None
     if Config().args.testscores:
         with open(Config().args.testscores, "w") as f:
             print(",".join(evaluation.Scores.field_titles()), file=f)
@@ -364,20 +376,20 @@ def main():
             train_passages = [passage for fold in folds
                               if fold is not dev_passages and fold is not test_passages
                               for passage in fold]
-            s = train_test(train_passages, dev_passages, test_passages, args, "_%d" % i)
+            s, _ = train_test(train_passages, dev_passages, test_passages, args, "_%d" % i)
             if s is not None:
                 fold_scores.append(s)
         if fold_scores:
-            scores = evaluation.Scores.aggregate(fold_scores)
+            test_scores = evaluation.Scores.aggregate(fold_scores)
             print("Average labeled test F1 score for each fold: " + ", ".join(
                 "%.3f" % s.average_f1() for s in fold_scores))
             print("Aggregated scores across folds:\n")
-            scores.print()
+            test_scores.print()
     else:  # Simple train/dev/test by given arguments
         train_passages, dev_passages, test_passages = [passage_util.read_files_and_dirs(arg) for arg in
                                                        (args.train, args.dev, args.passages)]
-        scores = train_test(train_passages, dev_passages, test_passages, args)
-    return scores
+        test_scores, dev_scores = train_test(train_passages, dev_passages, test_passages, args)
+    return test_scores, dev_scores
 
 
 if __name__ == "__main__":
