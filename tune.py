@@ -13,30 +13,39 @@ from ucca.evaluation import Scores
 class Params(object):
     def __init__(self, params):
         self.params = params
-        self.scores = None
+        self.test_scores = None
+        self.dev_scores = ()
 
     def run(self):
         assert Config().args.train and Config().args.passages or Config().args.folds, \
             "insufficient parameters given to parser"
         print("Running with %s" % self)
         Config().update(self.params)
-        self.scores = parse.main()
-        assert self.score is not None, "parser failed to produce score"
+        self.test_scores, self.dev_scores = parse.main()
 
     def score(self):
-        return -float("inf") if self.scores is None else self.scores.average_f1()
+        return -float("inf") if self.test_scores is None else self.test_scores.average_f1()
 
     def __str__(self):
         ret = ", ".join("%s: %s" % (name, value) for name, value in self.params.items())
-        if self.scores is not None:
+        if self.test_scores is not None:
             ret += ", average labeled f1: %.3f" % self.score()
         return ret
 
     def get_fields(self):
-        return [str(p) for p in self.params.values()] + [str(self.score())] + self.scores.fields()
+        return [str(p) for p in self.params.values()] + [str(self.score())] + self.test_scores.fields()
 
     def get_field_titles(self):
         return [p for p in self.params.keys()] + ["average_labeled_f1"] + Scores.field_titles()
+
+    def write_scores(self, writer):
+        for i, scores in enumerate(self.dev_scores):
+            writer.writerow([str((i + 1) if n == "iterations" else p) for n, p in self.params.items()] +
+                            [str(scores.average_f1())] + scores.fields())
+        if self.test_scores is not None and (not self.dev_scores or
+                                             self.test_scores.fields() != self.dev_scores[-1].fields()):
+            writer.writerow([str(p) for p in self.params.values()] +
+                            [str(self.test_scores.average_f1())] + self.test_scores.fields())
 
 
 def main():
@@ -82,7 +91,7 @@ def main():
     for param in params:
         param.run()
         with open(out_file, "a") as f:
-            csv.writer(f).writerow(param.get_fields())
+            param.write_scores(csv.writer(f))
         best = max(params, key=Params.score)
         print("Best parameters: %s" % best)
 
