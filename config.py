@@ -95,7 +95,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--batchsize", type=int, default=10, help="evaluate on dev every this many passages")
         group.add_argument("--minibatchsize", type=int, default=200, help="mini-batch size for optimization")
         group.add_argument("--optimizer", choices=OPTIMIZERS, default=OPTIMIZERS[0], help="algorithm for optimization")
-        group.add_argument("--maxwords", default=10000, help="maximum number of words to keep embeddings for")
+        group.add_argument("--maxwords", type=int, default=10000, help="maximum number of words to keep embeddings for")
         group.add_argument("--maxtags", type=int, default=100, help="maximum number of POS tags to keep embeddings for")
         group.add_argument("--maxedgelabels", type=int, default=15, help="maximum number of edge labels for embeddings")
         group.add_argument("--maxpuncts", type=int, default=5, help="maximum number of punctuations for embeddings")
