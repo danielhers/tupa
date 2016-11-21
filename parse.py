@@ -161,7 +161,7 @@ class Parser(object):
             print(Config().line_end, end="")
             if train:
                 print(Config().line_end, flush=True)
-            self.model.finish(train=train)
+            self.model.model.finished_item(train=train)
             self.total_correct += self.correct_count
             self.total_actions += self.action_count
             if train and Config().args.saveeverybatch and (i+1) % Config().args.batchsize == 0:
@@ -216,8 +216,8 @@ class Parser(object):
                     true_actions[self.scores[[a.id for a in true_actions]].argmax()]
                 self.model.model.update(features, predicted_action.id, best_true_action.id,
                                         Config().args.importance if best_true_action.is_swap else 1)
-            self.model.advance()
             self.action_count += 1
+            self.model.finished_step(train=train)
             try:
                 self.state.transition(action)
             except AssertionError as e:
