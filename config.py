@@ -112,15 +112,6 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--dynet-gpu-ids", help="the GPUs that you want to use by device ID")
         group.add_argument("--dynet-viz", action="store_true", help="visualize NN and exit")
         self.args = argparser.parse_args(args if args else None)
-
-        assert self.args.passages or self.args.train,\
-            "Either passages or --train is required (use -h for help)"
-        assert self.args.model or self.args.train or self.args.folds,\
-            "Either --model or --train or --folds is required"
-        assert not (self.args.train or self.args.dev) or self.args.folds is None,\
-            "--train and --dev are incompatible with --folds"
-        assert self.args.train or not self.args.dev,\
-            "--dev is only possible together with --train"
         
         if self.args.model:
             if not self.args.log:

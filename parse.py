@@ -44,8 +44,9 @@ class Parser(object):
         self.ignore_node = lambda n: n.tag == layer1.NodeTags.Linkage if Config().args.nolinkage else None
         self.best_score = self.dev = self.iteration = self.batch = None
         self.dev_scores = []
+        self.trained = False
 
-    def train(self, passages, dev=None, iterations=1):
+    def train(self, passages=(), dev=None, iterations=1):
         """
         Train parser on given passages
         :param passages: iterable of passages to train on
@@ -68,6 +69,7 @@ class Parser(object):
             print("Trained %d iterations" % iterations)
         if dev or not passages:
             self.model.load()
+        self.trained = True
 
     def eval_and_save(self, last=False, finished_epoch=False):
         model = self.model
@@ -108,8 +110,10 @@ class Parser(object):
         :return: generator of parsed passages (or in train mode, the original ones),
                  or, if evaluate=True, of pairs of (Passage, Scores).
         """
-        train = (mode is ParseMode.train)
         assert mode in ParseMode, "Invalid parse mode: %s" % mode
+        train = (mode is ParseMode.train)
+        if not train and not self.trained:
+            self.train()
         passage_word = "sentence" if Config().args.sentences else \
                        "paragraph" if Config().args.paragraphs else \
                        "passage"
@@ -117,6 +121,8 @@ class Parser(object):
         self.total_correct = 0
         total_duration = 0
         total_tokens = 0
+        if not hasattr(passages, "__iter__"):  # Single passage given
+            passages = (passages,)
         for i, passage in enumerate(passages):
             l0 = passage.layer(layer0.LAYER_ID)
             num_tokens = len(l0.all)
@@ -368,6 +374,10 @@ def shuffle(passages):
 
 def main():
     args = Config().args
+    assert args.passages or args.train,"Either passages or --train is required (use -h for help)"
+    assert args.model or args.train or args.folds,"Either --model or --train or --folds is required"
+    assert not (args.train or args.dev) or args.folds is None, "--train and --dev are incompatible with --folds"
+    assert args.train or not args.dev, "--dev is only possible together with --train"
     print("Running parser with %s" % Config())
     test_scores = None
     dev_scores = None
