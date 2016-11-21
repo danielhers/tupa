@@ -111,15 +111,6 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--saveeverybatch", action="store_true", help="save model every training batch")
         group.add_argument("--saveeveryepoch", action="store_true", help="save model every training epoch")
         self.args = argparser.parse_args(args if args else None)
-
-        assert self.args.passages or self.args.train,\
-            "Either passages or --train is required (use -h for help)"
-        assert self.args.model or self.args.train or self.args.folds,\
-            "Either --model or --train or --folds is required"
-        assert not (self.args.train or self.args.dev) or self.args.folds is None,\
-            "--train and --dev are incompatible with --folds"
-        assert self.args.train or not self.args.dev,\
-            "--dev is only possible together with --train"
         
         if self.args.model:
             if not self.args.log:
