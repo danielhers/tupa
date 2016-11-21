@@ -1,6 +1,7 @@
-import os
 import time
+from enum import Enum
 
+import os
 from nltk import pos_tag
 
 from classifiers.classifier import ClassifierProperty
@@ -15,6 +16,12 @@ from ucca import diffutil, evaluation, layer0, layer1
 
 class ParserException(Exception):
     pass
+
+
+class ParseMode(Enum):
+    train = 1
+    dev = 2
+    test = 3
 
 
 class Parser(object):
@@ -55,7 +62,7 @@ class Parser(object):
             for self.iteration in range(1, iterations + 1):
                 self.batch = 0
                 print("Training iteration %d of %d: " % (self.iteration, iterations))
-                passages = [passage for _, passage in self.parse(passages, mode="train")]
+                passages = [passage for _, passage in self.parse(passages, mode=ParseMode.train)]
                 self.eval_and_save(self.iteration == iterations, finished_epoch=True)
                 Config().random.shuffle(passages)
             print("Trained %d iterations" % iterations)
@@ -68,7 +75,7 @@ class Parser(object):
         if self.dev:
             print("Evaluating on dev passages")
             self.dev, scores = zip(*[(p, evaluate_passage(pred, p))
-                                     for pred, p in list(self.parse(self.dev, mode="dev"))])
+                                     for pred, p in list(self.parse(self.dev, mode=ParseMode.dev))])
             scores = evaluation.Scores.aggregate(scores)
             self.dev_scores.append(scores)
             score = scores.average_f1()
@@ -90,19 +97,17 @@ class Parser(object):
         if not last:
             self.model = model  # Restore non-finalized model
 
-    def parse(self, passages, mode="test"):
+    def parse(self, passages, mode=ParseMode.test):
         """
         Parse given passages
         :param passages: iterable of passages to parse
-        :param mode: "train", "test" or "dev".
-                     If "train", use oracle to train on given passages.
+        :param mode: ParseMode value.
+                     If train, use oracle to train on given passages.
                      Otherwise, just parse with classifier.
         :return: generator of pairs of (parsed passage, original passage)
         """
-        train = mode == "train"
-        dev = mode == "dev"
-        test = mode == "test"
-        assert train or dev or test, "Invalid parse mode: %s" % mode
+        train = (mode is ParseMode.train)
+        assert mode in ParseMode, "Invalid parse mode: %s" % mode
         passage_word = "sentence" if Config().args.sentences else \
                        "paragraph" if Config().args.paragraphs else \
                        "passage"
@@ -133,7 +138,7 @@ class Parser(object):
                 if train:
                     raise
                 Config().log("%s %s: %s" % (passage_word, passage.ID, e))
-                if not test:
+                if mode is not ParseMode.test:
                     print("failed")
                 failed = True
             predicted_passage = passage
@@ -170,7 +175,7 @@ class Parser(object):
                 print("Overall %d%% correct transitions (%d/%d) on %s" %
                       (100 * self.total_correct / self.total_actions,
                        self.total_correct, self.total_actions,
-                       mode))
+                       mode.name))
             print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
                 total_duration, passage_word, total_duration / num_passages,
                 total_tokens / total_duration), flush=True)
