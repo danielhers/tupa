@@ -205,6 +205,8 @@ class NeuralNetwork(Classifier):
         :return self
         """
         super(NeuralNetwork, self).finalize()
+        if self.model is None:
+            self.init_model()
         if self._losses:
             loss = -dy.esum(self._losses)
             loss.forward()
