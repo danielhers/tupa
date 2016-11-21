@@ -163,7 +163,7 @@ class Parser(object):
                 print(Config().line_end, flush=True)
             self.total_correct += self.correct_count
             self.total_actions += self.action_count
-            if train and Config().args.saveeverybatch and i % Config().args.batchsize == 0:
+            if train and Config().args.saveeverybatch and (i+1) % Config().args.batchsize == 0:
                 self.eval_and_save()
                 self.batch += 1
             yield (predicted_passage, evaluate_passage(predicted_passage, passage)) if evaluate else predicted_passage

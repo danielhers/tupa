@@ -92,7 +92,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--activation", choices=ACTIVATIONS, default=ACTIVATIONS[0], help="activation function")
         group.add_argument("--init", choices=INITIALIZATIONS, default=INITIALIZATIONS[0], help="weight initialization")
         group.add_argument("--maxlabels", type=int, default=100, help="maximum number of actions to allow")
-        group.add_argument("--batchsize", type=int, default=10, help="evaluate on dev every this many passages")
+        group.add_argument("--batchsize", type=int, default=100, help="evaluate on dev every this many passages")
         group.add_argument("--minibatchsize", type=int, default=200, help="mini-batch size for optimization")
         group.add_argument("--optimizer", choices=OPTIMIZERS, default=OPTIMIZERS[0], help="algorithm for optimization")
         group.add_argument("--maxwords", type=int, default=10000, help="maximum number of words to keep embeddings for")
