@@ -62,9 +62,9 @@ class Parser(object):
             for self.iteration in range(1, iterations + 1):
                 self.batch = 0
                 print("Training iteration %d of %d: " % (self.iteration, iterations))
-                passages = [passage for _, passage in self.parse(passages, mode=ParseMode.train)]
+                list(self.parse(passages, mode=ParseMode.train))
                 self.eval_and_save(self.iteration == iterations, finished_epoch=True)
-                Config().random.shuffle(passages)
+                shuffle(passages)
             print("Trained %d iterations" % iterations)
         if dev or not passages:
             self.model.load()
@@ -74,8 +74,7 @@ class Parser(object):
         self.model = self.model.finalize(finished_epoch=finished_epoch)
         if self.dev:
             print("Evaluating on dev passages")
-            self.dev, scores = zip(*[(p, evaluate_passage(pred, p))
-                                     for pred, p in list(self.parse(self.dev, mode=ParseMode.dev))])
+            scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev, evaluate=True)]
             scores = evaluation.Scores.aggregate(scores)
             self.dev_scores.append(scores)
             score = scores.average_f1()
@@ -97,14 +96,17 @@ class Parser(object):
         if not last:
             self.model = model  # Restore non-finalized model
 
-    def parse(self, passages, mode=ParseMode.test):
+    def parse(self, passages, mode=ParseMode.test, evaluate=False):
         """
         Parse given passages
         :param passages: iterable of passages to parse
         :param mode: ParseMode value.
                      If train, use oracle to train on given passages.
                      Otherwise, just parse with classifier.
-        :return: generator of pairs of (parsed passage, original passage)
+        :param evaluate: whether to evaluate parsed passages with respect to given ones.
+                         Only possible when given passages are annotated.
+        :return: generator of parsed passages (or in train mode, the original ones),
+                 or, if evaluate=True, of pairs of (Passage, Scores).
         """
         train = (mode is ParseMode.train)
         assert mode in ParseMode, "Invalid parse mode: %s" % mode
@@ -115,13 +117,13 @@ class Parser(object):
         self.total_correct = 0
         total_duration = 0
         total_tokens = 0
-        num_passages = 0
-        for passage in passages:
+        for i, passage in enumerate(passages):
             l0 = passage.layer(layer0.LAYER_ID)
             num_tokens = len(l0.all)
             l1 = passage.layer(layer1.LAYER_ID)
             labeled = len(l1.all) > 1
             assert not train or labeled, "Cannot train on unannotated passage"
+            assert not evaluate or labeled, "Cannot evaluate on unannotated passage"
             print("%s %-7s" % (passage_word, passage.ID), end=Config().line_end, flush=True)
             started = time.time()
             self.action_count = 0
@@ -141,9 +143,8 @@ class Parser(object):
                 if mode is not ParseMode.test:
                     print("failed")
                 failed = True
-            predicted_passage = passage
-            if not train or Config().args.verify:
-                predicted_passage = self.state.create_passage(assert_proper=Config().args.verify)
+            predicted_passage = self.state.create_passage(assert_proper=Config().args.verify) \
+                if not train or Config().args.verify else passage
             duration = time.time() - started
             total_duration += duration
             num_tokens -= len(self.state.buffer)
@@ -163,24 +164,23 @@ class Parser(object):
             self.model.finish(train=train)
             self.total_correct += self.correct_count
             self.total_actions += self.action_count
-            num_passages += 1
-            if train and Config().args.saveeverybatch and num_passages % Config().args.batchsize == 0:
+            if train and Config().args.saveeverybatch and i % Config().args.batchsize == 0:
                 self.eval_and_save()
                 self.batch += 1
-            yield predicted_passage, passage
+            yield (predicted_passage, evaluate_passage(predicted_passage, passage)) if evaluate else predicted_passage
 
-        if num_passages > 1:
-            print("Parsed %d %ss" % (num_passages, passage_word))
+        if len(passages) > 1:
+            print("Parsed %d %ss" % (len(passages), passage_word))
             if self.oracle and self.total_actions:
                 print("Overall %d%% correct transitions (%d/%d) on %s" %
                       (100 * self.total_correct / self.total_actions,
                        self.total_correct, self.total_actions,
                        mode.name))
             print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
-                total_duration, passage_word, total_duration / num_passages,
+                total_duration, passage_word, total_duration / len(passages),
                 total_tokens / total_duration), flush=True)
 
-    def parse_passage(self, train=False):
+    def parse_passage(self, train):
         """
         Internal method to parse a single passage
         :param train: use oracle to train on given passages, or just parse with classifier?
@@ -323,7 +323,6 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
     :return: pair of (test scores, list of dev scores per iteration) where each one is a Scores object
     """
     test_scores = None
-    train = bool(train_passages)
     model_base, model_ext = os.path.splitext(args.model or "ucca_" + args.classifier)
     p = Parser(model_file=model_base + model_suffix + model_ext, model_type=args.classifier, beam=args.beam)
     p.train(train_passages, dev=dev_passages, iterations=args.iterations)
@@ -331,11 +330,13 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
         if args.train or args.folds:
             print("Evaluating on test passages")
         passage_scores = []
-        for guessed_passage, ref_passage in p.parse(test_passages):
-            if args.evaluate or train:
-                score = evaluate_passage(guessed_passage, ref_passage)
+        evaluate = args.evaluate or train_passages
+        for result in p.parse(test_passages, evaluate=evaluate):
+            if evaluate:
+                guessed_passage, score = result
                 passage_scores.append(score)
             else:
+                guessed_passage = result
                 print()
             if guessed_passage is not None and not args.nowrite:
                 passage_util.write_passage(guessed_passage, args)
@@ -358,6 +359,13 @@ def evaluate_passage(guessed_passage, ref_passage):
     return score
 
 
+def shuffle(passages):
+    try:
+        passages.shuffle()  # A LazyLoadedPassages implements its own shuffle method
+    except AttributeError:
+        Config().random.shuffle(passages)
+
+
 def main():
     args = Config().args
     print("Running parser with %s" % Config())
@@ -372,7 +380,7 @@ def main():
         all_passages = list(passage_util.read_files_and_dirs(args.passages))
         assert len(all_passages) >= k,\
             "%d folds are not possible with only %d passages" % (k, len(all_passages))
-        Config().random.shuffle(all_passages)
+        shuffle(all_passages)
         folds = [all_passages[i::k] for i in range(k)]
         for i in range(k):
             print("Fold %d of %d:" % (i + 1, k))

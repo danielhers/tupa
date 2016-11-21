@@ -46,13 +46,9 @@ class ParserTests(unittest.TestCase):
             print("-- %sing %s" % (mode, model_type))
             p = Parser(model_file="test_files/%s" % model_type, model_type=model_type)
             p.train(passages if mode == "train" else None)
-            guess, ref = zip(*list(p.parse(passages)))
+            score = evaluation.Scores.aggregate([s for _, s in p.parse(passages, evaluate=True)])
+            scores.append(round(score.average_f1(), 1))
             print()
-            self.assertSequenceEqual(ref, passages)
-            score = evaluation.Scores.aggregate([evaluation.evaluate(
-                g, r, verbose=False, units=False, errors=False)
-                                                 for g, r in zip(guess, ref)])
-            scores.append(score.average_f1())
-        print("-- average labeled f1: %.3f, %.3f\n" % tuple(scores))
+        print("-- average labeled f1: %.1f, %.1f\n" % tuple(scores))
         if compare:
             self.assertEqual(*scores)
