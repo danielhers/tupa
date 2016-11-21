@@ -69,6 +69,7 @@ class NeuralNetwork(Classifier):
         self._losses = []
         self._iteration = 0
         self._trainer = None
+        self._value = None  # For caching the result of _evaluate
 
     @property
     def input_dim(self):
@@ -77,15 +78,12 @@ class NeuralNetwork(Classifier):
     def resize(self):
         assert self.num_labels <= self.max_num_labels, "Exceeded maximum number of labels"
 
-    def evaluate(self, *args, **kwargs):
-        self.init_cg()
-        return self.evaluate_mlp(*args, **kwargs)
-
     def init_model(self):
         self.model = dy.Model()
         self._trainer = self._optimizer(self.model, )
         input_dim = self.init_input_params()
         self.init_mlp_params(input_dim)
+        self.init_cg()
 
     def init_input_params(self):
         """
@@ -122,10 +120,7 @@ class NeuralNetwork(Classifier):
             self._params["b%d" % i] = self.model.add_parameters(out_dim, init=self._init)
 
     def init_cg(self):
-        if self.model is None:
-            self.init_model()
-        if not self._losses:
-            dy.renew_cg()
+        dy.renew_cg()
         for suffix, param in sorted(self._input_params.items()):
             if not param.numeric and param.dim > 0:  # lookup feature
                 self._empty_values[suffix] = self.empty_rep(param.dim)
@@ -173,6 +168,13 @@ class NeuralNetwork(Classifier):
             x = self._activation(W * x + b)
         return dy.log_softmax(x, restrict=list(range(self.num_labels)))
 
+    def evaluate(self, *args, **kwargs):
+        if self.model is None:
+            self.init_model()
+        if self._value is None:
+            self._value = self.evaluate_mlp(*args, **kwargs)
+        return self._value
+
     def score(self, features):
         """
         Calculate score for each label
@@ -193,11 +195,16 @@ class NeuralNetwork(Classifier):
         super(NeuralNetwork, self).update(features, pred, true, importance)
         for _ in range(int(importance)):
             self._losses.append(dy.pick(self.evaluate(features, train=True), true))
-            if len(self._losses) >= self._minibatch_size:
-                self.finalize()
             if Config().args.dynet_viz:
                 dy.print_graphviz()
                 sys.exit(0)
+
+    def finished_step(self):
+        self._value = None
+
+    def finished_item(self):
+        if len(self._losses) >= self._minibatch_size:
+            self.finalize()
 
     def finalize(self, finished_epoch=False):
         """
@@ -212,6 +219,7 @@ class NeuralNetwork(Classifier):
             loss.forward()
             loss.backward()
             self._trainer.update()
+            self.init_cg()
             self._losses = []
             self._iteration += 1
         if finished_epoch:

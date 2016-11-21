@@ -1,5 +1,3 @@
-import numpy as np
-
 import dynet as dy
 from classifiers.classifier import ClassifierProperty
 from features.feature_params import MISSING_VALUE
@@ -26,7 +24,8 @@ class BiLSTM(NeuralNetwork):
         return self._indexed_num * self._lstm_layer_dim
 
     def init_features(self, features, train=False):
-        self.init_cg()
+        if self.model is None:
+            self.init_model()
         embeddings = [[self._params[s][x] for x in xs] for s, xs in sorted(features.items())]  # time-lists of vectors
         embeddings = [dy.concatenate(list(e)) for e in zip(*embeddings)]  # one list: join each time step to one vector
         bilstm = self._params["bilstm"]
@@ -41,9 +40,6 @@ class BiLSTM(NeuralNetwork):
         :return: BiLSTM outputs at given indices
         """
         return dy.concatenate([self._empty_rep if i == MISSING_VALUE else self._input_reps[i] for i in indices])
-
-    def evaluate(self, *args, **kwargs):
-        return self.evaluate_mlp(*args, **kwargs)  # no init_cg here since it is performed in init_features
 
     def save_extra(self):
         return {
