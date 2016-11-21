@@ -13,7 +13,8 @@ from ucca.tests.test_ucca import TestUtil
 class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ParserTests, self).__init__(*args, **kwargs)
-        Config("", "-m", "test", "--layerdim", "100", "--layers", "1", "--lstmlayerdim", "100", "--lstmlayers", "1")
+        Config("", "-m", "test", "-I", "2",
+               "--layerdim", "100", "--layers", "1", "--lstmlayerdim", "100", "--lstmlayers", "1")
         self.passage = convert.from_standard(TestUtil.load_xml("test_files/standard3.xml"))
 
     def test_oracle(self):
@@ -43,7 +44,7 @@ class ParserTests(unittest.TestCase):
         self.train_test(BILSTM_NN)
 
     def train_test(self, model_type, compare=True):
-        passages = [self.passage]
+        passages = [self.passage] * 2
         scores = []
         for mode in "train", "load":
             print("-- %sing %s" % (mode, model_type))
