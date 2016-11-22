@@ -199,12 +199,15 @@ class NeuralNetwork(Classifier):
                 dy.print_graphviz()
                 sys.exit(0)
 
-    def finished_step(self):
+    def finished_step(self, train=False):
         self._value = None
 
-    def finished_item(self):
+    def finished_item(self, train=False):
         if len(self._losses) >= self._minibatch_size:
             self.finalize()
+        elif not train:
+            self.init_cg()
+        self.finished_step(train)
 
     def finalize(self, finished_epoch=False):
         """

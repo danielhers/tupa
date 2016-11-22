@@ -59,13 +59,13 @@ class Classifier(object):
         assert not self.is_frozen, "Cannot freeze a frozen model"
         self._update_num_labels()
 
-    def finished_step(self):
+    def finished_step(self, train=False):
         """
         Called by the parser when a single step is finished
         """
         pass
 
-    def finished_item(self):
+    def finished_item(self, train=False):
         """
         Called by the parser when a whole item is finished
         """
