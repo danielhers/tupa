@@ -46,7 +46,7 @@ class Parser(object):
         self.dev_scores = []
         self.trained = False
 
-    def train(self, passages=(), dev=None, iterations=1):
+    def train(self, passages=None, dev=None, iterations=1):
         """
         Train parser on given passages
         :param passages: iterable of passages to train on
@@ -54,6 +54,7 @@ class Parser(object):
         :param iterations: number of iterations to perform
         :return: trained model
         """
+        self.trained = True
         if passages:
             self.best_score = 0
             self.dev = dev
@@ -69,7 +70,6 @@ class Parser(object):
             print("Trained %d iterations" % iterations)
         if dev or not passages:
             self.model.load()
-        self.trained = True
 
     def eval_and_save(self, last=False, finished_epoch=False):
         model = self.model
