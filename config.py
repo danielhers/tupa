@@ -93,6 +93,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--init", choices=INITIALIZATIONS, default=INITIALIZATIONS[0], help="weight initialization")
         group.add_argument("--maxlabels", type=int, default=100, help="maximum number of actions to allow")
         group.add_argument("--batchsize", type=int, default=10, help="fit model every this many passages")
+        group.add_argument("--saveevery", type=int, help="every this many passages, evaluate on dev and save model")
         group.add_argument("--minibatchsize", type=int, default=200, help="mini-batch size for optimization")
         group.add_argument("--nbepochs", type=int, default=5, help="number of epochs for optimization")
         group.add_argument("--optimizer", choices=OPTIMIZERS, default=OPTIMIZERS[0], help="algorithm for optimization")
@@ -108,7 +109,6 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--worddropout", type=float, default=0.3, help="word dropout parameter")
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter for all inputs")
         group.add_argument("--validationsplit", type=float, default=0.1, help="ratio of train set to use as validation")
-        group.add_argument("--saveeverybatch", action="store_true", help="save model every training batch")
         group.add_argument("--saveeveryepoch", action="store_true", help="save model every training epoch")
         self.args = argparser.parse_args(args if args else None)
         

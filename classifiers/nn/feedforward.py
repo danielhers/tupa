@@ -78,7 +78,7 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
                 self._samples[name].append(value)
             self._samples["out"].append(true)
 
-    def finish(self, train=False):
+    def finished_item(self, train=False):
         """
         Mark the current item as finished.  Fit the model if reached the batch size.
         :param train: fit the model if batch size reached?

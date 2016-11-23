@@ -42,7 +42,7 @@ class Parser(object):
         self.state_hash_history = None  # For loop checking
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
         self.ignore_node = lambda n: n.tag == layer1.NodeTags.Linkage if Config().args.nolinkage else None
-        self.best_score = self.dev = self.iteration = self.batch = None
+        self.best_score = self.dev = self.iteration = self.eval_index = None
         self.dev_scores = []
         self.trained = False
 
@@ -62,7 +62,7 @@ class Parser(object):
                 with open(Config().args.devscores, "w") as f:
                     print(",".join(["iteration"] + evaluation.Scores.field_titles()), file=f)
             for self.iteration in range(1, iterations + 1):
-                self.batch = 0
+                self.eval_index = 0
                 print("Training iteration %d of %d: " % (self.iteration, iterations))
                 list(self.parse(passages, mode=ParseMode.train))
                 self.eval_and_save(self.iteration == iterations, finished_epoch=True)
@@ -83,8 +83,8 @@ class Parser(object):
             print("Average labeled F1 score on dev: %.3f" % score)
             if Config().args.devscores:
                 prefix = [self.iteration]
-                if Config().args.saveeverybatch:
-                    prefix.append(self.batch)
+                if Config().args.saveevery:
+                    prefix.append(self.eval_index)
                 with open(Config().args.devscores, "a") as f:
                     print(",".join([".".join(map(str, prefix))] + scores.fields()), file=f)
             if score >= self.best_score:
@@ -93,7 +93,7 @@ class Parser(object):
                 self.model.save()
             else:
                 print("Not better than previous best score (%.3f)" % self.best_score)
-        elif last or Config().args.saveeverybatch:
+        elif last or Config().args.saveevery is not None:
             self.model.save()
         if not last:
             self.model = model  # Restore non-finalized model
@@ -170,9 +170,9 @@ class Parser(object):
             self.model.model.finished_item(train=train)
             self.total_correct += self.correct_count
             self.total_actions += self.action_count
-            if train and Config().args.saveeverybatch and (i+1) % Config().args.batchsize == 0:
+            if train and Config().args.saveevery and (i+1) % Config().args.saveevery == 0:
                 self.eval_and_save()
-                self.batch += 1
+                self.eval_index += 1
             yield (predicted_passage, evaluate_passage(predicted_passage, passage)) if evaluate else predicted_passage
 
         if len(passages) > 1:

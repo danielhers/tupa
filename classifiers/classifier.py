@@ -49,14 +49,14 @@ class Classifier(object):
             self._num_labels = self.num_labels
             self.resize()
 
-    def finish(self, train=False):
+    def finished_item(self, train=False):
         """
         Mark the current item as finished.  Fit the model if reached the batch size.
         :param train: fit the model if batch size reached?
         """
         pass
 
-    def advance(self):
+    def finished_step(self, train=False):
         """
         Mark the current time step as finished.
         """
@@ -68,18 +68,6 @@ class Classifier(object):
     def finalize(self, *args, **kwargs):
         assert not self.is_frozen, "Cannot freeze a frozen model"
         self._update_num_labels()
-
-    def finished_step(self):
-        """
-        Called by the parser when a single step is finished
-        """
-        pass
-
-    def finished_item(self):
-        """
-        Called by the parser when a whole item is finished
-        """
-        pass
 
     def save(self):
         """
