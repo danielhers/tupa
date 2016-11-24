@@ -64,7 +64,7 @@ class FeatureEnumerator(FeatureExtractorWrapper):
         numeric_features, non_numeric_features = self.feature_extractor.extract_features(state, self.params)
         features = {NumericFeatureParameters.SUFFIX: numeric_features}
         for suffix, param in self.params.items():
-            if param.dim:
+            if param.dim and (param.copy_from is None or not param.indexed):
                 values = non_numeric_features.get(param.effective_suffix)
                 if values is not None:
                     features[suffix] = values if param.indexed else \
