@@ -23,15 +23,17 @@ class FeatureEmbedding(FeatureExtractorWrapper):
     def init_data(self, param):
         if param.data is not None or isinstance(param, NumericFeatureParameters):
             return
-        param.num = self.feature_extractor.num_features_non_numeric(param.suffix)
-        if isinstance(param.dim, Number):  # Dimensions given as a number, not as a file to load
-            param.data = defaultdict(lambda d=param.dim: Config().random.normal(size=d))
-            param.data[UnknownDict.UNKNOWN]  # Initialize unknown value
-        else:  # Otherwise, not a number but a string with path to word vectors file
-            w2v = load_word2vec(param.dim)
-            unknown = np.mean([w2v[x] for x in w2v.vocab], axis=0)
-            param.dim = w2v.vector_size
-            param.data = UnknownDict({x: w2v[x] for x in w2v.vocab}, unknown)
+        param.num = self.feature_extractor.num_features_non_numeric(param.effective_suffix)
+        if param.dim:
+            try:
+                param.dim = int(param.dim)
+                param.data = defaultdict(lambda d=param.dim: Config().random.normal(size=d))
+                param.data[UnknownDict.UNKNOWN]  # Initialize unknown value
+            except (ValueError, TypeError):  # Not a number but a string with path to word vectors file
+                w2v = load_word2vec(param.dim)
+                unknown = np.mean([w2v[x] for x in w2v.vocab], axis=0)
+                param.dim = w2v.vector_size
+                param.data = UnknownDict({x: w2v[x] for x in w2v.vocab}, unknown)
         param.empty = np.zeros(param.dim, dtype=float)
 
     def extract_features(self, state):
@@ -42,10 +44,12 @@ class FeatureEmbedding(FeatureExtractorWrapper):
         """
         numeric_features, non_numeric_features = self.feature_extractor.extract_features(state)
         features = [np.array(numeric_features, dtype=float)]
-        for suffix, values in non_numeric_features:
-            param = self.params[suffix]
-            self.init_data(param)
-            features += [param.empty if v == MISSING_VALUE else param.data[v] for v in values]
+        for suffix, param in sorted(self.params.items()):
+            if param.dim:
+                values = non_numeric_features.get(param.effective_suffix)
+                if values is not None:
+                    self.init_data(param)
+                    features += [param.empty if v == MISSING_VALUE else param.data[v] for v in values]
         # assert sum(map(len, features)) == self.num_features(),\
         #     "Invalid total number of features: %d != %d " % (
         #         sum(map(len, features)), self.num_features())
@@ -54,8 +58,9 @@ class FeatureEmbedding(FeatureExtractorWrapper):
     def num_features(self):
         ret = 0
         for param in self.params.values():
-            self.init_data(param)
-            ret += param.dim * param.num
+            if param.dim:
+                self.init_data(param)
+                ret += param.dim * param.num
         return ret
 
     def filename_suffix(self):

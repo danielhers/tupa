@@ -60,9 +60,11 @@ def main():
     num = int(os.environ.get("PARAMS_NUM", 30))
     np.random.seed()
     domains = (
-        ("seed", 2147483647),
+        ("seed",            2147483647),  # max value for int
         ("classifier",      100 * [config.FEEDFORWARD_NN] + list(config.CLASSIFIERS)),
-        ("wordvectors",     [50, 100, 200, 300] + [load_word2vec(f) for f in w2v_files]),
+        ("wordvectors",     [None] + [load_word2vec(f) for f in w2v_files]),
+        ("updatewordvectors", [True, False]),
+        ("worddim",         [50, 100, 200, 300]),
         ("tagdim",          (5, 10, 20)),
         ("labeldim",        (5, 10, 20)),
         ("punctdim",        (1, 2, 3)),
@@ -84,6 +86,7 @@ def main():
         ("normalize",       (False, True)),
         ("regularizer",     [None] + 3 * [config.REGULARIZERS[-1]] + list(config.REGULARIZERS)),
         ("regularization",  (1e-7, 1e-6, 1e-5, 1e-4)),
+        ("worddropoutexternal", (0, .1, .2, .25, .3)),
         ("dropout",         (0, .1, .2, .3, .4, .5)),
     )
     params = [Params(OrderedDict(p))
