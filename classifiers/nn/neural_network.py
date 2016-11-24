@@ -94,17 +94,18 @@ class NeuralNetwork(Classifier):
         self._indexed_dim = 0
         self._indexed_num = 0
         for suffix, param in sorted(self._input_params.items()):
-            if not param.numeric and param.dim:  # lookup feature
-                p = self.model.add_lookup_parameters((param.size, param.dim))
-                p.set_updated(param.updated)
-                if param.init is not None:
-                    p.init_from_array(param.init)
-                self._params[suffix] = p
-            if param.indexed:
-                self._indexed_dim += param.dim
-                self._indexed_num = max(self._indexed_num, param.num)  # indices to be looked up are collected
-            elif param.dim:
-                input_dim += param.num * param.dim
+            if param.dim:
+                if not param.numeric:  # lookup feature
+                    p = self.model.add_lookup_parameters((param.size, param.dim))
+                    p.set_updated(param.updated)
+                    if param.init is not None:
+                        p.init_from_array(param.init)
+                    self._params[suffix] = p
+                if param.indexed:
+                    self._indexed_dim += param.dim
+                    self._indexed_num = max(self._indexed_num, param.num)  # indices to be looked up are collected
+                else:
+                    input_dim += param.num * param.dim
         return input_dim + self.init_indexed_input_params()
 
     def init_indexed_input_params(self):

@@ -74,7 +74,7 @@ class FeatureEnumerator(FeatureExtractorWrapper):
         return features
 
     def collapse_features(self, suffixes):
-        self.feature_extractor.collapse_features(suffixes)
+        self.feature_extractor.collapse_features([s for s in suffixes if self.params[s].dim])
 
     def filename_suffix(self):
         return "_enum"
