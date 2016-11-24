@@ -59,15 +59,16 @@ class DropoutDict(AutoIncrementDict):
         :param dropout: dropout parameter
         """
         super(DropoutDict, self).__init__(max_size, keys, d=d)
+        assert dropout >= 0, "Dropout value must be >= 0, but given %f" % dropout
         if d is not None and isinstance(d, DropoutDict):
             self.dropout = d.dropout
-            self.counts = d.counts
+            self.counts = d.counts if self.dropout > 0 else None
         else:
             self.dropout = dropout
-            self.counts = Counter()
+            self.counts = Counter() if self.dropout > 0 else None
 
     def __getitem__(self, item):
-        if item != self.UNKNOWN:
+        if item != self.UNKNOWN and self.dropout > 0:
             self.counts[item] += 1
             if self.dropout / (self.counts[item] + self.dropout) > np.random.random_sample():
                 item = UnknownDict.UNKNOWN
