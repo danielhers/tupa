@@ -103,7 +103,7 @@ class NeuralNetwork(Classifier):
             if param.indexed:
                 self._indexed_dim += param.dim
                 self._indexed_num = max(self._indexed_num, param.num)  # indices to be looked up are collected
-            else:
+            elif param.dim:
                 input_dim += param.num * param.dim
         return input_dim + self.init_indexed_input_params()
 
