@@ -58,7 +58,9 @@ def main():
     domains = (
         ("seed",            2147483647),  # max value for int
         ("classifier",      (config.MLP_NN, config.BILSTM_NN)),
-        ("wordvectors",     [50, 100, 200, 300] + [load_word2vec(f) for f in w2v_files]),
+        ("wordvectors",     [None] + [load_word2vec(f) for f in w2v_files]),
+        ("updatewordvectors", [True, False]),
+        ("worddim",         [50, 100, 200, 300]),
         ("tagdim",          (5, 10, 20)),
         ("labeldim",        (5, 10, 20)),
         ("punctdim",        (1, 2, 3)),
@@ -77,6 +79,7 @@ def main():
         ("earlyupdate",     6 * [False] + [True]),
         ("iterations",      range(1, 31)),
         ("worddropout",     (0, .1, .2, .25, .3)),
+        ("worddropoutexternal", (0, .1, .2, .25, .3)),
         ("dynet_l2",        (1e-7, 1e-6, 1e-5, 1e-4)),
         ("dropout",         (0, .1, .2, .3, .4, .5)),
     )

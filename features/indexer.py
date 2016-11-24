@@ -1,6 +1,6 @@
 from features.feature_extractor_wrapper import FeatureExtractorWrapper
 
-INDEXED_FEATURES = "w", "t"
+INDEXED_FEATURES = "W", "w", "t"  # external word embeddings, learned word embeddings, POS tags
 
 
 class FeatureIndexer(FeatureExtractorWrapper):
@@ -18,12 +18,3 @@ class FeatureIndexer(FeatureExtractorWrapper):
         else:
             feature_extractor.params = params
         self.feature_extractor.collapse_features(INDEXED_FEATURES)
-
-    def extract_features(self, state):
-        return self.feature_extractor.extract_features(state)
-
-    def init_features(self, state):
-        return self.feature_extractor.init_features(state, INDEXED_FEATURES)
-
-    def filename_suffix(self):
-        return self.feature_extractor.filename_suffix()

@@ -18,8 +18,12 @@ class FeatureExtractorWrapper(FeatureExtractor):
         params[param.suffix] = param
         return params
 
+    def init_features(self, state):
+        return {s: self.feature_extractor.init_features(state, s)
+                for s, p in self.params.items() if p.indexed and p.dim}
+
     def extract_features(self, state):
-        raise NotImplementedError()
+        return self.feature_extractor.extract_features(state)
 
     def finalize(self):
         return self.__class__(self.feature_extractor, copy_params(self.params, UnknownDict))
@@ -31,4 +35,4 @@ class FeatureExtractorWrapper(FeatureExtractor):
         self.params.update(copy_params(load_dict(filename + self.filename_suffix()), UnknownDict))
 
     def filename_suffix(self):
-        raise NotImplementedError()
+        return self.feature_extractor.filename_suffix()

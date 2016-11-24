@@ -94,8 +94,9 @@ class NeuralNetwork(Classifier):
         self._indexed_dim = 0
         self._indexed_num = 0
         for suffix, param in sorted(self._input_params.items()):
-            if not param.numeric and param.dim > 0:  # lookup feature
+            if not param.numeric and param.dim:  # lookup feature
                 p = self.model.add_lookup_parameters((param.size, param.dim))
+                p.set_updated(param.updated)
                 if param.init is not None:
                     p.init_from_array(param.init)
                 self._params[suffix] = p
@@ -122,7 +123,7 @@ class NeuralNetwork(Classifier):
     def init_cg(self):
         dy.renew_cg()
         for suffix, param in sorted(self._input_params.items()):
-            if not param.numeric and param.dim > 0:  # lookup feature
+            if not param.numeric and param.dim:  # lookup feature
                 self._empty_values[suffix] = self.empty_rep(param.dim)
 
     @staticmethod
@@ -140,7 +141,7 @@ class NeuralNetwork(Classifier):
             param = self._input_params[suffix]
             if param.numeric:
                 yield dy.inputVector(values)
-            elif param.dim > 0:
+            elif param.dim:
                 if param.indexed:  # collect indices to be looked up
                     indices += values  # FeatureIndexer collapsed the features so there are no repetitions between them
                 else:

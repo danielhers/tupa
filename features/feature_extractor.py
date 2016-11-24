@@ -94,11 +94,11 @@ class FeatureExtractor(object):
         """
         raise NotImplementedError()
 
-    def init_features(self, state, suffixes=None):
+    def init_features(self, state, suffix=None):
         """
         Calculate feature values for initial state
         :param state: initial state of the parser
-        :param suffixes: feature suffixes to include
+        :param suffix: feature suffix to get
         """
         pass
 
