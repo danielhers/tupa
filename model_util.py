@@ -45,7 +45,7 @@ class AutoIncrementDict(UnknownDict):
             self.__missing__(key)
 
     def __missing__(self, key):
-        ret = self[key] = len(self) if self.max is not None and len(self) < self.max else self.unknown
+        ret = self[key] = len(self) + UNKNOWN_VALUE if self.max is not None and len(self) + UNKNOWN_VALUE < self.max else self.unknown
         return ret
 
 

@@ -9,33 +9,37 @@ from keras.models import Model
 from keras.utils import np_utils
 
 from nn.neural_network import NeuralNetwork
-from parsing.config import FEEDFORWARD_NN
+from parsing.config import Config, FEEDFORWARD_NN
 
 
 class FeedforwardNeuralNetwork(NeuralNetwork):
 
-    def __init__(self, *args, **kwargs):
-        super(FeedforwardNeuralNetwork, self).__init__(*args, model_type=FEEDFORWARD_NN, **kwargs)
+    def __init__(self, *args, model=None, **kwargs):
+        super(FeedforwardNeuralNetwork, self).__init__(FEEDFORWARD_NN, *args, model=model, **kwargs)
         self._samples = defaultdict(list)
 
     def init_model(self):
         if self.model is not None:
             return
-        if config.Config().args.verbose:
-            print("Input: " + self.feature_params)
+        if Config().args.verbose:
+            print("Input: " + self.input_params)
         inputs = []
         encoded = []
-        for suffix, param in self.feature_params.items():
-            x = Input(shape=(param.num,), dtype="float32" if param.numeric else "int32", name=suffix)
-            inputs.append(x)
-            if not param.numeric:  # index feature
-                x = Embedding(output_dim=param.dim, input_dim=param.size, init=self._init,
-                              weights=param.init, input_length=param.num,
-                              W_regularizer=self._regularizer())(x)
-                x = Flatten()(x)
-            if self._normalize or param.numeric:
-                x = BatchNormalization()(x)
-            encoded.append(x)
+        for suffix, param in self.input_params.items():
+            if param.dim:
+                x = Input(shape=(param.num,), dtype="float32" if param.numeric else "int32", name=suffix)
+                inputs.append(x)
+                if not param.numeric:  # index feature
+                    l = Embedding(output_dim=param.dim, input_dim=param.size, init=self._init,
+                                  weights=param.init, input_length=param.num,
+                                  W_regularizer=self._regularizer())
+                    #mask_zero=True) # TODO https://github.com/fchollet/keras/issues/2728
+                    l.trainable = param.updated
+                    x = l(x)
+                    x = Flatten()(x)
+                if self._normalize or param.numeric:
+                    x = BatchNormalization()(x)
+                encoded.append(x)
         x = merge(encoded, mode="concat")
         if self._dropout:
             x = Dropout(float(self._dropout))(x)
@@ -106,19 +110,19 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
                     x[name] = np.array(values)
             self.init_model()
             callbacks = [EarlyStopping(patience=1, verbose=1)]
-            if self.filename and config.Config().args.saveeveryepoch:
+            if self.filename and Config().args.saveeveryepoch:
                 # noinspection PyTypeChecker
                 callbacks.append(ModelCheckpoint(self.filename + ".{epoch:02d}-{val_loss:.2f}.h5",
                                                  verbose=1, save_best_only=True, save_weights_only=True))
             log = self.model.fit(x, y, batch_size=self._minibatch_size, nb_epoch=self._nb_epochs,
-                                 validation_split=config.Config().args.validationsplit, verbose=2, callbacks=callbacks)
-            config.Config().log(log.history)
+                                 validation_split=Config().args.validationsplit, verbose=2, callbacks=callbacks)
+            Config().log(log.history)
             self._samples = defaultdict(list)
             self._item_index = 0
             self._iteration += 1
             print("Done (%.3fs)." % (time.time() - started))
         if freeze:
             print("Labels: %d" % self.num_labels)
-            print("Features: %d" % sum(f.num * (f.dim or 1) for f in self.feature_params.values()))
-            return FeedforwardNeuralNetwork(self.filename, list(self.labels), model=self.model)
+            print("Features: %d" % sum(f.num * (f.dim or 1) for f in self.input_params.values()))
+            return FeedforwardNeuralNetwork(self.filename, list(self.labels), model=self.model, input_params=self.input_params)
         return None

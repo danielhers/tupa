@@ -223,7 +223,7 @@ class Parser(object):
                 self.model.model.update(features, predicted_action.id, best_true_action.id,
                                         Config().args.importance if best_true_action.is_swap else 1)
             self.action_count += 1
-            self.model.finished_step(train=train)
+            self.model.model.finished_step(train=train)
             try:
                 self.state.transition(action)
             except AssertionError as e:

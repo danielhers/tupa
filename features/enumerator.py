@@ -37,13 +37,14 @@ class FeatureEnumerator(FeatureExtractorWrapper):
                 w2v = load_word2vec(param.dim)
                 vocab = w2v.vocab
                 if param.size is None or param.size == 0:
-                    param.size = len(w2v.vocab) + 1
+                    param.size = len(w2v.vocab) + 2
                 else:
-                    vocab = list(vocab)[:param.size - 1]
+                    vocab = list(vocab)[:param.size - 2]
                 param.dim = w2v.vector_size
                 weights = np.array([w2v[x] for x in vocab])
+                missing = np.zeros((param.dim,))
                 unknown = weights.mean(axis=0)
-                param.init = (np.vstack((unknown, weights)),)
+                param.init = (np.vstack((missing, unknown, weights)),)
         param.data = DropoutDict(max_size=param.size, keys=vocab, dropout=param.dropout)
 
     def init_features(self, state, suffix):

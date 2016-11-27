@@ -5,6 +5,7 @@ from keras.models import model_from_json
 from classifiers.classifier import Classifier
 from features.feature_params import MISSING_VALUE
 from parsing.config import Config
+from parsing.model_util import load_dict, save_dict
 
 
 class NeuralNetwork(Classifier):
@@ -15,13 +16,12 @@ class NeuralNetwork(Classifier):
     Expects features from FeatureEnumerator.
     """
 
-    def __init__(self, *args, input_params):
+    def __init__(self, *args, input_params=None, model=None):
         """
         Create a new untrained NN
         :param input_params: dict of feature type name -> FeatureInformation
         """
-        super(NeuralNetwork, self).__init__(model_type=model_type, filename=filename,
-                                            labels=labels, model=model)
+        super(NeuralNetwork, self).__init__(*args)
         assert input_params is not None or model is not None
         if self.is_frozen:
             self.model = model

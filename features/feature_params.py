@@ -1,8 +1,8 @@
 from collections import Counter
 from copy import copy
 
-MISSING_VALUE = -1
-UNKNOWN_VALUE = 0
+MISSING_VALUE = 0
+UNKNOWN_VALUE = 1
 
 
 class FeatureParameters(object):
