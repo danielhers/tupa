@@ -17,8 +17,8 @@ class Params(object):
         self.dev_scores = ()
 
     def run(self):
-        assert Config().args.train and Config().args.passages or Config().args.folds, \
-            "insufficient parameters given to parser"
+        assert Config().args.train and (Config().args.passages or Config().args.dev) or \
+               Config().args.passages and Config().args.folds, "insufficient parameters given to parser"
         print("Running with %s" % self)
         Config().update(self.params)
         self.test_scores, self.dev_scores = parse.main()
