@@ -70,6 +70,8 @@ def main():
         ("layers",          [1] + 5 * [2]),
         ("lstmlayerdim",    (50, 100, 200, 300, 500, 1000)),
         ("lstmlayers",      [1] + 5 * [2]),
+        ("embeddinglayerdim", (50, 100, 200, 300, 500, 1000)),
+        ("embeddinglayers", 5 * [1] + [2]),
         ("activation",      config.ACTIVATIONS),
         ("init",            5 * [config.INITIALIZATIONS[0]] + list(config.INITIALIZATIONS)),
         ("batchsize",       (10, 30, 50, 100, 200, 500)),

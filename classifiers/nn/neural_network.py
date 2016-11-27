@@ -125,10 +125,10 @@ class NeuralNetwork(Classifier):
         dy.renew_cg()
         for suffix, param in sorted(self._input_params.items()):
             if not param.numeric and param.dim:  # lookup feature
-                self._empty_values[suffix] = self.empty_rep(param.dim)
+                self._empty_values[suffix] = self.zero_input(param.dim)
 
     @staticmethod
-    def empty_rep(dim):
+    def zero_input(dim):
         """
         Representation for missing elements
         :param dim: dimension of vector to return
@@ -161,6 +161,12 @@ class NeuralNetwork(Classifier):
         raise Exception("Input representations not initialized, cannot evaluate indexed features")
 
     def evaluate_mlp(self, features, train=False):
+        """
+        Apply MLP and log softmax to input features
+        :param features: dictionary of suffix, values for each feature type
+        :param train: whether to apply dropout
+        :return: expression corresponding to log softmax applied to MLP output
+        """
         x = dy.concatenate(list(self.generate_inputs(features)))
         for i in range(1, self._layers + 1):
             W = dy.parameter(self._params["W%d" % i])
