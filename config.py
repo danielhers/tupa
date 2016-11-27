@@ -111,7 +111,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter between layers")
         group = argparser.add_argument_group(title="DyNet parameters")
         group.add_argument("--dynet-mem", help="memory for dynet")
-        group.add_argument("--dynet-l2", type=float, help="level of l2 regularization (default 1e-6)")
+        group.add_argument("--dynet-weight-decay", type=float, help="weight decay for parameters (default 1e-6)")
         group.add_argument("--dynet-gpu", action="store_true", help="use the GPU")
         group.add_argument("--dynet-gpus", type=int, help="how many GPUs you want to use")
         group.add_argument("--dynet-gpu-ids", help="the GPUs that you want to use by device ID")
@@ -137,8 +137,8 @@ class Config(object, metaclass=Singleton):
         sys.argv += ["--dynet-seed", str(self.args.seed)]
         if self.args.dynet_mem:
             sys.argv += ["--dynet-mem", str(self.args.dynet_mem)]
-        if self.args.dynet_l2:
-            sys.argv += ["--dynet-l2", str(self.args.dynet_l2)]
+        if self.args.dynet_weight_decay:
+            sys.argv += ["--dynet-weight-decay", str(self.args.dynet_weight_decay)]
         if self.args.dynet_gpu:
             sys.argv += ["--dynet-gpu"]
         if self.args.dynet_gpus:
