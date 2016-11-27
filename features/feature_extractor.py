@@ -135,12 +135,10 @@ class FeatureExtractor(object):
                         values.append(int(prev_node in node.parents))
                 prev_elem = element
                 prev_node = node
-            elif indexed:
-                values.append(default if node is None or node.index >= len(state.terminals) else node.index)
             else:
                 prev_elem = None
                 prev_node = None
-                for p in element.properties:
+                for p in ("i",) if indexed else element.properties:
                     v = FeatureExtractor.get_prop(element, node, prev_node, p, state)
                     if v is None:
                         if default is None:
@@ -196,6 +194,7 @@ class FeatureExtractor(object):
     NODE_PROP_GETTERS = {
         "w": lambda node, _: FeatureExtractor.get_head_terminal(node).text,
         "t": lambda node, _: FeatureExtractor.get_head_terminal(node).pos_tag,
+        "i": lambda node, _: FeatureExtractor.get_head_terminal(node).index,
         "e": lambda node, prev_node: next(e.tag for e in node.incoming
                                           if prev_node is None or e.parent == prev_node),
         "x": lambda node, _: FeatureExtractor.gap_type(node),
