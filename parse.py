@@ -61,14 +61,13 @@ class Parser(object):
                 Config().random.shuffle(passages)
                 self.eval_and_save()
             print("Trained %d iterations" % iterations)
-        self.model.load()
+        if dev:
+            self.model.load()
 
     def eval_and_save(self):
         model = self.model
         self.model = self.model.finalize()
-        if not self.dev:
-            self.model.save()
-        else:
+        if self.dev:
             print("Evaluating on dev passages")
             self.dev, scores = zip(*[(p, evaluate_passage(pred, p))
                                      for pred, p in list(self.parse(self.dev, mode="dev"))])
@@ -87,6 +86,8 @@ class Parser(object):
                 self.model.save()
             else:
                 print("Not better than previous best score (%.3f)" % self.best_score)
+        elif Config().args.saveeverybatch:
+            self.model.save()
         self.model = model  # Restore non-finalized model
 
     def parse(self, passages, mode="test"):
