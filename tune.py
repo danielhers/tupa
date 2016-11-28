@@ -25,7 +25,7 @@ class Params(object):
 
     def score(self):
         return self.test_scores.average_f1() if self.test_scores is not None else \
-            self.dev_scores[-1] if self.dev_scores else -float("inf")
+            self.dev_scores[-1].average_f1() if self.dev_scores else -float("inf")
 
     def __str__(self):
         ret = ", ".join("%s: %s" % (name, value) for name, value in self.params.items())
