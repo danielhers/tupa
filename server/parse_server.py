@@ -1,4 +1,3 @@
-import logging
 from xml.etree.ElementTree import tostring
 
 from flask import Flask, request, Response, render_template
@@ -15,13 +14,13 @@ app = Flask(__name__)
 def initialize():
     config = Config()
     app.parser = Parser(config.args.model, config.args.classifier)
-    logging.info("Initialized parser")
+    app.logger.info("Initialized parser")
 
 
 @app.route("/parse", methods=["GET", "POST"])
 def parse():
     text = request.values["input"]
-    logging.info("Parsing text '%s'" % text)
+    app.logger.info("Parsing text '%s'" % text)
     in_passage = next(from_text(text))
     out_passage = next(app.parser.parse(in_passage))
     root = to_standard(out_passage)
