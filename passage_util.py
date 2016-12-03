@@ -54,7 +54,7 @@ class LazyLoadedPassages(object):
                     self._split_iter = iter(converter(self._file_handle, passage_id=base, split=Config().split))
             else:
                 print("File not found: %s" % file, file=sys.stderr)
-                return self._next_passage()
+                return next(self)
             if Config().split and self._split_iter is None:  # If it's not None, it's a converter and it splits alone
                 self._split_iter = iter(convert.split2segments(passage, is_sentences=Config().args.sentences))
         if self._split_iter is not None:  # Either set before or initialized now
@@ -65,7 +65,7 @@ class LazyLoadedPassages(object):
                 if self._file_handle is not None:
                     self._file_handle.close()
                     self._file_handle = None
-                return self._next_passage()
+                return next(self)
         return passage
 
     def __len__(self):
