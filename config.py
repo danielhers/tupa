@@ -162,11 +162,14 @@ class Config(object, metaclass=Singleton):
         return "\n" if self.args.verbose else " "  # show all in one line unless verbose
 
     def log(self, message):
-        if self._log_file is None:
-            self._log_file = open(self.args.log, "w")
-        print(message, file=self._log_file, flush=True)
-        if self.args.verbose:
-            print(message)
+        try:
+            if self._log_file is None:
+                self._log_file = open(self.args.log, "w")
+            print(message, file=self._log_file, flush=True)
+            if self.args.verbose:
+                print(message)
+        except OSError:
+            pass
 
     def close(self):
         if self._log_file is not None:

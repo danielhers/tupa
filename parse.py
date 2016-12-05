@@ -1,17 +1,16 @@
+import os
 import time
 from enum import Enum
 
-import os
 from nltk import pos_tag
 
 from classifiers.classifier import ClassifierProperty
-from parsing import passage_util
 from parsing.action import Actions
 from parsing.config import Config
 from parsing.model import Model
 from parsing.oracle import Oracle
 from states.state import State
-from ucca import diffutil, evaluation, layer0, layer1
+from ucca import diffutil, ioutil, evaluation, layer0, layer1
 
 
 class ParserException(Exception):
@@ -345,7 +344,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 guessed_passage = result
                 print()
             if guessed_passage is not None and not args.nowrite:
-                passage_util.write_passage(guessed_passage, args)
+                ioutil.write_passage(guessed_passage, args)
         if passage_scores and (not args.verbose or len(passage_scores) > 1):
             test_scores = evaluation.Scores.aggregate(passage_scores)
             print("\nAverage labeled F1 score on test: %.3f" % test_scores.average_f1())
@@ -387,7 +386,7 @@ def main():
     if args.folds is not None:
         k = args.folds
         fold_scores = []
-        all_passages = list(passage_util.read_files_and_dirs(args.passages))
+        all_passages = list(ioutil.read_files_and_dirs(args.passages))
         assert len(all_passages) >= k,\
             "%d folds are not possible with only %d passages" % (k, len(all_passages))
         shuffle(all_passages)
@@ -409,7 +408,7 @@ def main():
             print("Aggregated scores across folds:\n")
             test_scores.print()
     else:  # Simple train/dev/test by given arguments
-        train_passages, dev_passages, test_passages = [passage_util.read_files_and_dirs(arg) for arg in
+        train_passages, dev_passages, test_passages = [ioutil.read_files_and_dirs(arg) for arg in
                                                        (args.train, args.dev, args.passages)]
         test_scores, dev_scores = train_test(train_passages, dev_passages, test_passages, args)
     return test_scores, dev_scores
