@@ -13,6 +13,7 @@ from ucca.evaluation import Scores
 class Params(object):
     def __init__(self, params):
         self.params = params
+        self.params.model = "models/ucca_%s_%d" % (self.params["classifier"], self.params["seed"])
         self.test_scores = None
         self.dev_scores = ()
 
@@ -79,7 +80,7 @@ def main():
         ("optimizer",       5 * [config.OPTIMIZERS[0]] + list(config.OPTIMIZERS)),
         ("importance",      (1, 2)),
         ("earlyupdate",     6 * [False] + [True]),
-        ("iterations",      range(1, 31)),
+        ("iterations",      range(1, 51)),
         ("worddropout",     (0, .1, .2, .25, .3)),
         ("worddropoutexternal", (0, .1, .2, .25, .3)),
         ("dynet_weight_decay", (1e-7, 1e-6, 1e-5, 1e-4)),
