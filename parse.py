@@ -182,7 +182,7 @@ class Parser(object):
                        self.total_correct, self.total_actions,
                        mode.name))
             print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
-                total_duration, passage_word, total_duration / passage_index+1,
+                total_duration, passage_word, total_duration / (passage_index+1),
                 total_tokens / total_duration), flush=True)
 
     def parse_passage(self, train):
