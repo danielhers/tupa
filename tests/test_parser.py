@@ -55,4 +55,5 @@ class ParserTests(unittest.TestCase):
             print()
         print("-- average labeled f1: %.1f, %.1f\n" % tuple(scores))
         if compare:
-            self.assertEqual(*scores)
+            self.assertAlmostEqual(*scores)
+        self.assertFalse(list(p.parse(())))  # parsing nothing returns nothing
