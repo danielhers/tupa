@@ -65,7 +65,7 @@ class Parser(object):
                 print("Training iteration %d of %d: " % (self.iteration, iterations))
                 list(self.parse(passages, mode=ParseMode.train))
                 self.eval_and_save(self.iteration == iterations, finished_epoch=True)
-                shuffle(passages)
+                Config().random.shuffle(passages)
             print("Trained %d iterations" % iterations)
         if dev or not passages:
             self.model.load()
@@ -122,7 +122,7 @@ class Parser(object):
         total_tokens = 0
         if not hasattr(passages, "__iter__"):  # Single passage given
             passages = (passages,)
-        for i, passage in enumerate(passages):
+        for passage_index, passage in enumerate(passages):
             l0 = passage.layer(layer0.LAYER_ID)
             num_tokens = len(l0.all)
             l1 = passage.layer(layer1.LAYER_ID)
@@ -169,20 +169,20 @@ class Parser(object):
             self.model.model.finished_item(train=train)
             self.total_correct += self.correct_count
             self.total_actions += self.action_count
-            if train and Config().args.saveevery and (i+1) % Config().args.saveevery == 0:
+            if train and Config().args.saveevery and (passage_index+1) % Config().args.saveevery == 0:
                 self.eval_and_save()
                 self.eval_index += 1
             yield (predicted_passage, evaluate_passage(predicted_passage, passage)) if evaluate else predicted_passage
 
-        if len(passages) > 1:
-            print("Parsed %d %ss" % (len(passages), passage_word))
+        if passages:
+            print("Parsed %d %ss" % (passage_index+1, passage_word))
             if self.oracle and self.total_actions:
                 print("Overall %d%% correct transitions (%d/%d) on %s" %
                       (100 * self.total_correct / self.total_actions,
                        self.total_correct, self.total_actions,
                        mode.name))
             print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
-                total_duration, passage_word, total_duration / len(passages),
+                total_duration, passage_word, total_duration / passage_index+1,
                 total_tokens / total_duration), flush=True)
 
     def parse_passage(self, train):
@@ -364,13 +364,6 @@ def evaluate_passage(guessed_passage, ref_passage):
     return score
 
 
-def shuffle(passages):
-    try:
-        passages.shuffle()  # A LazyLoadedPassages implements its own shuffle method
-    except AttributeError:
-        Config().random.shuffle(passages)
-
-
 def main():
     args = Config().args
     assert args.passages or args.train,"Either passages or --train is required (use -h for help)"
@@ -386,10 +379,11 @@ def main():
     if args.folds is not None:
         k = args.folds
         fold_scores = []
-        all_passages = list(ioutil.read_files_and_dirs(args.passages))
+        all_passages = list(ioutil.read_files_and_dirs(args.passages,
+                                                       Config().args.sentences, Config().args.paragraphs))
         assert len(all_passages) >= k,\
             "%d folds are not possible with only %d passages" % (k, len(all_passages))
-        shuffle(all_passages)
+        Config().random.shuffle(all_passages)
         folds = [all_passages[i::k] for i in range(k)]
         for i in range(k):
             print("Fold %d of %d:" % (i + 1, k))
@@ -408,7 +402,8 @@ def main():
             print("Aggregated scores across folds:\n")
             test_scores.print()
     else:  # Simple train/dev/test by given arguments
-        train_passages, dev_passages, test_passages = [ioutil.read_files_and_dirs(arg) for arg in
+        train_passages, dev_passages, test_passages = [ioutil.read_files_and_dirs(arg,
+                                                       Config().args.sentences, Config().args.paragraphs) for arg in
                                                        (args.train, args.dev, args.passages)]
         test_scores, dev_scores = train_test(train_passages, dev_passages, test_passages, args)
     return test_scores, dev_scores

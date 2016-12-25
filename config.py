@@ -131,10 +131,6 @@ class Config(object, metaclass=Singleton):
         self.random = np.random
 
     @property
-    def split(self):
-        return self.args.sentences or self.args.paragraphs
-
-    @property
     def line_end(self):
         return "\n" if self.args.verbose else " "  # show all in one line unless verbose
 

@@ -17,6 +17,7 @@ class Params(object):
         if params["regularizer"] is None:
             params["regularization"] = None
         self.params = params
+        self.params.model = "models/ucca_%s_%d" % (self.params["classifier"], self.params["seed"])
         self.test_scores = None
         self.dev_scores = ()
 
@@ -81,7 +82,7 @@ def main():
         ("loss",            20 * [config.OBJECTIVES[0]] + list(config.OBJECTIVES)),
         ("importance",      (1, 2)),
         ("earlyupdate",     6 * [False] + [True]),
-        ("iterations",      range(1, 21)),
+        ("iterations",      range(1, 51)),
         ("worddropout",     (0, .1, .2, .25, .3)),
         ("normalize",       (False, True)),
         ("regularizer",     [None] + 3 * [config.REGULARIZERS[-1]] + list(config.REGULARIZERS)),
