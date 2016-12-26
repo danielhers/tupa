@@ -9,6 +9,8 @@ from parsing.config import Config
 from parsing.w2v_util import load_word2vec
 from ucca.evaluation import Scores
 
+MODELS_DIR = "models"
+
 
 class Params(object):
     def __init__(self, params):
@@ -17,7 +19,7 @@ class Params(object):
         if params["regularizer"] is None:
             params["regularization"] = None
         self.params = params
-        self.params["model"] = "models/ucca_%s_%d" % (self.params["classifier"], self.params["seed"])
+        self.params["model"] = "%s/ucca_%s_%d" % (MODELS_DIR, self.params["classifier"], self.params["seed"])
         self.test_scores = None
         self.dev_scores = ()
 
@@ -55,6 +57,8 @@ class Params(object):
 
 
 def main():
+    if not os.path.exists(MODELS_DIR):
+        os.makedirs(MODELS_DIR)
     Config().args.nowrite = True
     out_file = os.environ.get("PARAMS_FILE", "params.csv")
     w2v_files = [os.environ[f] for f in os.environ if f.startswith("W2V_FILE")]
