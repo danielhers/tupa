@@ -13,7 +13,7 @@ from ucca.evaluation import Scores
 class Params(object):
     def __init__(self, params):
         self.params = params
-        self.params.model = "models/ucca_%s_%d" % (self.params["classifier"], self.params["seed"])
+        self.params["model"] = "models/ucca_%s_%d" % (self.params["classifier"], self.params["seed"])
         self.test_scores = None
         self.dev_scores = ()
 
