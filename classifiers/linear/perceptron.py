@@ -94,4 +94,5 @@ class Perceptron(Classifier):
         raise NotImplementedError()
 
     def get_classifier_properties(self):
-        return ClassifierProperty.update_only_on_error,
+        return super(Perceptron, self).get_classifier_properties() + \
+               (ClassifierProperty.update_only_on_error,)

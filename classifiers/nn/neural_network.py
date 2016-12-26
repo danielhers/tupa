@@ -2,7 +2,7 @@ from keras import backend as K
 from keras import regularizers
 from keras.models import model_from_json
 
-from classifiers.classifier import Classifier
+from classifiers.classifier import Classifier, ClassifierProperty
 from features.feature_params import MISSING_VALUE
 from parsing.config import Config
 from parsing.model_util import load_dict, save_dict
@@ -101,5 +101,5 @@ class NeuralNetwork(Classifier):
                 "%d features" % self.input_dim)
 
     def get_classifier_properties(self):
-        return ()
-
+        return super(NeuralNetwork, self).get_classifier_properties() + \
+               (ClassifierProperty.trainable_after_saving,)
