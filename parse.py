@@ -363,8 +363,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
 
 def evaluate_passage(guessed_passage, ref_passage):
     score = evaluation.evaluate(guessed_passage, ref_passage,
-                                verbose=Config().args.verbose and guessed_passage is not None,
-                                units=False, errors=False)
+                                verbose=Config().args.verbose and guessed_passage is not None)
     print("F1=%.3f" % score.average_f1(), flush=True)
     return score
 
