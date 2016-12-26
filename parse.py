@@ -37,6 +37,11 @@ class Parser(object):
         self.total_actions = 0
         self.total_correct = 0
         self.model = Model(model_type, model_file, Actions().all)
+        if ClassifierProperty.trainable_after_saving in self.model.model.get_classifier_properties():
+            try:
+                self.model.load()
+            except OSError:
+                print("not found, starting from untrained model.")
         self.beam = beam  # Currently unused
         self.state_hash_history = None  # For loop checking
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:

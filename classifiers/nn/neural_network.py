@@ -1,12 +1,13 @@
+import os
 import sys
 import time
+from collections import OrderedDict
 
 import numpy as np
-import os
-from collections import OrderedDict
 
 import dynet as dy
 from classifiers.classifier import Classifier
+from classifiers.classifier import ClassifierProperty
 from features.feature_params import MISSING_VALUE
 from parsing.config import Config
 
@@ -241,10 +242,9 @@ class NeuralNetwork(Classifier):
 
     def save_model(self):
         self.finalize()
-        param_keys, param_values = zip(*self._params.items())
         d = {
             "input_params": self._input_params,
-            "param_keys": param_keys,
+            "param_keys": list(self._params.keys()),
             "layers": self._layers,
             "layer_dim": self._layer_dim,
             "activation": self._activation_str,
@@ -261,7 +261,7 @@ class NeuralNetwork(Classifier):
             pass
         print("Saving model to '%s'... " % model_filename, end="", flush=True)
         try:
-            self.model.save(model_filename, param_values)
+            self.model.save(model_filename, self._params.values())
             print("Done (%.3fs)." % (time.time() - started))
         except ValueError as e:
             print("Failed saving model: %s" % e)
@@ -291,4 +291,5 @@ class NeuralNetwork(Classifier):
             print("Failed loading model: %s" % e)
 
     def get_classifier_properties(self):
-        return ()
+        return super(NeuralNetwork, self).get_classifier_properties() + \
+               (ClassifierProperty.trainable_after_saving,)

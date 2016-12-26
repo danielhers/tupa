@@ -78,4 +78,5 @@ class BiLSTM(NeuralNetwork):
         self._lstm_layer_dim = d["lstm_layer_dim"]
 
     def get_classifier_properties(self):
-        return ClassifierProperty.require_init_features,
+        return super(BiLSTM, self).get_classifier_properties() + \
+               (ClassifierProperty.require_init_features,)
