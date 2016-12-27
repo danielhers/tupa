@@ -37,8 +37,6 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
                     l.trainable = param.updated
                     x = l(x)
                     x = Flatten()(x)
-                if self._normalize or param.numeric:
-                    x = BatchNormalization()(x)
                 encoded.append(x)
         x = merge(encoded, mode="concat")
         if self._dropout:
@@ -46,8 +44,6 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         for _ in range(self._layers):
             x = Dense(self._layer_dim, activation=self._activation, init=self._init,
                       W_regularizer=self._regularizer(), b_regularizer=self._regularizer())(x)
-            if self._normalize:
-                x = BatchNormalization()(x)
             if self._dropout:
                 x = Dropout(float(self._dropout))(x)
         out = Dense(self.max_num_labels, activation="softmax", init=self._init, name="out",

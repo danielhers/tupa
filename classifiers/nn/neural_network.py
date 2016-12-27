@@ -30,7 +30,6 @@ class NeuralNetwork(Classifier):
             self._layers = Config().args.layers
             self._layer_dim = Config().args.layerdim
             self._activation = (lambda x: x*x*x) if Config().args.activation == "cube" else Config().args.activation
-            self._normalize = Config().args.normalize
             self._init = Config().args.init
             self._num_labels = self.num_labels
             self._minibatch_size = Config().args.minibatchsize

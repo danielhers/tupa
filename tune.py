@@ -88,7 +88,6 @@ def main():
         ("earlyupdate",     6 * [False] + [True]),
         ("iterations",      range(1, 51)),
         ("worddropout",     (0, .1, .2, .25, .3)),
-        ("normalize",       (False, True)),
         ("regularizer",     [None] + 3 * [config.REGULARIZERS[-1]] + list(config.REGULARIZERS)),
         ("regularization",  (1e-7, 1e-6, 1e-5, 1e-4)),
         ("worddropoutexternal", (0, .1, .2, .25, .3)),
