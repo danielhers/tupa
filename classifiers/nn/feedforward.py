@@ -25,14 +25,18 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
             print("Input: " + self.input_params)
         inputs = []
         encoded = []
+        frozen_layers = []
         for suffix, param in self.input_params.items():
             if param.dim:
                 x = Input(shape=(param.num,), dtype="float32" if param.numeric else "int32", name=suffix)
                 inputs.append(x)
                 if not param.numeric:  # index feature
-                    x = Embedding(output_dim=param.dim, input_dim=param.size, init=self._init,
+                    l = Embedding(output_dim=param.dim, input_dim=param.size, init=self._init,
                                   weights=param.init, input_length=param.num,
-                                  W_regularizer=self._regularizer(), trainable=param.updated)(x)
+                                  W_regularizer=self._regularizer())
+                    if not param.updated:
+                        frozen_layers.append(l)
+                    x = l(x)
                     x = Flatten()(x)
                 encoded.append(x)
         x = merge(encoded, mode="concat")
@@ -46,6 +50,8 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         out = Dense(self.max_num_labels, activation="softmax", init=self._init, name="out",
                     W_regularizer=self._regularizer(), b_regularizer=self._regularizer())(x)
         self.model = Model(input=inputs, output=[out])
+        for l in frozen_layers:
+            l.trainable = False
         self.compile()
 
     def score(self, features):

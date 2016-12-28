@@ -37,7 +37,7 @@ class Model(object):
         from features.dense_features import DenseFeatureExtractor
         params = [
             FeatureParameters("W", Config().args.wordvectors, Config().args.maxwordvectors,
-                              Config().args.worddropoutexternal, True, copy_from="w"),
+                              Config().args.worddropoutexternal, Config().args.updatewordvectors, copy_from="w"),
             FeatureParameters("w", Config().args.worddim, Config().args.maxwords,
                               Config().args.worddropout),
             FeatureParameters("t", Config().args.tagdim, Config().args.maxtags),
