@@ -81,7 +81,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--minupdate", type=int, default=5, help="minimum #updates for using a feature")
         group = argparser.add_argument_group(title="Neural network parameters")
         group.add_argument("-w", "--wordvectors", help="pre-trained external word embeddings file to load")
-        group.add_argument("--updatewordvectors", action="store_true", help="tune the given external word embeddings")
+        # group.add_argument("--updatewordvectors", action="store_true", help="tune the given external word embeddings")
         group.add_argument("--worddim", type=int, default=100, help="dimension for learned word embeddings")
         group.add_argument("--tagdim", type=int, default=10, help="dimension for POS tag embeddings")
         group.add_argument("--labeldim", type=int, default=20, help="dimension for edge label embeddings")

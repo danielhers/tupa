@@ -30,12 +30,9 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
                 x = Input(shape=(param.num,), dtype="float32" if param.numeric else "int32", name=suffix)
                 inputs.append(x)
                 if not param.numeric:  # index feature
-                    l = Embedding(output_dim=param.dim, input_dim=param.size, init=self._init,
+                    x = Embedding(output_dim=param.dim, input_dim=param.size, init=self._init,
                                   weights=param.init, input_length=param.num,
-                                  W_regularizer=self._regularizer())
-                    #mask_zero=True) # TODO https://github.com/fchollet/keras/issues/2728
-                    l.trainable = param.updated
-                    x = l(x)
+                                  W_regularizer=self._regularizer(), trainable=param.updated)(x)
                     x = Flatten()(x)
                 encoded.append(x)
         x = merge(encoded, mode="concat")

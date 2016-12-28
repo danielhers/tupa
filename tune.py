@@ -68,7 +68,7 @@ def main():
         ("seed",            2147483647),  # max value for int
         ("classifier",      100 * [config.FEEDFORWARD_NN] + list(config.CLASSIFIERS)),
         ("wordvectors",     [None] + [load_word2vec(f) for f in w2v_files]),
-        ("updatewordvectors", [True, False]),
+        # ("updatewordvectors", [True, False]),
         ("worddim",         [50, 100, 200, 300]),
         ("tagdim",          (5, 10, 20)),
         ("labeldim",        (5, 10, 20)),
