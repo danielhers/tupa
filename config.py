@@ -4,6 +4,7 @@ import numpy as np
 import sys
 
 from ucca import convert
+from ucca.tagutil import POS_TAGGERS
 
 
 class Singleton(type):
@@ -39,6 +40,7 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("-B", "--beam", choices=(1,), default=1, help="beam size for beam search (1 for greedy)")
         argparser.add_argument("-e", "--evaluate", action="store_true", help="evaluate parsed passages")
         argparser.add_argument("-v", "--verbose", action="store_true", help="detailed parse output")
+        argparser.add_argument("--pos-tagger", choices=POS_TAGGERS, default=POS_TAGGERS[0], help="POS tagger to use")
         group = argparser.add_mutually_exclusive_group()
         group.add_argument("-s", "--sentences", action="store_true", help="separate passages to sentences")
         group.add_argument("-a", "--paragraphs", action="store_true", help="separate passages to paragraphs")
