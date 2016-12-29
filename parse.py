@@ -2,15 +2,13 @@ import os
 import time
 from enum import Enum
 
-from nltk import pos_tag
-
 from classifiers.classifier import ClassifierProperty
 from parsing.action import Actions
 from parsing.config import Config
 from parsing.model import Model
 from parsing.oracle import Oracle
 from states.state import State
-from ucca import diffutil, ioutil, evaluation, layer0, layer1
+from ucca import diffutil, ioutil, tagutil, evaluation, layer0, layer1
 
 
 class ParserException(Exception):
@@ -125,6 +123,7 @@ class Parser(object):
         self.total_correct = 0
         total_duration = 0
         total_tokens = 0
+        passage_index = 0
         if not hasattr(passages, "__iter__"):  # Single passage given
             passages = (passages,)
         for passage_index, passage in enumerate(passages):
@@ -315,7 +314,7 @@ class Parser(object):
         :param state: State object to modify
         """
         tokens = [token for tokens in state.tokens for token in tokens]
-        tokens, tags = zip(*pos_tag(tokens))
+        tokens, tags = zip(*tagutil.get_pos_tagger(Config().args.pos_tagger).tag(tokens))
         if Config().args.verbose:
             print(" ".join("%s/%s" % (token, tag) for (token, tag) in zip(tokens, tags)))
         for node, tag in zip(state.nodes, tags):
