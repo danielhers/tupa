@@ -1,14 +1,12 @@
 import sys
 from collections import deque, defaultdict
-from itertools import groupby
-from operator import attrgetter
 
 from parsing.action import Actions
 from parsing.config import Config
 from parsing.constants import Constraints
 from states.edge import Edge
 from states.node import Node
-from ucca import core, layer0, layer1
+from ucca import core, layer0, layer1, tagutil
 from ucca.layer1 import EdgeTags
 
 
@@ -16,27 +14,22 @@ class State(object):
     """
     The parser's state, responsible for applying actions and creating the final Passage
     :param passage: a Passage object to get the tokens from, and everything else if training
-    :param callback: function to call after creating the list of nodes (e.g. POS tagger)
     """
-    def __init__(self, passage, callback=None):
+    def __init__(self, passage):
         self.log = []
         self.finished = False
         l0 = passage.layer(layer0.LAYER_ID)
         l1 = passage.layer(layer1.LAYER_ID)
         assert l0.all, "Empty passage '%s'" % passage.ID
         self.labeled = len(l1.all) > 1
-        self.nodes = [Node(i, orig_node=t, text=t.text, paragraph=t.paragraph, tag=t.tag)
-                      for i, t in enumerate(l0.all)]
-        self.tokens = [[t.text for t in ts]
-                       for _, ts in groupby(l0.all, key=attrgetter("paragraph"))]
-        if callback is not None:  # For POS tagging, or other functions that operate on the nodes
-            callback(self)
-        self.terminals = list(self.nodes)
-        self.buffer = deque(self.nodes)
-        self.root = self.add_node(l1.heads[0])  # The root is not part of the stack/buffer
+        self.terminals = [Node(i, orig_node=t, text=t.text, paragraph=t.paragraph, tag=t.tag,
+                               pos_tag=t.extra.get(tagutil.POS_TAG_KEY)) for i, t in enumerate(l0.all)]
+        self.nodes = list(self.terminals)  # Copy the list of terminals; more nodes will be added later
+        self.buffer = deque(self.nodes)  # Copy the list of nodes to initialize the buffer
+        self.root = self.add_node(l1.heads[0])  # The root is not part of the buffer
         self.stack = [self.root]
         self.passage_id = passage.ID
-        self.actions = []
+        self.actions = []  # History of applied actions
 
     def is_valid(self, action):
         """

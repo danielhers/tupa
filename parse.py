@@ -137,7 +137,8 @@ class Parser(object):
             started = time.time()
             self.action_count = 0
             self.correct_count = 0
-            self.state = State(passage, callback=self.pos_tag)
+            tagutil.pos_tag(passage, tagger=Config().args.pos_tagger, verbose=Config().args.verbose)
+            self.state = State(passage)
             self.state_hash_history = set()
             self.oracle = Oracle(passage) if train else None
             failed = False
@@ -306,19 +307,6 @@ class Parser(object):
             "Failed to produce true passage" + \
             (diffutil.diff_passages(
                     passage, predicted_passage) if show_diff else "")
-
-    @staticmethod
-    def pos_tag(state):
-        """
-        Function to pass to State to POS tag the tokens when created
-        :param state: State object to modify
-        """
-        tokens = [token for tokens in state.tokens for token in tokens]
-        tokens, tags = zip(*tagutil.get_pos_tagger(Config().args.pos_tagger).tag(tokens))
-        if Config().args.verbose:
-            print(" ".join("%s/%s" % (token, tag) for (token, tag) in zip(tokens, tags)))
-        for node, tag in zip(state.nodes, tags):
-            node.pos_tag = tag
 
 
 def train_test(train_passages, dev_passages, test_passages, args, model_suffix=""):
