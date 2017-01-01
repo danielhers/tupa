@@ -10,7 +10,7 @@ class Node(object):
     """
     Temporary representation for core.Node with only relevant information for parsing
     """
-    def __init__(self, index, orig_node=None, text=None, paragraph=None, tag=None, implicit=False):
+    def __init__(self, index, orig_node=None, text=None, paragraph=None, tag=None, implicit=False, pos_tag=None):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated core.Node from the original Passage, during training
         self.node_id = orig_node.ID if orig_node else None  # ID of the original node
@@ -26,6 +26,7 @@ class Node(object):
         self.incoming_tags = set()  # String set
         self.node = None  # Associated core.Node, when creating final Passage
         self.implicit = implicit  # True or False
+        self.pos_tag = pos_tag
         self.swap_index = self.index  # Used to make sure nodes are not swapped more than once
         self.height = 0
         self._terminals = None
