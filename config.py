@@ -2,7 +2,7 @@ import argparse
 
 import numpy as np
 
-from ucca import convert
+from ucca import convert, constructions
 from ucca.tagutil import POS_TAGGERS
 
 
@@ -42,6 +42,7 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("-e", "--evaluate", action="store_true", help="evaluate parsed passages")
         argparser.add_argument("-v", "--verbose", action="store_true", help="detailed parse output")
         argparser.add_argument("--pos-tagger", choices=POS_TAGGERS, default=POS_TAGGERS[0], help="POS tagger to use")
+        constructions.add_argument(argparser)
         group = argparser.add_mutually_exclusive_group()
         group.add_argument("-s", "--sentences", action="store_true", help="separate passages to sentences")
         group.add_argument("-a", "--paragraphs", action="store_true", help="separate passages to paragraphs")

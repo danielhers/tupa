@@ -62,7 +62,7 @@ class Parser(object):
             self.dev = dev
             if Config().args.devscores:
                 with open(Config().args.devscores, "w") as f:
-                    print(",".join(["iteration"] + evaluation.Scores.field_titles()), file=f)
+                    print(",".join(["iteration"] + evaluation.Scores.field_titles(Config().args.constructions)), file=f)
             for self.iteration in range(1, iterations + 1):
                 self.eval_index = 0
                 print("Training iteration %d of %d: " % (self.iteration, iterations))
@@ -349,7 +349,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
 
 
 def evaluate_passage(guessed_passage, ref_passage):
-    score = evaluation.evaluate(guessed_passage, ref_passage,
+    score = evaluation.evaluate(guessed_passage, ref_passage, constructions=Config().args.constructions,
                                 verbose=Config().args.verbose and guessed_passage is not None)
     print("F1=%.3f" % score.average_f1(), flush=True)
     return score
@@ -357,8 +357,8 @@ def evaluate_passage(guessed_passage, ref_passage):
 
 def main():
     args = Config().args
-    assert args.passages or args.train,"Either passages or --train is required (use -h for help)"
-    assert args.model or args.train or args.folds,"Either --model or --train or --folds is required"
+    assert args.passages or args.train, "Either passages or --train is required (use -h for help)"
+    assert args.model or args.train or args.folds, "Either --model or --train or --folds is required"
     assert not (args.train or args.dev) or args.folds is None, "--train and --dev are incompatible with --folds"
     assert args.train or not args.dev, "--dev is only possible together with --train"
     print("Running parser with %s" % Config())
@@ -366,7 +366,7 @@ def main():
     dev_scores = None
     if Config().args.testscores:
         with open(Config().args.testscores, "w") as f:
-            print(",".join(evaluation.Scores.field_titles()), file=f)
+            print(",".join(evaluation.Scores.field_titles(Config().args.constructions)), file=f)
     if args.folds is not None:
         k = args.folds
         fold_scores = []
