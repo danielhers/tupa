@@ -8,7 +8,7 @@ from parsing import parse, config
 from parsing.config import Config
 from parsing.w2v_util import load_word2vec
 from ucca.evaluation import Scores
-from ucca.tagutil import POS_TAGGERS
+from ucca.tagutil import PERCEPTRON, STANFORD_BIDI
 
 MODELS_DIR = "models"
 
@@ -90,7 +90,7 @@ def main():
         ("worddropoutexternal", (0, .1, .2, .25, .3)),
         ("dynet_weight_decay", (1e-7, 1e-6, 1e-5, 1e-4)),
         ("dropout",         (0, .1, .2, .3, .4, .5)),
-        ("pos_tagger",      ([POS_TAGGERS[0]] + 20 * [POS_TAGGERS[1]])),
+        ("pos_tagger",      ([PERCEPTRON] + 20 * [STANFORD_BIDI])),
     )
     params = [Params(OrderedDict(p))
               for p in zip(*[[(n, v.item() if hasattr(v, "item") else v)
