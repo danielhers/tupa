@@ -13,7 +13,8 @@ from ucca.tests.test_ucca import TestUtil
 class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ParserTests, self).__init__(*args, **kwargs)
-        Config("", "-m", "test", "-I", "2")
+        Config("", "-m", "test", "-I", "2", "--worddimexternal", "100", "--maxwordsexternal", "100",
+               "--layerdim", "100", "--layers", "1")
         self.passage = convert.from_standard(TestUtil.load_xml("test_files/standard3.xml"))
 
     def test_oracle(self):
@@ -52,4 +53,5 @@ class ParserTests(unittest.TestCase):
         print("-- average labeled f1: %.1f, %.1f\n" % tuple(scores))
         if compare:
             self.assertAlmostEqual(*scores)
+        p.parse(convert.to_text(self.passage))
         self.assertFalse(list(p.parse(())))  # parsing nothing returns nothing

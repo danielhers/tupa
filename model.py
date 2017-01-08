@@ -36,10 +36,9 @@ class Model(object):
     def dense_features_wrapper(wrapper):
         from features.dense_features import DenseFeatureExtractor
         params = [
-            FeatureParameters("W", Config().args.wordvectors, Config().args.maxwordvectors,
+            FeatureParameters("W", Config().args.worddimexternal, Config().args.maxwordsexternal,
                               Config().args.worddropoutexternal, Config().args.updatewordvectors, copy_from="w"),
-            FeatureParameters("w", Config().args.worddim, Config().args.maxwords,
-                              Config().args.worddropout),
+            FeatureParameters("w", Config().args.worddim, Config().args.maxwords, Config().args.worddropout),
             FeatureParameters("t", Config().args.tagdim, Config().args.maxtags),
             FeatureParameters("e", Config().args.labeldim, Config().args.maxedgelabels),
             FeatureParameters("p", Config().args.punctdim, Config().args.maxpuncts),

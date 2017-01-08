@@ -45,6 +45,10 @@ class FeatureParameters(object):
     def effective_suffix(self):
         return self.suffix if self.copy_from is None else self.copy_from
 
+    @property
+    def external(self):
+        return self.copy_from is not None
+
 
 class NumericFeatureParameters(FeatureParameters):
     SUFFIX = "numeric"

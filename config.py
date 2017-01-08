@@ -1,9 +1,9 @@
 import argparse
+import sys
 
 import numpy as np
 
 from ucca import convert, constructions
-from ucca.tagutil import POS_TAGGERS
 
 
 class Singleton(type):
@@ -41,7 +41,6 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("-B", "--beam", choices=(1,), default=1, help="beam size for beam search (1 for greedy)")
         argparser.add_argument("-e", "--evaluate", action="store_true", help="evaluate parsed passages")
         argparser.add_argument("-v", "--verbose", action="store_true", help="detailed parse output")
-        argparser.add_argument("--pos-tagger", choices=POS_TAGGERS, default=POS_TAGGERS[0], help="POS tagger to use")
         constructions.add_argument(argparser)
         group = argparser.add_mutually_exclusive_group()
         group.add_argument("-s", "--sentences", action="store_true", help="separate passages to sentences")
@@ -78,13 +77,13 @@ class Config(object, metaclass=Singleton):
         group = argparser.add_argument_group(title="General classifier training parameters")
         group.add_argument("--importance", type=int, default=2, help="learning rate factor for Swap")
         group.add_argument("--earlyupdate", action="store_true", help="move to next example on incorrect prediction")
+        group.add_argument("--worddimexternal", type=int, default=300, help="dimension for external word embeddings")
         group = argparser.add_argument_group(title="Perceptron parameters")
         group.add_argument("--learningrate", type=float, default=1.0, help="rate for model weight updates")
         group.add_argument("--learningratedecay", type=float, default=0.0, help="learning rate decay per iteration")
         group.add_argument("--minupdate", type=int, default=5, help="minimum #updates for using a feature")
         group = argparser.add_argument_group(title="Neural network parameters")
-        group.add_argument("-w", "--wordvectors", help="pre-trained external word embeddings file to load")
-        group.add_argument("--updatewordvectors", action="store_true", help="tune the given external word embeddings")
+        group.add_argument("--updatewordvectors", action="store_true", help="tune the external word embeddings")
         group.add_argument("--worddim", type=int, default=100, help="dimension for learned word embeddings")
         group.add_argument("--tagdim", type=int, default=10, help="dimension for POS tag embeddings")
         group.add_argument("--labeldim", type=int, default=20, help="dimension for edge label embeddings")
@@ -104,7 +103,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--loss", choices=OBJECTIVES, default=OBJECTIVES[0], help="loss function for optimization")
         group.add_argument("--regularizer", choices=REGULARIZERS, default=REGULARIZERS[0], help="regularizer type")
         group.add_argument("--regularization", type=float, default=1e-8, help="regularization parameter")
-        group.add_argument("--maxwordvectors", type=int, default=10000, help="maximum number of external word vectors")
+        group.add_argument("--maxwordsexternal", type=int, help="maximum external word vectors to use")
         group.add_argument("--maxwords", type=int, default=10000, help="maximum number of words to keep embeddings for")
         group.add_argument("--maxtags", type=int, default=100, help="maximum number of POS tags to keep embeddings for")
         group.add_argument("--maxedgelabels", type=int, default=15, help="maximum number of edge labels for embeddings")
