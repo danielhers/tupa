@@ -8,7 +8,7 @@ from parsing.config import Config
 from parsing.model import Model
 from parsing.oracle import Oracle
 from states.state import State
-from ucca import diffutil, ioutil, tagutil, evaluation, layer0, layer1
+from ucca import diffutil, ioutil, textutil, evaluation, layer0, layer1
 
 
 class ParserException(Exception):
@@ -137,7 +137,7 @@ class Parser(object):
             started = time.time()
             self.action_count = 0
             self.correct_count = 0
-            tagutil.pos_tag(passage, tagger=Config().args.pos_tagger, verbose=Config().args.verbose)
+            textutil.pos_tag(passage, verbose=Config().args.verbose)
             self.state = State(passage)
             self.state_hash_history = set()
             self.oracle = Oracle(passage) if train else None

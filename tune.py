@@ -6,9 +6,7 @@ import numpy as np
 
 from parsing import parse, config
 from parsing.config import Config
-from parsing.w2v_util import load_word2vec
 from ucca.evaluation import Scores
-from ucca.tagutil import PERCEPTRON, STANFORD_BIDI
 
 MODELS_DIR = "models"
 
@@ -58,15 +56,14 @@ def main():
         os.makedirs(MODELS_DIR)
     Config().args.nowrite = True
     out_file = os.environ.get("PARAMS_FILE", "params.csv")
-    w2v_files = [os.environ[f] for f in os.environ if f.startswith("W2V_FILE")]
     num = int(os.environ.get("PARAMS_NUM", 30))
     np.random.seed()
     domains = (
         ("seed",            2147483647),  # max value for int
         ("classifier",      (config.MLP_NN, config.BILSTM_NN)),
-        ("wordvectors",     [None] + [load_word2vec(f) for f in w2v_files]),
         ("updatewordvectors", [True, False]),
-        ("worddim",         [50, 100, 200, 300]),
+        ("worddimexternal", (0, 300)),
+        ("worddim",         (0, 50, 100, 200, 300)),
         ("tagdim",          (5, 10, 20)),
         ("labeldim",        (5, 10, 20)),
         ("punctdim",        (1, 2, 3)),
@@ -90,7 +87,6 @@ def main():
         ("worddropoutexternal", (0, .1, .2, .25, .3)),
         ("dynet_weight_decay", (1e-7, 1e-6, 1e-5, 1e-4)),
         ("dropout",         (0, .1, .2, .3, .4, .5)),
-        ("pos_tagger",      ([PERCEPTRON] + 20 * [STANFORD_BIDI])),
     )
     params = [Params(OrderedDict(p))
               for p in zip(*[[(n, v.item() if hasattr(v, "item") else v)

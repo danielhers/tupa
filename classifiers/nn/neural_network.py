@@ -103,7 +103,7 @@ class NeuralNetwork(Classifier):
                         p.init_from_array(param.init)
                     self._params[suffix] = p
                 if param.indexed:
-                    self._indexed_dim += param.dim
+                    self._indexed_dim += param.dim  # add to the input dimensionality at each indexed time point
                     self._indexed_num = max(self._indexed_num, param.num)  # indices to be looked up are collected
                 else:
                     input_dim += param.num * param.dim

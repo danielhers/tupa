@@ -4,7 +4,7 @@ from features.feature_extractor_wrapper import FeatureExtractorWrapper
 from features.feature_params import MISSING_VALUE
 from features.feature_params import NumericFeatureParameters
 from parsing.model_util import DropoutDict
-from parsing.w2v_util import load_word2vec
+from ucca.textutil import get_word_vectors
 
 
 class FeatureEnumerator(FeatureExtractorWrapper):
@@ -29,22 +29,13 @@ class FeatureEnumerator(FeatureExtractorWrapper):
         if param.data is not None or isinstance(param, NumericFeatureParameters):
             return
         param.num = self.feature_extractor.num_features_non_numeric(param.effective_suffix)
-        vocab = ()
-        if param.dim:
-            try:
-                param.dim = int(param.dim)
-            except (ValueError, TypeError):  # Not a number but a string with path to word vectors file
-                w2v = load_word2vec(param.dim)
-                vocab = w2v.vocab
-                if param.size is None or param.size == 0:
-                    param.size = len(w2v.vocab) + 1
-                else:
-                    vocab = list(vocab)[:param.size - 1]
-                param.dim = w2v.vector_size
-                weights = np.array([w2v[x] for x in vocab])
-                unknown = weights.mean(axis=0)
-                param.init = np.vstack((unknown, weights))
-        param.data = DropoutDict(max_size=param.size, keys=vocab, dropout=param.dropout)
+        keys = ()
+        if param.dim and param.external:
+            vectors = get_word_vectors(param.dim, param.size)
+            keys = vectors.keys()
+            param.size = len(vectors)
+            param.init = np.array(list(vectors.values()))
+        param.data = DropoutDict(max_size=param.size, keys=keys, dropout=param.dropout)
 
     def init_features(self, state, suffix):
         param = self.params[suffix]
@@ -64,7 +55,7 @@ class FeatureEnumerator(FeatureExtractorWrapper):
         numeric_features, non_numeric_features = self.feature_extractor.extract_features(state, self.params)
         features = {NumericFeatureParameters.SUFFIX: numeric_features}
         for suffix, param in self.params.items():
-            if param.dim and (param.copy_from is None or not param.indexed):
+            if param.dim and (param.copy_from is None or not self.params[param.copy_from].dim or not param.indexed):
                 values = non_numeric_features.get(param.effective_suffix)
                 if values is not None:
                     features[suffix] = values if param.indexed else \
@@ -74,8 +65,8 @@ class FeatureEnumerator(FeatureExtractorWrapper):
         return features
 
     def collapse_features(self, suffixes):
-        self.feature_extractor.collapse_features([s for s in suffixes if self.params[s].dim and
-                                                                         self.params[s].copy_from is None])
+        self.feature_extractor.collapse_features({self.params[s].copy_from if self.params[s].external else s
+                                                  for s in suffixes if self.params[s].dim})
 
     def filename_suffix(self):
         return "_enum"

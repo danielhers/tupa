@@ -1,14 +1,13 @@
-from numbers import Number
+from collections import defaultdict
 
 import numpy as np
-from collections import defaultdict
 
 from features.feature_extractor_wrapper import FeatureExtractorWrapper
 from features.feature_params import MISSING_VALUE
 from features.feature_params import NumericFeatureParameters
 from parsing.config import Config
 from parsing.model_util import UnknownDict
-from parsing.w2v_util import load_word2vec
+from ucca.textutil import get_word_vectors
 
 
 class FeatureEmbedding(FeatureExtractorWrapper):
@@ -25,15 +24,13 @@ class FeatureEmbedding(FeatureExtractorWrapper):
             return
         param.num = self.feature_extractor.num_features_non_numeric(param.effective_suffix)
         if param.dim:
-            try:
-                param.dim = int(param.dim)
+            if param.external:
+                vectors = get_word_vectors(param.dim, param.size)
+                param.size = len(vectors)
+                param.data = UnknownDict(vectors, np.zeros(param.dim))
+            else:
                 param.data = defaultdict(lambda d=param.dim: Config().random.normal(size=d))
                 param.data[UnknownDict.UNKNOWN]  # Initialize unknown value
-            except (ValueError, TypeError):  # Not a number but a string with path to word vectors file
-                w2v = load_word2vec(param.dim)
-                unknown = np.mean([w2v[x] for x in w2v.vocab], axis=0)
-                param.dim = w2v.vector_size
-                param.data = UnknownDict({x: w2v[x] for x in w2v.vocab}, unknown)
         param.empty = np.zeros(param.dim, dtype=float)
 
     def extract_features(self, state):
