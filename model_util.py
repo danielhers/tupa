@@ -103,7 +103,7 @@ def load_dict(filename):
             except Exception as e:
                 exception = e
         if exception is not None:
-            raise IOError("File not found: " + filename) from exception
+            raise FileNotFoundError("File not found: '%s'" % filename) from exception
 
     print("Loading from '%s'... " % filename, end="", flush=True)
     started = time.time()
