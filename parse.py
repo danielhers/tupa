@@ -38,7 +38,7 @@ class Parser(object):
         if ClassifierProperty.trainable_after_saving in self.model.model.get_classifier_properties():
             try:
                 self.model.load()
-            except OSError:
+            except FileNotFoundError:
                 print("not found, starting from untrained model.")
         self.beam = beam  # Currently unused
         self.state_hash_history = None  # For loop checking

@@ -62,7 +62,7 @@ class Model(object):
                 self.feature_extractor.save(self.filename)
                 self.model.save()
             except Exception as e:
-                raise IOError("Failed saving model to '%s'" % self.filename, e)
+                raise IOError("Failed saving model to '%s'" % self.filename) from e
 
     def load(self):
         if self.filename is not None:
@@ -70,5 +70,7 @@ class Model(object):
                 self.feature_extractor.load(self.filename)
                 self.model.load()
                 Actions().all = self.model.labels
+            except FileNotFoundError:
+                raise
             except Exception as e:
-                raise IOError("Failed loading model from '%s'" % self.filename, e)
+                raise IOError("Failed loading model from '%s'" % self.filename) from e
