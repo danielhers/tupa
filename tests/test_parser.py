@@ -51,7 +51,7 @@ class ParserTests(unittest.TestCase):
             p = Parser(model_file="test_files/%s" % model_type, model_type=model_type)
             p.train(passages if mode == "train" else None)
             score = evaluation.Scores.aggregate([s for _, s in p.parse(passages, evaluate=True)])
-            scores.append(round(score.average_f1(), 1))
+            scores.append(score.average_f1())
             print()
         print("-- average labeled f1: %.1f, %.1f\n" % tuple(scores))
         if compare:
