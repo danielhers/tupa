@@ -150,8 +150,6 @@ class Parser(object):
                 if train:
                     raise
                 Config().log("%s %s: %s" % (passage_word, passage.ID, e))
-                if mode is not ParseMode.test:
-                    print("failed")
                 failed = True
             predicted_passage = self.state.create_passage(assert_proper=Config().args.verify) \
                 if not train or Config().args.verify else passage
@@ -167,7 +165,7 @@ class Parser(object):
                           (100 * self.correct_count / self.action_count,
                            self.correct_count, self.action_count)), end=Config().line_end)
             print("%0.3fs" % duration, end="")
-            print("%-15s" % ("" if failed else " (%d tokens/s)" % (num_tokens / duration)), end="")
+            print("%-15s" % (" (failed)" if failed else " (%d tokens/s)" % (num_tokens / duration)), end="")
             print(Config().line_end, end="")
             if train:
                 print(Config().line_end, flush=True)
