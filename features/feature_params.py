@@ -7,7 +7,7 @@ UNKNOWN_VALUE = 1
 
 class FeatureParameters(object):
     def __init__(self, suffix, dim, size, dropout=0, updated=True, num=1, init=None, data=None, indexed=False,
-                 copy_from=None):
+                 copy_from=None, filename=None):
         """
         :param suffix: one-character title for feature
         :param dim: vector dimension or, filename to load vectors from, or Word2Vec object
@@ -19,6 +19,7 @@ class FeatureParameters(object):
         :param data: dictionary of raw value to running numerical representation, or embedding matrix
         :param indexed: whether the feature is to be used as index into initialized values (otherwise used directly)
         :param copy_from: suffix of other parameter to copy values from instead of extracting them directly
+        :param filename: name of file to load data from
         """
         self.suffix = suffix
         self.dim = dim
@@ -30,12 +31,12 @@ class FeatureParameters(object):
         self.data = data
         self.indexed = indexed
         self.copy_from = copy_from
-        self.counts = Counter() if self.dropout else None
+        self.filename = filename
 
     def __repr__(self):
-        return "%s(%s, %d, %d, %f, %s, %s, %s, %s, %s, %s)" % (
+        return "%s(%s, %d, %d, %f, %s, %s, %s, %s, %s, %s, %s)" % (
             self.__class__.__name__, self.suffix, self.dim, self.size, self.dropout, self.updated, self.num, self.init,
-            self.data, self.indexed, self.copy_from)
+            self.data, self.indexed, self.copy_from, self.filename)
 
     @property
     def numeric(self):

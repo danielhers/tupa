@@ -1,6 +1,7 @@
 from features.feature_extractor import FeatureExtractor
 from features.feature_params import copy_params, NumericFeatureParameters
 from parsing.model_util import load_dict, save_dict, UnknownDict
+from ucca.textutil import get_word_vectors
 
 
 class FeatureExtractorWrapper(FeatureExtractor):
@@ -36,3 +37,13 @@ class FeatureExtractorWrapper(FeatureExtractor):
 
     def filename_suffix(self):
         return self.feature_extractor.filename_suffix()
+
+    @staticmethod
+    def get_word_vectors(param):
+        vectors, param.dim = get_word_vectors(param.dim, param.size, param.filename)
+        if param.size is None:
+            param.size = len(vectors)
+        else:
+            assert len(vectors) == param.size, "Number of loaded vectors differs from requested: %d != %d" % (
+                len(vectors), param.size)
+        return vectors
