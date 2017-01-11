@@ -13,7 +13,7 @@ from ucca.tests.test_ucca import TestUtil
 class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ParserTests, self).__init__(*args, **kwargs)
-        Config("", "-m", "test", "--maxwordsexternal", "100",
+        Config("", "-m", "test", "--maxwordsexternal", "100", "--worddimexternal", "100",
                "--layerdim", "100", "--layers", "1", "--lstmlayerdim", "100", "--lstmlayers", "1")
         self.passage = convert.from_standard(TestUtil.load_xml("test_files/standard3.xml"))
 
