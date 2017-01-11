@@ -26,18 +26,19 @@ class ParserTests(unittest.TestCase):
         return passages
 
     def test_oracle(self):
-        oracle = Oracle(self.passage)
-        state = State(self.passage)
-        actions_taken = []
-        while True:
-            actions = oracle.get_actions(state)
-            action = next(iter(actions))
-            state.transition(action)
-            actions_taken.append("%s\n" % action)
-            if state.finished:
-                break
-        with open("test_files/standard3.oracle_actions.txt") as f:
-            self.assertSequenceEqual(actions_taken, f.readlines())
+        for passage in self.load_passages():
+            oracle = Oracle(passage)
+            state = State(passage)
+            actions_taken = []
+            while True:
+                actions = oracle.get_actions(state)
+                action = next(iter(actions))
+                state.transition(action)
+                actions_taken.append("%s\n" % action)
+                if state.finished:
+                    break
+            with open("test_files/standard3.oracle_actions.txt") as f:
+                self.assertSequenceEqual(actions_taken, f.readlines())
 
     def test_parser_sparse(self):
         self.train_test(SPARSE_PERCEPTRON)
