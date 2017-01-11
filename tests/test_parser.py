@@ -15,8 +15,8 @@ NUM_PASSAGES = 2
 class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ParserTests, self).__init__(*args, **kwargs)
-        Config("", "-m", "test", "--maxwordsexternal", "100", "--worddimexternal", "100",
-               "--layerdim", "100", "--layers", "1", "--updatewordvectors")
+        Config("", "-m", "test", "--maxwordsexternal=100", "--worddimexternal=100", "--optimizer=sgd",
+               "--layerdim=100", "--layers=1", "--updatewordvectors")
 
     @staticmethod
     def load_passages():
@@ -54,7 +54,7 @@ class ParserTests(unittest.TestCase):
         for mode in "train", "load":
             print("-- %sing %s" % (mode, model_type))
             p = Parser(model_file="test_files/%s" % model_type, model_type=model_type)
-            p.train(self.load_passages() if mode == "train" else None, iterations=2)
+            p.train(self.load_passages() if mode == "train" else None, iterations=200)
             score = evaluation.Scores.aggregate([s for _, s in p.parse(self.load_passages(), evaluate=True)])
             scores.append(score.average_f1())
             print()
