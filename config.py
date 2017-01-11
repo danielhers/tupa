@@ -17,6 +17,17 @@ class Singleton(type):
     def reload(cls):
         cls.instance = None
 
+
+class VAction(argparse.Action):
+    def __call__(self, parser, args, values, option_string=None):
+        if values is None:
+            values = "1"
+        try:
+            values = int(values)
+        except ValueError:
+            values = values.count('v') + 1
+        setattr(args, self.dest, values)
+
 SPARSE_PERCEPTRON = "sparse"
 DENSE_PERCEPTRON = "dense"
 FEEDFORWARD_NN = "nn"
@@ -40,7 +51,7 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=SPARSE_PERCEPTRON, help="model type")
         argparser.add_argument("-B", "--beam", choices=(1,), default=1, help="beam size for beam search (1 for greedy)")
         argparser.add_argument("-e", "--evaluate", action="store_true", help="evaluate parsed passages")
-        argparser.add_argument("-v", "--verbose", action="store_true", help="detailed parse output")
+        argparser.add_argument("-v", "--verbose", nargs="?", action=VAction, help="detailed parse output")
         constructions.add_argument(argparser)
         group = argparser.add_mutually_exclusive_group()
         group.add_argument("-s", "--sentences", action="store_true", help="separate passages to sentences")
