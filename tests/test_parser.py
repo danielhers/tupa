@@ -9,13 +9,21 @@ from states.state import State
 from ucca import convert, evaluation
 from ucca.tests.test_ucca import TestUtil
 
+NUM_PASSAGES = 2
+
 
 class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ParserTests, self).__init__(*args, **kwargs)
         Config("", "-m", "test", "--maxwordsexternal", "100", "--worddimexternal", "100",
                "--layerdim", "100", "--layers", "1", "--updatewordvectors")
-        self.passage = convert.from_standard(TestUtil.load_xml("test_files/standard3.xml"))
+
+    @staticmethod
+    def load_passages():
+        passages = []
+        for _ in range(NUM_PASSAGES):
+            passages.append(convert.from_standard(TestUtil.load_xml("test_files/standard3.xml")))
+        return passages
 
     def test_oracle(self):
         oracle = Oracle(self.passage)
@@ -41,17 +49,16 @@ class ParserTests(unittest.TestCase):
         self.train_test(FEEDFORWARD_NN)
 
     def train_test(self, model_type, compare=True):
-        passages = [self.passage] * 2
         scores = []
         for mode in "train", "load":
             print("-- %sing %s" % (mode, model_type))
             p = Parser(model_file="test_files/%s" % model_type, model_type=model_type)
-            p.train(passages if mode == "train" else None, iterations=2)
-            score = evaluation.Scores.aggregate([s for _, s in p.parse(passages, evaluate=True)])
-            scores.append(round(score.average_f1(), 1))
+            p.train(self.load_passages() if mode == "train" else None, iterations=2)
+            score = evaluation.Scores.aggregate([s for _, s in p.parse(self.load_passages(), evaluate=True)])
+            scores.append(score.average_f1())
             print()
-        print("-- average labeled f1: %.1f, %.1f\n" % tuple(scores))
+        print("-- average labeled f1: %.3f, %.3f\n" % tuple(scores))
         if compare:
             self.assertAlmostEqual(*scores)
-        p.parse(convert.to_text(self.passage))
+        p.parse(convert.to_text(self.load_passages()[0]))
         self.assertFalse(list(p.parse(())))  # parsing nothing returns nothing
