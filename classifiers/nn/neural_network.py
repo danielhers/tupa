@@ -191,7 +191,12 @@ class NeuralNetwork(Classifier):
         :return: array with score for each label
         """
         super(NeuralNetwork, self).score(features)
-        return self.evaluate(features).npvalue()[:self.num_labels] if self._iteration > 0 else np.zeros(self.num_labels)
+        if self._iteration > 0:
+            return self.evaluate(features).npvalue()[:self.num_labels]
+        else:
+            if Config().args.verbose >= 2:
+                print("  no updates done yet, returning zero vector.")
+            return np.zeros(self.num_labels)
 
     def update(self, features, pred, true, importance=1):
         """
@@ -229,6 +234,8 @@ class NeuralNetwork(Classifier):
         if self._losses:
             loss = -dy.esum(self._losses)
             loss.forward()
+            if Config().args.verbose >= 2:
+                print("Total loss from %d time steps: %g" % (len(self._losses), loss.value()))
             loss.backward()
             self._trainer.update()
             self.init_cg()
@@ -250,6 +257,7 @@ class NeuralNetwork(Classifier):
             "activation": self._activation_str,
             "init": self._init_str,
             "optimizer": self._optimizer_str,
+            "iteration": self._iteration,
         }
         d.update(self.save_extra())
         model_filename = self.filename + ".model"
@@ -279,6 +287,7 @@ class NeuralNetwork(Classifier):
         self._init = INITIALIZERS[self._init_str]
         self._optimizer_str = d["optimizer"]
         self._optimizer = TRAINERS[self._optimizer_str]
+        self._iteration = d.get("iteration", 0)
         self.load_extra(d)
         model_filename = self.filename + ".model"
         print("Loading model from '%s'... " % model_filename, end="", flush=True)
