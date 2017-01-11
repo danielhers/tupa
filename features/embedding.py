@@ -25,8 +25,7 @@ class FeatureEmbedding(FeatureExtractorWrapper):
         param.num = self.feature_extractor.num_features_non_numeric(param.effective_suffix)
         if param.dim:
             if param.external:
-                vectors = get_word_vectors(param.dim, param.size)
-                param.size = len(vectors)
+                vectors = self.get_word_vectors(param)
                 param.data = UnknownDict(vectors, np.zeros(param.dim))
             else:
                 param.data = defaultdict(lambda d=param.dim: Config().random.normal(size=d))

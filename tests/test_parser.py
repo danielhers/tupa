@@ -13,7 +13,7 @@ from ucca.tests.test_ucca import TestUtil
 class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ParserTests, self).__init__(*args, **kwargs)
-        Config("", "-m", "test", "-I", "2", "--worddimexternal", "100", "--maxwordsexternal", "100",
+        Config("", "-m", "test", "--maxwordsexternal", "100",
                "--layerdim", "100", "--layers", "1", "--lstmlayerdim", "100", "--lstmlayers", "1")
         self.passage = convert.from_standard(TestUtil.load_xml("test_files/standard3.xml"))
 
@@ -49,7 +49,7 @@ class ParserTests(unittest.TestCase):
         for mode in "train", "load":
             print("-- %sing %s" % (mode, model_type))
             p = Parser(model_file="test_files/%s" % model_type, model_type=model_type)
-            p.train(passages if mode == "train" else None)
+            p.train(passages if mode == "train" else None, iterations=2)
             score = evaluation.Scores.aggregate([s for _, s in p.parse(passages, evaluate=True)])
             scores.append(score.average_f1())
             print()

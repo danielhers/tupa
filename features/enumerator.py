@@ -4,7 +4,6 @@ from features.feature_extractor_wrapper import FeatureExtractorWrapper
 from features.feature_params import MISSING_VALUE
 from features.feature_params import NumericFeatureParameters
 from parsing.model_util import DropoutDict
-from ucca.textutil import get_word_vectors
 
 
 class FeatureEnumerator(FeatureExtractorWrapper):
@@ -31,9 +30,8 @@ class FeatureEnumerator(FeatureExtractorWrapper):
         param.num = self.feature_extractor.num_features_non_numeric(param.effective_suffix)
         keys = ()
         if param.dim and param.external:
-            vectors = get_word_vectors(param.dim, param.size)
+            vectors = self.get_word_vectors(param)
             keys = vectors.keys()
-            param.size = len(vectors)
             param.init = np.array(list(vectors.values()))
         param.data = DropoutDict(max_size=param.size, keys=keys, dropout=param.dropout)
 

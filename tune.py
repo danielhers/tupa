@@ -56,12 +56,14 @@ def main():
         os.makedirs(MODELS_DIR)
     Config().args.nowrite = True
     out_file = os.environ.get("PARAMS_FILE", "params.csv")
+    word_vectors_files = [os.environ[f] for f in os.environ if f.startswith("WORD_VECTORS")]
     num = int(os.environ.get("PARAMS_NUM", 30))
     np.random.seed()
     domains = (
         ("seed",            2147483647),  # max value for int
         ("classifier",      (config.MLP_NN, config.BILSTM_NN)),
         ("updatewordvectors", [True, False]),
+        ("wordvectors",     [None] + word_vectors_files),
         ("worddimexternal", (0, 300)),
         ("worddim",         (0, 50, 100, 200, 300)),
         ("tagdim",          (5, 10, 20)),

@@ -131,8 +131,8 @@ class Parser(object):
             num_tokens = len(l0.all)
             l1 = passage.layer(layer1.LAYER_ID)
             labeled = len(l1.all) > 1
-            assert not train or labeled, "Cannot train on unannotated passage"
-            assert not evaluate or labeled, "Cannot evaluate on unannotated passage"
+            assert not train or labeled, "Cannot train on unannotated passage: %s" % passage.ID
+            assert not evaluate or labeled, "Cannot evaluate on unannotated passage: %s" % passage.ID
             print("%s %-7s" % (passage_word, passage.ID), end=Config().line_end, flush=True)
             started = time.time()
             self.action_count = 0

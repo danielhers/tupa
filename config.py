@@ -76,6 +76,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--importance", type=int, default=2, help="learning rate factor for Swap")
         group.add_argument("--earlyupdate", action="store_true", help="move to next example on incorrect prediction")
         group.add_argument("--worddimexternal", type=int, default=300, help="dimension for external word embeddings")
+        group.add_argument("--wordvectors", help="file to load external word embeddings from (default: GloVe)")
         group = argparser.add_argument_group(title="Perceptron parameters")
         group.add_argument("--learningrate", type=float, default=1.0, help="rate for model weight updates")
         group.add_argument("--learningratedecay", type=float, default=0.0, help="learning rate decay per iteration")
