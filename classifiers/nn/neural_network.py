@@ -68,6 +68,7 @@ class NeuralNetwork(Classifier):
             "type": self.model_type,
             "labels": self.labels,
             "is_frozen": self.is_frozen,
+            "iteration": self._iteration,
         }
         save_dict(self.filename, d)
         self.init_model()
@@ -87,6 +88,7 @@ class NeuralNetwork(Classifier):
         assert model_type == self.model_type, "Model type does not match: %s" % model_type
         self.labels = list(d["labels"])
         self.is_frozen = d["is_frozen"]
+        self._iteration = d.get("iteration", 0)
         with open(self.filename + ".json") as f:
             self.model = model_from_json(f.read())
         try:

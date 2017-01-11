@@ -262,6 +262,8 @@ class Parser(object):
         :return: valid action with maximum probability according to classifier
         """
         self.scores = self.model.model.score(features)  # Returns a NumPy array
+        if Config().args.verbose >= 2:
+            print("  scores: " + " ".join(("%g" % s for s in self.scores)))
         best_action = self.select_action(self.scores.argmax(), true_actions)
         if self.state.is_valid(best_action):
             return best_action
