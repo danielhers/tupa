@@ -11,7 +11,7 @@ from ucca.tests.test_ucca import TestUtil
 
 NUM_PASSAGES = 2
 
-i
+
 class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ParserTests, self).__init__(*args, **kwargs)
