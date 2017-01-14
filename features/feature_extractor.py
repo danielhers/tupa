@@ -3,7 +3,7 @@ import re
 from ucca import layer0
 from ucca.layer1 import EdgeTags
 
-FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lruLRU]*)([wtdepqxyAPCIR]*)")
+FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lruLRU]*)([wtdhepqxyAPCIR]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile("^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 
 
@@ -47,6 +47,7 @@ class FeatureTemplateElement(object):
                            w: node text
                            t: node POS tag
                            d: node dependency relation
+                           h: node height
                            e: tag of first incoming edge / action tag
                            ,: unique separator punctuation between nodes
                            q: count of any separator punctuation between nodes
@@ -196,6 +197,7 @@ class FeatureExtractor(object):
         "w": lambda node, _: FeatureExtractor.get_head_terminal(node).text,
         "t": lambda node, _: FeatureExtractor.get_head_terminal(node).pos_tag,
         "d": lambda node, _: FeatureExtractor.get_head_terminal(node).dep_rel,
+        "h": lambda node, _: FeatureExtractor.get_height(node),
         "i": lambda node, _: FeatureExtractor.get_head_terminal(node).index,
         "e": lambda node, prev_node: next(e.tag for e in node.incoming
                                           if prev_node is None or e.parent == prev_node),
@@ -256,6 +258,16 @@ class FeatureExtractor(object):
 
     @staticmethod
     def get_head_terminal(node):
+        terminal, height = get_head_terminal_height(node)
+        return terminal
+
+    @staticmethod
+    def get_height(node):
+        terminal, height = get_head_terminal_height(node)
+        return height
+
+    @staticmethod
+    def get_head_terminal_height(node):
         height = 0
         while node.text is None:  # Not a terminal
             edges = [edge for edge in node.outgoing
@@ -265,7 +277,7 @@ class FeatureExtractor(object):
             node = min(edges, key=lambda edge: FeatureExtractor.EDGE_PRIORITY.get(
                 edge.tag, 0)).child
             height += 1
-        return node
+        return node, height
 
     @staticmethod
     def has_gaps(node):
