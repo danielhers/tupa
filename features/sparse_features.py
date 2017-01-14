@@ -40,6 +40,8 @@ FEATURE_TEMPLATES = (
     # UCCA-specific
     "s0I", "s0R", "s0wI", "s0wR",
     "b0I", "b0R", "b0wI", "b0wR",
+    # height
+    "s0h", "s1h", "b0h", "b1h",
 )
 
 

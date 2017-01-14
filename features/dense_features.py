@@ -31,9 +31,9 @@ FEATURE_TEMPLATES = (
     # gap types
     "s0xs1xs2xs3x",
     # numeric
-    "s0qyPCIRs1qys2ys3y"
-    "b0PCIR"
-    "s0s1s0b0s0"
+    "s0hqyPCIRs1hqys2hys3hy"
+    "b0hPCIR"
+    "s0s1s0b0s0",
 )
 EXTRA_NUMERIC_FEATURES = 2  # bias, node ratio
 
