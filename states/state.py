@@ -23,7 +23,8 @@ class State(object):
         assert l0.all, "Empty passage '%s'" % passage.ID
         self.labeled = len(l1.all) > 1
         self.terminals = [Node(i, orig_node=t, text=t.text, paragraph=t.paragraph, tag=t.tag,
-                               pos_tag=t.extra.get(textutil.TAG_KEY)) for i, t in enumerate(l0.all)]
+                               pos_tag=t.extra.get(textutil.TAG_KEY), dep_rel=t.extra.get(textutil.DEP_KEY))
+                          for i, t in enumerate(l0.all)]
         self.nodes = list(self.terminals)  # Copy the list of terminals; more nodes will be added later
         self.buffer = deque(self.nodes)  # Copy the list of nodes to initialize the buffer
         self.root = self.add_node(l1.heads[0])  # The root is not part of the buffer
