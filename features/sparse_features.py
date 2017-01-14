@@ -2,16 +2,16 @@ from features.feature_extractor import FeatureExtractor
 
 FEATURE_TEMPLATES = (
     # unigrams (Zhang and Clark 2009):
-    "s0te", "s0we", "s1te", "s1we", "s2te", "s2we", "s3te", "s3we",
-    "b0wt", "b1wt", "b2wt", "b3wt",
+    "s0tde", "s0we", "s1tde", "s1we", "s2tde", "s2we", "s3tde", "s3we",
+    "b0wtd", "b1wtd", "b2wtd", "b3wtd",
     "s0lwe", "s0rwe", "s0uwe", "s1lwe", "s1rwe", "s1uwe",
     # bigrams (Zhang and Clark 2009):
-    "s0ws1w", "s0ws1e", "s0es1w", "s0es1e", "s0wb0w", "s0wb0t",
-    "s0eb0w", "s0eb0t", "s1wb0w", "s1wb0t", "s1eb0w", "s1eb0t",
-    "b0wb1w", "b0wb1t", "b0tb1w", "b0tb1t",
+    "s0ws1w", "s0ws1e", "s0es1w", "s0es1e", "s0wb0w", "s0wb0td",
+    "s0eb0w", "s0eb0td", "s1wb0w", "s1wb0td", "s1eb0w", "s1eb0td",
+    "b0wb1w", "b0wb1td", "b0tdb1w", "b0tdb1td",
     # trigrams (Zhang and Clark 2009):
-    "s0es1es2w", "s0es1es2e", "s0es1es2e", "s0es1eb0w", "s0es1eb0t",
-    "s0es1wb0w", "s0es1wb0t", "s0ws1es2e", "s0ws1eb0t",
+    "s0es1es2w", "s0es1es2e", "s0es1es2e", "s0es1eb0w", "s0es1eb0td",
+    "s0es1wb0w", "s0es1wb0td", "s0ws1es2e", "s0ws1eb0td",
     # extended (Zhu et al. 2013):
     "s0llwe", "s0lrwe", "s0luwe", "s0rlwe", "s0rrwe",
     "s0ruwe", "s0ulwe", "s0urwe", "s0uuwe", "s1llwe",
@@ -23,12 +23,12 @@ FEATURE_TEMPLATES = (
     "s1wp", "s1wep", "s1wq", "s1weq",
     # disco, unigrams (Maier 2015):
     "s0xwe", "s1xwe", "s2xwe", "s3xwe",
-    "s0xte", "s1xte", "s2xte", "s3xte",
+    "s0xtde", "s1xtde", "s2xtde", "s3xtde",
     "s0xy", "s1xy", "s2xy", "s3xy",
     # disco, bigrams (Maier 2015):
     "s0xs1e", "s0xs1w", "s0xs1x", "s0ws1x", "s0es1x",
     "s0xs2e", "s0xs2w", "s0xs2x", "s0es2x",
-    "s0ys1y", "s0ys2y", "s0xb0t", "s0xb0w",
+    "s0ys1y", "s0ys2y", "s0xb0td", "s0xb0w",
     # counts (Tokgöz and Eryiğit 2015):
     "s0P", "s0C", "s0wP", "s0wC",
     "b0P", "b0C", "b0wP", "b0wC",
