@@ -1,12 +1,12 @@
 from features.feature_extractor_wrapper import FeatureExtractorWrapper
 
-INDEXED_FEATURES = "W", "w", "t"  # external word embeddings, learned word embeddings, POS tags
+INDEXED_FEATURES = "W", "w", "t", "d"  # external word embeddings, learned word embeddings, POS tags, dep rels
 
 
 class FeatureIndexer(FeatureExtractorWrapper):
     """
     Wrapper for FeatureEnumerator to replace non-numeric feature values with indices.
-    To be used with LSTMNeuralNetwork classifier.
+    To be used with BiLSTM classifier.
     """
     def __init__(self, feature_extractor, params=None):
         super(FeatureIndexer, self).__init__(feature_extractor, feature_extractor.params if params is None else params)

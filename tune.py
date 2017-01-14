@@ -71,6 +71,7 @@ def main():
         ("worddimexternal", (0, 300)),
         ("worddim",         (0, 50, 100, 200, 300)),
         ("tagdim",          (5, 10, 20)),
+        ("depdim",          (5, 10, 20)),
         ("labeldim",        (5, 10, 20)),
         ("punctdim",        (1, 2, 3)),
         ("gapdim",          (1, 2, 3)),

@@ -1,7 +1,7 @@
 from features.feature_extractor import FeatureExtractor
 from features.feature_params import MISSING_VALUE
 
-NON_NUMERIC_FEATURE_SUFFIXES = "wtepxA"
+NON_NUMERIC_FEATURE_SUFFIXES = "wtdepxA"
 FEATURE_TEMPLATES = (
     # words
     "s0ws1ws2ws3w"  # stack
@@ -13,6 +13,9 @@ FEATURE_TEMPLATES = (
     # POS tags
     "s0ts1ts2ts3t"  # stack
     "b0tb1tb2tb3t",  # buffer
+    # dependency relations
+    "s0ds1ds2ds3d"  # stack
+    "b0db1db2db3d",  # buffer
     # edge tags
     "s0es1es2es3e"  # stack
     "s0les0res0ues1les1res1ue"  # children

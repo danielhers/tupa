@@ -3,7 +3,7 @@ import re
 from ucca import layer0
 from ucca.layer1 import EdgeTags
 
-FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lruLRU]*)([wtepqxyAPCIR]*)")
+FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lruLRU]*)([wtdepqxyAPCIR]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile("^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 
 
@@ -46,6 +46,7 @@ class FeatureTemplateElement(object):
         :param properties: the actual values to choose, if available (else omit feature), out of:
                            w: node text
                            t: node POS tag
+                           d: node dependency relation
                            e: tag of first incoming edge / action tag
                            ,: unique separator punctuation between nodes
                            q: count of any separator punctuation between nodes
@@ -194,6 +195,7 @@ class FeatureExtractor(object):
     NODE_PROP_GETTERS = {
         "w": lambda node, _: FeatureExtractor.get_head_terminal(node).text,
         "t": lambda node, _: FeatureExtractor.get_head_terminal(node).pos_tag,
+        "d": lambda node, _: FeatureExtractor.get_head_terminal(node).dep_rel,
         "i": lambda node, _: FeatureExtractor.get_head_terminal(node).index,
         "e": lambda node, prev_node: next(e.tag for e in node.incoming
                                           if prev_node is None or e.parent == prev_node),

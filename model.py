@@ -41,6 +41,7 @@ class Model(object):
                               filename=Config().args.wordvectors),
             FeatureParameters("w", Config().args.worddim, Config().args.maxwords, Config().args.worddropout),
             FeatureParameters("t", Config().args.tagdim, Config().args.maxtags),
+            FeatureParameters("d", Config().args.depdim, Config().args.maxdeps),
             FeatureParameters("e", Config().args.labeldim, Config().args.maxedgelabels),
             FeatureParameters("p", Config().args.punctdim, Config().args.maxpuncts),
             FeatureParameters("x", Config().args.gapdim, Config().args.maxgaps),
