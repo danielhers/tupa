@@ -258,16 +258,14 @@ class FeatureExtractor(object):
 
     @staticmethod
     def get_head_terminal(node):
-        terminal, height = get_head_terminal_height(node)
-        return terminal
+        return FeatureExtractor.get_head_terminal_height(node)
 
     @staticmethod
     def get_height(node):
-        terminal, height = get_head_terminal_height(node)
-        return height
+        return FeatureExtractor.get_head_terminal_height(node, True)
 
     @staticmethod
-    def get_head_terminal_height(node):
+    def get_head_terminal_height(node, return_height=False):
         height = 0
         while node.text is None:  # Not a terminal
             edges = [edge for edge in node.outgoing
@@ -277,7 +275,7 @@ class FeatureExtractor(object):
             node = min(edges, key=lambda edge: FeatureExtractor.EDGE_PRIORITY.get(
                 edge.tag, 0)).child
             height += 1
-        return node, height
+        return height if return_height else node
 
     @staticmethod
     def has_gaps(node):
