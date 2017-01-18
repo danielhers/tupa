@@ -86,7 +86,6 @@ def main():
         ("optimizer",       10 * [config.OPTIMIZERS[0]] + list(config.OPTIMIZERS)),
         ("loss",            20 * [config.OBJECTIVES[0]] + list(config.OBJECTIVES)),
         ("importance",      (1, 2)),
-        ("earlyupdate",     6 * [False] + [True]),
         ("iterations",      range(1, 51)),
         ("worddropout",     (0, .1, .2, .25, .3)),
         ("regularizer",     [None] + 3 * [config.REGULARIZERS[-1]] + list(config.REGULARIZERS)),
