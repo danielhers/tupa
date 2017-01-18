@@ -50,12 +50,12 @@ class NeuralNetwork(Classifier):
         :param input_params: dict of feature type name -> FeatureInformation
         """
         super(NeuralNetwork, self).__init__(*args)
-        self.max_num_labels = Config().args.maxlabels
+        self.max_num_labels = Config().args.max_labels
         self._layers = Config().args.layers
-        self._layer_dim = Config().args.layerdim
+        self._layer_dim = Config().args.layer_dim
         self._activation_str = Config().args.activation
         self._init_str = Config().args.init
-        self._minibatch_size = Config().args.minibatchsize
+        self._minibatch_size = Config().args.minibatch_size
         self._dropout = Config().args.dropout
         self._optimizer_str = Config().args.optimizer
         self._activation = ACTIVATIONS[self._activation_str]

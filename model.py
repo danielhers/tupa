@@ -42,16 +42,16 @@ class Model(object):
     def dense_features_wrapper(wrapper):
         from features.dense_features import DenseFeatureExtractor
         params = [
-            FeatureParameters("W", Config().args.worddimexternal, Config().args.maxwordsexternal,
-                              Config().args.worddropoutexternal, Config().args.updatewordvectors, copy_from="w",
-                              filename=Config().args.wordvectors),
-            FeatureParameters("w", Config().args.worddim, Config().args.maxwords, Config().args.worddropout),
-            FeatureParameters("t", Config().args.tagdim, Config().args.maxtags),
-            FeatureParameters("d", Config().args.depdim, Config().args.maxdeps),
-            FeatureParameters("e", Config().args.labeldim, Config().args.maxedgelabels),
-            FeatureParameters("p", Config().args.punctdim, Config().args.maxpuncts),
-            FeatureParameters("x", Config().args.gapdim, Config().args.maxgaps),
-            FeatureParameters("A", Config().args.actiondim, Config().args.maxactions),
+            FeatureParameters("W", Config().args.word_dim_external, Config().args.max_words_external,
+                              Config().args.word_dropout_external, Config().args.update_word_vectors, copy_from="w",
+                              filename=Config().args.word_vectors),
+            FeatureParameters("w", Config().args.word_dim, Config().args.max_words, Config().args.word_dropout),
+            FeatureParameters("t", Config().args.tag_dim, Config().args.max_tags),
+            FeatureParameters("d", Config().args.dep_dim, Config().args.max_deps),
+            FeatureParameters("e", Config().args.label_dim, Config().args.max_edge_labels),
+            FeatureParameters("p", Config().args.punct_dim, Config().args.max_puncts),
+            FeatureParameters("x", Config().args.gap_dim, Config().args.max_gaps),
+            FeatureParameters("A", Config().args.action_dim, Config().args.max_actions),
         ]
         return wrapper(DenseFeatureExtractor(), params)
 

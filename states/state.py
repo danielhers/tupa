@@ -104,7 +104,7 @@ class State(object):
             if parent is self.root and Config().args.constraints:
                 assert child.text is None, "Root may not have terminal children, but is being added '%s'" % child
                 assert action.tag in Constraints.TopLevel, "The root may not have %s edges" % action.tag
-            # if Config().args.multipleedges:  # Removed this option because it is not useful right now
+            # if Config().args.multiple_edges:  # Removed this option because it is not useful right now
             #     edge = Edge(parent, child, action.tag, remote=action.remote)
             #     assert edge not in parent.outgoing, "Edge must not already exist: %s" % edge
             # else:
@@ -112,7 +112,7 @@ class State(object):
             assert parent not in child.descendants, "Detected cycle created by edge: %s->%s" % (parent, child)
 
         if action.is_type(Actions.Finish):
-            if not Config().args.noswap:  # Without swap, the oracle may be incapable even of single action
+            if Config().args.swap:  # Without swap, the oracle may be incapable even of single action
                 assert self.root.outgoing, \
                     "Root must have at least one child at the end of the parse, but has none"
         elif action.is_type(Actions.Shift):
@@ -335,12 +335,12 @@ class State(object):
         return (len(self.nodes) + extra) / len(self.terminals) - 1
 
     def assert_node_ratio(self, extra=0):
-        max_ratio = Config().args.maxnodes
+        max_ratio = Config().args.max_nodes
         assert self.node_ratio(extra=extra) <= max_ratio, \
             "Reached maximum ratio (%.3f) of non-terminals to terminals" % max_ratio
 
     def assert_height(self):
-        max_height = Config().args.maxheight
+        max_height = Config().args.max_height
         assert self.root.height <= max_height, \
             "Reached maximum graph height (%d)" % max_height
 

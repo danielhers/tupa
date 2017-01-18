@@ -43,7 +43,7 @@ class Parser(object):
         self.beam = beam  # Currently unused
         self.state_hash_history = None  # For loop checking
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
-        self.ignore_node = lambda n: n.tag == layer1.NodeTags.Linkage if Config().args.nolinkage else None
+        self.ignore_node = None if Config().args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
         self.best_score = self.dev = self.iteration = self.eval_index = None
         self.dev_scores = []
         self.trained = False
@@ -85,7 +85,7 @@ class Parser(object):
             print("Average labeled F1 score on dev: %.3f" % score)
             if Config().args.devscores:
                 prefix = [self.iteration]
-                if Config().args.saveevery:
+                if Config().args.save_every:
                     prefix.append(self.eval_index)
                 with open(Config().args.devscores, "a") as f:
                     print(",".join([".".join(map(str, prefix))] + scores.fields()), file=f)
@@ -95,7 +95,7 @@ class Parser(object):
                 self.model.save()
             else:
                 print("Not better than previous best score (%.3f)" % self.best_score)
-        elif last or Config().args.saveevery is not None:
+        elif last or Config().args.save_every is not None:
             self.model.save()
         if not last:
             self.model = model  # Restore non-finalized model
@@ -172,7 +172,7 @@ class Parser(object):
             self.model.model.finished_item(train)
             self.total_correct += self.correct_count
             self.total_actions += self.action_count
-            if train and Config().args.saveevery and (passage_index+1) % Config().args.saveevery == 0:
+            if train and Config().args.save_every and (passage_index+1) % Config().args.save_every == 0:
                 self.eval_and_save()
                 self.eval_index += 1
             yield (predicted_passage, evaluate_passage(predicted_passage, passage)) if evaluate else predicted_passage
@@ -196,7 +196,7 @@ class Parser(object):
         if Config().args.verbose:
             print("  initial state: %s" % self.state)
         while True:
-            if Config().args.checkloops:
+            if Config().args.check_loops:
                 self.check_loop(print_oracle=train)
 
             true_actions = []
@@ -223,7 +223,7 @@ class Parser(object):
                 best_true_action = true_actions[0] if len(true_actions) == 1 else \
                     true_actions[self.scores[[a.id for a in true_actions]].argmax()]
                 self.model.model.update(features, predicted_action.id, best_true_action.id,
-                                        Config().args.importance if best_true_action.is_swap else 1)
+                                        Config().args.swap_importance if best_true_action.is_swap else 1)
             self.action_count += 1
             self.model.model.finished_step(train)
             try:
@@ -238,7 +238,7 @@ class Parser(object):
                         predicted_action, "|".join(map(str, true_actions)), action, self.state))
                 for line in self.state.log:
                     print("    " + line)
-            if self.state.finished or train and not correct_action and Config().args.earlyupdate:
+            if self.state.finished or train and not correct_action and Config().args.early_update:
                 return  # action is FINISH
 
     def check_loop(self, print_oracle):
@@ -335,7 +335,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
             else:
                 guessed_passage = result
                 print()
-            if guessed_passage is not None and not args.nowrite:
+            if guessed_passage is not None and not args.no_write:
                 ioutil.write_passage(guessed_passage, args)
         if passage_scores and (not args.verbose or len(passage_scores) > 1):
             test_scores = evaluation.Scores.aggregate(passage_scores)

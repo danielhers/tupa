@@ -9,10 +9,10 @@ class BiLSTM(NeuralNetwork):
 
     def __init__(self, *args, **kwargs):
         super(BiLSTM, self).__init__(BILSTM_NN, *args, **kwargs)
-        self._lstm_layers = Config().args.lstmlayers
-        self._lstm_layer_dim = Config().args.lstmlayerdim
-        self._embedding_layers = Config().args.embeddinglayers
-        self._embedding_layer_dim = Config().args.embeddinglayerdim
+        self._lstm_layers = Config().args.lstm_layers
+        self._lstm_layer_dim = Config().args.lstm_layer_dim
+        self._embedding_layers = Config().args.embedding_layers
+        self._embedding_layer_dim = Config().args.embedding_layer_dim
         self._input_reps = None
         self._empty_rep = None
 

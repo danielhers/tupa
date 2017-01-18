@@ -13,13 +13,13 @@ class Oracle(object):
         l1 = passage.layer(layer1.LAYER_ID)
         self.nodes_remaining = {node.ID for node in l1.all
                                 if node is not l1.heads[0] and
-                                (not Config().args.nolinkage or node.tag != layer1.NodeTags.Linkage) and
-                                (not Config().args.noimplicit or not node.attrib.get("implicit"))}
+                                (Config().args.linkage or node.tag != layer1.NodeTags.Linkage) and
+                                (Config().args.implicit or not node.attrib.get("implicit"))}
         self.edges_remaining = {edge for node in passage.nodes.values() for edge in node
-                                if (not Config().args.nolinkage or edge.tag not in (
+                                if (Config().args.linkage or edge.tag not in (
                                     layer1.EdgeTags.LinkRelation, layer1.EdgeTags.LinkArgument)) and
-                                (not Config().args.noimplicit or not edge.child.attrib.get("implicit")) and
-                                (not Config().args.noremote or not edge.attrib.get("remote"))}
+                                (Config().args.implicit or not edge.child.attrib.get("implicit")) and
+                                (Config().args.remote or not edge.attrib.get("remote"))}
         self.passage = passage
         self.edge_found = False
         self.log = None
@@ -99,10 +99,10 @@ class Oracle(object):
                         for i, s in enumerate(state.stack[-3::-1]):  # Skip top two, they are not related
                             edge = related.pop(s.node_id, None)
                             if edge is not None:
-                                if Config().args.noswap:  # We have no chance to reach it, so stop trying
+                                if not Config().args.swap:  # We have no chance to reach it, so stop trying
                                     self.remove(edge)
                                     continue
-                                if distance is None and Config().args.compoundswap:  # Save the first one
+                                if distance is None and Config().args.compound_swap:  # Save the first one
                                     distance = i + 1
                                 if not related:  # All related nodes are in the stack
                                     yield Actions.Swap(distance)
