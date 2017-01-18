@@ -84,7 +84,6 @@ def main():
         ("minibatchsize",   (50, 100, 200, 300, 500, 1000)),
         ("optimizer",       5 * [config.OPTIMIZERS[0]] + list(config.OPTIMIZERS)),
         ("importance",      (1, 2)),
-        ("earlyupdate",     6 * [False] + [True]),
         ("iterations",      range(1, 51)),
         ("worddropout",     (0, .1, .2, .25, .3)),
         ("worddropoutexternal", (0, .1, .2, .25, .3)),
