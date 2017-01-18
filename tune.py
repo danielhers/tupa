@@ -13,7 +13,7 @@ MODELS_DIR = "models"
 
 class Params(object):
     def __init__(self, params):
-        if not params["earlyupdate"]:
+        if params["classifier"] == config.FEEDFORWARD_NN:
             params["iterations"] = 1
         if params["regularizer"] is None:
             params["regularization"] = None
@@ -58,40 +58,40 @@ class Params(object):
 def main():
     if not os.path.exists(MODELS_DIR):
         os.makedirs(MODELS_DIR)
-    Config().args.nowrite = True
+    Config().args.no_write = True
     out_file = os.environ.get("PARAMS_FILE", "params.csv")
     word_vectors_files = [os.environ[f] for f in os.environ if f.startswith("WORD_VECTORS")]
     num = int(os.environ.get("PARAMS_NUM", 30))
     np.random.seed()
     domains = (
-        ("seed",            2147483647),  # max value for int
-        ("classifier",      100 * [config.FEEDFORWARD_NN] + list(config.CLASSIFIERS)),
-        ("updatewordvectors", [True, False]),
-        ("wordvectors",     [None] + word_vectors_files),
-        ("worddimexternal", (0, 300)),
-        ("worddim",         (0, 50, 100, 200, 300)),
-        ("tagdim",          (5, 10, 20)),
-        ("depdim",          (5, 10, 20)),
-        ("labeldim",        (5, 10, 20)),
-        ("punctdim",        (1, 2, 3)),
-        ("gapdim",          (1, 2, 3)),
-        ("actiondim",       (3, 5, 10)),
-        ("layerdim",        (50, 100, 200, 300, 500, 1000)),
-        ("layers",          [1] + 5 * [2]),
-        ("activation",      config.ACTIVATIONS),
-        ("init",            5 * [config.INITIALIZATIONS[0]] + list(config.INITIALIZATIONS)),
-        ("batchsize",       (10, 30, 50, 100, 200, 500)),
-        ("minibatchsize",   (50, 100, 200, 300, 500, 1000)),
-        ("nbepochs",        range(10, 51)),
-        ("optimizer",       10 * [config.OPTIMIZERS[0]] + list(config.OPTIMIZERS)),
-        ("loss",            20 * [config.OBJECTIVES[0]] + list(config.OBJECTIVES)),
-        ("importance",      (1, 2)),
-        ("iterations",      range(1, 51)),
-        ("worddropout",     (0, .1, .2, .25, .3)),
-        ("regularizer",     [None] + 3 * [config.REGULARIZERS[-1]] + list(config.REGULARIZERS)),
-        ("regularization",  (1e-7, 1e-6, 1e-5, 1e-4)),
-        ("worddropoutexternal", (0, .1, .2, .25, .3)),
-        ("dropout",         (0, .1, .2, .3, .4, .5)),
+        ("seed",                    2147483647),  # max value for int
+        ("classifier",              100 * [config.FEEDFORWARD_NN] + list(config.CLASSIFIERS)),
+        ("update_word_vectors",     [True, False]),
+        ("word_vectors",            [None] + word_vectors_files),
+        ("word_dim_external",       (0, 300)),
+        ("word_dim",                (0, 50, 100, 200, 300)),
+        ("tag_dim",                 (5, 10, 20)),
+        ("dep_dim",                 (5, 10, 20)),
+        ("label_dim",               (5, 10, 20)),
+        ("punct_dim",               (1, 2, 3)),
+        ("gap_dim",                 (1, 2, 3)),
+        ("action_dim",              (3, 5, 10)),
+        ("layer_dim",               (50, 100, 200, 300, 500, 1000)),
+        ("layers",                  [1] + 5 * [2]),
+        ("activation",              config.ACTIVATIONS),
+        ("init",                    5 * [config.INITIALIZATIONS[0]] + list(config.INITIALIZATIONS)),
+        ("batch_size",              (10, 30, 50, 100, 200, 500)),
+        ("minibatch_size",          (50, 100, 200, 300, 500, 1000)),
+        ("epochs",                  range(10, 51)),
+        ("optimizer",               10 * [config.OPTIMIZERS[0]] + list(config.OPTIMIZERS)),
+        ("loss",                    20 * [config.OBJECTIVES[0]] + list(config.OBJECTIVES)),
+        ("swap_importance",         (1, 2)),
+        ("iterations",              range(1, 51)),
+        ("word_dropout",            (0, .1, .2, .25, .3)),
+        ("word_dropout_external",   (0, .1, .2, .25, .3)),
+        ("regularizer",             [None] + 3 * [config.REGULARIZERS[-1]] + list(config.REGULARIZERS)),
+        ("regularization",          (1e-7, 1e-6, 1e-5, 1e-4)),
+        ("dropout",                 (0, .1, .2, .3, .4, .5)),
     )
     params = [Params(OrderedDict(p))
               for p in zip(*[[(n, v.item() if hasattr(v, "item") else v)

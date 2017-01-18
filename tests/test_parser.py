@@ -15,8 +15,9 @@ NUM_PASSAGES = 2
 class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ParserTests, self).__init__(*args, **kwargs)
-        Config("", "-m", "test", "--maxwordsexternal=100", "--worddimexternal=100", "--optimizer=sgd",
-               "--layerdim=100", "--layers=1", "--updatewordvectors")
+        Config("", "-m", "test", "--linkage", "--implicit", "--no-constraints",
+               "--max-words-external=100", "--word-dim-external=100", "--optimizer=sgd",
+               "--layer-dim=100", "--layers=1", "--update-word-vectors")
 
     @staticmethod
     def load_passages():

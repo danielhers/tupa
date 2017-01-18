@@ -71,7 +71,7 @@ class SparsePerceptron(Perceptron):
         if self.is_frozen:
             model.update(self.model)
         self.model = model
-        self._min_update = Config().args.minupdate  # Minimum number of updates for a feature to be used in scoring
+        self._min_update = Config().args.min_update  # Minimum number of updates for a feature to be used in scoring
 
     def score(self, features):
         """

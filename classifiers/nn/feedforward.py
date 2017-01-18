@@ -109,12 +109,12 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
                     x[name] = np.array(values)
             self.init_model()
             callbacks = [EarlyStopping(patience=1, verbose=1)]
-            if self.filename and Config().args.saveeveryepoch:
+            if self.filename and Config().args.save_every_epoch:
                 # noinspection PyTypeChecker
                 callbacks.append(ModelCheckpoint(self.filename + ".{epoch:02d}-{val_loss:.2f}.h5",
                                                  verbose=1, save_best_only=True, save_weights_only=True))
             log = self.model.fit(x, y, batch_size=self._minibatch_size, nb_epoch=self._nb_epochs,
-                                 validation_split=Config().args.validationsplit, verbose=2, callbacks=callbacks)
+                                 validation_split=Config().args.validation_split, verbose=2, callbacks=callbacks)
             Config().log(log.history)
             self._samples = defaultdict(list)
             self._item_index = 0
@@ -123,5 +123,6 @@ class FeedforwardNeuralNetwork(NeuralNetwork):
         if freeze:
             print("Labels: %d" % self.num_labels)
             print("Features: %d" % sum(f.num * (f.dim or 1) for f in self.input_params.values()))
-            return FeedforwardNeuralNetwork(self.filename, list(self.labels), model=self.model, input_params=self.input_params)
+            return FeedforwardNeuralNetwork(self.filename, list(self.labels), model=self.model,
+                                            input_params=self.input_params)
         return None

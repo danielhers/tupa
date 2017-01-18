@@ -26,8 +26,8 @@ class Classifier(object):
         self.labels = labels or []
         self._num_labels = len(self.labels)
         self.is_frozen = model is not None
-        self.learning_rate = Config().args.learningrate
-        self.learning_rate_decay = Config().args.learningratedecay
+        self.learning_rate = Config().args.learning_rate
+        self.learning_rate_decay = Config().args.learning_rate_decay
 
     @property
     def num_labels(self):

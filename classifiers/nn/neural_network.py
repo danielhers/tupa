@@ -26,14 +26,14 @@ class NeuralNetwork(Classifier):
         if self.is_frozen:
             self.model = model
         else:
-            self.max_num_labels = Config().args.maxlabels
+            self.max_num_labels = Config().args.max_labels
             self._layers = Config().args.layers
-            self._layer_dim = Config().args.layerdim
+            self._layer_dim = Config().args.layer_dim
             self._activation = (lambda x: x*x*x) if Config().args.activation == "cube" else Config().args.activation
             self._init = Config().args.init
             self._num_labels = self.num_labels
-            self._minibatch_size = Config().args.minibatchsize
-            self._nb_epochs = Config().args.nbepochs
+            self._minibatch_size = Config().args.minibatch_size
+            self._nb_epochs = Config().args.epochs
             self._dropout = Config().args.dropout
             self._optimizer = Config().args.optimizer
             self._loss = (lambda t, p: K.sum(K.maximum(0., 1.-p*t+p*(1.-t)))) if Config().args.loss == "max_margin" else Config().args.loss
@@ -42,7 +42,7 @@ class NeuralNetwork(Classifier):
                 (lambda: regularizers.get(Config().args.regularizer, {"l": Config().args.regularization}))
             self.input_params = input_params
             self.model = None
-        self._batch_size = Config().args.batchsize
+        self._batch_size = Config().args.batch_size
         self._item_index = 0
         self._iteration = 0
 
