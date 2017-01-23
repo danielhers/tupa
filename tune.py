@@ -18,7 +18,7 @@ class Params(object):
         if params["regularizer"] is None:
             params["regularization"] = None
         self.params = params
-        self.params["model"] = "%s/ucca_%s_%d" % (MODELS_DIR, self.params["classifier"], self.params["seed"])
+        self.params["model"] = "%s/ucca-%s-%d" % (MODELS_DIR, self.params["classifier"], self.params["seed"])
         self.test_scores = None
         self.dev_scores = ()
 
