@@ -84,7 +84,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("-b", "--binary", action="store_true", help="read and write passages in Pickle")
         group.add_argument("-f", "--format", choices=convert.CONVERTERS, help="output format for parsed files")
         group = argparser.add_argument_group(title="General classifier training parameters")
-        group.add_argument("--swap-importance", type=int, default=2, help="learning rate factor for Swap")
+        group.add_argument("--swap-importance", type=int, default=1, help="learning rate factor for Swap")
         group.add_argument("--early-update", action="store_true", help="move to next example on incorrect prediction")
         group.add_argument("--word-dim-external", type=int, default=300, help="dimension for external word embeddings")
         group.add_argument("--word-vectors", help="file to load external word embeddings from (default: GloVe)")
