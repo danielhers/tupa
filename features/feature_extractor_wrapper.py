@@ -10,6 +10,7 @@ class FeatureExtractorWrapper(FeatureExtractor):
         :param feature_extractor: DenseFeatureExtractor to wrap
         :param params: list of FeatureParameters
         """
+        super().__init__(())
         self.feature_extractor = feature_extractor
         self.params = params if isinstance(params, dict) else self.init_params(params)
 

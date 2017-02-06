@@ -355,6 +355,7 @@ def evaluate_passage(guessed_passage, ref_passage):
     return score
 
 
+# noinspection PyTypeChecker,PyStringFormat
 def main():
     args = Config().args
     assert args.passages or args.train, "Either passages or --train is required (use -h for help)"
@@ -368,18 +369,17 @@ def main():
         with open(Config().args.testscores, "w") as f:
             print(",".join(evaluation.Scores.field_titles(Config().args.constructions)), file=f)
     if args.folds is not None:
-        k = args.folds
         fold_scores = []
         all_passages = list(ioutil.read_files_and_dirs(args.passages,
                                                        Config().args.sentences, Config().args.paragraphs))
-        assert len(all_passages) >= k,\
-            "%d folds are not possible with only %d passages" % (k, len(all_passages))
+        assert len(all_passages) >= args.folds, \
+            "%d folds are not possible with only %d passages" % (args.folds, len(all_passages))
         Config().random.shuffle(all_passages)
-        folds = [all_passages[i::k] for i in range(k)]
-        for i in range(k):
-            print("Fold %d of %d:" % (i + 1, k))
+        folds = [all_passages[i::args.folds] for i in range(args.folds)]
+        for i in range(args.folds):
+            print("Fold %d of %d:" % (i + 1, args.folds))
             dev_passages = folds[i]
-            test_passages = folds[(i+1) % k]
+            test_passages = folds[(i + 1) % args.folds]
             train_passages = [passage for fold in folds
                               if fold is not dev_passages and fold is not test_passages
                               for passage in fold]

@@ -19,6 +19,7 @@ class UnknownDict(defaultdict):
         :param d: base dict to initialize by
         :param unknown: value to return for missing keys
         """
+        # noinspection PyTypeChecker
         super(UnknownDict, self).__init__(None, d)
         if self.UNKNOWN not in self:
             assert unknown is not None, "Default value must not be None"

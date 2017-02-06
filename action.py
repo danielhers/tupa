@@ -81,6 +81,7 @@ class Action(object):
             actions = Actions()
             self._id = actions.ids.get(key)
             if self._id is None:  # New action, add to list
+                # noinspection PyTypeChecker
                 self._id = len(actions.all)
                 actions.all.append(self)
                 actions.ids[key] = self._id

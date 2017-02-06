@@ -1,4 +1,3 @@
-from collections import Counter
 from copy import copy
 
 MISSING_VALUE = 0

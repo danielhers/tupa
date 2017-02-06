@@ -52,6 +52,7 @@ class ParserTests(unittest.TestCase):
 
     def train_test(self, model_type, compare=True):
         scores = []
+        p = None
         for mode in "train", "load":
             print("-- %sing %s" % (mode, model_type))
             p = Parser(model_file="test_files/%s" % model_type, model_type=model_type)

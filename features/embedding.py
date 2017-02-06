@@ -7,7 +7,6 @@ from features.feature_params import MISSING_VALUE
 from features.feature_params import NumericFeatureParameters
 from parsing.config import Config
 from parsing.model_util import UnknownDict
-from ucca.textutil import get_word_vectors
 
 
 class FeatureEmbedding(FeatureExtractorWrapper):
@@ -29,7 +28,7 @@ class FeatureEmbedding(FeatureExtractorWrapper):
                 param.data = UnknownDict(vectors, np.zeros(param.dim))
             else:
                 param.data = defaultdict(lambda d=param.dim: Config().random.normal(size=d))
-                param.data[UnknownDict.UNKNOWN]  # Initialize unknown value
+                _ = param.data[UnknownDict.UNKNOWN]  # Initialize unknown value
         param.empty = np.zeros(param.dim, dtype=float)
 
     def extract_features(self, state):
