@@ -15,8 +15,6 @@ class Params(object):
     def __init__(self, params):
         if params["classifier"] == config.FEEDFORWARD_NN:
             params["iterations"] = 1
-        if params["regularizer"] is None:
-            params["regularization"] = None
         self.params = params
         self.params["model"] = "%s/ucca-%s-%d" % (MODELS_DIR, self.params["classifier"], self.params["seed"])
         self.test_scores = None
@@ -65,33 +63,25 @@ def main():
     np.random.seed()
     domains = (
         ("seed",                    2147483647),  # max value for int
-        ("classifier",              100 * [config.FEEDFORWARD_NN] + list(config.CLASSIFIERS)),
-        ("update_word_vectors",     [True, False]),
-        ("word_vectors",            [None] + word_vectors_files),
-        ("word_dim_external",       (0, 300)),
-        ("word_dim",                (0, 50, 100, 200, 300)),
-        ("tag_dim",                 (5, 10, 20)),
-        ("dep_dim",                 (5, 10, 20)),
-        ("label_dim",               (5, 10, 20)),
-        ("punct_dim",               (1, 2, 3)),
-        ("gap_dim",                 (1, 2, 3)),
-        ("action_dim",              (3, 5, 10)),
-        ("layer_dim",               (50, 100, 200, 300, 500, 1000)),
-        ("layers",                  [1] + 5 * [2]),
-        ("activation",              config.ACTIVATIONS),
-        ("init",                    5 * [config.INITIALIZATIONS[0]] + list(config.INITIALIZATIONS)),
+        ("classifier",              (config.SPARSE_PERCEPTRON,)),
+#        ("word_vectors",            [None] + word_vectors_files),
+#        ("word_dim_external",       (0, 300)),
+#        ("word_dim",                (0, 50, 100, 200, 300)),
+#        ("tag_dim",                 (5, 10, 20)),
+#        ("dep_dim",                 (5, 10, 20)),
+#        ("label_dim",               (5, 10, 20)),
+#        ("punct_dim",               (1, 2, 3)),
+#        ("gap_dim",                 (1, 2, 3)),
+#        ("action_dim",              (3, 5, 10)),
         ("batch_size",              (10, 30, 50, 100, 200, 500)),
-        ("minibatch_size",          (50, 100, 200, 300, 500, 1000)),
-        ("epochs",                  range(10, 51)),
-        ("optimizer",               10 * [config.OPTIMIZERS[0]] + list(config.OPTIMIZERS)),
-        ("loss",                    20 * [config.OBJECTIVES[0]] + list(config.OBJECTIVES)),
+#        ("minibatch_size",          (50, 100, 200, 300, 500, 1000)),
         ("swap_importance",         (1, 2)),
         ("iterations",              range(1, 51)),
-        ("word_dropout",            (0, .1, .2, .25, .3)),
-        ("word_dropout_external",   (0, .1, .2, .25, .3)),
-        ("regularizer",             [None] + 3 * [config.REGULARIZERS[-1]] + list(config.REGULARIZERS)),
-        ("regularization",          (1e-7, 1e-6, 1e-5, 1e-4)),
-        ("dropout",                 (0, .1, .2, .3, .4, .5)),
+        ("min_update",              range(1, 51)),
+        ("learning_rate",           (.1, .5, .9, 1, 1.1, 1.5, 2)),
+        ("learning_rate_decay",     (.1, .5, .8, .9, .99, .999, .9999)),
+#        ("word_dropout",            (0, .1, .2, .25, .3)),
+#        ("word_dropout_external",   (0, .1, .2, .25, .3)),
     )
     params = [Params(OrderedDict(p))
               for p in zip(*[[(n, v.item() if hasattr(v, "item") else v)
