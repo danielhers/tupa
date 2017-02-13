@@ -2,21 +2,48 @@ Transition-based UCCA Parser [![Build Status](https://travis-ci.org/danielhers/t
 ============================
 TUPA is a transition-based parser for [Universal Conceptual Cognitive Annotation (UCCA)][1].
 
-This Python 3 package provides a parser for UCCA.
+### Requirements
+* Python 3.x
+* [DyNet](https://github.com/clab/dynet)
 
-Running the parser:
--------------------
+### Build
 
-Install the required modules and spaCy models:
-
+Install the required modules:
+    
+    git submodule update --init --recursive
     virtualenv --python=/usr/bin/python3 .
     . bin/activate  # on bash
     source bin/activate.csh  # on csh
     pip install -r requirements.txt
     python -m spacy.en.download all
+    python ucca/setup.py install
     python setup.py install
 
-Download and extract the pre-trained models:
+### Train the parser
+
+Having a directory with UCCA passage files
+(for example, [the Wiki corpus](https://github.com/huji-nlp/ucca-corpus/tree/master/wiki/pickle)),
+run:
+
+    python tupa/parse.py -t <train_dir> -d <dev_dir> -m <model_filename>
+
+To specify a model type (`sparse`, `dense`, `mlp` or `bilstm`),
+add `-c <model_type>`.
+
+### Parse a text file
+
+Run the parser on a text file (here named `example.txt`) using a trained model:
+
+    python tupa/parse.py example.txt -m <model_filename>
+
+A file named `example.xml` will be created.
+
+If you specified a model type using `-c` when training the model,
+be sure to include it when parsing too.
+
+### Pre-trained models
+
+To download and extract the pre-trained models, run:
 
     wget http://www.cs.huji.ac.il/~danielh/ucca/{sparse,dense,mlp,bilstm}.tgz
     tar xvzf sparse.tgz
@@ -24,16 +51,12 @@ Download and extract the pre-trained models:
     tar xvzf mlp.tgz
     tar xvzf bilstm.tgz
 
-Run the parser on a text file (here named `example.txt`) using either of the models:
+Run the parser using any of them:
 
     python tupa/parse.py example.txt -c sparse -m models/ucca-sparse
     python tupa/parse.py example.txt -c dense -m models/ucca-dense
     python tupa/parse.py example.txt -c mlp -m models/ucca-mlp
     python tupa/parse.py example.txt -c bilstm -m models/ucca-bilstm
-
-A file named `example.xml` will be created.
-
-The `tupa` package contains code for a full UCCA parser, currently under construction.
 
 Author
 ------
