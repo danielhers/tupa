@@ -34,7 +34,7 @@ install:
 before_script:
   - mkdir pickle
   - curl -L http://www.cs.huji.ac.il/~danielh/ucca/ucca_corpus_pickle.tgz | tar xz -C pickle
-  - python scripts/split_corpus.py pickle -t 4282 -d 454 -l
+  - python ucca/scripts/split_corpus.py pickle -t 4282 -d 454 -l
 env:
   - TEST_SUITE=unit
   - TEST_SUITE=sparse
