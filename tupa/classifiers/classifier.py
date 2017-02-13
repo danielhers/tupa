@@ -1,7 +1,7 @@
 from enum import Enum
 
-from parsing.config import Config
-from parsing.model_util import load_dict, save_dict
+from tupa.config import Config
+from tupa.model_util import load_dict, save_dict
 
 
 class ClassifierProperty(Enum):

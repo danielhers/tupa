@@ -3,7 +3,7 @@ from collections import defaultdict
 import numpy as np
 
 from linear.perceptron import Perceptron
-from parsing.config import Config, SPARSE_PERCEPTRON
+from tupa.config import Config, SPARSE_PERCEPTRON
 
 
 class FeatureWeights(object):

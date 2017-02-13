@@ -9,7 +9,7 @@ import dynet as dy
 from classifiers.classifier import Classifier
 from classifiers.classifier import ClassifierProperty
 from features.feature_params import MISSING_VALUE
-from parsing.config import Config
+from tupa.config import Config
 
 TRAINERS = {
     "sgd": dy.SimpleSGDTrainer,

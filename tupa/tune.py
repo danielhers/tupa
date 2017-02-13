@@ -4,8 +4,8 @@ from collections import OrderedDict
 
 import numpy as np
 
-from parsing import parse, config
-from parsing.config import Config
+from tupa import parse, config
+from tupa.config import Config
 from ucca.evaluation import Scores
 
 MODELS_DIR = "models"

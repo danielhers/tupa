@@ -5,8 +5,8 @@ import numpy as np
 from features.feature_extractor_wrapper import FeatureExtractorWrapper
 from features.feature_params import MISSING_VALUE
 from features.feature_params import NumericFeatureParameters
-from parsing.config import Config
-from parsing.model_util import UnknownDict
+from tupa.config import Config
+from tupa.model_util import UnknownDict
 
 
 class FeatureEmbedding(FeatureExtractorWrapper):

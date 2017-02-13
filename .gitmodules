@@ -1,0 +1,3 @@
+[submodule "ucca"]
+	path = ucca
+	url = https://github.com/huji-nlp/ucca

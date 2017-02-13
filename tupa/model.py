@@ -1,6 +1,6 @@
 from features.feature_params import FeatureParameters
-from parsing.action import Actions
-from parsing.config import Config, SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP_NN, BILSTM_NN
+from tupa.action import Actions
+from tupa.config import Config, SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP_NN, BILSTM_NN
 
 
 class Model(object):

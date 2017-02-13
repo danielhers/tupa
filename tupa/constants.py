@@ -1,4 +1,4 @@
-from parsing.config import Config
+from tupa.config import Config
 from ucca.layer1 import EdgeTags
 
 

@@ -1,6 +1,6 @@
 import re
 
-from parsing.config import Config, Singleton
+from tupa.config import Config, Singleton
 
 
 class Action(object):

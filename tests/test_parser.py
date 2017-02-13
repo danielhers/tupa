@@ -1,13 +1,12 @@
-"""Testing code for the parsing package, unit-testing only."""
+"""Testing code for the tupa package, unit-testing only."""
 
 import unittest
 
-from parsing.config import Config, SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP_NN, BILSTM_NN
-from parsing.oracle import Oracle
-from parsing.parse import Parser
 from states.state import State
-from ucca import convert, evaluation
-from ucca.tests.test_ucca import TestUtil
+from tupa.config import Config, SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP_NN, BILSTM_NN
+from tupa.oracle import Oracle
+from tupa.parse import Parser
+from ucca import convert, evaluation, ioutil
 
 NUM_PASSAGES = 2
 
@@ -23,7 +22,7 @@ class ParserTests(unittest.TestCase):
     def load_passages():
         passages = []
         for _ in range(NUM_PASSAGES):
-            passages.append(convert.from_standard(TestUtil.load_xml("test_files/standard3.xml")))
+            passages += ioutil.read_files_and_dirs(("ucca/test_files/standard3.xml",))
         return passages
 
     def test_oracle(self):
@@ -58,7 +57,7 @@ class ParserTests(unittest.TestCase):
         p = None
         for mode in "train", "load":
             print("-- %sing %s" % (mode, model_type))
-            p = Parser(model_file="test_files/%s" % model_type, model_type=model_type)
+            p = Parser(model_file="test_files/models/%s" % model_type, model_type=model_type)
             p.train(self.load_passages() if mode == "train" else None, iterations=200)
             score = evaluation.Scores.aggregate([s for _, s in p.parse(self.load_passages(), evaluate=True)])
             scores.append(score.average_f1())

@@ -3,10 +3,10 @@ import time
 from enum import Enum
 
 from classifiers.classifier import ClassifierProperty
-from parsing.action import Actions
-from parsing.config import Config
-from parsing.model import Model
-from parsing.oracle import Oracle
+from tupa.action import Actions
+from tupa.config import Config
+from tupa.model import Model
+from tupa.oracle import Oracle
 from states.state import State
 from ucca import diffutil, ioutil, textutil, evaluation, layer0, layer1
 

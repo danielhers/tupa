@@ -1,6 +1,6 @@
 from features.feature_extractor import FeatureExtractor
 from features.feature_params import copy_params, NumericFeatureParameters
-from parsing.model_util import load_dict, save_dict, UnknownDict
+from tupa.model_util import load_dict, save_dict, UnknownDict
 from ucca.textutil import get_word_vectors
 
 

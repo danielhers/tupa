@@ -1,5 +1,5 @@
-from parsing.action import Action, Actions
-from parsing.config import Config
+from tupa.action import Action, Actions
+from tupa.config import Config
 from ucca import layer1
 
 

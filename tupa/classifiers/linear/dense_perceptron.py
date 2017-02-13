@@ -1,7 +1,7 @@
 import numpy as np
 
 from linear.perceptron import Perceptron
-from parsing.config import DENSE_PERCEPTRON
+from tupa.config import DENSE_PERCEPTRON
 
 
 class DensePerceptron(Perceptron):

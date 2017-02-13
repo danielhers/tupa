@@ -1,16 +1,75 @@
 <!DOCTYPE html>
 <html>
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
-<script type="text/javascript" src="{{ url_for('static', filename='js/main.js') }}"></script>
-<body>
+  <head>
+    <meta charset="utf-8">
+    <title>UCCA Parser Demo</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+    <link href="//fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/default.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  </head>
+  <body>
 
-<form action="parse" method="post">
-  <fieldset>
-    Input:<br>
-    <input type="text" name="input" value=""><br>
-    <input type="submit" value="Submit">
-  </fieldset>
-</form>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        $('#loader').hide();
+        $.urlParam = function(name){
+          var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+          if(results) return results[1] || 0;
+          else return 0;
+        }
+        $.sendRequest = function(text) {
+          $('#loader').show(100);
+          $.post("parse", $("#demo").serialize(),
+            function(data){
+              var xml = new XMLSerializer().serializeToString(data);
+              $.post("visualize", xml,
+                function(data){
+                  $("#graph").attr("src", "data:image/png;base64," + data);
+                }
+              );
+              $("#xml").text(xml);
+              $('pre code').each(function(i, block) {
+                hljs.highlightBlock(block);
+              });
+              $('#loader').hide();
+            }
+          );
+        };
+        $('#parseButton').click(function () {
+          if ($.trim($("#input").val()) != '') $.sendRequest();
+        });
+        var inputParam = $.urlParam('input');
+        if(inputParam != '') {
+          $("#input").val(decodeURIComponent(inputParam.replace(/\+/g, ' ')));
+          $("#parseButton").click();
+        }
+      });
+    </script>
 
-</body>
+    <form action="" id="demo" style="font-family: Montserrat; margin: 25px auto 30px; max-width: 80%;">
+      <p>
+      <b>Input text:</b>
+      <br>
+      <textarea id="input", name="input" placeholder="e.g., After graduation, John moved to New York City." rows="3" class="form-control"></textarea>
+      <br>
+      <input type="button" id="parseButton" value="Parse" class="btn btn-default">
+      <div id="loader" class="text-center">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif" />
+      </div>
+
+      </p>
+
+      <img style="display:block;margin-left:auto;margin-right:auto" id="graph"/>
+      <pre><code class="xml"><div id="xml" style="font-family: monospace"></div></code></pre>
+
+    </form>
+
+  </body>
 </html>

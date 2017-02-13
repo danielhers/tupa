@@ -1,9 +1,9 @@
 import sys
 from collections import deque, defaultdict
 
-from parsing.action import Actions
-from parsing.config import Config
-from parsing.constants import Constraints
+from tupa.action import Actions
+from tupa.config import Config
+from tupa.constants import Constraints
 from states.edge import Edge
 from states.node import Node
 from ucca import core, layer0, layer1, textutil
