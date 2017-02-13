@@ -16,6 +16,7 @@ Install the required modules:
     source bin/activate.csh  # on csh
     pip install -r requirements.txt
     python -m spacy.en.download all
+    ci/install-dynet.sh
     python ucca/setup.py install
     python setup.py install
 
