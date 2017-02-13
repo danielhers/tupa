@@ -1,7 +1,7 @@
 from copy import copy
 
-MISSING_VALUE = 0
-UNKNOWN_VALUE = 1
+MISSING_VALUE = -1
+UNKNOWN_VALUE = 0
 
 
 class FeatureParameters(object):

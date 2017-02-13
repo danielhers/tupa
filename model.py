@@ -1,6 +1,6 @@
 from features.feature_params import FeatureParameters
 from parsing.action import Actions
-from parsing.config import Config, SPARSE_PERCEPTRON, DENSE_PERCEPTRON, FEEDFORWARD_NN
+from parsing.config import Config, SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP_NN, BILSTM_NN
 
 
 class Model(object):
@@ -24,11 +24,17 @@ class Model(object):
             from linear.dense_perceptron import DensePerceptron
             self.feature_extractor = self.dense_features_wrapper(FeatureEmbedding)
             self.model = DensePerceptron(filename, labels, num_features=self.feature_extractor.num_features())
-        elif model_type == FEEDFORWARD_NN:
+        elif model_type == MLP_NN:
             from features.enumerator import FeatureEnumerator
-            from nn.feedforward import FeedforwardNeuralNetwork
+            from nn.feedforward import MLP
             self.feature_extractor = self.dense_features_wrapper(FeatureEnumerator)
-            self.model = FeedforwardNeuralNetwork(filename, labels, input_params=self.feature_extractor.params)
+            self.model = MLP(filename, labels, input_params=self.feature_extractor.params)
+        elif model_type == BILSTM_NN:
+            from features.enumerator import FeatureEnumerator
+            from features.indexer import FeatureIndexer
+            from nn.bilstm import BiLSTM
+            self.feature_extractor = FeatureIndexer(self.dense_features_wrapper(FeatureEnumerator))
+            self.model = BiLSTM(filename, labels, input_params=self.feature_extractor.params)
         else:
             raise ValueError("Invalid model type: '%s'" % model_type)
 

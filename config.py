@@ -28,19 +28,16 @@ class VAction(argparse.Action):
             values = values.count("v") + 1
         setattr(args, self.dest, values)
 
-
 SPARSE_PERCEPTRON = "sparse"
 DENSE_PERCEPTRON = "dense"
-FEEDFORWARD_NN = "nn"
-CLASSIFIERS = (SPARSE_PERCEPTRON, DENSE_PERCEPTRON, FEEDFORWARD_NN)
+MLP_NN = "mlp"
+BILSTM_NN = "bilstm"
+CLASSIFIERS = (SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP_NN, BILSTM_NN)
 
 # Multiple choice options: the first one is always the default
 ACTIVATIONS = ("sigmoid", "tanh", "relu", "cube")
-INITIALIZATIONS = ("glorot_normal", "glorot_uniform", "he_normal", "he_uniform",
-                   "normal", "uniform", "lecun_uniform")
-OPTIMIZERS = ("nadam", "adam", "sgd", "rmsprop", "adagrad", "adadelta", "adamax")
-OBJECTIVES = ("sparse_categorical_crossentropy", "categorical_crossentropy", "max_margin", "hinge", "squared_hinge")
-REGULARIZERS = ("l2", "l1", "l1l2")
+INITIALIZATIONS = ("glorot_uniform", "normal", "uniform", "const")
+OPTIMIZERS = ("adam", "sgd", "momentum", "adagrad", "adadelta")
 
 
 class Config(object, metaclass=Singleton):
@@ -106,11 +103,10 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--action-dim", type=int, default=5, help="dimension for action type embeddings")
         group.add_argument("--layer-dim", type=int, default=500, help="dimension for hidden layers")
         group.add_argument("--layers", type=int, default=2, help="number of hidden layers")
-        group.add_argument("--batch-size", type=int, default=10, help="fit model every this many passages")
-        group.add_argument("--epochs", type=int, default=5, help="number of epochs for optimization")
-        group.add_argument("--loss", choices=OBJECTIVES, default=OBJECTIVES[0], help="loss function for optimization")
-        group.add_argument("--regularizer", choices=REGULARIZERS, default=REGULARIZERS[0], help="regularizer type")
-        group.add_argument("--regularization", type=float, default=1e-8, help="regularization parameter")
+        group.add_argument("--lstm-layer-dim", type=int, default=500, help="dimension for LSTM hidden layers")
+        group.add_argument("--lstm-layers", type=int, default=2, help="number of LSTM hidden layers")
+        group.add_argument("--embedding-layer-dim", type=int, default=500, help="dimension for layers before LSTM")
+        group.add_argument("--embedding-layers", type=int, default=1, help="number of layers before LSTM")
         group.add_argument("--activation", choices=ACTIVATIONS, default=ACTIVATIONS[0], help="activation function")
         group.add_argument("--init", choices=INITIALIZATIONS, default=INITIALIZATIONS[0], help="weight initialization")
         group.add_argument("--max-labels", type=int, default=100, help="max number of actions to allow")
@@ -128,8 +124,13 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--word-dropout", type=float, default=0.25, help="word dropout parameter")
         group.add_argument("--word-dropout-external", type=float, default=0.25, help="word dropout for word vectors")
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter between layers")
-        group.add_argument("--validation-split", type=float, default=0.1, help="ratio of train set to use as validation")
-        group.add_argument("--save-every-epoch", action="store_true", help="save model every training epoch")
+        group = argparser.add_argument_group(title="DyNet parameters")
+        group.add_argument("--dynet-mem", help="memory for dynet")
+        group.add_argument("--dynet-weight-decay", type=float, help="weight decay for parameters (default 1e-6)")
+        group.add_argument("--dynet-gpu", action="store_true", help="use the GPU")
+        group.add_argument("--dynet-gpus", type=int, help="how many GPUs you want to use")
+        group.add_argument("--dynet-gpu-ids", help="the GPUs that you want to use by device ID")
+        group.add_argument("--dynet-viz", action="store_true", help="visualize NN and exit")
         self.args = argparser.parse_args(args if args else None)
         
         if self.args.model:
@@ -143,8 +144,29 @@ class Config(object, metaclass=Singleton):
             self.args.log = "parse.log"
 
         self._log_file = None
-        np.random.seed(self.args.seed)
+        self.set_external()
         self.random = np.random
+
+    def set_external(self):
+        np.random.seed(self.args.seed)
+        sys.argv += ["--dynet-seed", str(self.args.seed)]
+        if self.args.dynet_mem:
+            sys.argv += ["--dynet-mem", str(self.args.dynet_mem)]
+        if self.args.dynet_weight_decay:
+            sys.argv += ["--dynet-weight-decay", str(self.args.dynet_weight_decay)]
+        if self.args.dynet_gpu:
+            sys.argv += ["--dynet-gpu"]
+        if self.args.dynet_gpus:
+            sys.argv += ["--dynet-gpus", str(self.args.dynet_gpus)]
+        if self.args.dynet_gpu_ids:
+            sys.argv += ["--dynet-gpu-ids", str(self.args.dynet_gpu_ids)]
+        if self.args.dynet_viz:
+            sys.argv += ["--dynet-viz"]
+
+    def update(self, params):
+        for name, value in params.items():
+            setattr(self.args, name, value)
+        self.set_external()
 
     @property
     def line_end(self):

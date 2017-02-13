@@ -2,7 +2,7 @@
 
 import unittest
 
-from parsing.config import Config, SPARSE_PERCEPTRON, DENSE_PERCEPTRON, FEEDFORWARD_NN
+from parsing.config import Config, SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP_NN, BILSTM_NN
 from parsing.oracle import Oracle
 from parsing.parse import Parser
 from states.state import State
@@ -17,7 +17,7 @@ class ParserTests(unittest.TestCase):
         super(ParserTests, self).__init__(*args, **kwargs)
         Config("", "-m", "test", "--linkage", "--implicit", "--no-constraints",
                "--max-words-external=100", "--word-dim-external=100", "--optimizer=sgd",
-               "--layer-dim=100", "--layers=1", "--update-word-vectors")
+               "--layer-dim=100", "--layers=1", "--lstm-layer-dim=100", "--lstm-layers=1")
 
     @staticmethod
     def load_passages():
@@ -47,8 +47,11 @@ class ParserTests(unittest.TestCase):
     def test_parser_dense(self):
         self.train_test(DENSE_PERCEPTRON)
 
-    def test_parser_nn(self):
-        self.train_test(FEEDFORWARD_NN)
+    def test_parser_mlp(self):
+        self.train_test(MLP_NN)
+
+    def test_parser_bilstm(self):
+        self.train_test(BILSTM_NN)
 
     def train_test(self, model_type, compare=True):
         scores = []

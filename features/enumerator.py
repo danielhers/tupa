@@ -32,8 +32,7 @@ class FeatureEnumerator(FeatureExtractorWrapper):
         if param.dim and param.external:
             vectors = self.get_word_vectors(param)
             keys = vectors.keys()
-            param.size += 1
-            param.init = (np.array([np.zeros(param.dim)] + list(vectors.values())),)
+            param.init = np.array(list(vectors.values()))
         param.data = DropoutDict(max_size=param.size, keys=keys, dropout=param.dropout)
 
     def init_features(self, state, suffix):
