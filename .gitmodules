@@ -1,3 +1,9 @@
 [submodule "ucca"]
 	path = ucca
 	url = https://github.com/huji-nlp/ucca
+[submodule "smatch"]
+	path = smatch
+	url = https://github.com/didzis/pSMATCH
+[submodule "amr"]
+	path = amr
+	url = https://github.com/nschneid/amr-hackathon
