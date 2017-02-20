@@ -30,6 +30,8 @@ def main():
             raise IOError("Not found: " + pattern)
         for filename in filenames:
             sys.stdout.write("\rConverting '%s'" % filename)
+            if args.outdir:
+                sys.stdout.write("\n")
             sys.stdout.flush()
             with open(filename, encoding="utf-8") as f:
                 for passage, (ref, amr_id) in zip(convert.from_amr(f), convert.from_amr(f, return_amr=True)):
