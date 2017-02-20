@@ -47,13 +47,15 @@ class AmrConverter(FormatConverter):
         nodes = {}
         while pending:  # add normal nodes
             head, rel, dep = pending.pop()
-            rel = rel.lstrip(":").rstrip("-of")  # FIXME
+            rel = rel.lstrip(":").rstrip("-of")  # FIXME handle -of properly
             dependents = amr.triples(head=dep)
             pending += dependents
             if dep in nodes:  # reentrancy
                 l1.add_remote(nodes[head], rel, nodes[dep])
             else:
-                nodes[dep] = l1.add_fnode(nodes.get(head), rel, implicit=dep not in amr.alignments() and not dependents)
+                node = l1.add_fnode(nodes.get(head), rel, implicit=dep not in amr.alignments() and not dependents)
+                node.tag = repr(dep)
+                nodes[dep] = node
         if amr.tokens():
             reverse_alignments = [None] * len(amr.tokens())
             for k, v in amr.alignments().items():
@@ -77,14 +79,19 @@ class AmrConverter(FormatConverter):
 
     @staticmethod
     def _to_triples(passage):
+        def _node_string(node):
+            m = re.match("\w+\((.*)\)", node.tag)
+            if m:
+                return m.group(1)
+            return node.tag
+
         pending = list(passage.layer(layer1.LAYER_ID).top_node.outgoing)
         while pending:
             edge = pending.pop()
             if edge.tag != EdgeTags.Function:  # skip function nodes
                 pending += edge.child.outgoing
                 if edge.tag != "top":  # do not print top node
-                    ids = ["v" + n.ID.split(core.Node.ID_SEPARATOR)[1] for n in (edge.parent, edge.child)]
-                    yield ids[0], edge.tag, ids[1]
+                    yield _node_string(edge.parent), edge.tag, _node_string(edge.child)
 
 
 def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):
