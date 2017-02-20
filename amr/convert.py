@@ -47,12 +47,13 @@ class AmrConverter(FormatConverter):
         nodes = {}
         while pending:  # add normal nodes
             head, rel, dep = pending.pop()
-            rel = rel.lstrip(":")
-            pending += amr.triples(head=dep)
+            rel = rel.lstrip(":").rstrip("-of")  # FIXME
+            dependents = amr.triples(head=dep)
+            pending += dependents
             if dep in nodes:  # reentrancy
                 l1.add_remote(nodes[head], rel, nodes[dep])
             else:
-                nodes[dep] = l1.add_fnode(nodes.get(head), rel, implicit=dep not in amr.alignments())
+                nodes[dep] = l1.add_fnode(nodes.get(head), rel, implicit=dep not in amr.alignments() and not dependents)
         if amr.tokens():
             reverse_alignments = [None] * len(amr.tokens())
             for k, v in amr.alignments().items():
@@ -60,7 +61,7 @@ class AmrConverter(FormatConverter):
                     reverse_alignments[int(i)] = k
             for i, token in enumerate(amr.tokens()):  # add terminals
                 triple = reverse_alignments[i]
-                if triple is None:
+                if triple is None:  # unaligned token
                     parent = l1.add_fnode(None, EdgeTags.Function)
                 elif isinstance(triple, tuple):
                     parent = nodes[triple[0]]
@@ -79,8 +80,11 @@ class AmrConverter(FormatConverter):
         pending = list(passage.layer(layer1.LAYER_ID).top_node.outgoing)
         while pending:
             edge = pending.pop()
-            pending += edge.child.outgoing
-            yield edge.parent.ID, edge.tag, edge.child.ID
+            if edge.tag != EdgeTags.Function:  # skip function nodes
+                pending += edge.child.outgoing
+                if edge.tag != "top":  # do not print top node
+                    ids = ["v" + n.ID.split(core.Node.ID_SEPARATOR)[1] for n in (edge.parent, edge.child)]
+                    yield ids[0], edge.tag, ids[1]
 
 
 def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):
