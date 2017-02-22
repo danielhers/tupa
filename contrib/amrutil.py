@@ -8,8 +8,10 @@ def parse(*args, **kwargs):
     if parse.AMR is None:
         prev_dir = os.getcwd()
         os.chdir(os.path.dirname(importlib.util.find_spec("src.amr").origin))
-        from src.amr import AMR
-        os.chdir(prev_dir)
+        try:
+            from src.amr import AMR
+        finally:
+            os.chdir(prev_dir)
         parse.AMR = AMR
     return parse.AMR(*args, **kwargs)
 parse.AMR = None
