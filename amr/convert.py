@@ -18,15 +18,17 @@ class AmrConverter(FormatConverter):
         self.amr_id = self.tokens = None
         for line in lines:
             line = line.lstrip()
-            if line and line[0] != "#":
-                self.lines.append(line)
-                continue
-            m = re.match("#\s*::id\s+(\S+)", line)
-            if m:
-                self.amr_id = m.group(1)
-            m = re.match("#\s*::(?:tok|snt)\s+(.*)", line)
-            if m:
-                self.tokens = m.group(1).split()
+            if line:
+                if line[0] != "#":
+                    self.lines.append(line)
+                    continue
+                m = re.match("#\s*::id\s+(\S+)", line)
+                if m:
+                    self.amr_id = m.group(1)
+                else:
+                    m = re.match("#\s*::(?:tok|snt)\s+(.*)", line)
+                    if m:
+                        self.tokens = m.group(1).split()
             if self.lines:
                 yield self._build_passage()
         if self.lines:
@@ -34,15 +36,11 @@ class AmrConverter(FormatConverter):
 
     def _build_passage(self):
         amr = amrutil.parse(" ".join(self.lines), tokens=self.tokens)
-        if self.return_amr:
-            return amr, self.amr_id
         p = core.Passage(self.amr_id or self.passage_id)
         l0 = layer0.Layer0(p)
         l1 = layer1.Layer1(p)
         self.lines = []
         self.amr_id = self.tokens = None
-        if not amr.nodes:
-            return None
         pending = amr.triples(rel=":top")
         nodes = {}
         while pending:  # add normal nodes
@@ -70,7 +68,7 @@ class AmrConverter(FormatConverter):
                 else:
                     parent = triple
                 parent.add(EdgeTags.Terminal, l0.add_terminal(text=token, punct=False))
-        return p
+        return (p, amr, self.amr_id) if self.return_amr else p
 
     def to_format(self, passage, **kwargs):
         del kwargs
@@ -81,16 +79,14 @@ class AmrConverter(FormatConverter):
     def _to_triples(passage):
         def _node_string(node):
             m = re.match("\w+\((.*)\)", node.tag)
-            if m:
-                return m.group(1)
-            return node.tag
+            return m.group(1) if m else node.tag
 
         pending = list(passage.layer(layer1.LAYER_ID).top_node.outgoing)
         while pending:
             edge = pending.pop()
             if edge.tag != EdgeTags.Function:  # skip function nodes
                 pending += edge.child.outgoing
-                if edge.tag != "top":  # do not print top node
+                if edge.tag != "top":  # omit top node from output
                     yield _node_string(edge.parent), edge.tag, _node_string(edge.child)
 
 
@@ -99,7 +95,7 @@ def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):
 
     :param lines: iterable of lines in AMR PENMAN format, describing a single passage.
     :param passage_id: ID to set for passage, overriding the ID from the file
-    :param return_amr: return pair of (AMR object, AMR ID) rather than UCCA passage
+    :param return_amr: return triple of (UCCA passage, AMR object, AMR ID)
 
     :return generator of Passage objects
     """

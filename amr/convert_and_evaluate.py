@@ -2,6 +2,7 @@
 
 import argparse
 import glob
+import os
 import sys
 
 import convert
@@ -33,8 +34,9 @@ def main():
             if args.outdir:
                 sys.stdout.write("\n")
             sys.stdout.flush()
+            basename = os.path.basename(os.path.splitext(filename)[0])
             with open(filename, encoding="utf-8") as f:
-                for passage, (ref, amr_id) in zip(convert.from_amr(f), convert.from_amr(f, return_amr=True)):
+                for passage, ref, amr_id in convert.from_amr(f, passage_id=basename, return_amr=True):
                     if args.outdir:
                         outfile = "%s/%s.xml" % (args.outdir, passage.ID)
                         sys.stderr.write("Writing '%s'...\n" % outfile)
