@@ -6,4 +6,4 @@
 	url = https://github.com/didzis/pSMATCH
 [submodule "amr"]
 	path = contrib/amr
-	url = https://github.com/nschneid/amr-hackathon
+	url = https://github.com/danielhers/amr-hackathon
