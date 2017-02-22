@@ -37,7 +37,7 @@ def main():
                 for passage, ref, amr_id in convert.from_amr(f, passage_id=basename, return_amr=True):
                     if args.outdir:
                         outfile = "%s/%s.xml" % (args.outdir, passage.ID)
-                        sys.stderr.write("Writing '%s'...\n" % outfile)
+                        print("Writing '%s'..." % outfile, file=sys.stderr, flush=True)
                         passage2file(passage, outfile)
                     try:
                         guessed = convert.to_amr(passage, amr_id)
@@ -45,7 +45,7 @@ def main():
                         raise ValueError("Error converting %s back from AMR" % filename) from e
                     if args.outdir:
                         outfile = "%s/%s.txt" % (args.outdir, passage.ID)
-                        sys.stderr.write("Writing '%s'...\n" % outfile)
+                        print("Writing '%s'..." % outfile, file=sys.stderr, flush=True)
                         with open(outfile, "w", encoding="utf-8") as f_out:
                             print(str(guessed), file=f_out)
                     try:
