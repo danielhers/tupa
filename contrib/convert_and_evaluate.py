@@ -6,8 +6,8 @@ import os
 import sys
 
 from ucca.ioutil import passage2file
+from tupa.config import VAction
 
-from config import VAction
 from contrib import convert
 from contrib.amrutil import evaluate, Scores
 
