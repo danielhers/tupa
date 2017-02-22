@@ -3,16 +3,16 @@
 # ::id nw.wsj_0001.1 ::date 2012-04-25T16:31:34 ::annotator ISI-AMR-01 ::preferred
 # ::snt Pierre Vinken , 61 years old , will join the board as a nonexecutive director Nov. 29 .
 # ::save-date Tue Sep 17, 2013 ::file nw_wsj_0001_1.txt
-(j / join-01
-      :ARG0 (p / person :name (p2 / name :op1 "Pierre" :op2 "Vinken")
-            :age (t / temporal-quantity :quant 61
-                  :unit (y / year)))
-      :ARG1 (b / board
-            :ARG1-of (h / have-org-role-91
+(j / join-01~e.8
+      :ARG0 (p / person :name (p2 / name :op1 "Pierre"~e.0 :op2 "Vinken"~e.1)
+            :age~e.5 (t / temporal-quantity :quant 61~e.3
+                  :unit (y / year~e.4)))
+      :ARG1 (b / board~e.10
+            :ARG1-of~e.11 (h / have-org-role-91
                   :ARG0 p
-                  :ARG2 (d2 / director
-                        :mod (e / executive :polarity -))))
-      :time (d / date-entity :month 11 :day 29))
+                  :ARG2 (d2 / director~e.14
+                        :mod (e / executive~e.13 :polarity -))))
+      :time (d / date-entity :month 11~e.15 :day 29~e.16))
 
 # ::id nw.wsj_0001.2 ::date 2012-04-25T16:33:55 ::annotator ISI-AMR-01 ::preferred
 # ::snt Mr. Vinken is chairman of Elsevier N.V. , the Dutch publishing group .
