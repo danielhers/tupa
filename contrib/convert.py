@@ -53,11 +53,16 @@ class AmrConverter(convert.FormatConverter):
         self.amr_id = self.tokens = None
         pending = amr.triples(rel=DEP_PREFIX + TOP_DEP)
         nodes = {}
+        visited = set()  # to avoid cycles
         # if an alignment is for a relation, change it to the dependent instead; separate strings to numeric indices
         alignments = {(k[2] if isinstance(k, tuple) else k): map(int, v.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP))
                       for k, v in amr.alignments().items()}
         while pending:  # add normal nodes
-            head, rel, dep = pending.pop()
+            triple = pending.pop()
+            if triple in visited:
+                continue
+            visited.add(triple)
+            head, rel, dep = triple
             rel = rel.lstrip(DEP_PREFIX)
             outgoing = amr.triples(head=dep)
             if dep in nodes:  # reentrancy
@@ -86,9 +91,11 @@ class AmrConverter(convert.FormatConverter):
             return m.group(1) if m else dep
 
         pending = list(passage.layer(layer1.LAYER_ID).top_node.outgoing)
+        visited = set()  # to avoid cycles
         while pending:
             edge = pending.pop()
-            if edge.tag != TERMINAL_EDGE_TAG:  # skip function nodes
+            if edge not in visited and edge.tag != TERMINAL_EDGE_TAG:  # skip cycles and unaligned terminals
+                visited.add(edge)
                 pending += edge.child.outgoing
                 if edge.tag != TOP_DEP:  # omit top node from output
                     tag = INSTANCE_DEP if edge.tag == INSTANCE_OF_DEP else edge.tag
