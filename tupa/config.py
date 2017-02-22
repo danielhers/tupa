@@ -145,7 +145,9 @@ class Config(object, metaclass=Singleton):
             self.args.log = "parse.log"
         if self.args.format:
             self.format_converter = convert.CONVERTERS[self.args.format][0]
-            self.args.constraints = False
+            if self.args.format == "amr":
+                self.args.constraints = False
+                self.args.implicit = True
         self._log_file = None
         self.set_external()
         self.random = np.random
