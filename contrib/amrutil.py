@@ -1,7 +1,7 @@
 import importlib.util  # needed for amr.peg
 import os
 
-from contrib.smatch import smatch
+from smatch import smatch
 
 
 def parse(*args, **kwargs):
