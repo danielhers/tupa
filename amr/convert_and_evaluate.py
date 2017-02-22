@@ -7,6 +7,7 @@ import sys
 
 import convert
 from amrutil import evaluate, Scores
+from config import VAction
 from ucca.ioutil import passage2file
 
 desc = """Parses files in AMR format, converts to UCCA standard format,
@@ -16,12 +17,9 @@ converts back to the original format and evaluates using smatch.
 
 def main():
     argparser = argparse.ArgumentParser(description=desc)
-    argparser.add_argument("filenames", nargs="+",
-                           help="file names to convert and evaluate")
-    argparser.add_argument("-v", "--verbose", action="store_true",
-                           help="print evaluation results for each file separately")
-    argparser.add_argument("-o", "--outdir",
-                           help="output directory (if unspecified, files are not written)")
+    argparser.add_argument("filenames", nargs="+", help="file names to convert and evaluate")
+    argparser.add_argument("-v", "--verbose", nargs="?", action=VAction, default=0, help="detailed evaluation output")
+    argparser.add_argument("-o", "--outdir", help="output directory (if unspecified, files are not written)")
     args = argparser.parse_args()
 
     scores = []
@@ -51,9 +49,12 @@ def main():
                         with open(outfile, "w", encoding="utf-8") as f_out:
                             print(str(guessed), file=f_out)
                     try:
-                        scores.append(evaluate(guessed, ref, verbose=args.verbose))
+                        s = evaluate(guessed, ref, verbose=args.verbose > 1)
                     except Exception as e:
                         raise ValueError("Error evaluating conversion of %s" % filename) from e
+                    scores.append(s)
+                    if args.verbose:
+                        s.print(flush=True)
     print()
     if args.verbose and len(scores) > 1:
         print("Aggregated scores:")
