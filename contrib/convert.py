@@ -59,12 +59,12 @@ class AmrConverter(convert.FormatConverter):
         while pending:  # add normal nodes
             head, rel, dep = pending.pop()
             rel = rel.lstrip(DEP_PREFIX)
-            dependents = amr.triples(head=dep)
-            pending += dependents
+            outgoing = amr.triples(head=dep)
             if dep in nodes:  # reentrancy
                 l1.add_remote(nodes[head], rel, nodes[dep])
             else:
-                node = l1.add_fnode(nodes.get(head), rel, implicit=dep not in alignments and not dependents)
+                pending += outgoing
+                node = l1.add_fnode(nodes.get(head), rel, implicit=dep not in alignments and not outgoing)
                 node.attrib[NODE_DEP_ATTRIB] = repr(dep)
                 nodes[dep] = node
         if alignments:
