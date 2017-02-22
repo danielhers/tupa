@@ -2,8 +2,8 @@
 	path = ucca
 	url = https://github.com/huji-nlp/ucca
 [submodule "smatch"]
-	path = amr/smatch
+	path = contrib/smatch
 	url = https://github.com/didzis/pSMATCH
 [submodule "amr"]
-	path = amr/amr
+	path = contrib/amr
 	url = https://github.com/nschneid/amr-hackathon

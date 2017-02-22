@@ -2,8 +2,7 @@
 
 import unittest
 
-import amrutil
-import convert
+from contrib import amrutil, convert
 
 
 class ConversionTests(unittest.TestCase):

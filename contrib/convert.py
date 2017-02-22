@@ -1,6 +1,6 @@
 import re
 
-import amrutil
+from contrib import amrutil
 from ucca import core, layer0, layer1
 from ucca.convert import FormatConverter
 
