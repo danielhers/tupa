@@ -45,7 +45,7 @@ class AmrConverter(FormatConverter):
         nodes = {}
         while pending:  # add normal nodes
             head, rel, dep = pending.pop()
-            rel = rel.lstrip(":").rstrip("-of")  # FIXME handle -of properly
+            rel = rel.lstrip(":")
             dependents = amr.triples(head=dep)
             pending += dependents
             if dep in nodes:  # reentrancy
@@ -87,7 +87,8 @@ class AmrConverter(FormatConverter):
             if edge.tag != EdgeTags.Function:  # skip function nodes
                 pending += edge.child.outgoing
                 if edge.tag != "top":  # omit top node from output
-                    yield _node_string(edge.parent), edge.tag, _node_string(edge.child)
+                    tag = "instance" if edge.tag == "instance-of" else edge.tag
+                    yield _node_string(edge.parent), tag, _node_string(edge.child)
 
 
 def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):
