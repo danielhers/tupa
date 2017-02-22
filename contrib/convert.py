@@ -1,8 +1,7 @@
 import re
 
 from contrib import amrutil
-from ucca import core, layer0, layer1
-from ucca.convert import FormatConverter
+from ucca import core, layer0, layer1, convert
 
 COMMENT_PREFIX = "#"
 ID_PATTERN = "#\s*::id\s+(\S+)"
@@ -14,10 +13,10 @@ INSTANCE_OF_DEP = "instance-of"
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
 NODE_DEP_ATTRIB = "dep"
-TERMINAL_EDGE_TAG = "TERMINAL"
+TERMINAL_EDGE_TAG = layer1.EdgeTags.Terminal
 
 
-class AmrConverter(FormatConverter):
+class AmrConverter(convert.FormatConverter):
     def __init__(self):
         self.passage_id = self.amr_id = self.lines = self.tokens = self.return_amr = None
 
@@ -54,6 +53,9 @@ class AmrConverter(FormatConverter):
         self.amr_id = self.tokens = None
         pending = amr.triples(rel=DEP_PREFIX + TOP_DEP)
         nodes = {}
+        # if an alignment is for a relation, change it to the dependent instead; separate strings to numeric indices
+        alignments = {(k[2] if isinstance(k, tuple) else k): map(int, v.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP))
+                      for k, v in amr.alignments().items()}
         while pending:  # add normal nodes
             head, rel, dep = pending.pop()
             rel = rel.lstrip(DEP_PREFIX)
@@ -62,18 +64,13 @@ class AmrConverter(FormatConverter):
             if dep in nodes:  # reentrancy
                 l1.add_remote(nodes[head], rel, nodes[dep])
             else:
-                node = l1.add_fnode(nodes.get(head), rel, implicit=dep not in amr.alignments() and not dependents)
+                node = l1.add_fnode(nodes.get(head), rel, implicit=dep not in alignments and not dependents)
                 node.attrib[NODE_DEP_ATTRIB] = repr(dep)
                 nodes[dep] = node
-        if amr.tokens():
-            reverse_alignments = [None] * len(amr.tokens())
-            for k, v in amr.alignments().items():
-                for i in v.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP):  # remove prefix and separate by comma
-                    reverse_alignments[int(i)] = k
-            for i, token in enumerate(amr.tokens()):  # add terminals
-                triple = reverse_alignments[i]
-                parent = l1.top_node if triple is None else nodes[triple[0] if isinstance(triple, tuple) else triple]
-                parent.add(TERMINAL_EDGE_TAG, l0.add_terminal(text=token, punct=False))
+        if alignments:
+            reverse_alignments = {i: nodes[k] for k, v in alignments.items() for i in v}
+            for i, token in enumerate(amr.tokens()):  # add terminals, unaligned tokens will be the root's children
+                reverse_alignments.get(i, l1.top_node).add(TERMINAL_EDGE_TAG, l0.add_terminal(text=token, punct=False))
         return (p, amr(alignments=False), self.amr_id) if self.return_amr else p
 
     def to_format(self, passage, **kwargs):
@@ -120,3 +117,7 @@ def to_amr(passage, *args, **kwargs):
     """
     del args, kwargs
     return AmrConverter().to_format(passage)
+
+
+CONVERTERS = dict(convert.CONVERTERS)
+CONVERTERS["amr"] = (from_amr, to_amr)

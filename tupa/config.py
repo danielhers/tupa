@@ -3,7 +3,8 @@ import sys
 
 import numpy as np
 
-from ucca import convert, constructions
+from contrib import convert
+from ucca import constructions
 
 
 class Singleton(type):
@@ -142,7 +143,9 @@ class Config(object, metaclass=Singleton):
                 self.args.testscores = self.args.model + ".test.csv"
         elif not self.args.log:
             self.args.log = "parse.log"
-
+        if self.args.format:
+            self.format_converter = convert.CONVERTERS[self.args.format][0]
+            self.args.constraints = False
         self._log_file = None
         self.set_external()
         self.random = np.random

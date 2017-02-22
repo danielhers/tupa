@@ -371,8 +371,8 @@ def main():
             print(",".join(evaluation.Scores.field_titles(Config().args.constructions)), file=f)
     if args.folds is not None:
         fold_scores = []
-        all_passages = list(ioutil.read_files_and_dirs(args.passages,
-                                                       Config().args.sentences, Config().args.paragraphs))
+        all_passages = list(ioutil.read_files_and_dirs(
+            args.passages, Config().args.sentences, Config().args.paragraphs, Config().format_converter))
         assert len(all_passages) >= args.folds, \
             "%d folds are not possible with only %d passages" % (args.folds, len(all_passages))
         Config().random.shuffle(all_passages)
@@ -394,8 +394,8 @@ def main():
             print("Aggregated scores across folds:\n")
             test_scores.print()
     else:  # Simple train/dev/test by given arguments
-        train_passages, dev_passages, test_passages = [ioutil.read_files_and_dirs(arg,
-                                                       Config().args.sentences, Config().args.paragraphs) for arg in
+        train_passages, dev_passages, test_passages = [ioutil.read_files_and_dirs(
+            arg, Config().args.sentences, Config().args.paragraphs, Config().format_converter) for arg in
                                                        (args.train, args.dev, args.passages)]
         test_scores, dev_scores = train_test(train_passages, dev_passages, test_passages, args)
     return test_scores, dev_scores
