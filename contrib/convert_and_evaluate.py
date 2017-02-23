@@ -41,7 +41,7 @@ def main():
                         print("Writing '%s'..." % outfile, file=sys.stderr, flush=True)
                         passage2file(passage, outfile)
                     try:
-                        guessed = convert.to_amr(passage, amr_id)
+                        guessed = convert.to_amr(passage, amr_id)[0]
                     except Exception as e:
                         raise ValueError("Error converting %s back from AMR" % filename) from e
                     if args.outdir:

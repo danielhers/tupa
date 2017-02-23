@@ -28,7 +28,7 @@ def main():
             raise IOError("Not found: " + pattern)
         for filename in filenames:
             passage = file2passage(filename)
-            output = convert.to_amr(passage)
+            output = convert.to_amr(passage)[0]
             outfile = "%s.txt" % (args.outdir + os.path.sep + args.prefix + passage.ID)
             sys.stderr.write("Writing '%s'...\n" % outfile)
             with open(outfile, "w", encoding="utf-8") as f:

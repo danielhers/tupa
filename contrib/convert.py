@@ -123,7 +123,7 @@ class AmrConverter(convert.FormatConverter):
     def to_format(self, passage, **kwargs):
         del kwargs
         import penman
-        return penman.encode(penman.Graph(list(self._to_triples(passage))))
+        return penman.encode(penman.Graph(list(self._to_triples(passage)))),
 
     @staticmethod
     def _to_triples(passage):
