@@ -148,6 +148,8 @@ class Config(object, metaclass=Singleton):
             if self.args.format == "amr":
                 self.args.constraints = False
                 self.args.implicit = True
+        else:
+            self.format_converter = None
         self._log_file = None
         self.set_external()
         self.random = np.random
