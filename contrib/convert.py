@@ -12,7 +12,7 @@ INSTANCE_DEP = "instance"
 INSTANCE_OF_DEP = "instance-of"
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
-NODE_DEP_ATTRIB = "dep"
+NODE_NAME_ATTRIB = "name"
 TERMINAL_EDGE_TAG = layer1.EdgeTags.Terminal
 
 
@@ -88,7 +88,7 @@ class AmrConverter(convert.FormatConverter):
             else:
                 pending += amr.triples(head=dep)
                 node = l1.add_fnode(nodes.get(head), rel)
-                node.attrib[NODE_DEP_ATTRIB] = repr(dep)
+                node.attrib[NODE_NAME_ATTRIB] = repr(dep)
                 nodes[dep] = node
         return nodes
 
@@ -127,10 +127,10 @@ class AmrConverter(convert.FormatConverter):
 
     @staticmethod
     def _to_triples(passage):
-        def _node_string(node):
-            dep = node.attrib[NODE_DEP_ATTRIB]
-            m = re.match("\w+\((.*)\)", dep)
-            return m.group(1) if m else dep
+        def _node_name(node):
+            name = node.attrib[NODE_NAME_ATTRIB]
+            m = re.match("\w+\((.*)\)", name)
+            return m.group(1) if m else name
 
         pending = list(passage.layer(layer1.LAYER_ID).top_node.outgoing)
         visited = set()  # to avoid cycles
@@ -141,7 +141,7 @@ class AmrConverter(convert.FormatConverter):
                 pending += edge.child.outgoing
                 if edge.tag != TOP_DEP:  # omit top node from output
                     tag = INSTANCE_DEP if edge.tag == INSTANCE_OF_DEP else edge.tag
-                    yield _node_string(edge.parent), tag, _node_string(edge.child)
+                    yield _node_name(edge.parent), tag, _node_name(edge.child)
 
 
 def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):
