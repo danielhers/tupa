@@ -7,12 +7,12 @@ RIGHT = PARENT = NODE = 0
 LEFT = CHILD = EDGE = 1
 ACTIONS = (  # index by [NODE/EDGE][PARENT/CHILD or RIGHT/LEFT][True/False (remote)]
     (  # node actions
-        (Actions.RemoteNode, Actions.Node),  # creating a parent
+        (Actions.Node, Actions.RemoteNode),  # creating a parent
         (Actions.Implicit, None)  # creating a child (remote implicit is not allowed)
     ),
     (  # edge actions
-        (Actions.RightRemote, Actions.RightEdge),  # creating a right edge
-        (Actions.LeftRemote, Actions.LeftEdge)  # creating a left edge
+        (Actions.RightEdge, Actions.RightRemote),  # creating a right edge
+        (Actions.LeftEdge, Actions.LeftRemote)  # creating a left edge
     )
 )
 
