@@ -145,13 +145,13 @@ class Config(object, metaclass=Singleton):
         elif not self.args.log:
             self.args.log = "parse.log"
         if self.args.format:
-            self.format_converter = convert.CONVERTERS[self.args.format][0]
+            self.input_converter, self.output_converter = convert.CONVERTERS[self.args.format]
             if self.args.format == "amr":
                 self.args.constraints = False
                 self.args.implicit = True
                 self.args.multiple_edges = True
         else:
-            self.format_converter = None
+            self.input_converter = self.output_converter = None
         self._log_file = None
         self.set_external()
         self.random = np.random
