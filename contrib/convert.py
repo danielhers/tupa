@@ -89,7 +89,8 @@ class AmrConverter(convert.FormatConverter):
             parents = reverse_alignments.get(i, [l1.top_node])
             parents[0].add(TERMINAL_EDGE_TAG, terminal)
             for parent in parents[1:]:  # add as remote terminal child to all parents but the first
-                l1.add_remote(parent, TERMINAL_EDGE_TAG, terminal)
+                if parent not in terminal.parents:  # avoid multiple identical edges (e.g. :polarity~e.68 -~e.68)
+                    l1.add_remote(parent, TERMINAL_EDGE_TAG, terminal)
 
     @staticmethod
     def _update_implicit(l1):
