@@ -118,7 +118,8 @@ class State(object):
         elif action.is_type(Actions.Shift):
             assert self.buffer, "Buffer must not be empty in order to shift from it"
         else:  # Unary actions
-            assert self.actions, "First action must be Shift, but was %s" % action
+            if Config().args.constraints:
+                assert self.actions, "First action must be Shift, but was %s" % action
             assert self.stack, "Action requires non-empty stack: %s" % action
             s0 = self.stack[-1]
             if action.is_type(Actions.Node, Actions.RemoteNode):
