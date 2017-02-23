@@ -1,6 +1,20 @@
-from tupa.action import Action, Actions
+from tupa.action import Actions
 from tupa.config import Config
 from ucca import layer1
+
+# Constants for readability, used by Oracle.action
+RIGHT = PARENT = NODE = 0
+LEFT = CHILD = EDGE = 1
+ACTIONS = (  # index by [NODE/EDGE][PARENT/CHILD or RIGHT/LEFT][True/False (remote)]
+    (  # node actions
+        (Actions.RemoteNode, Actions.Node),  # creating a parent
+        (Actions.Implicit, None)  # creating a child (remote implicit is not allowed)
+    ),
+    (  # edge actions
+        (Actions.RightRemote, Actions.RightEdge),  # creating a right edge
+        (Actions.LeftRemote, Actions.LeftEdge)  # creating a left edge
+    )
+)
 
 
 class Oracle(object):
@@ -73,23 +87,27 @@ class Oracle(object):
             else:
                 # Check for actions to create new nodes
                 for edge in incoming:
-                    if edge.parent.ID in self.nodes_remaining and not edge.attrib.get("remote"):
-                        yield self.create_node_action(edge, edge.parent, Actions.Node)
+                    if edge.parent.ID in self.nodes_remaining and not edge.parent.attrib.get("implicit") and (
+                                not edge.attrib.get("remote") or
+                                # Allow remote parent if all its children are remote/implicit
+                                all(e.attrib.get("remote") or e.child.attrib.get("implicit") for e in edge.parent)):
+                        yield self.action(edge, NODE, PARENT)
 
                 for edge in outgoing:
-                    if edge.child.attrib.get("implicit"):
-                        yield self.create_node_action(edge, edge.child, Actions.Implicit)
+                    if edge.child.ID in self.nodes_remaining and edge.child.attrib.get("implicit") and (
+                            not edge.attrib.get("remote")):  # Allow implicit child if it is not remote
+                        yield self.action(edge, NODE, CHILD)
 
                 if len(state.stack) > 1:
                     s1 = state.stack[-2]
                     # Check for actions to create binary edges
                     for edge in incoming:
                         if edge.parent.ID == s1.node_id:
-                            yield self.create_edge_action(edge, Action.RIGHT)
+                            yield self.action(edge, EDGE, RIGHT)
 
                     for edge in outgoing:
                         if edge.child.ID == s1.node_id:
-                            yield self.create_edge_action(edge, Action.LEFT)
+                            yield self.action(edge, EDGE, LEFT)
 
                     if not self.edge_found:
                         # Check if a swap is necessary, and how far (if compound swap is enabled)
@@ -111,14 +129,17 @@ class Oracle(object):
         if state.buffer and not self.edge_found:
             yield Actions.Shift
 
-    def create_edge_action(self, edge, direction):
+    def action(self, edge, kind, direction):
         self.edge_found = True
-        return Action.edge_action(direction, edge.attrib.get("remote"), edge.tag,
-                                  orig_edge=edge, oracle=self)
-
-    def create_node_action(self, edge, node, action):
-        self.edge_found = True
-        return action(edge.tag, orig_edge=edge, orig_node=node, oracle=self)
+        remote = edge.attrib.get("remote", False)
+        if kind == NODE:
+            node = (edge.parent, edge.child)[direction]
+            implicit = node.attrib.get("implicit")
+            assert not (direction == PARENT and implicit), "Cannot create implicit parent %s" % node.ID
+            assert not (remote and implicit), "Cannot create remote implicit node %s" % node.ID
+        else:  # kind == EDGE
+            node = None
+        return ACTIONS[kind][direction][remote](edge.tag, orig_edge=edge, orig_node=node, oracle=self)
 
     def remove(self, edge, node=None):
         self.edges_remaining.discard(edge)

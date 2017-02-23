@@ -58,8 +58,8 @@ class State(object):
 
         def assert_possible_parent(node):
             assert node.text is None, "Terminals may not have children: %s" % node.text
-            assert not node.implicit, "Implicit nodes may not have children: %s" % s0
             if Config().args.constraints:
+                assert not node.implicit, "Implicit nodes may not have children: %s" % s0
                 assert action.tag not in Constraints.UniqueOutgoing or action.tag not in node.outgoing_tags, \
                     "Outgoing edge tag %s must be unique, but %s already has one" % (
                         action.tag, node)
@@ -121,7 +121,7 @@ class State(object):
             assert self.actions, "First action must be Shift, but was %s" % action
             assert self.stack, "Action requires non-empty stack: %s" % action
             s0 = self.stack[-1]
-            if action.is_type(Actions.Node):
+            if action.is_type(Actions.Node, Actions.RemoteNode):
                 assert_possible_child(s0)
                 assert_possible_node()
             elif action.is_type(Actions.Implicit):
@@ -171,10 +171,10 @@ class State(object):
         self.log = []
         if action.is_type(Actions.Shift):  # Push buffer head to stack; shift buffer
             self.stack.append(self.buffer.popleft())
-        elif action.is_type(Actions.Node):  # Create new parent node and add to the buffer
+        elif action.is_type(Actions.Node, Actions.RemoteNode):  # Create new parent node and add to the buffer
             parent = self.add_node(action.orig_node)
             self.update_swap_index(parent)
-            self.add_edge(Edge(parent, self.stack[-1], action.tag))
+            self.add_edge(Edge(parent, self.stack[-1], action.tag, remote=action.remote))
             self.buffer.appendleft(parent)
         elif action.is_type(Actions.Implicit):  # Create new child node and add to the buffer
             child = self.add_node(action.orig_node, implicit=True)
@@ -195,7 +195,7 @@ class State(object):
         elif action.is_type(Actions.Finish):  # Nothing left to do
             self.finished = True
         else:
-            raise Exception("Invalid action: " + action)
+            raise Exception("Invalid action: %s" % action)
         if Config().args.verify:
             intersection = set(self.stack).intersection(self.buffer)
             assert not intersection, "Stack and buffer overlap: %s" % intersection

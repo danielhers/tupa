@@ -5,9 +5,6 @@ from tupa.config import Config, Singleton
 
 class Action(object):
     type_to_id = {}
-
-    RIGHT = 0
-    LEFT = 1
     MAX_SWAP = 15  # default maximum size for compound swap
 
     def __init__(self, action_type, tag=None, orig_edge=None, orig_node=None, oracle=None):
@@ -40,13 +37,6 @@ class Action(object):
             return Action(action_type, tag)
         return Action(s)
 
-    @classmethod
-    def edge_action(cls, direction, remote, tag, *args, **kwargs):
-        remote_action, edge_action = (Actions.RightRemote, Actions.RightEdge) \
-            if direction == cls.RIGHT else (Actions.LeftRemote, Actions.LeftEdge)
-        action = remote_action if remote else edge_action
-        return action(tag, *args, **kwargs)
-
     def __repr__(self):
         return Action.__name__ + "(" + self.type + (", " + self.tag if self.tag else "") + ")"
 
@@ -64,7 +54,7 @@ class Action(object):
 
     @property
     def remote(self):
-        return self.is_type(Actions.LeftRemote, Actions.RightRemote)
+        return self.is_type(Actions.RemoteNode, Actions.LeftRemote, Actions.RightRemote)
 
     @property
     def is_swap(self):
@@ -91,6 +81,7 @@ class Actions(object, metaclass=Singleton):
 
     Shift = Action("SHIFT")
     Node = Action("NODE")
+    RemoteNode = Action("REMOTE-NODE")
     Implicit = Action("IMPLICIT")
     Reduce = Action("REDUCE")
     LeftEdge = Action("LEFT-EDGE")
