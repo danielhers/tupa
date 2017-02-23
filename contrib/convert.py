@@ -65,6 +65,7 @@ class AmrConverter(convert.FormatConverter):
             head, rel, dep = triple
             rel = rel.lstrip(DEP_PREFIX)
             outgoing = amr.triples(head=dep)
+            # FIXME: must not have a remote child as the only child of a node, as the parser won't be able to create it
             if dep in nodes:  # reentrancy
                 l1.add_remote(nodes[head], rel, nodes[dep])
             else:
@@ -73,9 +74,17 @@ class AmrConverter(convert.FormatConverter):
                 node.attrib[NODE_DEP_ATTRIB] = repr(dep)
                 nodes[dep] = node
         if alignments:
-            reverse_alignments = {i: nodes[k] for k, v in alignments.items() for i in v}
+            reverse_alignments = {}
+            for k, v in alignments.items():
+                for i in v:
+                    reverse_alignments.setdefault(i, []).append(nodes[k])
             for i, token in enumerate(amr.tokens()):  # add terminals, unaligned tokens will be the root's children
-                reverse_alignments.get(i, l1.top_node).add(TERMINAL_EDGE_TAG, l0.add_terminal(text=token, punct=False))
+                terminal = l0.add_terminal(text=token, punct=False)
+                parents = reverse_alignments.get(i, [l1.top_node])
+                parents[0].add(TERMINAL_EDGE_TAG, terminal)
+                # FIXME: must not have a remote child as the only child of a node
+                for parent in parents[1:]:
+                    l1.add_remote(parent, TERMINAL_EDGE_TAG, terminal)
         return (p, amr(alignments=False), self.amr_id) if self.return_amr else p
 
     def to_format(self, passage, **kwargs):
