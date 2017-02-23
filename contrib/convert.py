@@ -51,41 +51,57 @@ class AmrConverter(convert.FormatConverter):
         l1 = layer1.Layer1(p)
         self.lines = []
         self.amr_id = self.tokens = None
-        pending = amr.triples(rel=DEP_PREFIX + TOP_DEP)
+        nodes = self._build_layer1(amr, l1)
+        self._build_layer0(amr, l0, l1, nodes)
+        self._update_implicit(l1)
+        return (p, amr(alignments=False), self.amr_id) if self.return_amr else p
+
+    @staticmethod
+    def _build_layer1(amr, l1):
         nodes = {}
         visited = set()  # to avoid cycles
-        # if an alignment is for a relation, change it to the dependent instead; separate strings to numeric indices
-        alignments = {(k[2] if isinstance(k, tuple) else k): map(int, v.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP))
-                      for k, v in amr.alignments().items()}
+        pending = amr.triples(rel=DEP_PREFIX + TOP_DEP)
         while pending:  # add normal nodes
-            triple = pending.pop()
+            triple = pending.pop(0)
             if triple in visited:
                 continue
             visited.add(triple)
             head, rel, dep = triple
             rel = rel.lstrip(DEP_PREFIX)
-            outgoing = amr.triples(head=dep)
-            # FIXME: must not have a remote child as the only child of a node, as the parser won't be able to create it
             if dep in nodes:  # reentrancy
                 l1.add_remote(nodes[head], rel, nodes[dep])
             else:
-                pending += outgoing
-                node = l1.add_fnode(nodes.get(head), rel, implicit=dep not in alignments and not outgoing)
+                pending += amr.triples(head=dep)
+                node = l1.add_fnode(nodes.get(head), rel)
                 node.attrib[NODE_DEP_ATTRIB] = repr(dep)
                 nodes[dep] = node
-        if alignments:
-            reverse_alignments = {}
-            for k, v in alignments.items():
-                for i in v:
-                    reverse_alignments.setdefault(i, []).append(nodes[k])
-            for i, token in enumerate(amr.tokens()):  # add terminals, unaligned tokens will be the root's children
-                terminal = l0.add_terminal(text=token, punct=False)
-                parents = reverse_alignments.get(i, [l1.top_node])
-                parents[0].add(TERMINAL_EDGE_TAG, terminal)
-                # FIXME: must not have a remote child as the only child of a node
-                for parent in parents[1:]:
-                    l1.add_remote(parent, TERMINAL_EDGE_TAG, terminal)
-        return (p, amr(alignments=False), self.amr_id) if self.return_amr else p
+        return nodes
+
+    @staticmethod
+    def _build_layer0(amr, l0, l1, nodes):  # add edges to terminals according to alignments
+        reverse_alignments = {}
+        for k, v in amr.alignments().items():
+            node = nodes[k[2] if isinstance(k, tuple) else k]  # change relation alignments to the dependent instead
+            for i in v.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP):  # separate strings to numeric indices
+                reverse_alignments.setdefault(int(i), []).append(node)
+        for i, token in enumerate(amr.tokens()):  # add terminals, unaligned tokens will be the root's children
+            terminal = l0.add_terminal(text=token, punct=False)
+            parents = reverse_alignments.get(i, [l1.top_node])
+            parents[0].add(TERMINAL_EDGE_TAG, terminal)
+            for parent in parents[1:]:  # add as remote terminal child to all parents but the first
+                l1.add_remote(parent, TERMINAL_EDGE_TAG, terminal)
+
+    @staticmethod
+    def _update_implicit(l1):
+        # set implicit attribute for nodes with no terminal descendants
+        pending = [n for n in l1.all if not n.children]
+        while pending:
+            node = pending.pop(0)
+            if any(n in pending for n in node.children):
+                pending.append(node)
+            elif all(n.attrib.get("implicit") for n in node.children):
+                node.attrib["implicit"] = True
+                pending += node.parents
 
     def to_format(self, passage, **kwargs):
         del kwargs
@@ -102,7 +118,7 @@ class AmrConverter(convert.FormatConverter):
         pending = list(passage.layer(layer1.LAYER_ID).top_node.outgoing)
         visited = set()  # to avoid cycles
         while pending:
-            edge = pending.pop()
+            edge = pending.pop(0)
             if edge not in visited and edge.tag != TERMINAL_EDGE_TAG:  # skip cycles and unaligned terminals
                 visited.add(edge)
                 pending += edge.child.outgoing
