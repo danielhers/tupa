@@ -73,6 +73,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--implicit", action="store_true", help="include implicit nodes and edges")
         group.add_argument("--no-remote", action="store_false", dest="remote", help="ignore remote edges")
         group.add_argument("--no-constraints", action="store_false", dest="constraints", help="ignore UCCA rules")
+        group.add_argument("--multiple-edges", action="store_true", help="allow multiple edges between the same nodes")
         group.add_argument("--max-nodes", type=float, default=3.0, help="max non-terminal/terminal ratio")
         group.add_argument("--max-height", type=int, default=20, help="max graph height")
         group = argparser.add_mutually_exclusive_group()
@@ -148,6 +149,7 @@ class Config(object, metaclass=Singleton):
             if self.args.format == "amr":
                 self.args.constraints = False
                 self.args.implicit = True
+                self.args.multiple_edges = True
         else:
             self.format_converter = None
         self._log_file = None
