@@ -350,10 +350,12 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
     return test_scores, p.dev_scores
 
 
-def evaluate_passage(guessed_passage, ref_passage):
-    score = Config().evaluate(guessed_passage, ref_passage, converter=Config().output_converter,
-                              verbose=Config().args.verbose and guessed_passage is not None,
-                              constructions=Config().args.constructions)
+def evaluate_passage(guessed, ref):
+    score = Config().evaluate(
+        guessed, ref,
+        converter=None if Config().output_converter is None else lambda p: Config().output_converter(p)[0],
+        verbose=Config().args.verbose and guessed is not None,
+        constructions=Config().args.constructions)
     print("F1=%.3f" % score.average_f1(), flush=True)
     return score
 
