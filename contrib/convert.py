@@ -47,28 +47,33 @@ class AmrConverter(convert.FormatConverter):
 
     def _build_passage(self):
         amr = amrutil.parse(" ".join(self.lines), tokens=self.tokens)
-        skipped = []
-        if self.remove_cycles:
-            cycle = amr.contains_cycle()
-            while cycle:
-                head, dep = cycle[-1], cycle[0]
-                skipped += amr.triples(head=head, dep=dep)
-                amr.nodes[head]["deps"].remove(dep)
-                cycle = amr.contains_cycle()
         p = core.Passage(self.amr_id or self.passage_id)
         l0 = layer0.Layer0(p)
         l1 = layer1.Layer1(p)
         self.lines = []
         self.amr_id = self.tokens = None
-        nodes = self._build_layer1(amr, l1, skipped)
+        nodes = self._build_layer1(amr, l1, self.remove_cycles)
         self._build_layer0(amr, l0, l1, nodes)
         self._update_implicit(l1)
         return (p, amr(alignments=False), self.amr_id) if self.return_amr else p
 
     @staticmethod
-    def _build_layer1(amr, l1, skipped):
+    def _build_layer1(amr, l1, remove_cycles):
+        def _reachable(x, y):
+            q = [x]
+            v = set()
+            while q:
+                x = q.pop(0)
+                if x in v:
+                    continue
+                v.add(x)
+                if x == y:
+                    return True
+                q += [d for _, _, d in amr.triples(head=x)]
+            return False
+
         nodes = {}
-        visited = set(skipped)  # to avoid cycles
+        visited = set()  # to avoid cycles
         pending = amr.triples(rel=DEP_PREFIX + TOP_DEP)
         while pending:  # add normal nodes
             triple = pending.pop(0)
@@ -78,7 +83,8 @@ class AmrConverter(convert.FormatConverter):
             head, rel, dep = triple
             rel = rel.lstrip(DEP_PREFIX)
             if dep in nodes:  # reentrancy
-                l1.add_remote(nodes[head], rel, nodes[dep])
+                if not remove_cycles or not _reachable(dep, head):
+                    l1.add_remote(nodes[head], rel, nodes[dep])
             else:
                 pending += amr.triples(head=dep)
                 node = l1.add_fnode(nodes.get(head), rel)
@@ -90,9 +96,10 @@ class AmrConverter(convert.FormatConverter):
     def _build_layer0(amr, l0, l1, nodes):  # add edges to terminals according to alignments
         reverse_alignments = {}
         for k, v in amr.alignments().items():
-            node = nodes[k[2] if isinstance(k, tuple) else k]  # change relation alignments to the dependent instead
-            for i in v.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP):  # separate strings to numeric indices
-                reverse_alignments.setdefault(int(i), []).append(node)
+            node = nodes.get(k[2] if isinstance(k, tuple) else k)  # change relation alignments to the dependent instead
+            if node is not None:  # it might be none if it was part of a removed cycle
+                for i in v.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP):  # separate strings to numeric indices
+                    reverse_alignments.setdefault(int(i), []).append(node)
         for i, token in enumerate(amr.tokens()):  # add terminals, unaligned tokens will be the root's children
             terminal = l0.add_terminal(text=token, punct=False)
             parents = reverse_alignments.get(i, [l1.top_node])
