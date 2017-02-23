@@ -67,7 +67,7 @@ class Scores(object):
     @staticmethod
     def field_titles(*args, **kwargs):
         del args, kwargs
-        return "precision", "recall", "f1"
+        return ["precision", "recall", "f1"]
 
     def __str__(self):
         print(",".join(self.fields()))
