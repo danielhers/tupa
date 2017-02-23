@@ -127,11 +127,20 @@ class AmrConverter(convert.FormatConverter):
 
     @staticmethod
     def _to_triples(passage):
+        class _IdGenerator:
+            def __init__(self):
+                self._id = 0
+
+            def __call__(self):
+                self._id += 1
+                return self._id
+
         def _node_name(node):
-            name = node.attrib[NODE_NAME_ATTRIB]
+            name = node.attrib.get(NODE_NAME_ATTRIB, "v%d" % id_generator())
             m = re.match("\w+\((.*)\)", name)
             return m.group(1) if m else name
 
+        id_generator = _IdGenerator()
         pending = list(passage.layer(layer1.LAYER_ID).top_node.outgoing)
         visited = set()  # to avoid cycles
         while pending:
