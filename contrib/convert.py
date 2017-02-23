@@ -18,12 +18,13 @@ TERMINAL_EDGE_TAG = layer1.EdgeTags.Terminal
 
 class AmrConverter(convert.FormatConverter):
     def __init__(self):
-        self.passage_id = self.amr_id = self.lines = self.tokens = self.return_amr = None
+        self.passage_id = self.amr_id = self.lines = self.tokens = self.return_amr = self.remove_cycles = None
 
-    def from_format(self, lines, passage_id, return_amr=False, **kwargs):
+    def from_format(self, lines, passage_id, return_amr=False, remove_cycles=True, **kwargs):
         del kwargs
         self.passage_id = passage_id
         self.return_amr = return_amr
+        self.remove_cycles = remove_cycles
         self.lines = []
         self.amr_id = self.tokens = None
         for line in lines:
@@ -46,20 +47,28 @@ class AmrConverter(convert.FormatConverter):
 
     def _build_passage(self):
         amr = amrutil.parse(" ".join(self.lines), tokens=self.tokens)
+        skipped = []
+        if self.remove_cycles:
+            cycle = amr.contains_cycle()
+            while cycle:
+                head, dep = cycle[-1], cycle[0]
+                skipped += amr.triples(head=head, dep=dep)
+                amr.nodes[head]["deps"].remove(dep)
+                cycle = amr.contains_cycle()
         p = core.Passage(self.amr_id or self.passage_id)
         l0 = layer0.Layer0(p)
         l1 = layer1.Layer1(p)
         self.lines = []
         self.amr_id = self.tokens = None
-        nodes = self._build_layer1(amr, l1)
+        nodes = self._build_layer1(amr, l1, skipped)
         self._build_layer0(amr, l0, l1, nodes)
         self._update_implicit(l1)
         return (p, amr(alignments=False), self.amr_id) if self.return_amr else p
 
     @staticmethod
-    def _build_layer1(amr, l1):
+    def _build_layer1(amr, l1, skipped):
         nodes = {}
-        visited = set()  # to avoid cycles
+        visited = set(skipped)  # to avoid cycles
         pending = amr.triples(rel=DEP_PREFIX + TOP_DEP)
         while pending:  # add normal nodes
             triple = pending.pop(0)
