@@ -150,6 +150,7 @@ class Config(object, metaclass=Singleton):
                 self.args.constraints = False
                 self.args.implicit = True
                 self.args.multiple_edges = True
+                self.args.max_nodes = 10.0
                 from contrib import amrutil
                 self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
         else:
