@@ -4,7 +4,7 @@ import sys
 import numpy as np
 
 from contrib import convert
-from ucca import constructions
+from ucca import evaluation, constructions
 
 
 class Singleton(type):
@@ -150,8 +150,11 @@ class Config(object, metaclass=Singleton):
                 self.args.constraints = False
                 self.args.implicit = True
                 self.args.multiple_edges = True
+                from contrib import amrutil
+                self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
         else:
             self.input_converter = self.output_converter = None
+            self.evaluate, self.Scores = evaluation.evaluate, evaluation.Scores
         self._log_file = None
         self.set_external()
         self.random = np.random

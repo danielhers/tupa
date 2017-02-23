@@ -3,12 +3,12 @@ import time
 from enum import Enum
 
 from classifiers.classifier import ClassifierProperty
+from states.state import State
 from tupa.action import Actions
 from tupa.config import Config
 from tupa.model import Model
 from tupa.oracle import Oracle
-from states.state import State
-from ucca import diffutil, ioutil, textutil, evaluation, layer0, layer1
+from ucca import diffutil, ioutil, textutil, layer0, layer1
 
 
 class ParserException(Exception):
@@ -62,7 +62,7 @@ class Parser(object):
             self.dev = dev
             if Config().args.devscores:
                 with open(Config().args.devscores, "w") as f:
-                    print(",".join(["iteration"] + evaluation.Scores.field_titles(Config().args.constructions)), file=f)
+                    print(",".join(["iteration"] + Config().Scores.field_titles(Config().args.constructions)), file=f)
             for self.iteration in range(1, iterations + 1):
                 self.eval_index = 0
                 print("Training iteration %d of %d: " % (self.iteration, iterations))
@@ -79,7 +79,7 @@ class Parser(object):
         if self.dev:
             print("Evaluating on dev passages")
             scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev, evaluate=True)]
-            scores = evaluation.Scores.aggregate(scores)
+            scores = Config().Scores.aggregate(scores)
             self.dev_scores.append(scores)
             score = scores.average_f1()
             print("Average labeled F1 score on dev: %.3f" % score)
@@ -340,7 +340,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                                      outdir=args.outdir, prefix=args.prefix,
                                      default_converter=Config().output_converter)
         if passage_scores and (not args.verbose or len(passage_scores) > 1):
-            test_scores = evaluation.Scores.aggregate(passage_scores)
+            test_scores = Config().Scores.aggregate(passage_scores)
             print("\nAverage labeled F1 score on test: %.3f" % test_scores.average_f1())
             print("Aggregated scores:")
             test_scores.print()
@@ -351,8 +351,9 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
 
 
 def evaluate_passage(guessed_passage, ref_passage):
-    score = evaluation.evaluate(guessed_passage, ref_passage, constructions=Config().args.constructions,
-                                verbose=Config().args.verbose and guessed_passage is not None)
+    score = Config().evaluate(guessed_passage, ref_passage, converter=Config().output_converter,
+                              verbose=Config().args.verbose and guessed_passage is not None,
+                              constructions=Config().args.constructions)
     print("F1=%.3f" % score.average_f1(), flush=True)
     return score
 
@@ -369,7 +370,7 @@ def main():
     dev_scores = None
     if Config().args.testscores:
         with open(Config().args.testscores, "w") as f:
-            print(",".join(evaluation.Scores.field_titles(Config().args.constructions)), file=f)
+            print(",".join(Config().Scores.field_titles(Config().args.constructions)), file=f)
     if args.folds is not None:
         fold_scores = []
         all_passages = list(ioutil.read_files_and_dirs(
@@ -389,7 +390,7 @@ def main():
             if s is not None:
                 fold_scores.append(s)
         if fold_scores:
-            test_scores = evaluation.Scores.aggregate(fold_scores)
+            test_scores = Config().Scores.aggregate(fold_scores)
             print("Average labeled test F1 score for each fold: " + ", ".join(
                 "%.3f" % s.average_f1() for s in fold_scores))
             print("Aggregated scores across folds:\n")

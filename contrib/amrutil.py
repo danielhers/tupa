@@ -17,17 +17,22 @@ def parse(*args, **kwargs):
 parse.AMR = None
 
 
-def evaluate(guessed, ref, amr_id=None, verbose=False):
+def evaluate(guessed, ref, converter=None, verbose=False, amr_id=None, **kwargs):
     """
     Compare two AMRs and return scores, possibly printing them too.
     :param guessed: AMR object to evaluate
     :param ref: reference AMR object to compare to
+    :param converter: optional function to apply to inputs before evaluation
     :param amr_id: ID of AMR pair
     :param verbose: whether to print the results
     :return: Scores object
     """
     def _read_amr(amr):
         return "".join(str(amr).splitlines())
+    del kwargs
+    if converter is not None:
+        guessed = converter(guessed)
+        ref = converter(ref)
     smatch.verbose = verbose
     return Scores(smatch.process_amr_pair((_read_amr(guessed), _read_amr(ref), amr_id)))
 
@@ -36,6 +41,10 @@ class Scores(object):
     def __init__(self, counts):
         self.counts = counts
         self.precision, self.recall, self.f1 = smatch.compute_f(*counts)
+
+    def average_f1(self, *args, **kwargs):
+        del args, kwargs
+        return self.f1
 
     @staticmethod
     def aggregate(scores):
@@ -49,12 +58,16 @@ class Scores(object):
     def print(self, *args, **kwargs):
         print("Precision: %.3f\nRecall: %.3f\nF1: %.3f" % self.fields(), *args, **kwargs)
 
-    def __str__(self):
-        print(",".join("%.3f" % float(f) for f in self.fields()))
-
     def fields(self):
         return self.precision, self.recall, self.f1
 
+    def titles(self):
+        return self.field_titles()
+
     @staticmethod
-    def field_titles():
+    def field_titles(*args, **kwargs):
+        del args, kwargs
         return "precision", "recall", "f1"
+
+    def __str__(self):
+        print(",".join("%.3f" % float(f) for f in self.fields()))
