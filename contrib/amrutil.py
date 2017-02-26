@@ -13,6 +13,8 @@ try:
 finally:
     os.chdir(prev_dir)
 
+NODE_LABEL_ATTRIB = "label"
+
 
 def parse(*args, **kwargs):
     return amr_lib.AMR(*args, **kwargs)

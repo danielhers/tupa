@@ -12,7 +12,6 @@ INSTANCE_DEP = "instance"
 INSTANCE_OF_DEP = "instance-of"
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
-NODE_LABEL_ATTRIB = "label"
 TERMINAL_EDGE_TAG = layer1.EdgeTags.Terminal
 
 
@@ -88,7 +87,7 @@ class AmrConverter(convert.FormatConverter):
             else:
                 pending += amr.triples(head=dep)
                 node = l1.add_fnode(nodes.get(head), rel)
-                node.attrib[NODE_LABEL_ATTRIB] = repr(dep)
+                node.attrib[amrutil.NODE_LABEL_ATTRIB] = repr(dep)
                 nodes[dep] = node
         return nodes
 
@@ -102,11 +101,12 @@ class AmrConverter(convert.FormatConverter):
                     reverse_alignments.setdefault(int(i), []).append(node)
         for i, token in enumerate(amr.tokens()):  # add terminals, unaligned tokens will be the root's children
             terminal = l0.add_terminal(text=token, punct=False)
-            parents = reverse_alignments.get(i, [l1.top_node])
-            parents[0].add(TERMINAL_EDGE_TAG, terminal)
-            for parent in parents[1:]:  # add as remote terminal child to all parents but the first
-                if parent not in terminal.parents:  # avoid multiple identical edges (e.g. :polarity~e.68 -~e.68)
-                    l1.add_remote(parent, TERMINAL_EDGE_TAG, terminal)
+            parents = reverse_alignments.get(i)
+            if parents:
+                parents[0].add(TERMINAL_EDGE_TAG, terminal)
+                for parent in parents[1:]:  # add as remote terminal child to all parents but the first
+                    if parent not in terminal.parents:  # avoid multiple identical edges (e.g. :polarity~e.68 -~e.68)
+                        l1.add_remote(parent, TERMINAL_EDGE_TAG, terminal)
 
     @staticmethod
     def _update_implicit(l1):
@@ -136,7 +136,7 @@ class AmrConverter(convert.FormatConverter):
                 return self._id
 
         def _node_label(node):
-            label = node.attrib.get(NODE_LABEL_ATTRIB, "v%d" % id_generator())
+            label = node.attrib.get(amrutil.NODE_LABEL_ATTRIB, "v%d" % id_generator())
             m = re.match("\w+\((.*)\)", label)
             return m.group(1) if m else label
 
@@ -145,7 +145,7 @@ class AmrConverter(convert.FormatConverter):
         visited = set()  # to avoid cycles
         while pending:
             edge = pending.pop(0)
-            if edge not in visited and edge.tag != TERMINAL_EDGE_TAG:  # skip cycles and unaligned terminals
+            if edge not in visited and edge.tag != TERMINAL_EDGE_TAG:  # skip cycles and terminals
                 visited.add(edge)
                 pending += edge.child.outgoing
                 if edge.tag != TOP_DEP:  # omit top node from output
