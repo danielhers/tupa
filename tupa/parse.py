@@ -271,7 +271,7 @@ class Parser(object):
         sorted_ids = self.scores.argsort()[::-1]
         actions = (self.select_action(i, true_actions) for i in sorted_ids)
         try:
-            return next(a for a in actions if self.state.is_valid(a))
+            return next(filter(self.state.is_valid, actions))
         except StopIteration as e:
             raise ParserException("No valid actions available\n" +
                                   ("True actions: %s" % true_actions if true_actions
