@@ -1,13 +1,16 @@
 import importlib.util  # needed for amr.peg
 import os
+import sys
 
+sys.path.insert(0, os.path.dirname(importlib.util.find_spec("smatch.smatch").origin))  # to find amr.py from smatch
 from smatch import smatch
+sys.path.pop(0)
 
 
 def parse(*args, **kwargs):
     if parse.AMR is None:
         prev_dir = os.getcwd()
-        os.chdir(os.path.dirname(importlib.util.find_spec("src.amr").origin))
+        os.chdir(os.path.dirname(importlib.util.find_spec("src.amr").origin))  # to find amr.peg
         try:
             from src.amr import AMR
         finally:
