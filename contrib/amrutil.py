@@ -6,18 +6,16 @@ sys.path.insert(0, os.path.dirname(importlib.util.find_spec("smatch.smatch").ori
 from smatch import smatch
 sys.path.pop(0)
 
+prev_dir = os.getcwd()
+os.chdir(os.path.dirname(importlib.util.find_spec("src.amr").origin))  # to find amr.peg
+try:
+    from src import amr as amr_lib
+finally:
+    os.chdir(prev_dir)
+
 
 def parse(*args, **kwargs):
-    if parse.AMR is None:
-        prev_dir = os.getcwd()
-        os.chdir(os.path.dirname(importlib.util.find_spec("src.amr").origin))  # to find amr.peg
-        try:
-            from src.amr import AMR
-        finally:
-            os.chdir(prev_dir)
-        parse.AMR = AMR
-    return parse.AMR(*args, **kwargs)
-parse.AMR = None
+    return amr_lib.AMR(*args, **kwargs)
 
 
 def evaluate(guessed, ref, converter=None, verbose=False, amr_id=None, **kwargs):
@@ -37,7 +35,17 @@ def evaluate(guessed, ref, converter=None, verbose=False, amr_id=None, **kwargs)
         guessed = converter(guessed)
         ref = converter(ref)
     smatch.verbose = verbose
-    return Scores(smatch.process_amr_pair((_read_amr(guessed), _read_amr(ref), amr_id)))
+    guessed = _read_amr(guessed)
+    ref = _read_amr(ref)
+    try:
+        counts = smatch.process_amr_pair((guessed, ref, amr_id))
+    except AttributeError:  # error in one of the AMRs
+        try:
+            counts = smatch.process_amr_pair((ref, ref, amr_id))
+            counts = (0, 0, counts[-1])  # best_match_num, test_triple_num
+        except AttributeError:  # error in ref AMR
+            counts = (0, 0, 1)  # best_match_num, test_triple_num, gold_triple_num
+    return Scores(counts)
 
 
 class Scores(object):
