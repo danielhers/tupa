@@ -9,12 +9,12 @@ class Action(object):
 
     def __init__(self, action_type, tag=None, orig_edge=None, orig_node=None, oracle=None):
         self.type = action_type  # String
-        self.tag = tag  # Usually the tag of the created edge; but if COMPOUND_SWAP, the distance
+        self.tag = tag  # Usually the tag of the created edge (+possibly node label); but if COMPOUND_SWAP, the distance
         self.orig_node = orig_node  # Node created by this action, if any (during training)
-        self.orig_edge = orig_edge
+        self.orig_edge = orig_edge  # Edge created by this action, if any (during training)
         self.edge = None  # Will be set by State when the edge created by this action is known
-        self.oracle = oracle
-        self.index = None
+        self.oracle = oracle  # Reference to oracle, to inform it of actually created nodes/edges
+        self.index = None  # Index of this action in history
 
         self.type_id = Action.type_to_id.get(self.type)  # Allocate ID for fast comparison
         if self.type_id is None:
@@ -32,13 +32,10 @@ class Action(object):
     @staticmethod
     def from_string(s):
         m = re.match("(.*)-(.*)", s)
-        if m:  # String contains tag
-            action_type, tag = m.groups()
-            return Action(action_type, tag)
-        return Action(s)
+        return Action(*m.groups()) if m else Action(s)
 
     def __repr__(self):
-        return Action.__name__ + "(" + self.type + (", " + self.tag if self.tag else "") + ")"
+        return Action.__name__ + "(" + self.type + (", " + str(self.tag) if self.tag else "") + ")"
 
     def __str__(self):
         return self.type + ("-" + str(self.tag) if self.tag else "")
@@ -51,6 +48,14 @@ class Action(object):
 
     def __call__(self, *args, **kwargs):
         return Action(self.type, *args, **kwargs)
+
+    @property
+    def edge_tag(self):
+        return self.tag[0] if isinstance(self.tag, tuple) else self.tag
+
+    @property
+    def node_label(self):
+        return self.tag[1] if isinstance(self.tag, tuple) else None
 
     @property
     def remote(self):

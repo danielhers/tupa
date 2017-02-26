@@ -16,6 +16,7 @@ class State(object):
     :param passage: a Passage object to get the tokens from, and everything else if training
     """
     def __init__(self, passage):
+        self.args = Config().args
         self.log = []
         self.finished = False
         l0 = passage.layer(layer0.LAYER_ID)
@@ -58,67 +59,67 @@ class State(object):
 
         def assert_possible_parent(node):
             assert node.text is None, "Terminals may not have children: %s" % node.text
-            if Config().args.constraints:
+            if self.args.constraints:
                 assert not node.implicit, "Implicit nodes may not have children: %s" % s0
-                assert action.tag not in Constraints.UniqueOutgoing or action.tag not in node.outgoing_tags, \
+                assert action.edge_tag not in Constraints.UniqueOutgoing or action.edge_tag not in node.outgoing_tags, \
                     "Outgoing edge tag %s must be unique, but %s already has one" % (
-                        action.tag, node)
-                assert action.tag not in Constraints.MutuallyExclusiveOutgoing or not \
+                        action.edge_tag, node)
+                assert action.edge_tag not in Constraints.MutuallyExclusiveOutgoing or not \
                     node.outgoing_tags & Constraints.MutuallyExclusiveOutgoing, \
                     "Outgoing edge tags %s are mutually exclusive, but %s already has %s and is being added %s" % (
-                        Constraints.MutuallyExclusiveOutgoing, node, node.outgoing_tags, action.tag)
-                assert action.tag in Constraints.ChildlessOutgoing or not \
+                        Constraints.MutuallyExclusiveOutgoing, node, node.outgoing_tags, action.edge_tag)
+                assert action.edge_tag in Constraints.ChildlessOutgoing or not \
                     node.incoming_tags & Constraints.ChildlessIncoming, \
                     "Units with incoming %s edges may not have children, and %s has incoming %s" % (
                         Constraints.ChildlessIncoming, node, node.incoming_tags)
 
         def assert_possible_child(node):
             assert node is not self.root, "The root may not have parents"
-            assert (node.text is not None) == (action.tag == EdgeTags.Terminal), \
+            assert (node.text is not None) == (action.edge_tag == EdgeTags.Terminal), \
                 "Edge tag must be %s iff child is terminal, but node is %s and edge tag is %s" % (
-                    EdgeTags.Terminal, node, action.tag)
-            if Config().args.constraints:
-                assert action.tag not in Constraints.UniqueIncoming or \
-                    action.tag not in node.incoming_tags, \
+                    EdgeTags.Terminal, node, action.edge_tag)
+            if self.args.constraints:
+                assert action.edge_tag not in Constraints.UniqueIncoming or \
+                    action.edge_tag not in node.incoming_tags, \
                     "Incoming edge tag %s must be unique, but %s already has one" % (
-                        action.tag, node)
-                assert action.tag not in Constraints.ChildlessIncoming or \
+                        action.edge_tag, node)
+                assert action.edge_tag not in Constraints.ChildlessIncoming or \
                     node.outgoing_tags <= Constraints.ChildlessOutgoing, \
                     "Units with incoming %s edges may not have children, but %s has %d" % (
                         Constraints.ChildlessIncoming, node, len(node.children))
-                assert action.remote or action.tag in Constraints.possible_multiple_incoming() or \
+                assert action.remote or action.edge_tag in Constraints.possible_multiple_incoming() or \
                     all(e.remote or e.tag in Constraints.possible_multiple_incoming()
                         for e in node.incoming), \
                     "Multiple parents only allowed if they are remote or linkage edges: %s, %s" % (
                         action, node)
                 # Commented out due to passage 106, unit 1.300
-                # assert not node.incoming_tags or (action.tag in Constraints.LinkerIncoming) == (
+                # assert not node.incoming_tags or (action.edge_tag in Constraints.LinkerIncoming) == (
                 #     node.incoming_tags <= Constraints.LinkerIncoming), \
                 #     "Linker units may only have incoming edges with tags from %s, but %s is being added '%s'" % (
-                #         Constraints.LinkerIncoming, node, action.tag)
+                #         Constraints.LinkerIncoming, node, action.edge_tag)
 
         def assert_possible_edge():
             parent, child = self.get_parent_child(action)
             assert_possible_parent(parent)
             assert_possible_child(child)
-            if parent is self.root and Config().args.constraints:
+            if parent is self.root and self.args.constraints:
                 assert child.text is None, "Root may not have terminal children, but is being added '%s'" % child
-                assert action.tag in Constraints.TopLevel, "The root may not have %s edges" % action.tag
-            if Config().args.multiple_edges:  # Removed this option because it is not useful right now
-                edge = Edge(parent, child, action.tag, remote=action.remote)
+                assert action.edge_tag in Constraints.TopLevel, "The root may not have %s edges" % action.edge_tag
+            if self.args.multiple_edges:  # Allow multiple edges (with different tags) between the same pair of nodes
+                edge = Edge(parent, child, action.edge_tag, remote=action.remote)
                 assert edge not in parent.outgoing, "Edge must not already exist: %s" % edge
             else:
                 assert child not in parent.children, "Edge must not already exist: %s->%s" % (parent, child)
             assert parent not in child.descendants, "Detected cycle created by edge: %s->%s" % (parent, child)
 
         if action.is_type(Actions.Finish):
-            if Config().args.swap:  # Without swap, the oracle may be incapable even of single action
+            if self.args.swap:  # Without swap, the oracle may be incapable even of single action
                 assert self.root.outgoing, \
                     "Root must have at least one child at the end of the parse, but has none"
         elif action.is_type(Actions.Shift):
             assert self.buffer, "Buffer must not be empty in order to shift from it"
         else:  # Unary actions
-            if Config().args.constraints:
+            if self.args.constraints:
                 assert self.actions, "First action must be Shift, but was %s" % action
             assert self.stack, "Action requires non-empty stack: %s" % action
             s0 = self.stack[-1]
@@ -173,20 +174,20 @@ class State(object):
         if action.is_type(Actions.Shift):  # Push buffer head to stack; shift buffer
             self.stack.append(self.buffer.popleft())
         elif action.is_type(Actions.Node, Actions.RemoteNode):  # Create new parent node and add to the buffer
-            parent = self.add_node(action.orig_node)
+            parent = self.add_node(action.orig_node, label=action.node_label)
             self.update_swap_index(parent)
-            self.add_edge(Edge(parent, self.stack[-1], action.tag, remote=action.remote))
+            self.add_edge(Edge(parent, self.stack[-1], action.edge_tag, remote=action.remote))
             self.buffer.appendleft(parent)
         elif action.is_type(Actions.Implicit):  # Create new child node and add to the buffer
-            child = self.add_node(action.orig_node, implicit=True)
+            child = self.add_node(action.orig_node, label=action.node_label, implicit=True)
             self.update_swap_index(child)
-            self.add_edge(Edge(self.stack[-1], child, action.tag))
+            self.add_edge(Edge(self.stack[-1], child, action.edge_tag))
             self.buffer.appendleft(child)
         elif action.is_type(Actions.Reduce):  # Pop stack (no more edges to create with this node)
             self.stack.pop()
         elif action.is_type(Actions.LeftEdge, Actions.LeftRemote, Actions.RightEdge, Actions.RightRemote):
             parent, child = self.get_parent_child(action)
-            self.add_edge(Edge(parent, child, action.tag, remote=action.remote))
+            self.add_edge(Edge(parent, child, action.edge_tag, remote=action.remote))
         elif action.is_type(Actions.Swap):  # Place second (or more) stack item back on the buffer
             distance = action.tag or 1
             s = slice(-distance - 1, -1)
@@ -197,7 +198,7 @@ class State(object):
             self.finished = True
         else:
             raise Exception("Invalid action: %s" % action)
-        if Config().args.verify:
+        if self.args.verify:
             intersection = set(self.stack).intersection(self.buffer)
             assert not intersection, "Stack and buffer overlap: %s" % intersection
         self.assert_node_ratio()
@@ -211,7 +212,7 @@ class State(object):
         :param kwargs: keyword arguments for Node()
         """
         node = Node(len(self.nodes), *args, **kwargs)
-        if Config().args.verify:
+        if self.args.verify:
             assert node not in self.nodes, "Node already exists"
         self.nodes.append(node)
         self.log.append("node: %s" % node)
@@ -249,7 +250,8 @@ class State(object):
         for node in self.nodes:
             if self.labeled and assert_proper:
                 assert node.text or node.outgoing or node.implicit, "Non-terminal leaf node: %s" % node
-                assert node.node or node is self.root or node.is_linkage, "Non-root without incoming: %s" % node
+                if self.args.constraints:
+                    assert node.node or node is self.root or node.is_linkage, "Non-root without incoming: %s" % node
             if node.is_linkage:
                 linkages.append(node)
             else:
@@ -295,7 +297,7 @@ class State(object):
     def fix_terminal_tags(self, terminals):
         for terminal, orig_terminal in zip(terminals, self.terminals):
             if terminal.tag != orig_terminal.tag:
-                if Config().args.verbose:
+                if self.args.verbose:
                     print("%s is the wrong tag for terminal: %s" % (terminal.tag, terminal.text),
                           file=sys.stderr)
                 terminal.tag = orig_terminal.tag
@@ -336,12 +338,12 @@ class State(object):
         return (len(self.nodes) + extra) / len(self.terminals) - 1
 
     def assert_node_ratio(self, extra=0):
-        max_ratio = Config().args.max_nodes
+        max_ratio = self.args.max_nodes
         assert self.node_ratio(extra=extra) <= max_ratio, \
             "Reached maximum ratio (%.3f) of non-terminals to terminals" % max_ratio
 
     def assert_height(self):
-        max_height = Config().args.max_height
+        max_height = self.args.max_height
         assert self.root.height <= max_height, \
             "Reached maximum graph height (%d)" % max_height
 

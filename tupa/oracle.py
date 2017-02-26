@@ -24,16 +24,17 @@ class Oracle(object):
     :param passage gold passage to get the correct edges from
     """
     def __init__(self, passage):
+        self.args = Config().args
         l1 = passage.layer(layer1.LAYER_ID)
         self.nodes_remaining = {node.ID for node in l1.all
                                 if node is not l1.heads[0] and
-                                (Config().args.linkage or node.tag != layer1.NodeTags.Linkage) and
-                                (Config().args.implicit or not node.attrib.get("implicit"))}
+                                (self.args.linkage or node.tag != layer1.NodeTags.Linkage) and
+                                (self.args.implicit or not node.attrib.get("implicit"))}
         self.edges_remaining = {edge for node in passage.nodes.values() for edge in node
-                                if (Config().args.linkage or edge.tag not in (
+                                if (self.args.linkage or edge.tag not in (
                                     layer1.EdgeTags.LinkRelation, layer1.EdgeTags.LinkArgument)) and
-                                (Config().args.implicit or not edge.child.attrib.get("implicit")) and
-                                (Config().args.remote or not edge.attrib.get("remote"))}
+                                (self.args.implicit or not edge.child.attrib.get("implicit")) and
+                                (self.args.remote or not edge.attrib.get("remote"))}
         self.passage = passage
         self.edge_found = False
         self.log = None
@@ -117,10 +118,10 @@ class Oracle(object):
                         for i, s in enumerate(state.stack[-3::-1]):  # Skip top two, they are not related
                             edge = related.pop(s.node_id, None)
                             if edge is not None:
-                                if not Config().args.swap:  # We have no chance to reach it, so stop trying
+                                if not self.args.swap:  # We have no chance to reach it, so stop trying
                                     self.remove(edge)
                                     continue
-                                if distance is None and Config().args.compound_swap:  # Save the first one
+                                if distance is None and self.args.compound_swap:  # Save the first one
                                     distance = i + 1
                                 if not related:  # All related nodes are in the stack
                                     yield Actions.Swap(distance)
@@ -137,9 +138,11 @@ class Oracle(object):
             implicit = node.attrib.get("implicit")
             assert not (direction == PARENT and implicit), "Cannot create implicit parent %s" % node.ID
             assert not (remote and implicit), "Cannot create remote implicit node %s" % node.ID
+            node_label = node.attrib.get(self.args.node_label_attrib)
         else:  # kind == EDGE
-            node = None
-        return ACTIONS[kind][direction][remote](edge.tag, orig_edge=edge, orig_node=node, oracle=self)
+            node = node_label = None
+        tag = (edge.tag, node_label) if self.args.node_labels and node_label is not None else edge.tag
+        return ACTIONS[kind][direction][remote](tag, orig_edge=edge, orig_node=node, oracle=self)
 
     def remove(self, edge, node=None):
         self.edges_remaining.discard(edge)

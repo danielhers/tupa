@@ -27,6 +27,7 @@ class Parser(object):
     Main class to implement transition-based UCCA parser
     """
     def __init__(self, model_file=None, model_type=None, beam=1):
+        self.args = Config().args
         self.state = None  # State object created at each parse
         self.oracle = None  # Oracle object created at each parse
         self.scores = None  # NumPy array of action scores at each action
@@ -38,7 +39,7 @@ class Parser(object):
         self.beam = beam  # Currently unused
         self.state_hash_history = None  # For loop checking
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
-        self.ignore_node = None if Config().args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
+        self.ignore_node = None if self.args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
         self.best_score = self.dev = self.iteration = self.eval_index = None
         self.dev_scores = []
         self.trained = False
@@ -60,9 +61,9 @@ class Parser(object):
                     print("not found, starting from untrained model.")
             self.best_score = 0
             self.dev = dev
-            if Config().args.devscores:
-                with open(Config().args.devscores, "w") as f:
-                    print(",".join(["iteration"] + Config().Scores.field_titles(Config().args.constructions)), file=f)
+            if self.args.devscores:
+                with open(self.args.devscores, "w") as f:
+                    print(",".join(["iteration"] + Config().Scores.field_titles(self.args.constructions)), file=f)
             for self.iteration in range(1, iterations + 1):
                 self.eval_index = 0
                 print("Training iteration %d of %d: " % (self.iteration, iterations))
@@ -83,11 +84,11 @@ class Parser(object):
             self.dev_scores.append(scores)
             score = scores.average_f1()
             print("Average labeled F1 score on dev: %.3f" % score)
-            if Config().args.devscores:
+            if self.args.devscores:
                 prefix = [self.iteration]
-                if Config().args.save_every:
+                if self.args.save_every:
                     prefix.append(self.eval_index)
-                with open(Config().args.devscores, "a") as f:
+                with open(self.args.devscores, "a") as f:
                     print(",".join([".".join(map(str, prefix))] + scores.fields()), file=f)
             if score >= self.best_score:
                 print("Better than previous best score (%.3f)" % self.best_score)
@@ -95,7 +96,7 @@ class Parser(object):
                 self.model.save()
             else:
                 print("Not better than previous best score (%.3f)" % self.best_score)
-        elif last or Config().args.save_every is not None:
+        elif last or self.args.save_every is not None:
             self.model.save()
         if not last:
             self.model = model  # Restore non-finalized model
@@ -116,8 +117,8 @@ class Parser(object):
         train = (mode is ParseMode.train)
         if not train and not self.trained:
             self.train()
-        passage_word = "sentence" if Config().args.sentences else \
-                       "paragraph" if Config().args.paragraphs else \
+        passage_word = "sentence" if self.args.sentences else \
+                       "paragraph" if self.args.paragraphs else \
                        "passage"
         self.total_actions = 0
         self.total_correct = 0
@@ -137,7 +138,7 @@ class Parser(object):
             started = time.time()
             self.action_count = 0
             self.correct_count = 0
-            textutil.annotate(passage, verbose=Config().args.verbose)  # tag POS and parse dependencies
+            textutil.annotate(passage, verbose=self.args.verbose)  # tag POS and parse dependencies
             self.state = State(passage)
             self.state_hash_history = set()
             self.oracle = Oracle(passage) if train else None
@@ -151,14 +152,14 @@ class Parser(object):
                     raise
                 Config().log("%s %s: %s" % (passage_word, passage.ID, e))
                 failed = True
-            predicted_passage = self.state.create_passage(assert_proper=Config().args.verify) \
-                if not train or Config().args.verify else passage
+            predicted_passage = self.state.create_passage(assert_proper=self.args.verify) \
+                if not train or self.args.verify else passage
             duration = time.time() - started
             total_duration += duration
             num_tokens -= len(self.state.buffer)
             total_tokens += num_tokens
             if train:  # We have an oracle to verify by
-                if not failed and Config().args.verify:
+                if not failed and self.args.verify:
                     self.verify_passage(passage, predicted_passage, train)
                 if self.action_count:
                     print("%-16s" % ("%d%% (%d/%d)" %
@@ -172,7 +173,7 @@ class Parser(object):
             self.model.model.finished_item(train)
             self.total_correct += self.correct_count
             self.total_actions += self.action_count
-            if train and Config().args.save_every and (passage_index+1) % Config().args.save_every == 0:
+            if train and self.args.save_every and (passage_index+1) % self.args.save_every == 0:
                 self.eval_and_save()
                 self.eval_index += 1
             yield (predicted_passage, evaluate_passage(predicted_passage, passage)) if evaluate else predicted_passage
@@ -193,10 +194,10 @@ class Parser(object):
         Internal method to parse a single passage
         :param train: use oracle to train on given passages, or just parse with classifier?
         """
-        if Config().args.verbose:
+        if self.args.verbose:
             print("  initial state: %s" % self.state)
         while True:
-            if Config().args.check_loops:
+            if self.args.check_loops:
                 self.check_loop(print_oracle=train)
 
             true_actions = []
@@ -223,14 +224,14 @@ class Parser(object):
                 best_true_action = true_actions[0] if len(true_actions) == 1 else \
                     true_actions[self.scores[[a.id for a in true_actions]].argmax()]
                 self.model.model.update(features, predicted_action.id, best_true_action.id,
-                                        Config().args.swap_importance if best_true_action.is_swap else 1)
+                                        self.args.swap_importance if best_true_action.is_swap else 1)
             self.action_count += 1
             self.model.model.finished_step(train)
             try:
                 self.state.transition(action)
             except AssertionError as e:
                 raise ParserException("Invalid transition (%s): %s" % (action, e)) from e
-            if Config().args.verbose:
+            if self.args.verbose:
                 if self.oracle is None:
                     print("  action: %-15s %s" % (action, self.state))
                 else:
@@ -238,7 +239,7 @@ class Parser(object):
                         predicted_action, "|".join(map(str, true_actions)), action, self.state))
                 for line in self.state.log:
                     print("    " + line)
-            if self.state.finished or train and not correct_action and Config().args.early_update:
+            if self.state.finished or train and not correct_action and self.args.early_update:
                 return  # action is FINISH
 
     def check_loop(self, print_oracle):
@@ -260,7 +261,7 @@ class Parser(object):
         :return: valid action with maximum probability according to classifier
         """
         self.scores = self.model.model.score(features)  # Returns a NumPy array
-        if Config().args.verbose >= 2:
+        if self.args.verbose >= 2:
             print("  scores: " + " ".join(("%g" % s for s in self.scores)))
         best_action = self.select_action(self.scores.argmax(), true_actions)
         if self.state.is_valid(best_action):
@@ -336,7 +337,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 guessed_passage = result
                 print()
             if guessed_passage is not None and not args.no_write:
-                ioutil.write_passage(guessed_passage, output_format=args.format, binary=args.binary,
+                ioutil.write_passage(guessed_passage, output_format=args.output_format, binary=args.binary,
                                      outdir=args.outdir, prefix=args.prefix,
                                      default_converter=Config().output_converter)
         if passage_scores and (not args.verbose or len(passage_scores) > 1):
@@ -354,7 +355,7 @@ def evaluate_passage(guessed, ref):
     score = Config().evaluate(
         guessed, ref,
         converter=None if Config().output_converter is None else lambda p: Config().output_converter(p)[0],
-        verbose=Config().args.verbose and guessed is not None,
+        verbose=Config().args.verbose > 1 and guessed is not None,
         constructions=Config().args.constructions)
     print("F1=%.3f" % score.average_f1(), flush=True)
     return score
@@ -370,13 +371,13 @@ def main():
     print("Running parser with %s" % Config())
     test_scores = None
     dev_scores = None
-    if Config().args.testscores:
-        with open(Config().args.testscores, "w") as f:
-            print(",".join(Config().Scores.field_titles(Config().args.constructions)), file=f)
+    if args.testscores:
+        with open(args.testscores, "w") as f:
+            print(",".join(Config().Scores.field_titles(args.constructions)), file=f)
     if args.folds is not None:
         fold_scores = []
         all_passages = list(ioutil.read_files_and_dirs(
-            args.passages, Config().args.sentences, Config().args.paragraphs, Config().input_converter))
+            args.passages, args.sentences, args.paragraphs, Config().input_converter))
         assert len(all_passages) >= args.folds, \
             "%d folds are not possible with only %d passages" % (args.folds, len(all_passages))
         Config().random.shuffle(all_passages)
@@ -399,7 +400,7 @@ def main():
             test_scores.print()
     else:  # Simple train/dev/test by given arguments
         train_passages, dev_passages, test_passages = [ioutil.read_files_and_dirs(
-            arg, Config().args.sentences, Config().args.paragraphs, Config().input_converter) for arg in
+            arg, args.sentences, args.paragraphs, Config().input_converter) for arg in
                                                        (args.train, args.dev, args.passages)]
         test_scores, dev_scores = train_test(train_passages, dev_passages, test_passages, args)
     return test_scores, dev_scores

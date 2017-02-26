@@ -10,7 +10,7 @@ class Node(object):
     """
     Temporary representation for core.Node with only relevant information for parsing
     """
-    def __init__(self, index, orig_node=None, text=None, paragraph=None, tag=None, implicit=False,
+    def __init__(self, index, orig_node=None, text=None, paragraph=None, tag=None, label=None, implicit=False,
                  pos_tag=None, dep_rel=None, dep_head=None):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated core.Node from the original Passage, during training
@@ -18,6 +18,7 @@ class Node(object):
         self.text = text  # Text for terminals, None for non-terminals
         self.paragraph = paragraph  # int for terminals, None for non-terminals
         self.tag = tag  # Node tag of the original node (Word/Punctuation)
+        self.label = label  # Node label (if node label prediction is enabled)
         self.node_index = int(self.node_id.split(core.Node.ID_SEPARATOR)[1]) if orig_node else None
         self.outgoing = []  # Edge list
         self.incoming = []  # Edge list
@@ -73,6 +74,8 @@ class Node(object):
             self.node = l1.add_fnode(parent.node, tag, implicit=self.implicit)
         if train and self.node is not None and self.node_id is not None:  # In training
             self.node.extra["remarks"] = self.node_id  # Keep original node ID for reference
+        if self.label is not None:
+            self.node.attrib[Config().args.node_label_attrib] = self.label
 
     @property
     def is_linkage(self):

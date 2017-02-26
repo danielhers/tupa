@@ -69,6 +69,8 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--devscores", help="output CSV file for dev scores (default: model filename + .dev.csv)")
         group.add_argument("--testscores", help="output CSV file for test scores (default: model filename + .test.csv)")
         group = argparser.add_argument_group(title="Structural constraints")
+        group.add_argument("--node-labels", action="store_true", help="predict node labels (not just edge labels)")
+        group.add_argument("--node-label-attrib", default=None, help="node attribute to store label in (if predicted)")
         group.add_argument("--linkage", action="store_true", help="include linkage nodes and edges")
         group.add_argument("--implicit", action="store_true", help="include implicit nodes and edges")
         group.add_argument("--no-remote", action="store_false", dest="remote", help="ignore remote edges")
@@ -84,7 +86,8 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--verify", action="store_true", help="verify oracle reproduces original passage")
         group = group.add_mutually_exclusive_group()
         group.add_argument("-b", "--binary", action="store_true", help="read and write passages in Pickle")
-        group.add_argument("-f", "--format", choices=convert.CONVERTERS, help="output format for parsed files")
+        group.add_argument("-f", "--format", choices=convert.CONVERTERS, help="input and output format (default: UCCA)")
+        group.add_argument("--output-format", choices=convert.CONVERTERS, help="output format for parsed files")
         group = argparser.add_argument_group(title="General classifier training parameters")
         group.add_argument("--swap-importance", type=int, default=1, help="learning rate factor for Swap")
         group.add_argument("--early-update", action="store_true", help="move to next example on incorrect prediction")
@@ -144,6 +147,7 @@ class Config(object, metaclass=Singleton):
                 self.args.testscores = self.args.model + ".test.csv"
         elif not self.args.log:
             self.args.log = "parse.log"
+        assert self.args.node_labels == (self.args.node_label_attrib is not None), "Node labels require attribute name"
         if self.args.format:
             self.input_converter, self.output_converter = convert.CONVERTERS[self.args.format]
             if self.args.format == "amr":
@@ -153,9 +157,15 @@ class Config(object, metaclass=Singleton):
                 self.args.max_nodes = 10.0
                 from contrib import amrutil
                 self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
+                self.args.node_labels = True
+                self.args.node_label_attrib = amrutil.NODE_LABEL_ATTRIB
         else:
             self.input_converter = self.output_converter = None
             self.evaluate, self.Scores = evaluation.evaluate, evaluation.Scores
+        if self.args.output_format:
+            _, self.output_converter = convert.CONVERTERS[self.args.output_format]
+        else:
+            self.args.output_format = self.args.format
         self._log_file = None
         self.set_external()
         self.random = np.random
