@@ -262,7 +262,7 @@ class Parser(object):
         """
         self.scores = self.model.model.score(features)  # Returns a NumPy array
         if self.args.verbose >= 2:
-            print("  scores: " + " ".join(("%g" % s for s in self.scores)))
+            print("  scores: " + ", ".join(("%s: %g" % x for x in zip(Actions().all, self.scores))))
         best_action = self.select_action(self.scores.argmax(), true_actions)
         if self.state.is_valid(best_action):
             return best_action
