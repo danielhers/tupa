@@ -92,7 +92,7 @@ class Constraints(constraints.Constraints):
     def __init__(self, args):
         super(Constraints, self).__init__(args)
 
-    require_connected = False
+    require_connected = True
     require_first_shift = False
     require_implicit_childless = False
     allow_root_terminal_children = True

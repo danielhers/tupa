@@ -140,6 +140,9 @@ class State(object):
                 assert_possible_node()
             elif action.is_type(Actions.Reduce):
                 assert s0 is not self.root or s0.outgoing, "May not reduce the root without children"
+                if self.args.constraints and self.constraints.require_connected:
+                    assert s0 is self.root or s0.is_linkage or s0.text or s0.incoming, \
+                        "May not reduce a non-terminal node without incoming edges"
                 # Commented out due to passage 126, unit 1.338
                 # assert (self.constraints.scene_sufficient_outgoing is None or \
                 #     not s0.outgoing_tags & self.constraints.scene_sufficient_outgoing) and \
@@ -263,7 +266,8 @@ class State(object):
             if self.labeled and assert_proper:
                 assert node.text or node.outgoing or node.implicit, "Non-terminal leaf node: %s" % node
                 if self.args.constraints and self.constraints.require_connected:
-                    assert node.node or node is self.root or node.is_linkage, "Non-root without incoming: %s" % node
+                    assert node.node or node is self.root or node.is_linkage or node.text, \
+                        "Non-root without incoming: %s" % node
             if node.is_linkage:
                 linkages.append(node)
             else:
