@@ -4,6 +4,7 @@ import sys
 import numpy as np
 
 from contrib import convert
+from tupa import constraints
 from ucca import evaluation, constructions
 
 
@@ -75,7 +76,6 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--implicit", action="store_true", help="include implicit nodes and edges")
         group.add_argument("--no-remote", action="store_false", dest="remote", help="ignore remote edges")
         group.add_argument("--no-constraints", action="store_false", dest="constraints", help="ignore UCCA rules")
-        group.add_argument("--multiple-edges", action="store_true", help="allow multiple edges between the same nodes")
         group.add_argument("--max-nodes", type=float, default=3.0, help="max non-terminal/terminal ratio")
         group.add_argument("--max-height", type=int, default=20, help="max graph height")
         group = argparser.add_mutually_exclusive_group()
@@ -148,17 +148,17 @@ class Config(object, metaclass=Singleton):
         elif not self.args.log:
             self.args.log = "parse.log"
         assert self.args.node_labels == (self.args.node_label_attrib is not None), "Node labels require attribute name"
+        self.constraints = constraints.Constraints(self.args)
         if self.args.format:
             self.input_converter, self.output_converter = convert.CONVERTERS[self.args.format]
             if self.args.format == "amr":
-                self.args.constraints = False
                 self.args.implicit = True
-                self.args.multiple_edges = True
                 self.args.max_nodes = 10.0
+                self.args.node_labels = True
                 from contrib import amrutil
                 self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
-                self.args.node_labels = True
                 self.args.node_label_attrib = amrutil.NODE_LABEL_ATTRIB
+                self.constraints = amrutil.Constraints(self.args)
         else:
             self.input_converter = self.output_converter = None
             self.evaluate, self.Scores = evaluation.evaluate, evaluation.Scores

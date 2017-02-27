@@ -85,7 +85,7 @@ class AmrConverter(convert.FormatConverter):
                     l1.add_remote(nodes[head], rel, nodes[dep])
             else:  # first occurrence of dep
                 pending += amr.triples(head=dep)
-                node = l1.top_node if rel == TOP_DEP else l1.add_fnode(nodes.get(head), rel)
+                node = l1.top_node if rel == TOP_DEP else l1.add_fnode(nodes[head], rel)
                 node.attrib[amrutil.NODE_LABEL_ATTRIB] = repr(dep)
                 nodes[dep] = node
         return nodes

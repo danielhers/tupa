@@ -2,6 +2,8 @@ import importlib.util  # needed for amr.peg
 import os
 import sys
 
+from tupa import constraints
+
 sys.path.insert(0, os.path.dirname(importlib.util.find_spec("smatch.smatch").origin))  # to find amr.py from smatch
 from smatch import smatch
 sys.path.pop(0)
@@ -84,3 +86,29 @@ class Scores(object):
 
     def __str__(self):
         print(",".join(self.fields()))
+
+
+class Constraints(constraints.Constraints):
+    def __init__(self, args):
+        super(Constraints, self).__init__(args)
+
+    require_connected = False
+    require_first_shift = False
+    require_implicit_childless = False
+    allow_root_terminal_children = True
+    allow_multiple_edges = True
+
+    unique_outgoing = {
+        "instance-of",
+    }
+
+    unique_incoming = None
+    mutually_exclusive_outgoing = None
+    childless_incoming = None
+    childless_outgoing = None
+    scene_sufficient_outgoing = None
+    scene_necessary_outgoing = None
+    scene_sufficient_incoming = None
+    top_level = None
+    linker_incoming = None
+    possible_multiple_incoming = None
