@@ -41,11 +41,11 @@ def evaluate(guessed, ref, converter=None, verbose=False, amr_id=None, **kwargs)
     ref = _read_amr(ref)
     try:
         counts = smatch.process_amr_pair((guessed, ref, amr_id))
-    except AttributeError:  # error in one of the AMRs
+    except (AttributeError, IndexError):  # error in one of the AMRs
         try:
             counts = smatch.process_amr_pair((ref, ref, amr_id))
             counts = (0, 0, counts[-1])  # best_match_num, test_triple_num
-        except AttributeError:  # error in ref AMR
+        except (AttributeError, IndexError):  # error in ref AMR
             counts = (0, 0, 1)  # best_match_num, test_triple_num, gold_triple_num
     return Scores(counts)
 
