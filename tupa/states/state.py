@@ -52,8 +52,6 @@ class State(object):
         :param action: action to check for validity
         """
         def assert_possible_node():
-            if self.labeled:  # We're in training, so we must have an original node to refer to
-                assert action.orig_node is not None, "May only create real nodes during training"
             self.assert_node_ratio(extra=1)
             self.assert_height()
 
