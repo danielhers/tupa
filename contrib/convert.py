@@ -8,8 +8,7 @@ ID_PATTERN = "#\s*::id\s+(\S+)"
 TOK_PATTERN = "#\s*::(?:tok|snt)\s+(.*)"
 DEP_PREFIX = ":"
 TOP_DEP = "top"
-INSTANCE_DEP = "instance"
-INSTANCE_OF_DEP = "instance-of"
+DEP_REPLACEMENT = {"instance-of": "instance"}
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
 TERMINAL_EDGE_TAG = layer1.EdgeTags.Terminal
@@ -58,7 +57,7 @@ class AmrConverter(convert.FormatConverter):
 
     @staticmethod
     def _build_layer1(amr, l1, remove_cycles):
-        def _reachable(x, y):
+        def _reachable(x, y):  # is there a path from x to y? used to detect cycles
             q = [x]
             v = set()
             while q:
@@ -82,11 +81,11 @@ class AmrConverter(convert.FormatConverter):
             head, rel, dep = triple
             rel = rel.lstrip(DEP_PREFIX)
             if dep in nodes:  # reentrancy
-                if not remove_cycles or not _reachable(dep, head):
+                if not remove_cycles or not _reachable(dep, head):  # do not add the edge if it results in a cycle
                     l1.add_remote(nodes[head], rel, nodes[dep])
-            else:
+            else:  # first occurrence of dep
                 pending += amr.triples(head=dep)
-                node = l1.add_fnode(nodes.get(head), rel)
+                node = l1.top_node if rel == TOP_DEP else l1.add_fnode(nodes.get(head), rel)
                 node.attrib[amrutil.NODE_LABEL_ATTRIB] = repr(dep)
                 nodes[dep] = node
         return nodes
@@ -136,21 +135,22 @@ class AmrConverter(convert.FormatConverter):
                 return self._id
 
         def _node_label(node):
-            label = node.attrib.get(amrutil.NODE_LABEL_ATTRIB, "v%d" % id_generator())
+            label = labels.get(node.ID, node.attrib.get(amrutil.NODE_LABEL_ATTRIB, "v%d" % id_generator()))
+            labels[node.ID] = label
             m = re.match("\w+\((.*)\)", label)
             return m.group(1) if m else label
 
         id_generator = _IdGenerator()
-        pending = list(passage.layer(layer1.LAYER_ID).top_node.outgoing)
+        pending = list(passage.layer(layer1.LAYER_ID).top_node)
         visited = set()  # to avoid cycles
+        labels = {}
         while pending:
             edge = pending.pop(0)
             if edge not in visited and edge.tag != TERMINAL_EDGE_TAG:  # skip cycles and terminals
                 visited.add(edge)
-                pending += edge.child.outgoing
-                if edge.tag != TOP_DEP:  # omit top node from output
-                    tag = INSTANCE_DEP if edge.tag == INSTANCE_OF_DEP else edge.tag
-                    yield _node_label(edge.parent), tag, _node_label(edge.child)
+                pending += edge.child
+                tag = DEP_REPLACEMENT.get(edge.tag, edge.tag)
+                yield _node_label(edge.parent), tag, _node_label(edge.child)
 
 
 def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):
