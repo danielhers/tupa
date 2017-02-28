@@ -66,6 +66,6 @@ Author
 
 License
 -------
-This package is licensed under the GPLv3 or later license (see [`LICENSE.txt`](master/LICENSE.txt)).
+This package is licensed under the GPLv3 or later license (see [`LICENSE.txt`](LICENSE.txt)).
 
 [1]: http://github.com/huji-nlp/ucca
