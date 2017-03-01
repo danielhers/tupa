@@ -80,14 +80,14 @@ class AmrConverter(convert.FormatConverter):
             visited.add(triple)
             head, rel, dep = triple
             rel = rel.lstrip(DEP_PREFIX)
-            if dep in nodes:  # reentrancy
-                if not remove_cycles or not _reachable(dep, head):  # do not add the edge if it results in a cycle
-                    l1.add_remote(nodes[head], rel, nodes[dep])
-            else:  # first occurrence of dep
+            node = nodes.get(dep)
+            if node is None:  # first occurrence of dep
                 pending += amr.triples(head=dep)
                 node = l1.top_node if rel == TOP_DEP else l1.add_fnode(nodes[head], rel)
                 node.attrib[amrutil.NODE_LABEL_ATTRIB] = repr(dep)
                 nodes[dep] = node
+            elif not remove_cycles or not _reachable(dep, head):  # reentrancy; do not add if results in a cycle
+                l1.add_remote(nodes[head], rel, node)
         return nodes
 
     @staticmethod

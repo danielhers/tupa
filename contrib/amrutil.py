@@ -98,17 +98,25 @@ class Constraints(constraints.Constraints):
     allow_root_terminal_children = True
     allow_multiple_edges = True
 
-    unique_outgoing = {
+    UniqueOutgoing = {
         "instance-of",
+        "ARG",
+        "op",
+        "snt",
     }
 
-    unique_incoming = None
+    def is_unique_outgoing(self, tag):
+        return tag.rstrip("0123456789") in self.UniqueOutgoing
+
+    is_unique_incoming = None
     mutually_exclusive_outgoing = None
     childless_incoming = None
     childless_outgoing = None
-    scene_sufficient_outgoing = None
-    scene_necessary_outgoing = None
-    scene_sufficient_incoming = None
-    top_level = None
-    linker_incoming = None
-    possible_multiple_incoming = None
+    is_scene_sufficient_outgoing = None
+    is_scene_necessary_outgoing = None
+    is_scene_sufficient_incoming = None
+    is_top_level = None
+    is_linker_incoming = None
+
+    def is_possible_multiple_incoming(self, tag):
+        return False

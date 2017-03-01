@@ -47,14 +47,14 @@ class Node(object):
         self.height = max(self.height, edge.child.height + 1)
         self._terminals = None  # Invalidate terminals because we might have added some
 
-    def add_to_l1(self, l1, parent, tag, terminals, train):
+    def add_to_l1(self, l1, parent, tag, terminals, labeled):
         """
         Called when creating final Passage to add a new core.Node
         :param l1: Layer1 of the passage
         :param parent: node
         :param tag: edge tag to link to parent
         :param terminals: all terminals strings in the passage
-        :param train: in training, so keep original node IDs in the "remarks" field
+        :param labeled: there is a reference passage, so keep original node IDs in the "remarks" field
         """
         if Config().args.verify:
             assert self.node is None or self.text is not None,\
@@ -72,7 +72,7 @@ class Node(object):
             edge.child.node = self.node[0].child
         else:  # The usual case; if parent is an orphan then parent.node is None and this will be attached to root
             self.node = l1.add_fnode(parent.node, tag, implicit=self.implicit)
-        if train and self.node is not None and self.node_id is not None:  # In training
+        if labeled and self.node is not None and self.node_id is not None:  # In training
             self.node.extra["remarks"] = self.node_id  # Keep original node ID for reference
         if self.label is not None:
             self.node.attrib[Config().args.node_label_attrib] = self.label
@@ -87,9 +87,9 @@ class Node(object):
     @property
     def descendants(self):
         """
-        Find all children of this node recursively, stopping if a cycle is detected (so self not included)
+        Find all children of this node recursively
         """
-        result = []
+        result = [self]
         queue = deque(node for node in self.children if node is not self)
         while queue:
             node = queue.popleft()
@@ -117,10 +117,14 @@ class Node(object):
                ((", " + self.node_id) if self.node_id else "") + ")"
 
     def __str__(self):
-        return '"%s"' % self.text if self.text else self.node_id or str(self.index)
+        s = '"%s"' % self.text if self.text else self.node_id or str(self.index)
+        if self.label:
+            s += "/" + self.label
+        return s
 
     def __eq__(self, other):
-        return self.index == other.index and self.outgoing == other.outgoing
+        return self.index == other.index and self.outgoing == other.outgoing or \
+                self.label is not None and self.label == other.label
 
     def __hash__(self):
-        return hash((self.index, tuple(self.outgoing)))
+        return hash(self.label if self.label is not None else (self.index, tuple(self.outgoing)))

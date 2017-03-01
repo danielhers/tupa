@@ -23,14 +23,17 @@ class Constraints:
     allow_multiple_edges = False
 
     # A unit may not have more than one outgoing edge with the same tag, if it is one of these:
-    unique_outgoing = {
+    UniqueOutgoing = {
         EdgeTags.LinkRelation,
         EdgeTags.Process,
         EdgeTags.State,
     }
 
+    def is_unique_outgoing(self, tag):
+        return tag in self.UniqueOutgoing
+
     # A unit may not have more than one incoming edge with the same tag, if it is one of these:
-    unique_incoming = {
+    UniqueIncoming = {
         EdgeTags.Function,
         EdgeTags.Ground,
         EdgeTags.ParallelScene,
@@ -41,43 +44,67 @@ class Constraints:
         EdgeTags.Terminal,
     }
 
+    def is_unique_incoming(self, tag):
+        return tag in self.UniqueIncoming
+
     # A unit may not have more than one outgoing edge with any of these:
-    mutually_exclusive_outgoing = {
+    MutuallyExclusiveOutgoing = {
         EdgeTags.Process,
         EdgeTags.State,
     }
 
+    @property
+    def mutually_exclusive_outgoing(self):
+        return self.MutuallyExclusiveOutgoing
+
     # A unit may not have any children if it has any of these incoming edge tags:
-    childless_incoming = {
+    ChildlessIncoming = {
         EdgeTags.Function,
     }
 
+    @property
+    def childless_incoming(self):
+        return self.ChildlessIncoming
+
     # A childless unit may still have these outgoing edge tags:
-    childless_outgoing = {
+    ChildlessOutgoing = {
         EdgeTags.Terminal,
         EdgeTags.Punctuation,
     }
 
+    @property
+    def childless_outgoing(self):
+        return self.ChildlessOutgoing
+
     # A unit with any outgoing edge with one of these tags is a scene:
-    scene_sufficient_outgoing = {
+    SceneSufficientOutgoing = {
         EdgeTags.Participant,
         EdgeTags.Process,
         EdgeTags.State,
     }
 
+    def is_scene_sufficient_outgoing(self, tag):
+        return tag in self.SceneSufficientOutgoing
+
     # A scene unit must have any outgoing edge with one of these tags:
-    scene_necessary_outgoing = {
+    SceneNecessaryOutgoing = {
         EdgeTags.Process,
         EdgeTags.State,
     }
 
+    def is_scene_necessary_outgoing(self, tag):
+        return tag in self.SceneNecessaryOutgoing
+
     # A unit with any incoming edge with one of these tags is a scene:
-    scene_sufficient_incoming = {
+    SceneSufficientIncoming = {
         EdgeTags.ParallelScene,
     }
 
+    def is_scene_sufficient_incoming(self, tag):
+        return tag in self.SceneSufficientIncoming
+
     # Outgoing edges from the root may only have these tags:
-    top_level = {
+    TopLevel = {
         EdgeTags.ParallelScene,
         EdgeTags.Linker,
         EdgeTags.Function,
@@ -85,13 +112,23 @@ class Constraints:
         EdgeTags.Punctuation,
     }
 
+    def is_top_level(self, tag):
+        return tag in self.TopLevel
+
     # A linker may only have incoming edges with these tags, and must have both:
-    linker_incoming = {
+    LinkerIncoming = {
         EdgeTags.Linker,
         EdgeTags.LinkRelation,
     }
 
+    def is_linker_incoming(self, tag):
+        return tag in self.LinkerIncoming
+
     # Only a unit with one of these incoming tags may also have another non-remote incoming edge:
-    @property
-    def possible_multiple_incoming(self):
-        return {EdgeTags.LinkArgument, EdgeTags.LinkRelation} if self.args.linkage else ()
+    PossibleMultipleIncoming = {
+        EdgeTags.LinkArgument,
+        EdgeTags.LinkRelation,
+    }
+
+    def is_possible_multiple_incoming(self, tag):
+        return self.args.linkage and tag in self.PossibleMultipleIncoming
