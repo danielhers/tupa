@@ -28,7 +28,7 @@ run:
 
     python tupa/parse.py -t <train_dir> -d <dev_dir> -m <model_filename>
 
-To specify a model type (`sparse`, `dense`, `mlp` or `bilstm`),
+To specify a model type (`sparse`, `mlp` or `bilstm`),
 add `-c <model_type>`.
 
 ### Parse a text file
@@ -46,16 +46,14 @@ be sure to include it when parsing too.
 
 To download and extract the pre-trained models, run:
 
-    wget http://www.cs.huji.ac.il/~danielh/ucca/{sparse,dense,mlp,bilstm}.tgz
+    wget http://www.cs.huji.ac.il/~danielh/ucca/{sparse,mlp,bilstm}.tgz
     tar xvzf sparse.tgz
-    tar xvzf dense.tgz
     tar xvzf mlp.tgz
     tar xvzf bilstm.tgz
 
 Run the parser using any of them:
 
     python tupa/parse.py example.txt -c sparse -m models/ucca-sparse
-    python tupa/parse.py example.txt -c dense -m models/ucca-dense
     python tupa/parse.py example.txt -c mlp -m models/ucca-mlp
     python tupa/parse.py example.txt -c bilstm -m models/ucca-bilstm
 
