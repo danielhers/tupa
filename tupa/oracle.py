@@ -92,23 +92,23 @@ class Oracle(object):
                                 not edge.attrib.get("remote") or
                                 # Allow remote parent if all its children are remote/implicit
                                 all(e.attrib.get("remote") or e.child.attrib.get("implicit") for e in edge.parent)):
-                        yield self.action(edge, NODE, PARENT)
+                        yield self.action(edge, NODE, PARENT)  # Node or RemoteNode
 
                 for edge in outgoing:
                     if edge.child.ID in self.nodes_remaining and edge.child.attrib.get("implicit") and (
                             not edge.attrib.get("remote")):  # Allow implicit child if it is not remote
-                        yield self.action(edge, NODE, CHILD)
+                        yield self.action(edge, NODE, CHILD)  # Implicit
 
                 if len(state.stack) > 1:
                     s1 = state.stack[-2]
                     # Check for actions to create binary edges
                     for edge in incoming:
                         if edge.parent.ID == s1.node_id:
-                            yield self.action(edge, EDGE, RIGHT)
+                            yield self.action(edge, EDGE, RIGHT)  # RightEdge or RightRemote
 
                     for edge in outgoing:
                         if edge.child.ID == s1.node_id:
-                            yield self.action(edge, EDGE, LEFT)
+                            yield self.action(edge, EDGE, LEFT)  # LeftEdge or LeftRemote
 
                     if not self.edge_found:
                         # Check if a swap is necessary, and how far (if compound swap is enabled)
