@@ -1,69 +1,82 @@
-import json, pdb
-import datetime, time, subprocess
-import sys
 import os
-from bottle import route, run, error, request, static_file, debug, redirect, app, template, abort, response
 
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 
-PARSER_MODEL = "models/ucca-bilstm"
-PARSER_TYPE = "bilstm"
+from io import BytesIO
+from xml.etree.ElementTree import fromstring, tostring
+from urllib.parse import quote
+from base64 import b64encode
+import jinja2
+from flask import Flask, render_template, Response, request
+import flask_assets
+from flask_compress import Compress
+from webassets.ext.jinja2 import AssetsExtension
+from webassets import Environment as AssetsEnvironment
+
+from ucca.convert import from_text, to_standard, from_standard
+from ucca.textutil import indent_xml
+from ucca.visualization import draw
+from tupa.parse import Parser
+
+app = Flask(__name__)
+assets = flask_assets.Environment()
+assets.init_app(app)
+assets_env = AssetsEnvironment("./static/", "/static")
+jinja_environment = jinja2.Environment(
+    autoescape=True,
+    loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), "templates")),
+    extensions=[AssetsExtension])
+jinja_environment.assets_environment = assets_env
+Compress(app)
+
+app.parser = None
+PARSER_MODEL = os.path.join(os.path.dirname(__file__), "..", "models/toy")
+PARSER_TYPE = "sparse"
 
 
 def get_parser():
-    if _parser is None:
-        from tupa.parse import Parser
-        _parser = Parser(PARSER_MODEL, PARSER_TYPE)
-    return _parser
-_parser = None
+    if app.parser is None:
+        print("Initializing parser...")
+        app.parser = Parser(PARSER_MODEL, PARSER_TYPE)
+    return app.parser
 
 
-@route('/', method='GET')
+@app.route("/")
 def parser_demo():
-    return static_file('demo.html', root='../../static/')
+    return render_template("demo.html")
 
-@route('/parse', method='POST')
+@app.route("/parse", methods=["POST"])
 def parse():
-    from ucca.convert import from_text, to_standard
-    from ucca.textutil import indent_xml
-    from xml.etree.ElementTree import tostring
-    text = request.forms.get("input")
+    text = request.values["input"]
+    print("Parsing text: '%s'" % text)
     in_passage = next(from_text(text))
     out_passage = next(get_parser().parse(in_passage))
     root = to_standard(out_passage)
     xml = tostring(root).decode()
-    response.headers['Content-Type'] = 'xml/application'
-    return indent_xml(xml)
+    return Response(indent_xml(xml), headers={"Content-Type": "xml/application"})
 
-@route('/visualize', method='POST')
+@app.route("/visualize", methods=["POST"])
 def visualize():
-    from ucca.convert import from_standard
-    from ucca.visualization import draw
-    import matplotlib.pyplot as plt
-    from matplotlib.backends.backend_agg import FigureCanvasAgg
-    from io import BytesIO
-    from xml.etree.ElementTree import fromstring
-    from urllib.parse import quote
-    from base64 import b64encode
-    xml = request.body.read()
+    xml = request.get_data()
     passage = from_standard(fromstring(xml))
-    print("Passage %s: %s" % (passage.ID, passage.layer("1").top_node))
+    print("Visualizing passage %s: %s" % (passage.ID, passage.layer("1").top_node))
     canvas = FigureCanvasAgg(plt.figure())
     draw(passage)
     image = BytesIO()
     canvas.print_png(image)
     data = b64encode(image.getvalue()).decode()
-    return quote(data.rstrip('\n'))
+    return Response(quote(data.rstrip("\n")))
 
 
 session_opts = {
-    'session.type': 'file',
-    'session.cookie_expires': 60*24*60*2, #two days in seconds
-    'session.data_dir': './data',
-    'session.auto': True
+    "session.type": "file",
+    "session.cookie_expires": 60*24*60*2, #two days in seconds
+    "session.data_dir": "./data",
+    "session.auto": True
 }
-sm = SessionMiddleware(app(), session_opts)
 
 if __name__ == "__main__":
-    run(host='0.0.0.0', port=5000, app=sm)
+    app.run(debug=True, host=os.getenv("IP", "ucca"), port=int(os.getenv("PORT", 5001)))

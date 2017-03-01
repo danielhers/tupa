@@ -1,0 +1,7 @@
+Flask>=0.12
+Flask-Assets>=0.12
+Flask-Compress>=1.4.0
+Jinja2>=2.8
+matplotlib>=2.0.0
+networkx>=1.11
+webassets>=0.12.1
