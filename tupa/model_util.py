@@ -1,4 +1,4 @@
-import shelve
+import pickle
 import time
 
 import numpy as np
@@ -79,28 +79,29 @@ class DropoutDict(AutoIncrementDict):
 def save_dict(filename, d):
     """
     Save dictionary to file
-    :param filename: file to write to; the actual written file may have an additional suffix
+    :param filename: file to write to
     :param d: dictionary to save
     """
     print("Saving to '%s'... " % filename, end="", flush=True)
     started = time.time()
-    with shelve.open(filename) as db:
-        db.update(d)
+    with open(filename, 'wb') as h:
+        pickle.dump(d, h, protocol=pickle.HIGHEST_PROTOCOL)
     print("Done (%.3fs)." % (time.time() - started))
 
 
 def load_dict(filename):
     """
     Load dictionary from file
-    :param filename: file to read from; the actual read file may have an additional suffix
+    :param filename: file to read from
     """
 
-    def try_open(*names):
+    def try_load(*names):
         exception = None
         for f in names:
             # noinspection PyBroadException
             try:
-                return shelve.open(f, flag="r")
+                with open(f, 'rb') as h:
+                    return pickle.load(h)
             except Exception as e:
                 exception = e
         if exception is not None:
@@ -108,7 +109,6 @@ def load_dict(filename):
 
     print("Loading from '%s'... " % filename, end="", flush=True)
     started = time.time()
-    with try_open(filename, os.path.splitext(filename)[0]) as db:
-        d = dict(db)
+    d = try_load(filename, os.path.splitext(filename)[0])
     print("Done (%.3fs)." % (time.time() - started))
     return d
