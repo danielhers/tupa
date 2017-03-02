@@ -31,7 +31,7 @@ class ParserTests(unittest.TestCase):
             state = State(passage)
             actions_taken = []
             while True:
-                actions = oracle.get_actions(state)
+                actions = oracle.get_actions(state).values()
                 action = next(iter(actions))
                 state.transition(action)
                 actions_taken.append("%s\n" % action)

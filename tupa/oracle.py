@@ -44,15 +44,15 @@ class Oracle(object):
         Determine all zero-cost action according to current state
         Asserts that the returned action is valid before returning
         :param state: current State of the parser
-        :return: list of Action items to perform
+        :return: dict of action ID to Action
         """
-        actions = []
+        actions = {}
         invalid = []
         for action in self.generate_actions(state):
             action.generate_id()
             try:
                 state.assert_valid(action)
-                actions.append(action)
+                actions[action.id] = action
             except AssertionError as e:
                 invalid.append((action, e))
         assert actions, self.generate_log(invalid, state)

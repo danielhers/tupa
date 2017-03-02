@@ -200,7 +200,7 @@ class Parser(object):
             if self.args.check_loops:
                 self.check_loop(print_oracle=train)
 
-            true_actions = []
+            true_actions = {}
             if self.oracle is not None:
                 try:
                     true_actions = self.oracle.get_actions(self.state)
@@ -214,17 +214,17 @@ class Parser(object):
             correct_action = False
             if not true_actions:
                 true_actions = "?"
-            elif predicted_action in true_actions:
+            elif predicted_action.id in true_actions:
                 self.correct_count += 1
                 correct_action = True
             elif train:
-                action = Config().random.choice(true_actions)
+                action = Config().random.choice(list(true_actions.values()))
             if train and not (correct_action and
                               ClassifierProperty.update_only_on_error in self.model.model.get_classifier_properties()):
-                best_true_action = true_actions[0] if len(true_actions) == 1 else \
-                    true_actions[self.scores[[a.id for a in true_actions]].argmax()]
-                self.model.model.update(features, predicted_action.id, best_true_action.id,
-                                        self.args.swap_importance if best_true_action.is_swap else 1)
+                true_action_ids = list(true_actions)
+                best_id = true_action_ids[self.scores[true_action_ids].argmax()]
+                self.model.model.update(features, predicted_action.id, best_id,
+                                        self.args.swap_importance if true_actions[best_id].is_swap else 1)
             self.action_count += 1
             self.model.model.finished_step(train)
             try:
@@ -236,7 +236,7 @@ class Parser(object):
                     print("  action: %-15s %s" % (action, self.state))
                 else:
                     print("  predicted: %-15s true: %-15s taken: %-15s %s" % (
-                        predicted_action, "|".join(map(str, true_actions)), action, self.state))
+                        predicted_action, "|".join(map(str, true_actions.values())), action, self.state))
                 for line in self.state.log:
                     print("    " + line)
             if self.state.finished or train and not correct_action and self.args.early_update:
@@ -274,7 +274,7 @@ class Parser(object):
             return next(filter(self.state.is_valid, actions))
         except StopIteration as e:
             raise ParserException("No valid actions available\n" +
-                                  ("True actions: %s" % true_actions if true_actions
+                                  ("True actions: %s" % true_actions.values() if true_actions
                                    else self.oracle.log if self.oracle is not None
                                    else "") +
                                   "\nReturned actions: %s" %
@@ -286,17 +286,14 @@ class Parser(object):
         return ", ".join(("%s: %g" % x for x in zip(Actions().all, self.scores)))
 
     @staticmethod
-    def select_action(i, true_actions=()):
+    def select_action(i, true_actions={}):
         """
         Find action with the given ID in true actions (if exists) or in all actions
         :param i: ID to lookup
-        :param true_actions: preferred set of actions to look in first
+        :param true_actions: preferred set of actions to look in first; dict of action ID to Action
         :return: Action with id=i
         """
-        try:
-            return next(a for a in true_actions if a.id == i)
-        except StopIteration:
-            return Actions().all[i]
+        return true_actions.get(i, Actions().all[i])
 
     def verify_passage(self, passage, predicted_passage, show_diff):
         """
