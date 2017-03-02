@@ -64,7 +64,7 @@ class Node(object):
             if self.node is None and parent.node is not None:
                 self.node = parent.node.add(EdgeTags.Terminal,
                                             terminals[self.index - 1]).child
-        elif edge and edge.child.text and layer0.is_punct(terminals[edge.child.index]):
+        elif edge and edge.child.text and layer0.is_punct(terminals[edge.child.index - 1]):
             if Config().args.verify:
                 assert tag == EdgeTags.Punctuation, "Tag for %s is %s" % (parent.node_id, tag)
                 assert edge.tag == EdgeTags.Terminal, "Tag for %s is %s" % (self.node_id, edge.tag)

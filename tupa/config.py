@@ -154,6 +154,7 @@ class Config(object, metaclass=Singleton):
             if self.args.format == "amr":
                 self.args.implicit = True
                 self.args.max_nodes = 10.0
+                self.args.max_labels = 10000
                 self.args.node_labels = True
                 from contrib import amrutil
                 self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores

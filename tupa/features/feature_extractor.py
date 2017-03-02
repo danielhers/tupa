@@ -198,7 +198,7 @@ class FeatureExtractor(object):
         "t": lambda node, _: FeatureExtractor.get_head_terminal(node).pos_tag,
         "d": lambda node, _: FeatureExtractor.get_head_terminal(node).dep_rel,
         "h": lambda node, _: FeatureExtractor.get_height(node),
-        "i": lambda node, _: FeatureExtractor.get_head_terminal(node).index,
+        "i": lambda node, _: FeatureExtractor.get_head_terminal(node).index - 1,
         "e": lambda node, prev_node: next(e.tag for e in node.incoming
                                           if prev_node is None or e.parent == prev_node),
         "x": lambda node, _: FeatureExtractor.gap_type(node),
@@ -228,7 +228,7 @@ class FeatureExtractor(object):
             return None
         t0, t1 = sorted([FeatureExtractor.get_head_terminal(node) for node in nodes],
                         key=lambda t: t.index)
-        punctuation = [terminal for terminal in terminals[t0.index + 1:t1.index]
+        punctuation = [terminal for terminal in terminals[t0.index:t1.index - 1]
                        if terminal.tag == layer0.NodeTags.Punct]
         if p == "p" and len(punctuation) == 1:
             return punctuation[0].text
