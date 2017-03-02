@@ -1,17 +1,51 @@
 from ucca.layer1 import EdgeTags
 
 
-class Constraints:
-    def __init__(self, args):
-        self.args = args
+class TagRule:
+    def __init__(self, trigger, allowed=(None, None), disallowed=(None, None)):
+        self.trigger = trigger
+        self.allowed = allowed
+        self.disallowed = disallowed
+
+    @staticmethod
+    def contains(s, tag):
+        return s is not None and (s(tag) if callable(s) else tag == s if isinstance(s, str) else tag in s)
+
+    @staticmethod
+    def tags(node, direction):
+        return (node.incoming_tags, node.outgoing_tags)[direction]
+
+    def check(self, node, tag, direction):
+        for d in Constraints.DIRECTIONS:
+            if any(self.contains(self.trigger[d], t) for t in self.tags(node, d)):
+                if self.allowed[direction] is not None:
+                    assert self.contains(self.allowed[direction], tag), \
+                        "Units with %s %s edges must get only %s edges, but got '%s' for %s" % (
+                            Constraints.TITLE[direction], self.trigger[d], self.allowed[direction], tag, node)
+                if self.disallowed[direction] is not None:
+                    assert not self.contains(self.disallowed[direction], tag), \
+                        "Units with %s %s edges must not get %s edges, but got '%s' for %s" % (
+                            Constraints.TITLE[direction], self.trigger[d], self.disallowed[direction], tag, node)
+        if self.contains(self.trigger[direction], tag):
+            for d in Constraints.DIRECTIONS:
+                if self.allowed[d] is not None:
+                    assert all(self.contains(self.allowed[d], t) for t in self.tags(node, d)), \
+                        "Units getting %s '%s' edges must have only %s edges, but got %s for %s" % (
+                            Constraints.TITLE[d], tag, self.allowed[d], self.trigger[direction], node)
+                if self.disallowed[d] is not None:
+                    assert not any(self.contains(self.disallowed[d], t) for t in self.tags(node, d)), \
+                        "Units getting %s '%s' edges must not have %s edges, but got %s for %s" % (
+                            Constraints.TITLE[d], tag, self.disallowed[d], self.trigger[direction], node)
+
+
+class Constraints(object):
+    INCOMING = 0
+    OUTGOING = 1
+    DIRECTIONS = (INCOMING, OUTGOING)
+    TITLE = "incoming", "outgoing"
 
     # Require all non-roots to have incoming edges
     require_connected = True
-
-    # Require the first action to be shift, i.e., do not allow implicit children to the root
-    @property
-    def require_first_shift(self):
-        return not self.args.implicit
 
     # Implicit nodes may not have children
     require_implicit_childless = True
@@ -22,16 +56,6 @@ class Constraints:
     # Allow multiple edges (with different tags) between the same pair of nodes
     allow_multiple_edges = False
 
-    # A unit may not have more than one outgoing edge with the same tag, if it is one of these:
-    UniqueOutgoing = {
-        EdgeTags.LinkRelation,
-        EdgeTags.Process,
-        EdgeTags.State,
-    }
-
-    def is_unique_outgoing(self, tag):
-        return tag in self.UniqueOutgoing
-
     # A unit may not have more than one incoming edge with the same tag, if it is one of these:
     UniqueIncoming = {
         EdgeTags.Function,
@@ -41,30 +65,20 @@ class Constraints:
         EdgeTags.LinkRelation,
         EdgeTags.Connector,
         EdgeTags.Punctuation,
-        EdgeTags.Terminal,
+        # EdgeTags.Terminal,
     }
 
-    def is_unique_incoming(self, tag):
-        return tag in self.UniqueIncoming
-
-    # A unit may not have more than one outgoing edge with any of these:
-    MutuallyExclusiveOutgoing = {
+    # A unit may not have more than one outgoing edge with the same tag, if it is one of these:
+    UniqueOutgoing = {
+        EdgeTags.LinkRelation,
         EdgeTags.Process,
         EdgeTags.State,
     }
-
-    @property
-    def mutually_exclusive_outgoing(self):
-        return self.MutuallyExclusiveOutgoing
 
     # A unit may not have any children if it has any of these incoming edge tags:
     ChildlessIncoming = {
         EdgeTags.Function,
     }
-
-    @property
-    def childless_incoming(self):
-        return self.ChildlessIncoming
 
     # A childless unit may still have these outgoing edge tags:
     ChildlessOutgoing = {
@@ -72,36 +86,11 @@ class Constraints:
         EdgeTags.Punctuation,
     }
 
-    @property
-    def childless_outgoing(self):
-        return self.ChildlessOutgoing
-
-    # A unit with any outgoing edge with one of these tags is a scene:
-    SceneSufficientOutgoing = {
-        EdgeTags.Participant,
-        EdgeTags.Process,
-        EdgeTags.State,
+    # A linker may only have incoming edges with these tags, and must have both:
+    LinkerIncoming = {
+        EdgeTags.Linker,
+        EdgeTags.LinkRelation,
     }
-
-    def is_scene_sufficient_outgoing(self, tag):
-        return tag in self.SceneSufficientOutgoing
-
-    # A scene unit must have any outgoing edge with one of these tags:
-    SceneNecessaryOutgoing = {
-        EdgeTags.Process,
-        EdgeTags.State,
-    }
-
-    def is_scene_necessary_outgoing(self, tag):
-        return tag in self.SceneNecessaryOutgoing
-
-    # A unit with any incoming edge with one of these tags is a scene:
-    SceneSufficientIncoming = {
-        EdgeTags.ParallelScene,
-    }
-
-    def is_scene_sufficient_incoming(self, tag):
-        return tag in self.SceneSufficientIncoming
 
     # Outgoing edges from the root may only have these tags:
     TopLevel = {
@@ -112,23 +101,31 @@ class Constraints:
         EdgeTags.Punctuation,
     }
 
-    def is_top_level(self, tag):
-        return tag in self.TopLevel
-
-    # A linker may only have incoming edges with these tags, and must have both:
-    LinkerIncoming = {
-        EdgeTags.Linker,
-        EdgeTags.LinkRelation,
-    }
-
-    def is_linker_incoming(self, tag):
-        return tag in self.LinkerIncoming
-
     # Only a unit with one of these incoming tags may also have another non-remote incoming edge:
     PossibleMultipleIncoming = {
         EdgeTags.LinkArgument,
         EdgeTags.LinkRelation,
     }
 
+    tag_rules = [
+        TagRule(trigger=(None, EdgeTags.Process), disallowed=(None, EdgeTags.State)),
+        TagRule(trigger=(None, EdgeTags.State), disallowed=(None, EdgeTags.Process)),
+        TagRule(trigger=(ChildlessIncoming, None), allowed=(None, ChildlessOutgoing)),
+        # TagRule(trigger=(LinkerIncoming, None), allowed=(LinkerIncoming, None)),  # passage 106, unit 1.300
+    ] + \
+        [TagRule(trigger=(t, None), disallowed=(t, None)) for t in UniqueIncoming] + \
+        [TagRule(trigger=(None, t), disallowed=(None, t)) for t in UniqueOutgoing]
+
+    def __init__(self, args):
+        self.args = args
+
+    def is_top_level(self, tag):
+        return tag in self.TopLevel
+
     def is_possible_multiple_incoming(self, tag):
         return self.args.linkage and tag in self.PossibleMultipleIncoming
+
+    # Require the first action to be shift, i.e., do not allow implicit children to the root
+    @property
+    def require_first_shift(self):
+        return not self.args.implicit

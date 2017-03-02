@@ -89,26 +89,21 @@ class Scores(object):
 
 
 class Constraints(constraints.Constraints):
-    def __init__(self, args):
-        super(Constraints, self).__init__(args)
-
     require_connected = True
     require_first_shift = False
     require_implicit_childless = False
     allow_root_terminal_children = True
     allow_multiple_edges = True
-
-    UniqueOutgoing = ChildlessIncoming = {
-        "instance-of",
-    }
-
-    is_unique_incoming = None
-    mutually_exclusive_outgoing = None
-    is_scene_sufficient_outgoing = None
-    is_scene_necessary_outgoing = None
-    is_scene_sufficient_incoming = None
+    UniqueOutgoing = ChildlessIncoming = {"instance-of"}
+    UniqueIncoming = ()
     is_top_level = None
-    is_linker_incoming = None
+
+    tag_rules = constraints.Constraints.tag_rules + [
+        constraints.TagRule(trigger=("name", None), allowed=(lambda t: t == "instance-of" or t.startswith("op"), None)),
+    ]
+
+    def __init__(self, args):
+        super(Constraints, self).__init__(args)
 
     def is_possible_multiple_incoming(self, tag):
         return False

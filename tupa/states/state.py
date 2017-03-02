@@ -66,21 +66,8 @@ class State(object):
             if self.args.constraints:
                 assert not self.constraints.require_implicit_childless or not node.implicit, \
                     "Implicit nodes may not have children: %s" % s0
-                assert self.constraints.is_unique_outgoing is None or \
-                    not self.constraints.is_unique_outgoing(action.edge_tag) or \
-                    action.edge_tag not in node.outgoing_tags, \
-                    "Outgoing edge tag '%s' must be unique, but %s already has one" % (
-                        action.edge_tag, node)
-                assert self.constraints.mutually_exclusive_outgoing is None or \
-                    action.edge_tag not in self.constraints.mutually_exclusive_outgoing or not \
-                    node.outgoing_tags & self.constraints.mutually_exclusive_outgoing, \
-                    "Outgoing edge tags %s are mutually exclusive, but %s already has %s and is being added '%s'" % (
-                        self.constraints.mutually_exclusive_outgoing, node, node.outgoing_tags, action.edge_tag)
-                assert self.constraints.childless_outgoing is None or \
-                    action.edge_tag in self.constraints.childless_outgoing or not \
-                    node.incoming_tags & self.constraints.childless_incoming, \
-                    "Units with incoming %s edges may not have children, and %s has incoming %s" % (
-                        self.constraints.childless_incoming, node, node.incoming_tags)
+                for rule in self.constraints.tag_rules:
+                    rule.check(node, action.edge_tag, self.constraints.OUTGOING)
 
         def assert_possible_child(node):
             assert node is not self.root, "The root may not have parents"
@@ -88,27 +75,12 @@ class State(object):
                 "Edge tag must be %s iff child is terminal, but node is %s and edge tag is %s" % (
                     EdgeTags.Terminal, node, action.edge_tag)
             if self.args.constraints:
-                assert self.constraints.is_unique_incoming is None or \
-                    not self.constraints.is_unique_incoming(action.edge_tag) or \
-                    action.edge_tag not in node.incoming_tags, \
-                    "Incoming edge tag %s must be unique, but %s already has one" % (
-                        action.edge_tag, node)
-                assert self.constraints.childless_incoming is None or \
-                    action.edge_tag not in self.constraints.childless_incoming or \
-                    node.outgoing_tags <= self.constraints.childless_outgoing, \
-                    "Units with incoming %s edges may not have children, but %s has %d" % (
-                        self.constraints.childless_incoming, node, len(node.children))
+                for rule in self.constraints.tag_rules:
+                    rule.check(node, action.edge_tag, self.constraints.INCOMING)
                 assert self.constraints.is_possible_multiple_incoming is None or \
                     action.remote or self.constraints.is_possible_multiple_incoming(action.edge_tag) or \
                     all(e.remote or self.constraints.is_possible_multiple_incoming(e.tag) for e in node.incoming), \
-                    "Multiple parents only allowed if they are remote or linkage edges: %s, %s" % (
-                        action, node)
-                # Commented out due to passage 106, unit 1.300
-                # assert self.constraints.linker_incoming is None or \
-                #     not node.incoming_tags or (self.constraints.linker_incoming(action.edge_tag)) == (
-                #     node.incoming_tags <= self.constraints.linker_incoming), \
-                #     "Linker units may only have incoming edges with tags from %s, but %s is being added '%s'" % (
-                #         self.constraints.linker_incoming, node, action.edge_tag)
+                    "Multiple parents only allowed if they are remote or linkage edges: %s, %s" % (action, node)
 
         def assert_possible_edge():
             parent, child = self.get_parent_child(action)
@@ -152,20 +124,6 @@ class State(object):
                 if self.args.constraints and self.constraints.require_connected:
                     assert s0 is self.root or s0.is_linkage or s0.text or s0.incoming, \
                         "May not reduce a non-terminal node without incoming edges"
-                # Commented out due to passage 126, unit 1.338
-                # assert (self.constraints.scene_sufficient_outgoing is None or \
-                #     not s0.outgoing_tags & self.constraints.scene_sufficient_outgoing) and \
-                #     (self.constraints.scene_necessary_outgoing is None or \
-                #      not s0.incoming_tags & self.constraints.scene_sufficient_incoming or \
-                #      s0.outgoing_tags & self.constraints.scene_necessary_outgoing), \
-                #     "May not reduce a scene before it has any outgoing edge of %s (it has only %s)" % (
-                #         self.constraints.scene_necessary_outgoing, s0.outgoing_tags)
-                # Commented out due to passage 126, unit 1.60
-                # assert self.constraints.linker_incoming is None or \
-                #     s0.incoming_tags == self.constraints.linker_incoming or not \
-                #     s0.incoming_tags & self.constraints.linker_incoming, \
-                #     "May not reduce a linker before it has all incoming edges of %s (it has only %s)" % (
-                #         self.constraints.linker_incoming, s0.incoming_tags)
             else:  # Binary actions
                 assert len(self.stack) > 1, "Action requires at least two stack elements: %s" % action
                 if action.is_type(Actions.LeftEdge, Actions.RightEdge, Actions.LeftRemote, Actions.RightRemote):
