@@ -98,14 +98,12 @@ class Constraints(constraints.Constraints):
     allow_root_terminal_children = True
     allow_multiple_edges = True
 
-    UniqueOutgoing = {
+    UniqueOutgoing = ChildlessIncoming = {
         "instance-of",
     }
 
     is_unique_incoming = None
     mutually_exclusive_outgoing = None
-    childless_incoming = None
-    childless_outgoing = None
     is_scene_sufficient_outgoing = None
     is_scene_necessary_outgoing = None
     is_scene_sufficient_incoming = None
