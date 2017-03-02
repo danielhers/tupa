@@ -100,12 +100,7 @@ class Constraints(constraints.Constraints):
 
     UniqueOutgoing = {
         "instance-of",
-        "op",
-        "snt",
     }
-
-    def is_unique_outgoing(self, tag):
-        return tag.rstrip("0123456789") in self.UniqueOutgoing
 
     is_unique_incoming = None
     mutually_exclusive_outgoing = None
