@@ -23,15 +23,18 @@ class State(object):
         l1 = passage.layer(layer1.LAYER_ID)
         assert l0.all, "Empty passage '%s'" % passage.ID
         self.labeled = len(l1.all) > 1
-        self.terminals = [Node(i, orig_node=t, text=t.text, paragraph=t.paragraph, tag=t.tag,
+        self.terminals = [Node(i + 1, orig_node=t, text=t.text, paragraph=t.paragraph, tag=t.tag,
                                pos_tag=t.extra.get(textutil.TAG_KEY),
                                dep_rel=t.extra.get(textutil.DEP_KEY),
                                dep_head=t.extra.get(textutil.HEAD_KEY))
                           for i, t in enumerate(l0.all)]
-        self.nodes = list(self.terminals)  # Copy the list of terminals; more nodes will be added later
-        self.buffer = deque(self.nodes)  # Copy the list of nodes to initialize the buffer
-        self.root = self.add_node(l1.heads[0])  # The root is not part of the buffer
-        self.stack = [self.root]
+        self.stack = []
+        self.buffer = deque()
+        self.nodes = []
+        self.root = self.add_node(orig_node=l1.heads[0])  # The root is not part of the buffer
+        self.stack.append(self.root)
+        self.buffer += self.terminals
+        self.nodes += self.terminals
         self.passage_id = passage.ID
         self.actions = []  # History of applied actions
 
@@ -175,7 +178,7 @@ class State(object):
                     swapped = self.stack[-distance - 1]
                     # To prevent swap loops: only swap if the nodes are currently in their original order
                     assert self.swappable(s0, swapped),\
-                        "Swapping already-swapped nodes: %s (swap index %d) <--> %s (swap index %d)" % (
+                        "Swapping already-swapped nodes: %s (swap index %g) <--> %s (swap index %g)" % (
                             swapped, swapped.swap_index, s0, s0.swap_index)
                 else:
                     raise Exception("Invalid action: %s" % action)
@@ -195,13 +198,11 @@ class State(object):
         if action.is_type(Actions.Shift):  # Push buffer head to stack; shift buffer
             self.stack.append(self.buffer.popleft())
         elif action.is_type(Actions.Node, Actions.RemoteNode):  # Create new parent node and add to the buffer
-            parent = self.add_node(action.orig_node, label=action.node_label)
-            self.update_swap_index(parent)
+            parent = self.add_node(orig_node=action.orig_node, label=action.node_label)
             self.add_edge(Edge(parent, self.stack[-1], action.edge_tag, remote=action.remote))
             self.buffer.appendleft(parent)
         elif action.is_type(Actions.Implicit):  # Create new child node and add to the buffer
-            child = self.add_node(action.orig_node, label=action.node_label, implicit=True)
-            self.update_swap_index(child)
+            child = self.add_node(orig_node=action.orig_node, label=action.node_label, implicit=True)
             self.add_edge(Edge(self.stack[-1], child, action.edge_tag))
             self.buffer.appendleft(child)
         elif action.is_type(Actions.Reduce):  # Pop stack (no more edges to create with this node)
@@ -226,18 +227,35 @@ class State(object):
         action.index = len(self.actions)
         self.actions.append(action)
 
-    def add_node(self, *args, **kwargs):
+    def add_node(self, **kwargs):
         """
         Called during parsing to add a new Node (not core.Node) to the temporary representation
-        :param args: ordinal arguments for Node()
         :param kwargs: keyword arguments for Node()
         """
-        node = Node(len(self.nodes), *args, **kwargs)
+        node = Node(len(self.nodes), swap_index=self.calculate_swap_index(), **kwargs)
         if self.args.verify:
             assert node not in self.nodes, "Node already exists"
         self.nodes.append(node)
-        self.log.append("node: %s" % node)
+        self.log.append("node: %s (swap_index: %g)" % (node, node.swap_index))
         return node
+
+    def calculate_swap_index(self):
+        """
+        Update a new node's swap index according to the nodes before and after it.
+        Usually the swap index is just the index, i.e., len(self.nodes).
+        If the buffer is not empty and its head is not a terminal, it means that it is a non-terminal created before.
+        In that case, the buffer head's index will be lower than the new node's index, so the new node's swap index will
+        be the arithmetic mean between the previous node (stack top) and the next node (buffer head).
+        Then, in the validity check on the SWAP action, we will correctly identify this node as always having appearing
+        before the current buffer head. Otherwise, we would prevent swapping them even though it should be valid
+        (because they have never been swapped before).
+        """
+        if self.buffer:
+            b = self.buffer[0]
+            if self.stack and (b.text is not None or b.swap_index <= len(self.nodes)):
+                s = self.stack[-1]
+                return (s.swap_index + b.swap_index) / 2
+        return None
 
     def add_edge(self, edge):
         edge.add()
@@ -368,28 +386,6 @@ class State(object):
         max_height = self.args.max_height
         assert self.root.height <= max_height, \
             "Reached maximum graph height (%d)" % max_height
-
-    def update_swap_index(self, node):
-        """
-        Update the node's swap index according to the nodes before and after it.
-        Usually the swap index is just the index, and that is what it is initialized to.
-        If the buffer is not empty and the next node on it is not a terminal, it means that it is
-        a non-terminal that was created at some point, probably before this node (because this method
-        should be run just when this node is created).
-        In that case, the buffer head's index will be lower than this node's index, and we will
-        update this node's swap index to be the arithmetic average between the previous node
-        (stack top) and the next node (buffer head).
-        This will make sure that when we perform the validity check on the SWAP action,
-        we will correctly identify this node as always having appearing before b (what is the
-        current buffer head). Otherwise, we would prevent swapping this node with b even though
-        it should be a legal action (because they have never been swapped before).
-        :param node: the new node that was added
-        """
-        if self.buffer:
-            b = self.buffer[0]
-            if self.stack and (b.text is not None or b.swap_index <= node.swap_index):
-                s = self.stack[-1]
-                node.swap_index = (s.swap_index + b.swap_index) / 2
 
     def str(self, sep):
         return "stack: [%-20s]%sbuffer: [%s]" % (" ".join(map(str, self.stack)), sep,

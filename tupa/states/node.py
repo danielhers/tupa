@@ -10,8 +10,8 @@ class Node(object):
     """
     Temporary representation for core.Node with only relevant information for parsing
     """
-    def __init__(self, index, orig_node=None, text=None, paragraph=None, tag=None, label=None, implicit=False,
-                 pos_tag=None, dep_rel=None, dep_head=None):
+    def __init__(self, index, swap_index=None, orig_node=None, text=None, paragraph=None, tag=None, label=None,
+                 implicit=False, pos_tag=None, dep_rel=None, dep_head=None):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated core.Node from the original Passage, during training
         self.node_id = orig_node.ID if orig_node else None  # ID of the original node
@@ -31,7 +31,7 @@ class Node(object):
         self.pos_tag = pos_tag
         self.dep_rel = dep_rel
         self.dep_head = dep_head
-        self.swap_index = self.index  # Used to make sure nodes are not swapped more than once
+        self.swap_index = self.index if swap_index is None else swap_index  # To avoid swapping nodes more than once
         self.height = 0
         self._terminals = None
 
@@ -63,12 +63,12 @@ class Node(object):
         if self.text:  # For Word terminals (Punctuation already created by add_punct for parent)
             if self.node is None and parent.node is not None:
                 self.node = parent.node.add(EdgeTags.Terminal,
-                                            terminals[self.index]).child
+                                            terminals[self.index - 1]).child
         elif edge and edge.child.text and layer0.is_punct(terminals[edge.child.index]):
             if Config().args.verify:
                 assert tag == EdgeTags.Punctuation, "Tag for %s is %s" % (parent.node_id, tag)
                 assert edge.tag == EdgeTags.Terminal, "Tag for %s is %s" % (self.node_id, edge.tag)
-            self.node = l1.add_punct(parent.node, terminals[edge.child.index])
+            self.node = l1.add_punct(parent.node, terminals[edge.child.index - 1])
             edge.child.node = self.node[0].child
         else:  # The usual case; if parent is an orphan then parent.node is None and this will be attached to root
             self.node = l1.add_fnode(parent.node, tag, implicit=self.implicit)
