@@ -100,7 +100,6 @@ class Constraints(constraints.Constraints):
 
     UniqueOutgoing = {
         "instance-of",
-        "ARG",
         "op",
         "snt",
     }
