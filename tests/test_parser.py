@@ -31,12 +31,13 @@ class ParserTests(unittest.TestCase):
             state = State(passage)
             actions_taken = []
             while True:
-                actions = oracle.get_actions(state).values()
-                action = next(iter(actions))
+                action = min(oracle.get_actions(state).values(), key=str)
                 state.transition(action)
                 actions_taken.append("%s\n" % action)
                 if state.finished:
                     break
+            # with open("test_files/standard3.oracle_actions.txt", "w") as f:
+            #     f.writelines(actions_taken)
             with open("test_files/standard3.oracle_actions.txt") as f:
                 self.assertSequenceEqual(actions_taken, f.readlines())
 
