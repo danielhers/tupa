@@ -198,24 +198,12 @@ class Parser(object):
         while True:
             if self.args.check_loops:
                 self.check_loop()
-
-            true_actions = {}
-            if self.oracle:
-                try:
-                    true_actions = self.oracle.get_actions(self.state)
-                except (AttributeError, AssertionError) as e:
-                    if train:
-                        raise ParserException("Error in oracle during training") from e
-
+            true_actions = self.get_oracle_actions(train)
             features = self.model.feature_extractor.extract_features(self.state)
             scores = self.model.model.score(features)  # Returns a NumPy array
             if self.args.verbose > 2:
                 print("  scores: " + ", ".join(("%s: %g" % x for x in zip(Actions().all, scores))))
-            try:
-                predicted_action = self.predict_action(scores)
-            except StopIteration as e:
-                raise ParserException("No valid actions available. Predicted action: %s%s" % (
-                    predicted_action, "\n" + self.oracle.log if self.oracle else "")) from e
+            predicted_action = self.predict_action(scores)
             action = true_actions.get(predicted_action.id)
             correct_action = False
             if action is None:
@@ -245,6 +233,16 @@ class Parser(object):
             if self.state.finished or train and not correct_action and self.args.early_update:
                 return  # action is Finish
 
+    def get_oracle_actions(self, train):
+        true_actions = {}
+        if self.oracle:
+            try:
+                true_actions = self.oracle.get_actions(self.state)
+            except (AttributeError, AssertionError) as e:
+                if train:
+                    raise ParserException("Error in oracle during training") from e
+        return true_actions
+
     def check_loop(self):
         """
         Check if the current state has already occurred, indicating a loop
@@ -263,7 +261,10 @@ class Parser(object):
         """
         if all_actions is None:
             all_actions = Actions().all
-        return next(filter(self.state.is_valid, (all_actions[i] for i in self.generate_descending(scores))))
+        try:
+            return next(filter(self.state.is_valid, (all_actions[i] for i in self.generate_descending(scores))))
+        except StopIteration as e:
+            raise ParserException("No valid actions available\n%s" % (self.oracle.log if self.oracle else "")) from e
 
     @staticmethod
     def generate_descending(scores):
