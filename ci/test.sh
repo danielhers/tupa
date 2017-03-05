@@ -13,16 +13,16 @@ unit)
     python tupa/parse.py ucca/doc/toy.xml -esm model_toy_paragraphs -v || exit 1
     ;;
 sparse)
-    python tupa/parse.py -c sparse --max-words-external=5000 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle
+    python tupa/parse.py -v -c sparse --max-words-external=5000 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle
     ;;
 dense)
-    python tupa/parse.py -c dense --max-words-external=5000 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle
+    python tupa/parse.py -v -c dense --max-words-external=5000 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle
     ;;
 mlp)
-    python tupa/parse.py -c mlp --max-words-external=5000 --layer-dim=100 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle --dynet-mem=1500
+    python tupa/parse.py -v -c mlp --max-words-external=5000 --layer-dim=100 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle --dynet-mem=1500
     ;;
 bilstm)
-    python tupa/parse.py -c bilstm --max-words-external=5000 --layer-dim=100 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle --dynet-mem=1500
+    python tupa/parse.py -v -c bilstm --max-words-external=5000 --layer-dim=100 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle --dynet-mem=1500
     ;;
 tune)
     export PARAMS_NUM=5
