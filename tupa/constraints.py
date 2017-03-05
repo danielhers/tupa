@@ -42,13 +42,13 @@ class TagRule:
                 allowed = None if self.allowed is None else self.allowed.get(d)
                 if allowed is not None:
                     assert all(contains(allowed, t) for t in tags(node, d)), \
-                        "Units getting %s '%s' edges must have only %s '%s' edges, but got '%s' for '%s'" % (
-                            d.name, tag, direction.name, allowed, trigger, node)
+                        "Units getting %s '%s' edges must have only %s '%s' edges, but '%s' has '%s'" % (
+                            direction.name, tag, d.name, allowed, node, tags(node, d))
                 disallowed = None if self.disallowed is None else self.disallowed.get(d)
                 if disallowed is not None:
                     assert not any(contains(disallowed, t) for t in tags(node, d)), \
-                        "Units getting %s '%s' edges must not have %s '%s' edges, but got '%s' for '%s'" % (
-                            d.name, tag, direction.name, disallowed, trigger, node)
+                        "Units getting %s '%s' edges must not have %s '%s' edges, but got '%s' for '%s' has '%s'" % (
+                            direction.name, tag, d.name, disallowed, node, tags(node, d))
 
 
 def set_prod(set1, set2=None):
