@@ -99,4 +99,5 @@ class Constraints(constraints.Constraints):
                                           unique_incoming=(), mutually_exclusive_outgoing=(), top_level=None)
         self.tag_rules.append(
             constraints.TagRule(trigger={constraints.Direction.incoming: "name"},
-                                allowed={constraints.Direction.outgoing: re.compile("^(instance-of|op\d+)$")}))
+                                allowed={constraints.Direction.outgoing: re.compile(
+                                    "^(instance-of|op\d+|%s)$" % constraints.EdgeTags.Terminal)}))
