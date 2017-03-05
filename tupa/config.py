@@ -194,7 +194,7 @@ class Config(object, metaclass=Singleton):
 
     @property
     def line_end(self):
-        return "\n" if self.args.verbose else " "  # show all in one line unless verbose
+        return "\n" if self.args.verbose > 1 else " "  # show all in one line unless verbose
 
     def log(self, message):
         try:

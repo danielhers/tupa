@@ -296,7 +296,7 @@ class State(object):
     def fix_terminal_tags(self, terminals):
         for terminal, orig_terminal in zip(terminals, self.terminals):
             if terminal.tag != orig_terminal.tag:
-                if self.args.verbose:
+                if self.args.verbose > 1:
                     print("%s is the wrong tag for terminal: %s" % (terminal.tag, terminal.text),
                           file=sys.stderr)
                 terminal.tag = orig_terminal.tag

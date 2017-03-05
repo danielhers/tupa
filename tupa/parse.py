@@ -30,7 +30,6 @@ class Parser(object):
         self.args = Config().args
         self.state = None  # State object created at each parse
         self.oracle = None  # Oracle object created at each parse
-        self.scores = None  # NumPy array of action scores at each action
         self.action_count = 0
         self.correct_count = 0
         self.total_actions = 0
@@ -138,10 +137,10 @@ class Parser(object):
             started = time.time()
             self.action_count = 0
             self.correct_count = 0
-            textutil.annotate(passage, verbose=self.args.verbose)  # tag POS and parse dependencies
+            textutil.annotate(passage, verbose=self.args.verbose > 1)  # tag POS and parse dependencies
             self.state = State(passage)
             self.state_hash_history = set()
-            self.oracle = Oracle(passage) if train else None
+            self.oracle = Oracle(passage) if train or self.args.verbose and labeled else None
             failed = False
             if ClassifierProperty.require_init_features in self.model.model.get_classifier_properties():
                 self.model.init_features(self.state, train)
@@ -158,7 +157,7 @@ class Parser(object):
             total_duration += duration
             num_tokens -= len(self.state.buffer)
             total_tokens += num_tokens
-            if train:  # We have an oracle to verify by
+            if self.oracle:  # We have an oracle to verify by
                 if not failed and self.args.verify:
                     self.verify_passage(passage, predicted_passage, train)
                 if self.action_count:
@@ -168,7 +167,7 @@ class Parser(object):
             print("%0.3fs" % duration, end="")
             print("%-15s" % (" (failed)" if failed else " (%d tokens/s)" % (num_tokens / duration)), end="")
             print(Config().line_end, end="")
-            if train:
+            if self.oracle:
                 print(Config().line_end, flush=True)
             self.model.model.finished_item(train)
             self.total_correct += self.correct_count
@@ -194,14 +193,14 @@ class Parser(object):
         Internal method to parse a single passage
         :param train: use oracle to train on given passages, or just parse with classifier?
         """
-        if self.args.verbose:
+        if self.args.verbose > 1:
             print("  initial state: %s" % self.state)
         while True:
             if self.args.check_loops:
-                self.check_loop(print_oracle=train)
+                self.check_loop()
 
             true_actions = {}
-            if self.oracle is not None:
+            if self.oracle:
                 try:
                     true_actions = self.oracle.get_actions(self.state)
                 except (AttributeError, AssertionError) as e:
@@ -209,91 +208,67 @@ class Parser(object):
                         raise ParserException("Error in oracle during training") from e
 
             features = self.model.feature_extractor.extract_features(self.state)
-            predicted_action = self.predict_action(features, true_actions)  # sets self.scores
-            action = predicted_action
+            scores = self.model.model.score(features)  # Returns a NumPy array
+            if self.args.verbose > 2:
+                print("  scores: " + ", ".join(("%s: %g" % x for x in zip(Actions().all, scores))))
+            try:
+                predicted_action = self.predict_action(scores)
+            except StopIteration as e:
+                raise ParserException("No valid actions available. Predicted action: %s%s" % (
+                    predicted_action, "\n" + self.oracle.log if self.oracle else "")) from e
+            action = true_actions.get(predicted_action.id)
             correct_action = False
-            if not true_actions:
-                true_actions = "?"
-            elif predicted_action.id in true_actions:
+            if action is None:
+                action = Config().random.choice(list(true_actions.values())) if train else predicted_action
+            else:
                 self.correct_count += 1
                 correct_action = True
-            elif train:
-                action = Config().random.choice(list(true_actions.values()))
             if train and not (correct_action and
                               ClassifierProperty.update_only_on_error in self.model.model.get_classifier_properties()):
-                true_action_ids = list(true_actions)
-                best_id = true_action_ids[self.scores[true_action_ids].argmax()]
-                self.model.model.update(features, predicted_action.id, best_id,
-                                        self.args.swap_importance if true_actions[best_id].is_swap else 1)
+                best_action = self.predict_action(scores[list(true_actions.keys())], list(true_actions.values()))
+                self.model.model.update(features, predicted_action.id, best_action.id,
+                                        self.args.swap_importance if best_action.is_swap else 1)
             self.action_count += 1
             self.model.model.finished_step(train)
             try:
                 self.state.transition(action)
             except AssertionError as e:
                 raise ParserException("Invalid transition (%s): %s" % (action, e)) from e
-            if self.args.verbose:
-                if self.oracle is None:
-                    print("  action: %-15s %s" % (action, self.state))
-                else:
+            if self.args.verbose > 1:
+                if self.oracle:
                     print("  predicted: %-15s true: %-15s taken: %-15s %s" % (
                         predicted_action, "|".join(map(str, true_actions.values())), action, self.state))
+                else:
+                    print("  action: %-15s %s" % (action, self.state))
                 for line in self.state.log:
                     print("    " + line)
             if self.state.finished or train and not correct_action and self.args.early_update:
-                return  # action is FINISH
+                return  # action is Finish
 
-    def check_loop(self, print_oracle):
+    def check_loop(self):
         """
         Check if the current state has already occurred, indicating a loop
-        :param print_oracle: whether to print the oracle in case of an assertion error
         """
         h = hash(self.state)
         assert h not in self.state_hash_history,\
-            "\n".join(["Transition loop", self.state.str("\n")] +
-                      [self.oracle.str("\n")] if print_oracle else ())
+            "\n".join(["Transition loop", self.state.str("\n")] + [self.oracle.str("\n")] if self.oracle else ())
         self.state_hash_history.add(h)
 
-    def predict_action(self, features, true_actions):
+    def predict_action(self, scores, all_actions=None):
         """
         Choose action based on classifier
-        :param features: extracted feature values
-        :param true_actions: from the oracle, to copy orig_node if the same action is selected
+        Usually the best action is valid, so max is enough to choose it in O(n) time
+        Otherwise, sorts all the other scores to choose the best valid one in O(n lg n)
         :return: valid action with maximum probability according to classifier
         """
-        self.scores = self.model.model.score(features)  # Returns a NumPy array
-        if self.args.verbose >= 2:
-            print("  scores: " + self.scores_string())
-        best_action = self.select_action(self.scores.argmax(), true_actions)
-        if self.state.is_valid(best_action):
-            return best_action
-        # Usually the best action is valid, so max is enough to choose it in O(n) time
-        # Otherwise, sort all the other scores to choose the best valid one in O(n lg n)
-        sorted_ids = self.scores.argsort()[::-1]
-        actions = (self.select_action(i, true_actions) for i in sorted_ids)
-        try:
-            return next(filter(self.state.is_valid, actions))
-        except StopIteration as e:
-            raise ParserException("No valid actions available\n" +
-                                  ("True actions: %s" % true_actions.values() if true_actions
-                                   else self.oracle.log if self.oracle is not None
-                                   else "") +
-                                  "\nReturned actions: %s" %
-                                  [self.select_action(i) for i in sorted_ids] +
-                                  "\nScores: %s" % self.scores_string()
-                                  ) from e
-
-    def scores_string(self):
-        return ", ".join(("%s: %g" % x for x in zip(Actions().all, self.scores)))
+        if all_actions is None:
+            all_actions = Actions().all
+        return next(filter(self.state.is_valid, (all_actions[i] for i in self.generate_descending(scores))))
 
     @staticmethod
-    def select_action(i, true_actions={}):
-        """
-        Find action with the given ID in true actions (if exists) or in all actions
-        :param i: ID to lookup
-        :param true_actions: preferred set of actions to look in first; dict of action ID to Action
-        :return: Action with id=i
-        """
-        return true_actions.get(i, Actions().all[i])
+    def generate_descending(scores):
+        yield scores.argmax()
+        yield from scores.argsort()[::-1]
 
     def verify_passage(self, passage, predicted_passage, show_diff):
         """
@@ -340,7 +315,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 ioutil.write_passage(guessed_passage, output_format=args.output_format, binary=args.binary,
                                      outdir=args.outdir, prefix=args.prefix,
                                      default_converter=Config().output_converter)
-        if passage_scores and (not args.verbose or len(passage_scores) > 1):
+        if passage_scores and (args.verbose <= 1 or len(passage_scores) > 1):
             test_scores = Config().Scores.aggregate(passage_scores)
             print("\nAverage labeled F1 score on test: %.3f" % test_scores.average_f1())
             print("Aggregated scores:")
@@ -355,7 +330,7 @@ def evaluate_passage(guessed, ref):
     score = Config().evaluate(
         guessed, ref,
         converter=None if Config().output_converter is None else lambda p: Config().output_converter(p)[0],
-        verbose=Config().args.verbose > 1 and guessed is not None,
+        verbose=Config().args.verbose > 2 and guessed is not None,
         constructions=Config().args.constructions)
     print("F1=%.3f" % score.average_f1(), flush=True)
     return score

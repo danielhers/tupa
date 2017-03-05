@@ -194,7 +194,7 @@ class NeuralNetwork(Classifier):
         if self._iteration > 0:
             return self.evaluate(features).npvalue()[:self.num_labels]
         else:
-            if Config().args.verbose >= 2:
+            if Config().args.verbose > 2:
                 print("  no updates done yet, returning zero vector.")
             return np.zeros(self.num_labels)
 
@@ -234,7 +234,7 @@ class NeuralNetwork(Classifier):
         if self._losses:
             loss = -dy.esum(self._losses)
             loss.forward()
-            if Config().args.verbose >= 2:
+            if Config().args.verbose > 2:
                 print("Total loss from %d time steps: %g" % (len(self._losses), loss.value()))
             loss.backward()
             self._trainer.update()
@@ -243,7 +243,7 @@ class NeuralNetwork(Classifier):
             self._iteration += 1
         if finished_epoch:
             self._trainer.update_epoch()
-        if Config().args.verbose:
+        if Config().args.verbose > 1:
             self._trainer.status()
         return self
 
