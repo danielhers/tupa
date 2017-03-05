@@ -141,7 +141,7 @@ class Oracle(object):
             node_label = node.attrib.get(self.args.node_label_attrib)
         else:  # kind == EDGE
             node = node_label = None
-        tag = (edge.tag, node_label) if self.args.node_labels and node_label is not None else edge.tag
+        tag = (edge.tag, node_label) if node_label is not None else edge.tag
         return ACTIONS[kind][direction][remote](tag, orig_edge=edge, orig_node=node, oracle=self)
 
     def remove(self, edge, node=None):
