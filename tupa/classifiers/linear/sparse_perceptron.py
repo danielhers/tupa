@@ -30,7 +30,7 @@ class FeatureWeights(object):
         self._update_totals(label, update_index)
         self.weights[label] += value
 
-    def finalize(self, update_index, average=True):
+    def finalize(self, update_index, average):
         """
         Average weights over all updates, and keep only true label columns
         :param update_index: number of updates to average over

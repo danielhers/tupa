@@ -62,7 +62,7 @@ class Model(object):
         return Model(model_type=self.model_type,
                      filename=self.filename,
                      feature_extractor=self.feature_extractor.finalize(),
-                     model=self.model.finalize(finished_epoch))
+                     model=self.model.finalize(finished_epoch=finished_epoch))
 
     def save(self):
         if self.filename is not None:

@@ -32,7 +32,7 @@ class Perceptron(Classifier):
         super(Perceptron, self).update(features, pred, true, importance)
         self._update_index += 1
 
-    def finalize(self, average=True, finished_epoch=False):
+    def finalize(self, finished_epoch=False, average=True):
         """
         Average all weights over all updates, as a form of regularization
         :param average: whether to really average the weights or just return them as they are now
