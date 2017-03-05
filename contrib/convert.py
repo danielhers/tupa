@@ -70,6 +70,9 @@ class AmrConverter(convert.FormatConverter):
                 q += [d for _, _, d in amr.triples(head=x)]
             return False
 
+        def _node_label(n):
+            return None if isinstance(n, amrutil.amr_lib.Var) else repr(n)
+
         nodes = {}
         visited = set()  # to avoid cycles
         pending = amr.triples(rel=DEP_PREFIX + TOP_DEP)
@@ -84,7 +87,9 @@ class AmrConverter(convert.FormatConverter):
             if node is None:  # first occurrence of dep
                 pending += amr.triples(head=dep)
                 node = l1.top_node if rel == TOP_DEP else l1.add_fnode(nodes[head], rel)
-                node.attrib[amrutil.NODE_LABEL_ATTRIB] = repr(dep)
+                label = _node_label(dep)
+                if label is not None:
+                    node.attrib[amrutil.NODE_LABEL_ATTRIB] = label
                 nodes[dep] = node
             elif not remove_cycles or not _reachable(dep, head):  # reentrancy; do not add if results in a cycle
                 l1.add_remote(nodes[head], rel, node)
@@ -134,9 +139,11 @@ class AmrConverter(convert.FormatConverter):
                 self._id += 1
                 return self._id
 
-        def _node_label(node):
-            label = labels.get(node.ID, node.attrib.get(amrutil.NODE_LABEL_ATTRIB, "v%d" % id_generator()))
-            labels[node.ID] = label
+        def _node_label(n):
+            label = labels.get(n.ID, n.attrib.get(amrutil.NODE_LABEL_ATTRIB))
+            if label is None:
+                label = "v%d" % id_generator()
+            labels[n.ID] = label
             m = re.match("\w+\((.*)\)", label)
             return m.group(1) if m else label
 
