@@ -32,6 +32,7 @@ class State(object):
         self.stack = []
         self.buffer = deque()
         self.nodes = []
+        self.heads = set()
         self.root = self.add_node(orig_node=l1.heads[0])  # The root is not part of the buffer
         self.stack.append(self.root)
         self.buffer += self.terminals
@@ -195,6 +196,7 @@ class State(object):
         if self.args.verify:
             assert node not in self.nodes, "Node already exists"
         self.nodes.append(node)
+        self.heads.add(node)
         self.log.append("node: %s (swap_index: %g)" % (node, node.swap_index))
         return node
 
@@ -218,6 +220,7 @@ class State(object):
 
     def add_edge(self, edge):
         edge.add()
+        self.heads.discard(edge.child)
         self.log.append("edge: %s" % edge)
 
     def get_parent_child(self, action):
@@ -343,8 +346,8 @@ class State(object):
 
     def assert_height(self):
         max_height = self.args.max_height
-        assert self.root.height <= max_height, \
-            "Reached maximum graph height (%d)" % max_height
+        for head in self.heads:
+            assert head.height <= max_height, "Reached maximum graph height (%d)" % max_height
 
     def str(self, sep):
         return "stack: [%-20s]%sbuffer: [%s]" % (" ".join(map(str, self.stack)), sep,
