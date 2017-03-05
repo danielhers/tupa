@@ -17,6 +17,7 @@ finally:
     os.chdir(prev_dir)
 
 NODE_LABEL_ATTRIB = "label"
+INSTANCE_OF = "instance-of"
 
 
 def parse(*args, **kwargs):
@@ -90,21 +91,12 @@ class Scores(object):
 
 
 class Constraints(constraints.Constraints):
-    require_connected = True
-    require_first_shift = False
-    require_implicit_childless = False
-    allow_root_terminal_children = True
-    allow_multiple_edges = True
-    UniqueOutgoing = ChildlessIncoming = {"instance-of"}
-    UniqueIncoming = ()
-    is_top_level = None
-
-    tag_rules = constraints.Constraints.tag_rules + [
-        constraints.TagRule(trigger=("name", None), allowed=(None, re.compile("^(instance-of|op\d+)$"))),
-    ]
-
     def __init__(self, args):
-        super(Constraints, self).__init__(args)
-
-    def is_possible_multiple_incoming(self, tag):
-        return False
+        super(Constraints, self).__init__(args, require_connected=True, require_first_shift=False,
+                                          require_implicit_childless=False, allow_root_terminal_children=True,
+                                          allow_multiple_edges=True, possible_multiple_incoming=(),
+                                          unique_outgoing={INSTANCE_OF}, childless_incoming_trigger=INSTANCE_OF,
+                                          unique_incoming=(), mutually_exclusive_outgoing=(), top_level=None)
+        self.tag_rules.append(
+            constraints.TagRule(trigger={constraints.Direction.incoming: "name"},
+                                allowed={constraints.Direction.outgoing: re.compile("^(instance-of|op\d+)$")}))

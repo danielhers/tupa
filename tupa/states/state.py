@@ -5,6 +5,7 @@ from states.edge import Edge
 from states.node import Node
 from tupa.action import Actions
 from tupa.config import Config
+from tupa.constraints import Direction
 from ucca import core, layer0, layer1, textutil
 from ucca.layer1 import EdgeTags
 
@@ -67,7 +68,7 @@ class State(object):
                 assert not self.constraints.require_implicit_childless or not node.implicit, \
                     "Implicit nodes may not have children: %s" % s0
                 for rule in self.constraints.tag_rules:
-                    rule.check(node, action.edge_tag, self.constraints.OUTGOING)
+                    rule.check(node, action.edge_tag, Direction.outgoing)
 
         def assert_possible_child(node):
             assert node is not self.root, "The root may not have parents"
@@ -76,10 +77,10 @@ class State(object):
                     EdgeTags.Terminal, node, action.edge_tag)
             if self.args.constraints:
                 for rule in self.constraints.tag_rules:
-                    rule.check(node, action.edge_tag, self.constraints.INCOMING)
-                assert self.constraints.is_possible_multiple_incoming is None or \
-                    action.remote or self.constraints.is_possible_multiple_incoming(action.edge_tag) or \
-                    all(e.remote or self.constraints.is_possible_multiple_incoming(e.tag) for e in node.incoming), \
+                    rule.check(node, action.edge_tag, Direction.incoming)
+                assert self.constraints.possible_multiple_incoming is None or \
+                    action.remote or action.edge_tag in self.constraints.possible_multiple_incoming or \
+                    all(e.remote or e.tag in self.constraints.possible_multiple_incoming for e in node.incoming), \
                     "Multiple parents only allowed if they are remote or linkage edges: %s, %s" % (action, node)
 
         def assert_possible_edge():
@@ -89,7 +90,7 @@ class State(object):
             if parent is self.root and self.args.constraints:
                 assert self.constraints.allow_root_terminal_children or child.text is None, \
                     "Root may not have terminal children, but is being added '%s'" % child
-                assert self.constraints.is_top_level is None or self.constraints.is_top_level(action.edge_tag), \
+                assert self.constraints.top_level is None or action.edge_tag in self.constraints.top_level, \
                     "The root may not have %s edges" % action.edge_tag
             if self.args.constraints and self.constraints.allow_multiple_edges:
                 edge = Edge(parent, child, action.edge_tag, remote=action.remote)
