@@ -1,5 +1,6 @@
 import importlib.util  # needed for amr.peg
 import os
+import re
 import sys
 
 from tupa import constraints
@@ -99,7 +100,7 @@ class Constraints(constraints.Constraints):
     is_top_level = None
 
     tag_rules = constraints.Constraints.tag_rules + [
-        constraints.TagRule(trigger=("name", None), allowed=(lambda t: t == "instance-of" or t.startswith("op"), None)),
+        constraints.TagRule(trigger=("name", None), allowed=(None, re.compile("^(instance-of|op\d+)$"))),
     ]
 
     def __init__(self, args):

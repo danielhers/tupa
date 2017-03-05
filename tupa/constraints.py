@@ -9,7 +9,7 @@ class TagRule:
 
     @staticmethod
     def contains(s, tag):
-        return s is not None and (s(tag) if callable(s) else tag == s if isinstance(s, str) else tag in s)
+        return s is not None and (s.match(tag) if hasattr(s, "match") else tag == s if isinstance(s, str) else tag in s)
 
     @staticmethod
     def tags(node, direction):
@@ -17,25 +17,29 @@ class TagRule:
 
     def check(self, node, tag, direction):
         for d in Constraints.DIRECTIONS:
-            if any(self.contains(self.trigger[d], t) for t in self.tags(node, d)):
+            if any(self.contains(self.trigger[d], t) for t in self.tags(node, d)):  # Trigger on what node already has
                 if self.allowed[direction] is not None:
                     assert self.contains(self.allowed[direction], tag), \
-                        "Units with %s %s edges must get only %s edges, but got '%s' for %s" % (
-                            Constraints.TITLE[direction], self.trigger[d], self.allowed[direction], tag, node)
+                        "Units with %s '%s' edges must get only %s '%s' edges, but got '%s' for '%s'" % (
+                            Constraints.TITLE[d], self.trigger[d], Constraints.TITLE[direction],
+                            self.allowed[direction], tag, node)
                 if self.disallowed[direction] is not None:
                     assert not self.contains(self.disallowed[direction], tag), \
-                        "Units with %s %s edges must not get %s edges, but got '%s' for %s" % (
-                            Constraints.TITLE[direction], self.trigger[d], self.disallowed[direction], tag, node)
-        if self.contains(self.trigger[direction], tag):
+                        "Units with %s '%s' edges must not get %s '%s' edges, but got '%s' for '%s'" % (
+                            Constraints.TITLE[d], self.trigger[d], Constraints.TITLE[direction],
+                            self.disallowed[direction], tag, node)
+        if self.contains(self.trigger[direction], tag):  # Trigger on what node is getting now
             for d in Constraints.DIRECTIONS:
                 if self.allowed[d] is not None:
                     assert all(self.contains(self.allowed[d], t) for t in self.tags(node, d)), \
-                        "Units getting %s '%s' edges must have only %s edges, but got %s for %s" % (
-                            Constraints.TITLE[d], tag, self.allowed[d], self.trigger[direction], node)
+                        "Units getting %s '%s' edges must have only %s '%s' edges, but got '%s' for '%s'" % (
+                            Constraints.TITLE[d], tag, Constraints.TITLE[direction],
+                            self.allowed[d], self.trigger[direction], node)
                 if self.disallowed[d] is not None:
                     assert not any(self.contains(self.disallowed[d], t) for t in self.tags(node, d)), \
-                        "Units getting %s '%s' edges must not have %s edges, but got %s for %s" % (
-                            Constraints.TITLE[d], tag, self.disallowed[d], self.trigger[direction], node)
+                        "Units getting %s '%s' edges must not have %s '%s' edges, but got '%s' for '%s'" % (
+                            Constraints.TITLE[d], tag, Constraints.TITLE[direction],
+                            self.disallowed[d], self.trigger[direction], node)
 
 
 class Constraints(object):
