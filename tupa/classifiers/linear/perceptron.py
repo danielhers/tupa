@@ -49,7 +49,7 @@ class Perceptron(Classifier):
         if average:
             print("Done (%.3fs)." % (time.time() - started))
         print("Labels: %d" % self.num_labels)
-        print("Features: %d" % self.input_dim)
+        print("Features: %d" % self._input_dim)
         return finalized
 
     def _finalize_model(self, average):

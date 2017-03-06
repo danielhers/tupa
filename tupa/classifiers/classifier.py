@@ -25,6 +25,7 @@ class Classifier(object):
         self.filename = filename
         self.labels = labels or []
         self._num_labels = len(self.labels)
+        self._input_dim = None
         self.is_frozen = model is not None
         self.learning_rate = Config().args.learning_rate
         self.learning_rate_decay = Config().args.learning_rate_decay
@@ -117,4 +118,4 @@ class Classifier(object):
 
     def __str__(self):
         return ("%d labels, " % self.num_labels) + (
-                "%d features" % self.input_dim)
+                "%d features" % self._input_dim)

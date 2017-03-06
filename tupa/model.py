@@ -51,7 +51,7 @@ class Model(object):
             FeatureParameters("e", Config().args.label_dim, Config().args.max_edge_labels),
             FeatureParameters("p", Config().args.punct_dim, Config().args.max_puncts),
             FeatureParameters("x", Config().args.gap_dim, Config().args.max_gaps),
-            FeatureParameters("A", Config().args.action_dim, Config().args.max_actions),
+            FeatureParameters("A", Config().args.action_dim, Config().args.max_action_types),
         ]
         return wrapper(DenseFeatureExtractor(), params)
 

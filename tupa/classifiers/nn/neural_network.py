@@ -50,9 +50,10 @@ class NeuralNetwork(Classifier):
         :param input_params: dict of feature type name -> FeatureInformation
         """
         super(NeuralNetwork, self).__init__(*args)
-        self.max_num_labels = Config().args.max_labels
+        self.max_num_labels = Config().args.max_action_labels
         self._layers = Config().args.layers
         self._layer_dim = Config().args.layer_dim
+        self._output_dim = Config().args.output_dim
         self._activation_str = Config().args.activation
         self._init_str = Config().args.init
         self._minibatch_size = Config().args.minibatch_size
@@ -72,18 +73,14 @@ class NeuralNetwork(Classifier):
         self._trainer = None
         self._value = None  # For caching the result of _evaluate
 
-    @property
-    def input_dim(self):
-        return sum(f.num * f.dim for f in self._input_params.values())
-
     def resize(self):
         assert self.num_labels <= self.max_num_labels, "Exceeded maximum number of labels"
 
     def init_model(self):
         self.model = dy.Model()
         self._trainer = self._optimizer(self.model, )
-        input_dim = self.init_input_params()
-        self.init_mlp_params(input_dim)
+        self.init_input_params()
+        self.init_mlp_params()
         self.init_cg()
 
     def init_input_params(self):
@@ -91,7 +88,7 @@ class NeuralNetwork(Classifier):
         Initialize lookup parameters and any other parameters that process the input (e.g. LSTMs)
         :return: total output dimension of inputs
         """
-        input_dim = 0
+        self._input_dim = 0
         self._indexed_dim = 0
         self._indexed_num = 0
         for suffix, param in sorted(self._input_params.items()):
@@ -106,8 +103,8 @@ class NeuralNetwork(Classifier):
                     self._indexed_dim += param.dim  # add to the input dimensionality at each indexed time point
                     self._indexed_num = max(self._indexed_num, param.num)  # indices to be looked up are collected
                 else:
-                    input_dim += param.num * param.dim
-        return input_dim + self.init_indexed_input_params()
+                    self._input_dim += param.num * param.dim
+        self._input_dim += self.init_indexed_input_params()
 
     def init_indexed_input_params(self):
         """
@@ -115,12 +112,12 @@ class NeuralNetwork(Classifier):
         """
         return self._indexed_dim * self._indexed_num
 
-    def init_mlp_params(self, input_dim):
-        for i in range(1, self._layers + 1):
-            in_dim = input_dim if i == 1 else self._layer_dim
-            out_dim = self._layer_dim if i < self._layers else self.max_num_labels
-            self._params["W%d" % i] = self.model.add_parameters((out_dim, in_dim), init=self._init)
-            self._params["b%d" % i] = self.model.add_parameters(out_dim, init=self._init)
+    def init_mlp_params(self):
+        in_dim = [self._input_dim] + (self._layers - 1) * [self._layer_dim] + [self._output_dim]
+        out_dim = (self._layers - 1) * [self._layer_dim] + [self._output_dim, self.max_num_labels]
+        for i in range(self._layers + 1):
+            self._params["W%d" % i] = self.model.add_parameters((out_dim[i], in_dim[i]), init=self._init)
+            self._params["b%d" % i] = self.model.add_parameters(out_dim[i], init=self._init)
 
     def init_cg(self):
         dy.renew_cg()
@@ -169,7 +166,7 @@ class NeuralNetwork(Classifier):
         :return: expression corresponding to log softmax applied to MLP output
         """
         x = dy.concatenate(list(self.generate_inputs(features)))
-        for i in range(1, self._layers + 1):
+        for i in range(self._layers + 1):
             W = dy.parameter(self._params["W%d" % i])
             b = dy.parameter(self._params["b%d" % i])
             if train and self._dropout:

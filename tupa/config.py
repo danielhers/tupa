@@ -104,7 +104,8 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--label-dim", type=int, default=20, help="dimension for edge label embeddings")
         group.add_argument("--punct-dim", type=int, default=2, help="dimension for separator punctuation embeddings")
         group.add_argument("--gap-dim", type=int, default=2, help="dimension for gap type embeddings")
-        group.add_argument("--action-dim", type=int, default=5, help="dimension for action type embeddings")
+        group.add_argument("--action-dim", type=int, default=5, help="dimension for input action type embeddings")
+        group.add_argument("--output-dim", type=int, default=50, help="dimension for output action embeddings")
         group.add_argument("--layer-dim", type=int, default=500, help="dimension for hidden layers")
         group.add_argument("--layers", type=int, default=2, help="number of hidden layers")
         group.add_argument("--lstm-layer-dim", type=int, default=500, help="dimension for LSTM hidden layers")
@@ -113,7 +114,6 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--embedding-layers", type=int, default=1, help="number of layers before LSTM")
         group.add_argument("--activation", choices=ACTIVATIONS, default=ACTIVATIONS[0], help="activation function")
         group.add_argument("--init", choices=INITIALIZATIONS, default=INITIALIZATIONS[0], help="weight initialization")
-        group.add_argument("--max-labels", type=int, default=100, help="max number of actions to allow")
         group.add_argument("--save-every", type=int, help="every this many passages, evaluate on dev and save model")
         group.add_argument("--minibatch-size", type=int, default=200, help="mini-batch size for optimization")
         group.add_argument("--optimizer", choices=OPTIMIZERS, default=OPTIMIZERS[0], help="algorithm for optimization")
@@ -124,7 +124,8 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--max-edge-labels", type=int, default=15, help="max number of edge labels for embeddings")
         group.add_argument("--max-puncts", type=int, default=5, help="max number of punctuations for embeddings")
         group.add_argument("--max-gaps", type=int, default=3, help="max number of gap types to keep embeddings for")
-        group.add_argument("--max-actions", type=int, default=10, help="max number of action types for embeddings")
+        group.add_argument("--max-action-types", type=int, default=10, help="max number of action types for embeddings")
+        group.add_argument("--max-action-labels", type=int, default=100000, help="max number of action labels to allow")
         group.add_argument("--word-dropout", type=float, default=0.25, help="word dropout parameter")
         group.add_argument("--word-dropout-external", type=float, default=0.25, help="word dropout for word vectors")
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter between layers")
@@ -152,7 +153,6 @@ class Config(object, metaclass=Singleton):
             if self.args.format == "amr":
                 self.args.implicit = True
                 self.args.max_nodes = 10.0
-                self.args.max_labels = 100000
                 from contrib import amrutil
                 self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
                 self.args.node_label_attrib = amrutil.NODE_LABEL_ATTRIB

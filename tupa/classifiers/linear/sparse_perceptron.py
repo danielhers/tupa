@@ -71,6 +71,7 @@ class SparsePerceptron(Perceptron):
         if self.is_frozen:
             model.update(self.model)
         self.model = model
+        self._input_dim = len(self.model)
         self._min_update = Config().args.min_update  # Minimum number of updates for a feature to be used in scoring
 
     def score(self, features):
@@ -105,6 +106,7 @@ class SparsePerceptron(Perceptron):
             weights = self.model[feature]
             weights.update(true, importance * self.learning_rate * value, self._update_index)
             weights.update(pred, -importance * self.learning_rate * value, self._update_index)
+        self._input_dim = len(self.model)
 
     def resize(self):
         for weights in self.model.values():
@@ -127,10 +129,6 @@ class SparsePerceptron(Perceptron):
         self.model.clear()
         self.model.update(d["model"])
         self._min_update = d["_min_update"]
-
-    @property
-    def input_dim(self):
-        return len(self.model)
 
     def write_model(self, f, sep):
         print(sep.join(["feature"] + list(map(str, self.labels))), file=f)
