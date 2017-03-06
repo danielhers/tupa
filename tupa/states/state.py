@@ -257,9 +257,6 @@ class State(object):
                 for edge in node.outgoing:
                     if edge.remote:
                         remotes.append((node, edge))
-                    elif self.args.constraints and self.constraints.require_connected \
-                            and not (node.node or node is self.root or node.is_linkage or node.text):
-                        assert not assert_proper, "Disconnected node: %s" % node
                     else:
                         edge.child.add_to_l1(l1, node, edge.tag, terminals, self.labeled)
 

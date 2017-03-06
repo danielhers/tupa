@@ -70,7 +70,9 @@ class Node(object):
                 assert edge.tag == EdgeTags.Terminal, "Tag for %s is %s" % (self.node_id, edge.tag)
             self.node = l1.add_punct(parent.node, terminals[edge.child.index - 1])
             edge.child.node = self.node[0].child
-        else:  # The usual case; if parent is an orphan then parent.node is None and this will be attached to root
+        else:  # The usual case
+            if parent.node is None:  # If parent is an orphan, attach it to the root with F label
+                parent.node = l1.add_fnode(None, EdgeTags.Function)
             self.node = l1.add_fnode(parent.node, tag, implicit=self.implicit)
         if labeled and self.node is not None and self.node_id is not None:  # In training
             self.node.extra["remarks"] = self.node_id  # Keep original node ID for reference
