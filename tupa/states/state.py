@@ -242,6 +242,7 @@ class State(object):
         terminals = [l0.add_terminal(text=terminal.text, punct=terminal.tag == layer0.NodeTags.Punct,
                                      paragraph=terminal.paragraph) for terminal in self.terminals]
         l1 = layer1.Layer1(passage)
+        self.root.node = l1.heads[0]
         if self.labeled:  # We have a reference passage
             l1.heads[0].extra["remarks"] = self.root.node_id  # For reference
             self.fix_terminal_tags(terminals)
