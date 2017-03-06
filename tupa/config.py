@@ -125,7 +125,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--max-puncts", type=int, default=5, help="max number of punctuations for embeddings")
         group.add_argument("--max-gaps", type=int, default=3, help="max number of gap types to keep embeddings for")
         group.add_argument("--max-action-types", type=int, default=10, help="max number of action types for embeddings")
-        group.add_argument("--max-action-labels", type=int, default=100000, help="max number of action labels to allow")
+        group.add_argument("--max-action-labels", type=int, default=1000, help="max number of action labels to allow")
         group.add_argument("--word-dropout", type=float, default=0.25, help="word dropout parameter")
         group.add_argument("--word-dropout-external", type=float, default=0.25, help="word dropout for word vectors")
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter between layers")
@@ -153,6 +153,7 @@ class Config(object, metaclass=Singleton):
             if self.args.format == "amr":
                 self.args.implicit = True
                 self.args.max_nodes = 10.0
+                self.args.max_action_labels = 100000
                 from contrib import amrutil
                 self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
                 self.args.node_label_attrib = amrutil.NODE_LABEL_ATTRIB
