@@ -133,16 +133,10 @@ class Oracle(object):
     def action(self, edge, kind, direction):
         self.edge_found = True
         remote = edge.attrib.get("remote", False)
-        if kind == NODE:
-            node = (edge.parent, edge.child)[direction]
-            implicit = node.attrib.get("implicit")
-            assert not (direction == PARENT and implicit), "Cannot create implicit parent %s" % node.ID
-            assert not (remote and implicit), "Cannot create remote implicit node %s" % node.ID
-            node_label = node.attrib.get(self.args.node_label_attrib)
-        else:  # kind == EDGE
-            node = node_label = None
-        tag = edge.tag if node_label is None else (edge.tag, node_label)
-        return ACTIONS[kind][direction][remote](tag, orig_edge=edge, orig_node=node, oracle=self)
+        node = (edge.parent, edge.child)[direction] if kind == NODE else None
+        return ACTIONS[kind][direction][remote](
+            tag=edge.tag, label=None if node is None else node.attrib.get(self.args.node_label_attrib),
+            orig_edge=edge, orig_node=node, oracle=self)
 
     def remove(self, edge, node=None):
         self.edges_remaining.discard(edge)

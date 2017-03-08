@@ -59,8 +59,8 @@ class State(object):
         def assert_possible_node():
             self.assert_node_ratio(extra=1)
             self.assert_height()
-            if action.node_label:
-                node = Node(None, label=action.node_label)
+            if action.label:
+                node = Node(None, label=action.label)
                 assert node not in self.nodes, "Node must not already exist: %s" % node
 
         def assert_possible_parent(node):
@@ -69,18 +69,18 @@ class State(object):
                 assert not self.constraints.require_implicit_childless or not node.implicit, \
                     "Implicit nodes may not have children: %s" % s0
                 for rule in self.constraints.tag_rules:
-                    rule.check(node, action.edge_tag, Direction.outgoing)
+                    rule.check(node, action.tag, Direction.outgoing)
 
         def assert_possible_child(node):
             assert node is not self.root, "The root may not have parents"
-            assert (node.text is not None) == (action.edge_tag == EdgeTags.Terminal), \
+            assert (node.text is not None) == (action.tag == EdgeTags.Terminal), \
                 "Edge tag must be %s iff child is terminal, but node is %s and edge tag is %s" % (
-                    EdgeTags.Terminal, node, action.edge_tag)
+                    EdgeTags.Terminal, node, action.tag)
             if self.args.constraints:
                 for rule in self.constraints.tag_rules:
-                    rule.check(node, action.edge_tag, Direction.incoming)
+                    rule.check(node, action.tag, Direction.incoming)
                 assert self.constraints.possible_multiple_incoming is None or \
-                    action.remote or action.edge_tag in self.constraints.possible_multiple_incoming or \
+                    action.remote or action.tag in self.constraints.possible_multiple_incoming or \
                     all(e.remote or e.tag in self.constraints.possible_multiple_incoming for e in node.incoming), \
                     "Multiple parents only allowed if they are remote or linkage edges: %s, %s" % (action, node)
 
@@ -91,10 +91,10 @@ class State(object):
             if parent is self.root and self.args.constraints:
                 assert self.constraints.allow_root_terminal_children or child.text is None, \
                     "Root may not have terminal children, but is being added '%s'" % child
-                assert self.constraints.top_level is None or action.edge_tag in self.constraints.top_level, \
-                    "The root may not have %s edges" % action.edge_tag
+                assert self.constraints.top_level is None or action.tag in self.constraints.top_level, \
+                    "The root may not have %s edges" % action.tag
             if self.args.constraints and self.constraints.allow_multiple_edges:
-                edge = Edge(parent, child, action.edge_tag, remote=action.remote)
+                edge = Edge(parent, child, action.tag, remote=action.remote)
                 assert edge not in parent.outgoing, "Edge must not already exist: %s" % edge
             else:
                 assert child not in parent.children, "Edge must not already exist: %s->%s" % (parent, child)
@@ -158,18 +158,18 @@ class State(object):
         if action.is_type(Actions.Shift):  # Push buffer head to stack; shift buffer
             self.stack.append(self.buffer.popleft())
         elif action.is_type(Actions.Node, Actions.RemoteNode):  # Create new parent node and add to the buffer
-            parent = self.add_node(orig_node=action.orig_node, label=action.node_label)
-            self.add_edge(Edge(parent, self.stack[-1], action.edge_tag, remote=action.remote))
+            parent = self.add_node(orig_node=action.orig_node, label=action.label)
+            self.add_edge(Edge(parent, self.stack[-1], action.tag, remote=action.remote))
             self.buffer.appendleft(parent)
         elif action.is_type(Actions.Implicit):  # Create new child node and add to the buffer
-            child = self.add_node(orig_node=action.orig_node, label=action.node_label, implicit=True)
-            self.add_edge(Edge(self.stack[-1], child, action.edge_tag))
+            child = self.add_node(orig_node=action.orig_node, label=action.label, implicit=True)
+            self.add_edge(Edge(self.stack[-1], child, action.tag))
             self.buffer.appendleft(child)
         elif action.is_type(Actions.Reduce):  # Pop stack (no more edges to create with this node)
             self.stack.pop()
         elif action.is_type(Actions.LeftEdge, Actions.LeftRemote, Actions.RightEdge, Actions.RightRemote):
             parent, child = self.get_parent_child(action)
-            self.add_edge(Edge(parent, child, action.edge_tag, remote=action.remote))
+            self.add_edge(Edge(parent, child, action.tag, remote=action.remote))
         elif action.is_type(Actions.Swap):  # Place second (or more) stack item back on the buffer
             distance = action.tag or 1
             s = slice(-distance - 1, -1)

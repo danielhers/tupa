@@ -1,5 +1,3 @@
-import re
-
 from tupa.config import Config, Singleton
 
 
@@ -7,9 +5,10 @@ class Action(object):
     type_to_id = {}
     MAX_SWAP = 15  # default maximum size for compound swap
 
-    def __init__(self, action_type, tag=None, orig_edge=None, orig_node=None, oracle=None):
+    def __init__(self, action_type, tag=None, label=None, orig_edge=None, orig_node=None, oracle=None):
         self.type = action_type  # String
-        self.tag = tag  # Usually the tag of the created edge (+possibly node label); but if COMPOUND_SWAP, the distance
+        self.tag = tag  # Usually the tag of the created edge; but if COMPOUND_SWAP, the distance
+        self.label = label  # Label of the created node, if any
         self.orig_node = orig_node  # Node created by this action, if any (during training)
         self.orig_edge = orig_edge  # Edge created by this action, if any (during training)
         self.edge = None  # Will be set by State when the edge created by this action is known
@@ -29,16 +28,16 @@ class Action(object):
         if self.oracle is not None:
             self.oracle.remove(self.orig_edge, self.orig_node)
 
-    @staticmethod
-    def from_string(s):
-        m = re.match("(.*)-(.*)", s)
-        return Action(*m.groups()) if m else Action(s)
-
     def __repr__(self):
-        return Action.__name__ + "(" + self.type + (", " + str(self.tag) if self.tag else "") + ")"
+        return Action.__name__ + "(" + ", ".join(filter(None, (self.type, self.tag, self.label))) + ")"
 
     def __str__(self):
-        return self.type + ("-" + str(self.tag) if self.tag else "")
+        s = self.type
+        if self.tag:
+            s += "-%s" % self.tag
+            if self.label:
+                s += "/%s" % self.label
+        return s
 
     def __eq__(self, other):
         return self.id == other.id
@@ -48,14 +47,6 @@ class Action(object):
 
     def __call__(self, *args, **kwargs):
         return Action(self.type, *args, **kwargs)
-
-    @property
-    def edge_tag(self):
-        return self.tag[0] if isinstance(self.tag, tuple) else self.tag
-
-    @property
-    def node_label(self):
-        return self.tag[1] if isinstance(self.tag, tuple) else None
 
     @property
     def remote(self):
@@ -83,7 +74,6 @@ class Action(object):
 
 
 class Actions(object, metaclass=Singleton):
-
     Shift = Action("SHIFT")
     Node = Action("NODE")
     RemoteNode = Action("REMOTE-NODE")
@@ -122,5 +112,3 @@ class Actions(object, metaclass=Singleton):
         if self._all is None:
             self.init()
         return self._ids
-
-
