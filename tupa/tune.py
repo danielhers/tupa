@@ -68,7 +68,7 @@ def main():
         ("word_dim",                (0, 50, 100, 200, 300)),
         ("tag_dim",                 (5, 10, 20)),
         ("dep_dim",                 (5, 10, 20)),
-        ("label_dim",               (5, 10, 20)),
+        ("edge_label_dim",          (5, 10, 20)),
         ("punct_dim",               (1, 2, 3)),
         ("gap_dim",                 (1, 2, 3)),
         ("action_dim",              (3, 5, 10)),

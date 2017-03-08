@@ -101,7 +101,8 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--word-dim", type=int, default=100, help="dimension for learned word embeddings")
         group.add_argument("--tag-dim", type=int, default=10, help="dimension for POS tag embeddings")
         group.add_argument("--dep-dim", type=int, default=10, help="dimension for dependency relation embeddings")
-        group.add_argument("--label-dim", type=int, default=20, help="dimension for edge label embeddings")
+        group.add_argument("--edge-label-dim", type=int, default=20, help="dimension for edge label embeddings")
+        group.add_argument("--node-label-dim", type=int, default=0, help="dimension for node label embeddings")
         group.add_argument("--punct-dim", type=int, default=2, help="dimension for separator punctuation embeddings")
         group.add_argument("--gap-dim", type=int, default=2, help="dimension for gap type embeddings")
         group.add_argument("--action-dim", type=int, default=5, help="dimension for input action type embeddings")
@@ -126,6 +127,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--max-gaps", type=int, default=3, help="max number of gap types to keep embeddings for")
         group.add_argument("--max-action-types", type=int, default=10, help="max number of action types for embeddings")
         group.add_argument("--max-action-labels", type=int, default=100, help="max number of action labels to allow")
+        group.add_argument("--max-node-labels", type=int, default=0, help="max number of node labels to allow")
         group.add_argument("--word-dropout", type=float, default=0.25, help="word dropout parameter")
         group.add_argument("--word-dropout-external", type=float, default=0.25, help="word dropout for word vectors")
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter between layers")
@@ -152,8 +154,10 @@ class Config(object, metaclass=Singleton):
             self.input_converter, self.output_converter = convert.CONVERTERS[self.args.format]
             if self.args.format == "amr":
                 self.args.implicit = True
-                self.args.max_nodes = 10.0
-                self.args.max_action_labels = 100000
+                self.args.max_nodes = max(self.args.max_nodes, 10.0)
+                self.args.max_node_labels = max(self.args.max_node_labels, 100000)
+                self.args.node_label_dim = max(self.args.node_label_dim, 20)
+                self.args.max_edge_labels = max(self.args.max_edge_labels, 150)
                 from contrib import amrutil
                 self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
                 self.args.node_label_attrib = amrutil.NODE_LABEL_ATTRIB
