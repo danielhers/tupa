@@ -114,7 +114,7 @@ class DropoutDict(AutoIncrementDict):
         if item != None and self.dropout > 0:
             self.counts[item] += 1
             if self.dropout / (self.counts[item] + self.dropout) > np.random.random_sample():
-                item = UnknownDict.UNKNOWN
+                item = None
         return super(DropoutDict, self).__getitem__(item)
 
 
