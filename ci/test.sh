@@ -17,9 +17,6 @@ unit)
 sparse)
     python tupa/parse.py -v -c sparse --max-words-external=5000 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle
     ;;
-dense)
-    python tupa/parse.py -v -c dense --max-words-external=5000 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle
-    ;;
 mlp)
     python tupa/parse.py -v -c mlp --max-words-external=5000 --layer-dim=100 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle --dynet-mem=1500
     ;;

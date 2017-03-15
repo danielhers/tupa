@@ -3,7 +3,7 @@ from collections import defaultdict
 import numpy as np
 
 from linear.perceptron import Perceptron
-from tupa.config import Config, SPARSE_PERCEPTRON
+from tupa.config import Config, SPARSE
 
 
 class FeatureWeights(object):
@@ -62,62 +62,69 @@ class SparsePerceptron(Perceptron):
     def __init__(self, *args, model=None, epoch=0):
         """
         Create a new untrained Perceptron or copy the weights from an existing one
-        :param labels: a list of labels that can be updated later to add a new label
+        :param labels: tuple of lists of labels that can be updated later to add new labels
         :param min_update: minimum number of updates to a feature required for consideration
         :param model: if given, copy the weights (from a trained model)
         """
-        super(SparsePerceptron, self).__init__(SPARSE_PERCEPTRON, *args, model=model, epoch=epoch)
-        model = defaultdict(lambda: FeatureWeights(self.num_labels))
+        super(SparsePerceptron, self).__init__(SPARSE, *args, model=model, epoch=epoch)
+        model = defaultdict(self.create_weights)
         if self.is_frozen:
             model.update(self.model)
         self.model = model
         self._input_dim = len(self.model)
         self._min_update = Config().args.min_update  # Minimum number of updates for a feature to be used in scoring
 
-    def score(self, features):
+    def create_weights(self):
+        return tuple(map(FeatureWeights, self.num_labels))
+
+    def score(self, features, axis):
         """
         Calculate score for each label
         :param features: extracted feature values, in the form of a dict (name -> value)
+        :param axis: axis of the label we are predicting
         :return: array with score for each label
         """
-        super(SparsePerceptron, self).score(features)
-        scores = np.zeros(self.num_labels)
+        super(SparsePerceptron, self).score(features, axis)
+        scores = np.zeros(self.num_labels[axis])
         for feature, value in features.items():
             if not value:
                 continue
             weights = self.model.get(feature)
-            if weights is None or not self.is_frozen and weights.update_count < self._min_update:
-                continue
-            scores += value * weights.weights
+            if weights is not None:
+                w = weights[axis]
+                if self.is_frozen or w.update_count >= self._min_update:
+                    scores += value * w.weights
         return scores
 
-    def update(self, features, pred, true, importance=1):
+    def update(self, features, axis, pred, true, importance=1):
         """
         Update classifier weights according to predicted and true labels
         :param features: extracted feature values, in the form of a dict (name: value)
-        :param pred: label predicted by the classifier (non-negative integer less than num_labels)
-        :param true: true label (non-negative integer less than num_labels)
+        :param axis: axis of the label we are predicting
+        :param pred: label predicted by the classifier (non-negative integer bounded by num_labels[axis])
+        :param true: true label (non-negative integer bounded by num_labels[axis])
         :param importance: how much to scale the feature vector for the weight update
         """
-        super(SparsePerceptron, self).update(features, pred, true, importance)
+        super(SparsePerceptron, self).update(features, axis, pred, true, importance)
         for feature, value in features.items():
             if not value:
                 continue
-            weights = self.model[feature]
-            weights.update(true, importance * self.learning_rate * value, self._update_index)
-            weights.update(pred, -importance * self.learning_rate * value, self._update_index)
+            w = self.model[feature][axis]
+            w.update(true, importance * self.learning_rate * value, self._update_index)
+            w.update(pred, -importance * self.learning_rate * value, self._update_index)
         self._input_dim = len(self.model)
 
-    def resize(self):
+    def resize(self, axis=None):
         for weights in self.model.values():
-            weights.resize(self.num_labels)
-        self.model.default_factory = lambda: FeatureWeights(self.num_labels)
+            for i, (l, w) in enumerate(zip(self.num_labels, weights)):
+                if axis is None or i == axis:
+                    w.resize(l)
 
     def _finalize_model(self, average):
-        model = {f: w.finalize(self._update_index, average=average)
-                 for f, w in self.model.items() if w.update_count >= self._min_update}
+        model = {f: tuple(w.finalize(self._update_index, average=average) for w in weights)
+                 for f, weights in self.model.items() if weights[0].update_count >= self._min_update}
         print("%d features occurred at least %d times" % (len(model), self._min_update))
-        return SparsePerceptron(self.filename, list(self.labels), model=model, epoch=self.epoch)
+        return SparsePerceptron(self.filename, tuple(map(list, self.labels)), model=model, epoch=self.epoch)
 
     def save_extra(self):
         return {
@@ -129,9 +136,3 @@ class SparsePerceptron(Perceptron):
         self.model.clear()
         self.model.update(d["model"])
         self._min_update = d["_min_update"]
-
-    def write_model(self, f, sep):
-        print(sep.join(["feature"] + list(map(str, self.labels))), file=f)
-        for feature, weights in self.model.items():
-            print(sep.join([feature] +
-                           ["%.8f" % w for w in weights.weights]), file=f)

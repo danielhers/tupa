@@ -5,10 +5,11 @@ class Action(object):
     type_to_id = {}
     MAX_SWAP = 15  # default maximum size for compound swap
 
-    def __init__(self, action_type, tag=None, label=None, orig_edge=None, orig_node=None, oracle=None):
+    def __init__(self, action_type, tag=None, label=None, has_label=False, orig_edge=None, orig_node=None, oracle=None):
         self.type = action_type  # String
         self.tag = tag  # Usually the tag of the created edge; but if COMPOUND_SWAP, the distance
         self.label = label  # Label of the created node, if any
+        self.has_label = has_label  # Whether this action type requires a label or not
         self.orig_node = orig_node  # Node created by this action, if any (during training)
         self.orig_edge = orig_edge  # Edge created by this action, if any (during training)
         self.edge = None  # Will be set by State when the edge created by this action is known
@@ -46,7 +47,7 @@ class Action(object):
         return hash(self.id)
 
     def __call__(self, *args, **kwargs):
-        return Action(self.type, *args, **kwargs)
+        return Action(self.type, *args, **kwargs, has_label=self.has_label)
 
     @property
     def remote(self):
@@ -75,9 +76,9 @@ class Action(object):
 
 class Actions(object, metaclass=Singleton):
     Shift = Action("SHIFT")
-    Node = Action("NODE")
-    RemoteNode = Action("REMOTE-NODE")
-    Implicit = Action("IMPLICIT")
+    Node = Action("NODE", has_label=True)
+    RemoteNode = Action("REMOTE-NODE", has_label=True)
+    Implicit = Action("IMPLICIT", has_label=True)
     Reduce = Action("REDUCE")
     LeftEdge = Action("LEFT-EDGE")
     RightEdge = Action("RIGHT-EDGE")

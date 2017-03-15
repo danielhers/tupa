@@ -79,7 +79,7 @@ class FeatureExtractor(object):
     """
     Object to extract features from the parser state to be used in action classification
     """
-    def __init__(self, feature_templates):
+    def __init__(self, feature_templates=(), feature_extractor=None, params=None):
         assert all(FEATURE_TEMPLATE_PATTERN.match(f) for f in feature_templates), \
             "Features do not match pattern: " + ", ".join(
                 f for f in feature_templates if not FEATURE_TEMPLATE_PATTERN.match(f))
@@ -88,6 +88,8 @@ class FeatureExtractor(object):
             feature_name, tuple(FeatureTemplateElement(*m.group(1, 2, 3, 4))
                                 for m in re.finditer(FEATURE_ELEMENT_PATTERN, feature_name)))
                                   for feature_name in feature_templates]
+        self.feature_extractor = feature_extractor
+        self.params = {} if params is None else params
 
     def extract_features(self, state, params):
         """

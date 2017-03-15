@@ -30,11 +30,10 @@ class VAction(argparse.Action):
             values = values.count("v") + 1
         setattr(args, self.dest, values)
 
-SPARSE_PERCEPTRON = "sparse"
-DENSE_PERCEPTRON = "dense"
+SPARSE = "sparse"
 MLP_NN = "mlp"
 BILSTM_NN = "bilstm"
-CLASSIFIERS = (SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP_NN, BILSTM_NN)
+CLASSIFIERS = (SPARSE, MLP_NN, BILSTM_NN)
 
 # Multiple choice options: the first one is always the default
 ACTIVATIONS = ("sigmoid", "tanh", "relu", "cube")
@@ -48,7 +47,7 @@ class Config(object, metaclass=Singleton):
                                             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
         argparser.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
         argparser.add_argument("-m", "--model", help="model file to load/save (default: ucca_<model_type>")
-        argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=SPARSE_PERCEPTRON, help="model type")
+        argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=SPARSE, help="model type")
         argparser.add_argument("-B", "--beam", choices=(1,), default=1, help="beam size for beam search (1 for greedy)")
         argparser.add_argument("-e", "--evaluate", action="store_true", help="evaluate parsed passages")
         argparser.add_argument("-v", "--verbose", nargs="?", action=VAction, default=0, help="detailed parse output")
@@ -157,7 +156,7 @@ class Config(object, metaclass=Singleton):
                 self.args.max_nodes = max(self.args.max_nodes, 10.0)
                 self.args.max_node_labels = max(self.args.max_node_labels, 100000)
                 self.args.node_label_dim = max(self.args.node_label_dim, 20)
-                self.args.max_edge_labels = max(self.args.max_edge_labels, 150)
+                self.args.max_edge_labels = max(self.args.max_edge_labels, 250)
                 from contrib import amrutil
                 self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
                 self.args.node_label_attrib = amrutil.NODE_LABEL_ATTRIB

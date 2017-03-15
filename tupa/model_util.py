@@ -1,19 +1,60 @@
+import os
 import pickle
 import time
+from collections import OrderedDict, Counter
 
 import numpy as np
-import os
-from collections import defaultdict, Counter
 
 from features.feature_params import UNKNOWN_VALUE
 
 
-class UnknownDict(defaultdict):
-    """
-    defaultdict that has a single default value for missing keys
-    """
-    UNKNOWN = "<UNKNOWN>"
+class DefaultOrderedDict(OrderedDict):
+    # Source: http://stackoverflow.com/a/6190500/223267
+    def __init__(self, default_factory=None, *args, **kwargs):
+        if default_factory is not None and not callable(default_factory):
+            raise TypeError("default_factory must be callable")
+        OrderedDict.__init__(self, *args, **kwargs)
+        self.default_factory = default_factory
+        self.all = []
 
+    def __getitem__(self, key):
+        try:
+            return OrderedDict.__getitem__(self, key)
+        except KeyError:
+            return self.__missing__(key)
+
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+        self[key] = value = self.default_factory()
+        return value
+
+    def __reduce__(self):
+        args = tuple() if self.default_factory is None else self.default_factory,
+        return type(self), args, None, None, self.items()
+
+    def copy(self):
+        return self.__copy__()
+
+    def __copy__(self):
+        return type(self)(self.default_factory, self)
+
+    def __deepcopy__(self, memo):
+        import copy
+        return type(self)(self.default_factory, copy.deepcopy(self.items()))
+
+    def __repr__(self):
+        return "%s(%s, %s)" % (type(self), self.default_factory, OrderedDict.__repr__(self))
+
+    def __setitem__(self, key, value):
+        super(DefaultOrderedDict, self).__setitem__(key, value)
+        self.all.append(key)
+
+
+class UnknownDict(DefaultOrderedDict):
+    """
+    DefaultOrderedDict that has a single default value for missing keys
+    """
     def __init__(self, d, unknown=None):
         """
         :param d: base dict to initialize by
@@ -21,10 +62,10 @@ class UnknownDict(defaultdict):
         """
         # noinspection PyTypeChecker
         super(UnknownDict, self).__init__(None, d)
-        if self.UNKNOWN not in self:
+        if None not in self:
             assert unknown is not None, "Default value must not be None"
-            self[self.UNKNOWN] = unknown
-        self.unknown = self[self.UNKNOWN]
+            self[None] = unknown
+        self.unknown = self[None]
 
     def __missing__(self, key):
         return self.unknown
@@ -58,6 +99,7 @@ class DropoutDict(AutoIncrementDict):
         """
         :param d: base dict to initialize by
         :param dropout: dropout parameter
+        :param reverse: whether to keep reverse map (simply list) from numeric id to value
         """
         super(DropoutDict, self).__init__(max_size, keys, d=d)
         assert dropout >= 0, "Dropout value must be >= 0, but given %f" % dropout
@@ -69,7 +111,7 @@ class DropoutDict(AutoIncrementDict):
             self.counts = Counter() if self.dropout > 0 else None
 
     def __getitem__(self, item):
-        if item != self.UNKNOWN and self.dropout > 0:
+        if item != None and self.dropout > 0:
             self.counts[item] += 1
             if self.dropout / (self.counts[item] + self.dropout) > np.random.random_sample():
                 item = UnknownDict.UNKNOWN

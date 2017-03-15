@@ -43,14 +43,14 @@ class NeuralNetwork(Classifier):
     Expects features from FeatureEnumerator.
     """
 
-    def __init__(self, *args, input_params):
+    def __init__(self, *args, input_params, max_num_labels):
         """
         Create a new untrained NN
-        :param labels: a list of labels that can be updated later to add a new label
+        :param labels: tuple of lists of labels that can be updated later to add new labels
         :param input_params: dict of feature type name -> FeatureInformation
         """
         super(NeuralNetwork, self).__init__(*args)
-        self.max_num_labels = Config().args.max_action_labels
+        self.max_num_labels = max_num_labels
         self._layers = Config().args.layers
         self._layer_dim = Config().args.layer_dim
         self._output_dim = Config().args.output_dim
@@ -73,8 +73,10 @@ class NeuralNetwork(Classifier):
         self._trainer = None
         self._value = None  # For caching the result of _evaluate
 
-    def resize(self):
-        assert self.num_labels <= self.max_num_labels, "Exceeded maximum number of labels"
+    def resize(self, axis=None):
+        for i, (l, m) in enumerate(zip(self.num_labels, self.max_num_labels)):
+            if axis is None or i == axis:
+                assert l <= m, "Exceeded maximum number of labels at dimension %d: %d > %d" % (i, l, m)
 
     def init_model(self):
         self.model = dy.Model()
@@ -156,9 +158,9 @@ class NeuralNetwork(Classifier):
         :param indices: indices of inputs
         :return: feature values at given indices
         """
-        raise Exception("Input representations not initialized, cannot evaluate indexed features")
+        raise ValueError("Input representations not initialized, cannot evaluate indexed features")
 
-    def evaluate_mlp(self, features, train=False):
+    def evaluate_mlp(self, features, axis, train=False):
         """
         Apply MLP and log softmax to input features
         :param features: dictionary of suffix, values for each feature type
@@ -172,7 +174,7 @@ class NeuralNetwork(Classifier):
             if train and self._dropout:
                 x = dy.dropout(x, self._dropout)
             x = self._activation(W * x + b)
-        return dy.log_softmax(x, restrict=list(range(self.num_labels)))
+        return dy.log_softmax(x, restrict=list(range(self.num_labels[axis])))
 
     def evaluate(self, *args, **kwargs):
         if self.model is None:
@@ -181,31 +183,33 @@ class NeuralNetwork(Classifier):
             self._value = self.evaluate_mlp(*args, **kwargs)
         return self._value
 
-    def score(self, features):
+    def score(self, features, axis):
         """
         Calculate score for each label
         :param features: extracted feature values, of size input_size
+        :param axis: axis of the label we are predicting
         :return: array with score for each label
         """
-        super(NeuralNetwork, self).score(features)
+        super(NeuralNetwork, self).score(features, axis)
         if self._iteration > 0:
-            return self.evaluate(features).npvalue()[:self.num_labels]
+            return self.evaluate(features, axis).npvalue()[:self.num_labels[axis]]
         else:
             if Config().args.verbose > 2:
                 print("  no updates done yet, returning zero vector.")
-            return np.zeros(self.num_labels)
+            return np.zeros(self.num_labels[axis])
 
-    def update(self, features, pred, true, importance=1):
+    def update(self, features, axis, pred, true, importance=1):
         """
         Update classifier weights according to predicted and true labels
-        :param features: extracted feature values, of size input_size
-        :param pred: label predicted by the classifier (non-negative integer less than num_labels)
-        :param true: true label (non-negative integer less than num_labels)
+        :param features: extracted feature values, in the form of a dict (name: value)
+        :param axis: axis of the label we are predicting
+        :param pred: label predicted by the classifier (non-negative integer bounded by num_labels[axis])
+        :param true: true label (non-negative integer bounded by num_labels[axis])
         :param importance: add this many samples with the same features
         """
-        super(NeuralNetwork, self).update(features, pred, true, importance)
+        super(NeuralNetwork, self).update(features, axis, pred, true, importance)
         for _ in range(int(importance)):
-            self._losses.append(dy.pick(self.evaluate(features, train=True), true))
+            self._losses.append(dy.pick(self.evaluate(features, axis, train=True), true))
             if Config().args.dynet_viz:
                 dy.print_graphviz()
                 sys.exit(0)

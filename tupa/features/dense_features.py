@@ -41,8 +41,8 @@ EXTRA_NUMERIC_FEATURES = 2  # bias, node ratio
 class DenseFeatureExtractor(FeatureExtractor):
     """
     Object to extract features from the parser state to be used in action classification
-    Requires wrapping by FeatureEmbedding.
-    To be used with DensePerceptron or NeuralNetwork classifier.
+    Requires wrapping by FeatureEnumerator.
+    To be used with a NeuralNetwork classifier.
     """
     def __init__(self, feature_templates=FEATURE_TEMPLATES):
         super(DenseFeatureExtractor, self).__init__(feature_templates=feature_templates)

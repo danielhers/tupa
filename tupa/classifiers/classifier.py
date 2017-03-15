@@ -17,14 +17,14 @@ class Classifier(object):
 
     def __init__(self, model_type, filename, labels, model=None):
         """
-        :param labels: a list of labels that can be updated later to add a new label
+        :param labels: tuple of lists of labels that can be updated later to add new labels
         :param model: if given, copy the weights (from a trained model)
         """
         self.model = None
         self.model_type = model_type
         self.filename = filename
-        self.labels = labels or []
-        self._num_labels = len(self.labels)
+        self.labels = labels
+        self._num_labels = self.num_labels
         self._input_dim = None
         self.is_frozen = model is not None
         self.learning_rate = Config().args.learning_rate
@@ -32,29 +32,32 @@ class Classifier(object):
 
     @property
     def num_labels(self):
-        return len(self.labels)
+        return tuple(len(l) for l in self.labels)
 
-    def score(self, features):
+    def num_labels_str(self):
+        return "x".join("%d" % l for l in self.num_labels)
+
+    def score(self, features, axis):
         if not self.is_frozen:
-            self._update_num_labels()
+            self._update_num_labels(axis)
 
     def init_features(self, features, train=False):
         pass
 
-    def update(self, features, pred, true, importance=1):
+    def update(self, features, axis, pred, true, importance=1):
         assert not self.is_frozen, "Cannot update a frozen model"
-        self._update_num_labels()
+        self._update_num_labels(axis)
 
-    def _update_num_labels(self):
+    def _update_num_labels(self, axis=None):
         """
         self.num_labels is updated automatically when a label is added to self.labels,
         but we need to update the weights whenever that happens
         """
-        if self.num_labels > self._num_labels:
+        if self.num_labels != self._num_labels:
             self._num_labels = self.num_labels
-            self.resize()
+            self.resize(axis)
 
-    def resize(self):
+    def resize(self, axis=None):
         raise NotImplementedError()
 
     def finalize(self, *args, **kwargs):
@@ -99,9 +102,8 @@ class Classifier(object):
         """
         d = load_dict(self.filename)
         model_type = d.get("type")
-        assert model_type is None or model_type == self.model_type, \
-            "Model type does not match: %s" % model_type
-        self.labels = list(d["labels"])
+        assert model_type is None or model_type == self.model_type, "Model type does not match: %s" % model_type
+        self.labels = tuple(map(list, d["labels"]))
         self.is_frozen = d["is_frozen"]
         self.learning_rate = d["learning_rate"]
         self.learning_rate_decay = d["learning_rate_decay"]
@@ -117,5 +119,4 @@ class Classifier(object):
         return ()
 
     def __str__(self):
-        return ("%d labels, " % self.num_labels) + (
-                "%d features" % self._input_dim)
+        return "%s labels, %d features" % (self.num_labels_str(), self._input_dim)

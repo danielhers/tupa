@@ -6,7 +6,7 @@ from classifiers.classifier import ClassifierProperty
 from states.state import State
 from tupa.action import Actions
 from tupa.config import Config
-from tupa.model import Model
+from tupa.model import Model, ACTION_AXIS, LABEL_AXIS
 from tupa.oracle import Oracle
 from ucca import diffutil, ioutil, textutil, layer0, layer1
 
@@ -34,7 +34,9 @@ class Parser(object):
         self.correct_count = 0
         self.total_actions = 0
         self.total_correct = 0
-        self.model = Model(model_type, model_file, Actions().all)
+        self.model = Model(model_type, model_file)
+        self.update_only_on_error = \
+            ClassifierProperty.update_only_on_error in self.model.model.get_classifier_properties()
         self.beam = beam  # Currently unused
         self.state_hash_history = None  # For loop checking
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
@@ -200,22 +202,24 @@ class Parser(object):
                 self.check_loop()
             true_actions = self.get_oracle_actions(train)
             features = self.model.feature_extractor.extract_features(self.state)
-            scores = self.model.model.score(features)  # Returns a NumPy array
+            scores = self.model.model.score(features, axis=ACTION_AXIS)  # Returns NumPy array
             if self.args.verbose > 2:
-                print("  scores: " + ", ".join(("%s: %g" % x for x in zip(Actions().all, scores))))
-            predicted_action = self.predict_action(scores)
+                print("  action scores: " + ",".join(("%s: %g" % x for x in zip(Actions().all, scores))))
+            try:
+                predicted_action = self.predict(scores, Actions().all, self.state.is_valid)
+            except StopIteration as e:
+                raise ParserException("No valid action available\n%s" % (self.oracle.log if self.oracle else "")) from e
             action = true_actions.get(predicted_action.id)
-            correct_action = False
-            if action is None:
-                action = Config().random.choice(list(true_actions.values())) if train else predicted_action
-            else:
+            is_correct_action = (action is not None)
+            if is_correct_action:
                 self.correct_count += 1
-                correct_action = True
-            if train and not (correct_action and
-                              ClassifierProperty.update_only_on_error in self.model.model.get_classifier_properties()):
-                best_action = self.predict_action(scores[list(true_actions.keys())], list(true_actions.values()))
-                self.model.model.update(features, predicted_action.id, best_action.id,
-                                        self.args.swap_importance if best_action.is_swap else 1)
+            else:
+                action = Config().random.choice(list(true_actions.values())) if train else predicted_action
+            if train and not (is_correct_action and self.update_only_on_error):
+                best_action = self.predict(scores[list(true_actions.keys())], list(true_actions.values()))
+                self.model.model.update(features, axis=ACTION_AXIS, pred=predicted_action.id, true=best_action.id,
+                                        importance=self.args.swap_importance if best_action.is_swap else 1)
+            self.label_action(action, features, train)
             self.action_count += 1
             self.model.model.finished_step(train)
             try:
@@ -230,8 +234,24 @@ class Parser(object):
                     print("  action: %-15s %s" % (action, self.state))
                 for line in self.state.log:
                     print("    " + line)
-            if self.state.finished or train and not correct_action and self.args.early_update:
+            if self.state.finished or train and not is_correct_action and self.args.early_update:
                 return  # action is Finish
+
+    def label_action(self, action, features, train):
+        labels = self.model.labels
+        if labels and action.has_label:  # Node-creating action that requires a label
+            scores = self.model.model.score(features, axis=LABEL_AXIS)
+            if self.args.verbose > 2:
+                print("  label scores: " + ",".join(("%s: %g" % x for x in zip(labels.all, scores))))
+            try:
+                label = self.predict(scores, labels.all)
+            except StopIteration:
+                label = None  # Empty label
+            if train:
+                if not (label == action.label and self.update_only_on_error):
+                    self.model.model.update(features, axis=LABEL_AXIS, pred=labels[label], true=labels[action.label])
+            else:
+                action.label = label
 
     def get_oracle_actions(self, train):
         true_actions = {}
@@ -243,6 +263,20 @@ class Parser(object):
                     raise ParserException("Error in oracle during training") from e
         return true_actions
 
+    def predict(self, scores, values, is_valid=None):
+        """
+        Choose action/label based on classifier
+        Usually the best action/label is valid, so max is enough to choose it in O(n) time
+        Otherwise, sorts all the other scores to choose the best valid one in O(n lg n)
+        :return: valid action/label with maximum probability according to classifier
+        """
+        return next(filter(is_valid, (values[i] for i in self.generate_descending(scores))))
+
+    @staticmethod
+    def generate_descending(scores):
+        yield scores.argmax()
+        yield from scores.argsort()[::-1]
+
     def check_loop(self):
         """
         Check if the current state has already occurred, indicating a loop
@@ -251,25 +285,6 @@ class Parser(object):
         assert h not in self.state_hash_history,\
             "\n".join(["Transition loop", self.state.str("\n")] + [self.oracle.str("\n")] if self.oracle else ())
         self.state_hash_history.add(h)
-
-    def predict_action(self, scores, all_actions=None):
-        """
-        Choose action based on classifier
-        Usually the best action is valid, so max is enough to choose it in O(n) time
-        Otherwise, sorts all the other scores to choose the best valid one in O(n lg n)
-        :return: valid action with maximum probability according to classifier
-        """
-        if all_actions is None:
-            all_actions = Actions().all
-        try:
-            return next(filter(self.state.is_valid, (all_actions[i] for i in self.generate_descending(scores))))
-        except StopIteration as e:
-            raise ParserException("No valid actions available\n%s" % (self.oracle.log if self.oracle else "")) from e
-
-    @staticmethod
-    def generate_descending(scores):
-        yield scores.argmax()
-        yield from scores.argsort()[::-1]
 
     def verify_passage(self, passage, predicted_passage, show_diff):
         """

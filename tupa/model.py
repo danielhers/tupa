@@ -1,45 +1,52 @@
+from features.enumerator import FeatureEnumerator
 from features.feature_params import FeatureParameters
+from features.indexer import FeatureIndexer
 from tupa.action import Actions
-from tupa.config import Config, SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP_NN, BILSTM_NN
+from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN
+
+ACTION_AXIS = 0
+LABEL_AXIS = 1
 
 
 class Model(object):
-    def __init__(self, model_type, filename, labels=None, feature_extractor=None, model=None):
+    def __init__(self, model_type, filename, feature_extractor=None, model=None, labels=None):
         if model_type is None:
-            model_type = SPARSE_PERCEPTRON
+            model_type = SPARSE
         self.model_type = model_type
         self.filename = filename
         if feature_extractor is not None and model is not None:
             self.feature_extractor = feature_extractor
             self.model = model
+            self.labels = labels
             return
-
-        if model_type == SPARSE_PERCEPTRON:
+        max_labels = (Config().args.max_action_labels,)
+        labels = (Actions().all,)
+        node_labels = FeatureParameters("n", Config().args.node_label_dim, Config().args.max_node_labels)
+        FeatureEnumerator().init_data(node_labels)
+        if node_labels.size:
+            self.labels = node_labels.data
+            labels += (self.labels.all,)
+            max_labels += (Config().args.max_node_labels,)
+        else:
+            self.labels = None
+        if model_type == SPARSE:
             from features.sparse_features import SparseFeatureExtractor
             from linear.sparse_perceptron import SparsePerceptron
             self.feature_extractor = SparseFeatureExtractor()
             self.model = SparsePerceptron(filename, labels)
-        elif model_type == DENSE_PERCEPTRON:
-            from features.embedding import FeatureEmbedding
-            from linear.dense_perceptron import DensePerceptron
-            self.feature_extractor = self.dense_features_wrapper(FeatureEmbedding)
-            self.model = DensePerceptron(filename, labels, num_features=self.feature_extractor.num_features())
         elif model_type == MLP_NN:
-            from features.enumerator import FeatureEnumerator
             from nn.feedforward import MLP
-            self.feature_extractor = self.dense_features_wrapper(FeatureEnumerator)
-            self.model = MLP(filename, labels, input_params=self.feature_extractor.params)
+            self.feature_extractor = self.dense_features_wrapper(node_labels)
+            self.model = MLP(filename, labels, input_params=self.feature_extractor.params, max_num_labels=max_labels)
         elif model_type == BILSTM_NN:
-            from features.enumerator import FeatureEnumerator
-            from features.indexer import FeatureIndexer
             from nn.bilstm import BiLSTM
-            self.feature_extractor = FeatureIndexer(self.dense_features_wrapper(FeatureEnumerator))
-            self.model = BiLSTM(filename, labels, input_params=self.feature_extractor.params)
+            self.feature_extractor = FeatureIndexer(self.dense_features_wrapper(node_labels))
+            self.model = BiLSTM(filename, labels, input_params=self.feature_extractor.params, max_num_labels=max_labels)
         else:
             raise ValueError("Invalid model type: '%s'" % model_type)
 
     @staticmethod
-    def dense_features_wrapper(wrapper):
+    def dense_features_wrapper(*args):
         from features.dense_features import DenseFeatureExtractor
         params = [
             FeatureParameters("W", Config().args.word_dim_external, Config().args.max_words_external,
@@ -49,12 +56,11 @@ class Model(object):
             FeatureParameters("t", Config().args.tag_dim, Config().args.max_tags),
             FeatureParameters("d", Config().args.dep_dim, Config().args.max_deps),
             FeatureParameters("e", Config().args.edge_label_dim, Config().args.max_edge_labels),
-            FeatureParameters("n", Config().args.node_label_dim, Config().args.max_node_labels),
             FeatureParameters("p", Config().args.punct_dim, Config().args.max_puncts),
             FeatureParameters("x", Config().args.gap_dim, Config().args.max_gaps),
             FeatureParameters("A", Config().args.action_dim, Config().args.max_action_types),
-        ]
-        return wrapper(DenseFeatureExtractor(), params)
+        ] + list(args)
+        return FeatureEnumerator(DenseFeatureExtractor(), params)
 
     def init_features(self, state, train):
         self.model.init_features(self.feature_extractor.init_features(state), train)
@@ -63,7 +69,8 @@ class Model(object):
         return Model(model_type=self.model_type,
                      filename=self.filename,
                      feature_extractor=self.feature_extractor.finalize(),
-                     model=self.model.finalize(finished_epoch=finished_epoch))
+                     model=self.model.finalize(finished_epoch=finished_epoch),
+                     labels=self.labels)
 
     def save(self):
         if self.filename is not None:
@@ -78,7 +85,11 @@ class Model(object):
             try:
                 self.feature_extractor.load(self.filename)
                 self.model.load()
-                Actions().all = self.model.labels
+                Actions().all = self.model.labels[ACTION_AXIS]
+                node_labels = self.feature_extractor.params.get("n")
+                if node_labels is not None and node_labels.size:  # Use same list of node labels as for features
+                    self.labels = node_labels.data
+                    self.model.labels[LABEL_AXIS] = self.labels.all
             except FileNotFoundError:
                 raise
             except Exception as e:

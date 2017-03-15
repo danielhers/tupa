@@ -38,7 +38,6 @@ before_script:
 env:
   - TEST_SUITE=unit
   - TEST_SUITE=sparse
-  - TEST_SUITE=dense
   - TEST_SUITE=mlp
   - TEST_SUITE=bilstm
   - TEST_SUITE=tune

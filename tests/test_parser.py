@@ -3,7 +3,7 @@
 import unittest
 
 from states.state import State
-from tupa.config import Config, SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP_NN, BILSTM_NN
+from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN
 from tupa.oracle import Oracle
 from tupa.parse import Parser
 from ucca import convert, evaluation, ioutil
@@ -42,10 +42,7 @@ class ParserTests(unittest.TestCase):
                 self.assertSequenceEqual(actions_taken, f.readlines())
 
     def test_parser_sparse(self):
-        self.train_test(SPARSE_PERCEPTRON)
-
-    def test_parser_dense(self):
-        self.train_test(DENSE_PERCEPTRON)
+        self.train_test(SPARSE)
 
     def test_parser_mlp(self):
         self.train_test(MLP_NN)
