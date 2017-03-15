@@ -19,16 +19,16 @@ class FeatureEnumerator(FeatureExtractorWrapper):
         params = super(FeatureEnumerator, self).init_params(feature_extractor, param_list)
         for param in list(params.values()):
             if feature_extractor.features_exist(param.effective_suffix):
-                self.init_data(param)
+                self.init_data(param, feature_extractor)
             else:
                 del params[param.suffix]
         return params
 
-    def init_data(self, param):
+    def init_data(self, param, feature_extractor=None):
         if param.data is not None or isinstance(param, NumericFeatureParameters):
             return
-        if self.feature_extractor:
-            param.num = self.feature_extractor.num_features_non_numeric(param.effective_suffix)
+        if feature_extractor:
+            param.num = feature_extractor.num_features_non_numeric(param.effective_suffix)
         keys = ()
         if param.dim and param.external:
             vectors = self.get_word_vectors(param)
