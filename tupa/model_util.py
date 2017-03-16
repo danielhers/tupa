@@ -15,6 +15,7 @@ class DefaultOrderedDict(OrderedDict):
             raise TypeError("default_factory must be callable")
         self.all = []
         OrderedDict.__init__(self, *args, **kwargs)
+        self.all = list(self.keys())
         self.default_factory = default_factory
 
     def __getitem__(self, key):
@@ -62,10 +63,7 @@ class UnknownDict(DefaultOrderedDict):
         """
         # noinspection PyTypeChecker
         super(UnknownDict, self).__init__(None, d)
-        if None not in self:
-            assert unknown is not None, "Default value must not be None"
-            self[None] = unknown
-        self.unknown = self[None]
+        self.unknown = self.setdefault(None, unknown)
 
     def __missing__(self, key):
         return self.unknown
@@ -144,10 +142,10 @@ def load_dict(filename):
             try:
                 with open(f, 'rb') as h:
                     return pickle.load(h)
-            except Exception as e:
+            except FileNotFoundError as e:
                 exception = e
         if exception is not None:
-            raise FileNotFoundError("File not found: '%s'" % filename) from exception
+            raise FileNotFoundError("File not found: '%s'" % "', '".join(names)) from exception
 
     print("Loading from '%s'... " % filename, end="", flush=True)
     started = time.time()
