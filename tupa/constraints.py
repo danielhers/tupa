@@ -59,7 +59,7 @@ def set_prod(set1, set2=None):
 
 class Constraints(object):
     def __init__(self, args, require_first_shift=True, require_connected=True, require_implicit_childless=True,
-                 allow_root_terminal_children=False, allow_multiple_edges=False,
+                 allow_root_terminal_children=False,
                  top_level={EdgeTags.ParallelScene, EdgeTags.Linker, EdgeTags.Function, EdgeTags.Ground,
                             EdgeTags.Punctuation},
                  possible_multiple_incoming={EdgeTags.LinkArgument, EdgeTags.LinkRelation},
@@ -75,7 +75,6 @@ class Constraints(object):
         self.require_connected = require_connected
         self.require_implicit_childless = require_implicit_childless
         self.allow_root_terminal_children = allow_root_terminal_children
-        self.allow_multiple_edges = allow_multiple_edges
         self.top_level = top_level
         self.possible_multiple_incoming = possible_multiple_incoming if self.args.linkage else ()
         self.tag_rules = \
@@ -89,6 +88,9 @@ class Constraints(object):
              for t1, t2 in set_prod(mutually_exclusive_outgoing)]
     # LinkerIncoming = {EdgeTags.Linker, EdgeTags.LinkRelation}
     # TagRule(trigger=(LinkerIncoming, None), allowed=(LinkerIncoming, None)),  # disabled due to passage 106 unit 1.300
+
+    def allow_edge(self, edge):
+        return edge.child not in edge.parent.children
 
     def allow_node(self, node, labels):
         return True

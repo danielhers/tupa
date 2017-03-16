@@ -95,13 +95,16 @@ class Constraints(constraints.Constraints):
     def __init__(self, args):
         super(Constraints, self).__init__(args, require_connected=True, require_first_shift=False,
                                           require_implicit_childless=False, allow_root_terminal_children=True,
-                                          allow_multiple_edges=True, possible_multiple_incoming=(),
+                                          possible_multiple_incoming=(),
                                           unique_outgoing={INSTANCE_OF}, childless_incoming_trigger=INSTANCE_OF,
                                           unique_incoming=(), mutually_exclusive_outgoing=(), top_level=None)
         self.tag_rules.append(
             constraints.TagRule(trigger={constraints.Direction.incoming: "name"},
                                 allowed={constraints.Direction.outgoing: re.compile(
                                     "^(instance-of|op\d+|%s)$" % constraints.EdgeTags.Terminal)}))
+
+    def allow_edge(self, edge):
+        return edge not in edge.parent.outgoing and (edge.parent.label is None or edge.tag != INSTANCE_OF)
 
     def allow_node(self, node, labels):
         label = self.resolve_label(node)
