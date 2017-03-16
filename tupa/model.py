@@ -89,7 +89,7 @@ class Model(object):
                 node_labels = self.feature_extractor.params.get("n")
                 if node_labels is not None and node_labels.size:  # Use same list of node labels as for features
                     self.labels = node_labels.data
-                    self.model.labels[LABEL_AXIS] = self.labels.all
+                    self.model.labels = (Actions().all, self.labels.all)
             except FileNotFoundError:
                 raise
             except Exception as e:
