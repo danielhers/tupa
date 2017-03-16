@@ -1,7 +1,7 @@
 from features.feature_extractor import FeatureExtractor
 from features.feature_params import MISSING_VALUE
 
-NON_NUMERIC_FEATURE_SUFFIXES = "wtdepxnA"
+NON_NUMERIC_FEATURE_SUFFIXES = "wtdenpxA"
 FEATURE_TEMPLATES = (
     # words
     "s0ws1ws2ws3w"  # stack
