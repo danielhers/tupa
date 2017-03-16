@@ -111,5 +111,5 @@ class Constraints(constraints.Constraints):
         if node.label is not None:
             for child in node.children:
                 if child.text:
-                    return node.label.replace(LABEL_TEXT_PLACEHOLDER, child.text)
+                    return node.label.replace(LABEL_TEXT_PLACEHOLDER, child.lemma or child.text)
         return node.label
