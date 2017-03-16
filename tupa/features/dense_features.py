@@ -1,7 +1,7 @@
 from features.feature_extractor import FeatureExtractor
 from features.feature_params import MISSING_VALUE
 
-NON_NUMERIC_FEATURE_SUFFIXES = "wtdepxA"
+NON_NUMERIC_FEATURE_SUFFIXES = "wtdepxnA"
 FEATURE_TEMPLATES = (
     # words
     "s0ws1ws2ws3w"  # stack
@@ -26,6 +26,13 @@ FEATURE_TEMPLATES = (
     "a0ea1e",  # past actions edge tags
     # past action labels
     "a0Aa1A",
+    # node labels
+    "s0ns1ns2ns3n"  # stack
+    "b0nb1nb2nb3n"  # buffer
+    "s0lns0rns0uns1lns1rns1un"  # children
+    "s0llns0lrns0luns0rlns0rrns0runs0ulns0urn"
+    "s0uuns1llns1lrns1luns1rlns1rrns1run"  # grandchildren
+    "s0Uns1Unb0Un",  # parents
     # separators
     "s0ps1p",
     # gap types
