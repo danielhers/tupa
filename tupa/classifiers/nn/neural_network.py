@@ -71,7 +71,7 @@ class NeuralNetwork(Classifier):
         self._losses = []
         self._iteration = 0
         self._trainer = None
-        self._value = None  # For caching the result of _evaluate
+        self._value = [None] * len(self.num_labels)  # For caching the result of _evaluate
 
     def resize(self, axis=None):
         for i, (l, m) in enumerate(zip(self.num_labels, self.max_num_labels)):
@@ -115,11 +115,12 @@ class NeuralNetwork(Classifier):
         return self._indexed_dim * self._indexed_num
 
     def init_mlp_params(self):
-        in_dim = [self._input_dim] + (self._layers - 1) * [self._layer_dim] + [self._output_dim]
-        out_dim = (self._layers - 1) * [self._layer_dim] + [self._output_dim, self.max_num_labels]
-        for i in range(self._layers + 1):
-            self._params["W%d" % i] = self.model.add_parameters((out_dim[i], in_dim[i]), init=self._init)
-            self._params["b%d" % i] = self.model.add_parameters(out_dim[i], init=self._init)
+        for axis in range(len(self.num_labels)):
+            in_dim = [self._input_dim] + (self._layers - 1) * [self._layer_dim] + [self._output_dim]
+            out_dim = (self._layers - 1) * [self._layer_dim] + [self._output_dim, self.max_num_labels[axis]]
+            for i in range(self._layers + 1):
+                self._params[("W", i, axis)] = self.model.add_parameters((out_dim[i], in_dim[i]), init=self._init)
+                self._params[("b", i, axis)] = self.model.add_parameters(out_dim[i], init=self._init)
 
     def init_cg(self):
         dy.renew_cg()
@@ -132,7 +133,7 @@ class NeuralNetwork(Classifier):
         """
         Representation for missing elements
         :param dim: dimension of vector to return
-        :return: zero vector (an alternative could be to learn this value, as in e.g. Kiperwasser and Goldberg 2016)
+        :return: zero vector (as in e.g. Kiperwasser and Goldberg 2016; an alternative could be to learn this value)
         """
         return dy.inputVector(np.zeros(dim, dtype=float))
 
@@ -169,19 +170,19 @@ class NeuralNetwork(Classifier):
         """
         x = dy.concatenate(list(self.generate_inputs(features)))
         for i in range(self._layers + 1):
-            W = dy.parameter(self._params["W%d" % i])
-            b = dy.parameter(self._params["b%d" % i])
+            W = dy.parameter(self._params[("W", i, axis)])
+            b = dy.parameter(self._params[("b", i, axis)])
             if train and self._dropout:
                 x = dy.dropout(x, self._dropout)
             x = self._activation(W * x + b)
         return dy.log_softmax(x, restrict=list(range(self.num_labels[axis])))
 
-    def evaluate(self, *args, **kwargs):
+    def evaluate(self, features, axis, train=False):
         if self.model is None:
             self.init_model()
-        if self._value is None:
-            self._value = self.evaluate_mlp(*args, **kwargs)
-        return self._value
+        if self._value[axis] is None:
+            self._value[axis] = self.evaluate_mlp(features=features, axis=axis, train=train)
+        return self._value[axis]
 
     def score(self, features, axis):
         """
@@ -215,7 +216,7 @@ class NeuralNetwork(Classifier):
                 sys.exit(0)
 
     def finished_step(self, train=False):
-        self._value = None
+        self._value = [None] * len(self.num_labels)
 
     def finished_item(self, train=False):
         if len(self._losses) >= self._minibatch_size:

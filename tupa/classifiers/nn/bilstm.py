@@ -24,8 +24,8 @@ class BiLSTM(NeuralNetwork):
         for i in range(1, self._embedding_layers + 1):
             in_dim = self._indexed_dim if i == 1 else self._embedding_layer_dim
             out_dim = self._embedding_layer_dim if i < self._embedding_layers else self._lstm_layer_dim
-            self._params["W%de" % i] = self.model.add_parameters((out_dim, in_dim), init=self._init)
-            self._params["b%de" % i] = self.model.add_parameters(out_dim, init=self._init)
+            self._params[("We", i)] = self.model.add_parameters((out_dim, in_dim), init=self._init)
+            self._params[("be", i)] = self.model.add_parameters(out_dim, init=self._init)
         self._params["bilstm"] = dy.BiRNNBuilder(self._lstm_layers,
                                                  self._lstm_layer_dim if self._embedding_layers else self._indexed_dim,
                                                  self._lstm_layer_dim, self.model, dy.LSTMBuilder)
@@ -53,8 +53,8 @@ class BiLSTM(NeuralNetwork):
         """
         x = dy.concatenate(list(embeddings))
         for i in range(1, self._embedding_layers + 1):
-            W = dy.parameter(self._params["W%de" % i])
-            b = dy.parameter(self._params["b%de" % i])
+            W = dy.parameter(self._params[("We", i)])
+            b = dy.parameter(self._params[("be", i)])
             if train and self._dropout:
                 x = dy.dropout(x, self._dropout)
             x = self._activation(W * x + b)
