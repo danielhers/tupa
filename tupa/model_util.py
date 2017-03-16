@@ -31,7 +31,7 @@ class DefaultOrderedDict(OrderedDict):
 
     def __reduce__(self):
         args = tuple() if self.default_factory is None else self.default_factory,
-        return type(self), args, None, None, self.items()
+        return type(self), args, None, None, iter(self.items())
 
     def copy(self):
         return self.__copy__()
@@ -41,7 +41,7 @@ class DefaultOrderedDict(OrderedDict):
 
     def __deepcopy__(self, memo):
         import copy
-        return type(self)(self.default_factory, copy.deepcopy(self.items()))
+        return type(self)(self.default_factory, copy.deepcopy(tuple(self.items())))
 
     def __repr__(self):
         return "%s(%s, %s)" % (type(self), self.default_factory, OrderedDict.__repr__(self))
