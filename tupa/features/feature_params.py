@@ -34,7 +34,7 @@ class FeatureParameters(object):
 
     def __repr__(self):
         return "%s(%s, %d, %d, %f, %s, %s, %s, %s, %s, %s, %s)" % (
-            self.__class__.__name__, self.suffix, self.dim, self.size, self.dropout, self.updated, self.num, self.init,
+            type(self).__name__, self.suffix, self.dim, self.size, self.dropout, self.updated, self.num, self.init,
             self.data, self.indexed, self.copy_from, self.filename)
 
     @property
@@ -58,7 +58,7 @@ class NumericFeatureParameters(FeatureParameters):
 
     def __repr__(self):
         return "%s(%d)" % (
-            self.__class__.__name__, self.num)
+            type(self).__name__, self.num)
 
     @property
     def numeric(self):

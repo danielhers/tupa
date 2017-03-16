@@ -28,7 +28,7 @@ class FeatureExtractorWrapper(FeatureExtractor):
         return self.feature_extractor.extract_features(state)
 
     def finalize(self):
-        return self.__class__(self.feature_extractor, copy_params(self.params, UnknownDict))
+        return type(self)(self.feature_extractor, copy_params(self.params, UnknownDict))
 
     def save(self, filename):
         save_dict(filename + self.filename_suffix(), copy_params(self.params))
