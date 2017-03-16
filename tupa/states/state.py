@@ -39,6 +39,7 @@ class State(object):
         self.nodes += self.terminals
         self.passage_id = passage.ID
         self.actions = []  # History of applied actions
+        self.labels = set()  # Set of resolved labels for all nodes
 
     def is_valid(self, action):
         """
@@ -59,9 +60,8 @@ class State(object):
         def assert_possible_node():
             self.assert_node_ratio(extra=1)
             self.assert_height()
-            if action.label:
-                node = Node(None, label=action.label)
-                assert node not in self.nodes, "Node must not already exist: %s" % node
+            assert self.constraints.allow_node(Node(None, label=action.label), self.labels), \
+                "May not create node with label %s (existing: %s)" % (action.label, ",".join(filter(None, self.labels)))
 
         def assert_possible_parent(node):
             assert node.text is None, "Terminals may not have children: %s" % node.text
@@ -221,6 +221,8 @@ class State(object):
     def add_edge(self, edge):
         edge.add()
         self.heads.discard(edge.child)
+        if self.args.constraints:
+            self.labels.add(self.constraints.resolve_label(edge.parent))
         self.log.append("edge: %s" % edge)
 
     def get_parent_child(self, action):

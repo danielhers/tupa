@@ -155,8 +155,9 @@ class Config(object, metaclass=Singleton):
                 self.args.implicit = True
                 self.args.max_nodes = max(self.args.max_nodes, 10.0)
                 self.args.node_label_dim = max(self.args.node_label_dim, 20)
-                self.args.max_node_labels = max(self.args.max_node_labels, 100000)
-                self.args.max_edge_labels = max(self.args.max_edge_labels, 250)
+                self.args.max_node_labels = max(self.args.max_node_labels, 1000)
+                self.args.max_action_labels = max(self.args.max_action_labels, 600)
+                self.args.max_edge_labels = max(self.args.max_edge_labels, 500)
                 from contrib import amrutil
                 self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
                 self.args.node_label_attrib = amrutil.NODE_LABEL_ATTRIB

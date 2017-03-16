@@ -3,6 +3,7 @@ import re
 from contrib import amrutil
 from ucca import core, layer0, layer1, convert
 
+
 COMMENT_PREFIX = "#"
 ID_PATTERN = "#\s*::id\s+(\S+)"
 TOK_PATTERN = "#\s*::(?:tok|snt)\s+(.*)"
@@ -12,6 +13,7 @@ DEP_REPLACEMENT = {amrutil.INSTANCE_OF: "instance"}
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
 TERMINAL_EDGE_TAG = layer1.EdgeTags.Terminal
+VARIABLE_LABEL_PREFIX = "v"
 
 
 class AmrConverter(convert.FormatConverter):
@@ -53,6 +55,7 @@ class AmrConverter(convert.FormatConverter):
         nodes = self._build_layer1(amr, l1, self.remove_cycles)
         self._build_layer0(amr, l0, l1, nodes)
         self._update_implicit(l1)
+        self._update_label(l1)
         return (p, amr(alignments=False), self.amr_id) if self.return_amr else p
 
     @staticmethod
@@ -124,6 +127,16 @@ class AmrConverter(convert.FormatConverter):
                 node.attrib["implicit"] = True
                 pending += node.parents
 
+    @staticmethod
+    def _update_label(l1):
+        # change labels for nodes with terminal children, replacing the child's text, if present, by *
+        for node in l1.all:
+            if node.tag == layer1.NodeTags.Foundational and node.terminals:
+                text = node.terminals[0].text
+                label = node.attrib.get(amrutil.NODE_LABEL_ATTRIB)
+                if label is not None:
+                    node.attrib[amrutil.NODE_LABEL_ATTRIB] = label.replace(text, amrutil.LABEL_TEXT_PLACEHOLDER)
+
     def to_format(self, passage, **kwargs):
         del kwargs
         import penman
@@ -139,11 +152,14 @@ class AmrConverter(convert.FormatConverter):
                 self._id += 1
                 return self._id
 
-        def _node_label(n):
-            label = labels.get(n.ID, n.attrib.get(amrutil.NODE_LABEL_ATTRIB))
+        def _node_label(node):
+            label = labels.get(node.ID, node.attrib.get(amrutil.NODE_LABEL_ATTRIB))
             if label is None:
-                label = "v%d" % id_generator()
-            labels[n.ID] = label
+                label = "%s%d" % (VARIABLE_LABEL_PREFIX, id_generator())
+            elif node.tag == layer1.NodeTags.Foundational and node.terminals:
+                terminal = node.terminals[0]
+                label = label.replace(amrutil.LABEL_TEXT_PLACEHOLDER, terminal.text)
+            labels[node.ID] = label
             m = re.match("\w+\((.*)\)", label)
             return m.group(1) if m else label
 

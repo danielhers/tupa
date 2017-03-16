@@ -89,3 +89,9 @@ class Constraints(object):
              for t1, t2 in set_prod(mutually_exclusive_outgoing)]
     # LinkerIncoming = {EdgeTags.Linker, EdgeTags.LinkRelation}
     # TagRule(trigger=(LinkerIncoming, None), allowed=(LinkerIncoming, None)),  # disabled due to passage 106 unit 1.300
+
+    def allow_node(self, node, labels):
+        return True
+
+    def resolve_label(self, node):
+        return node.label

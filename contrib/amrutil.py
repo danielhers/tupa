@@ -18,6 +18,7 @@ finally:
 
 NODE_LABEL_ATTRIB = "label"
 INSTANCE_OF = "instance-of"
+LABEL_TEXT_PLACEHOLDER = "*"
 
 
 def parse(*args, **kwargs):
@@ -101,3 +102,14 @@ class Constraints(constraints.Constraints):
             constraints.TagRule(trigger={constraints.Direction.incoming: "name"},
                                 allowed={constraints.Direction.outgoing: re.compile(
                                     "^(instance-of|op\d+|%s)$" % constraints.EdgeTags.Terminal)}))
+
+    def allow_node(self, node, labels):
+        label = self.resolve_label(node)
+        return label is None or label not in labels
+
+    def resolve_label(self, node):
+        if node.label is not None:
+            for child in node.children:
+                if child.text:
+                    return node.label.replace(LABEL_TEXT_PLACEHOLDER, child.text)
+        return node.label
