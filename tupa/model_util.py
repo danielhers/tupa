@@ -13,9 +13,9 @@ class DefaultOrderedDict(OrderedDict):
     def __init__(self, default_factory=None, *args, **kwargs):
         if default_factory is not None and not callable(default_factory):
             raise TypeError("default_factory must be callable")
+        self.all = []
         OrderedDict.__init__(self, *args, **kwargs)
         self.default_factory = default_factory
-        self.all = []
 
     def __getitem__(self, key):
         try:
