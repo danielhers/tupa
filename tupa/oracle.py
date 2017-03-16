@@ -51,7 +51,7 @@ class Oracle(object):
         for action in self.generate_actions(state):
             action.generate_id()
             try:
-                state.assert_valid(action)
+                state.assert_valid_action(action)
                 actions[action.id] = action
             except AssertionError as e:
                 invalid.append((action, e))

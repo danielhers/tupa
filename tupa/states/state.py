@@ -42,18 +42,18 @@ class State(object):
         self.actions = []  # History of applied actions
         self.labels = set()  # Set of resolved labels for all nodes
 
-    def is_valid(self, action):
+    def is_valid_action(self, action):
         """
         :param action: action to check for validity
         :return: is the action (including tag) valid in the current state?
         """
         try:
-            self.assert_valid(action)
+            self.assert_valid_action(action)
         except AssertionError:
             return False
         return True
 
-    def assert_valid(self, action):
+    def assert_valid_action(self, action):
         """
         Raise AssertionError if the action is invalid in the current state
         :param action: action to check for validity
@@ -61,8 +61,8 @@ class State(object):
         def assert_possible_node():
             self.assert_node_ratio(extra=1)
             self.assert_height()
-            assert self.constraints.allow_node(Node(None, label=action.label), self.labels), \
-                "May not create node with label %s (existing: %s)" % (action.label, ",".join(filter(None, self.labels)))
+            if action.label:
+                self.assert_valid_label(action.label)
 
         def assert_possible_parent(node):
             assert node.text is None, "Terminals may not have children: %s" % node.text
@@ -144,6 +144,22 @@ class State(object):
                 else:
                     raise Exception("Invalid action: %s" % action)
 
+    def is_valid_label(self, label):
+        """
+        :param label: label to check for validity
+        :return: is the label valid in the current state?
+        """
+        try:
+            self.assert_valid_label(label)
+        except AssertionError:
+            return False
+        return True
+
+    def assert_valid_label(self, label):
+        if self.args.constraints:
+            assert self.constraints.allow_node(Node(None, label=label), self.labels), \
+                "May not create node with label %s (existing: %s)" % (label, ",".join(self.labels))
+
     @staticmethod
     def swappable(right, left):
         return left.swap_index < right.swap_index
@@ -223,7 +239,9 @@ class State(object):
         edge.add()
         self.heads.discard(edge.child)
         if self.args.constraints:
-            self.labels.add(self.constraints.resolve_label(edge.parent))
+            label = self.constraints.resolve_label(edge.parent)
+            if label is not None:
+                self.labels.add(label)
         self.log.append("edge: %s" % edge)
 
     def get_parent_child(self, action):

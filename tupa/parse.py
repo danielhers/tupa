@@ -206,7 +206,7 @@ class Parser(object):
             if self.args.verbose > 2:
                 print("  action scores: " + ",".join(("%s: %g" % x for x in zip(Actions().all, scores))))
             try:
-                predicted_action = self.predict(scores, Actions().all, self.state.is_valid)
+                predicted_action = self.predict(scores, Actions().all, self.state.is_valid_action)
             except StopIteration as e:
                 raise ParserException("No valid action available\n%s" % (self.oracle.log if self.oracle else "")) from e
             action = true_actions.get(predicted_action.id)
@@ -244,7 +244,7 @@ class Parser(object):
             if self.args.verbose > 2:
                 print("  label scores: " + ",".join(("%s: %g" % x for x in zip(labels.all, scores))))
             try:
-                label = self.predict(scores, labels.all)
+                label = self.predict(scores, labels.all, self.state.is_valid_label)
             except StopIteration:
                 label = None  # Empty label
             if train:
