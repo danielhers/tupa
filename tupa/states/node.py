@@ -126,8 +126,7 @@ class Node(object):
         return s
 
     def __eq__(self, other):
-        return self.index == other.index and self.outgoing == other.outgoing or \
-                self.label is not None and self.label == other.label
+        return self.index == other.index and self.outgoing == other.outgoing
 
     def __hash__(self):
-        return hash(self.label if self.label is not None else (self.index, tuple(self.outgoing)))
+        return hash((self.index, tuple(self.outgoing)))
