@@ -1,5 +1,5 @@
 spacy>=1.7.3
 cython>=0.25.2
-penman>=0.6.0
+penman>=0.6.1
 nltk>=3.2.2
 parsimonious>=0.7.0
