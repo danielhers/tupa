@@ -39,7 +39,7 @@ class AmrConverter(convert.FormatConverter):
                 else:
                     m = re.match(TOK_PATTERN, line)
                     if m:
-                        self.tokens = m.group(1).split()
+                        self.tokens = [re.sub("@(.*)@", "\\1", t) for t in m.group(1).split()]
             if self.lines:
                 yield self._build_passage()
         if self.lines:
