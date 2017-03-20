@@ -75,7 +75,7 @@ class AmrConverter(convert.FormatConverter):
             return False
 
         def _node_label(n):
-            return None if isinstance(n, amrutil.amr_lib.Var) else repr(n)
+            return None if isinstance(n, amrutil.amr_lib.Var) else str(n)
 
         nodes = {}
         visited = set()  # to avoid cycles
@@ -163,8 +163,7 @@ class AmrConverter(convert.FormatConverter):
                 if lemma:
                     label = label.replace(amrutil.LABEL_TEXT_PLACEHOLDER, lemma)
             labels[node.ID] = label
-            m = re.match("\w+\((.*)\)", label)
-            return m.group(1) if m else label
+            return label
 
         id_generator = _IdGenerator()
         pending = list(passage.layer(layer1.LAYER_ID).top_node)
