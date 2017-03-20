@@ -13,9 +13,9 @@ class DefaultOrderedDict(OrderedDict):
     def __init__(self, default_factory=None, *args, **kwargs):
         if default_factory is not None and not callable(default_factory):
             raise TypeError("default_factory must be callable")
-        self.all = []
+        self._all = []
         OrderedDict.__init__(self, *args, **kwargs)
-        self.all = list(self.keys())
+        self._all = list(self.keys())
         self.default_factory = default_factory
 
     def __getitem__(self, key):
@@ -49,7 +49,18 @@ class DefaultOrderedDict(OrderedDict):
 
     def __setitem__(self, key, value):
         super(DefaultOrderedDict, self).__setitem__(key, value)
-        self.all.append(key)
+        self._all.append(key)
+
+    @property
+    def all(self):
+        return self._all
+
+    @all.setter
+    def all(self, keys):
+        self._all = []
+        self.clear()
+        for i, key in enumerate(keys):
+            self[key] = i
 
 
 class UnknownDict(DefaultOrderedDict):

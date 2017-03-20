@@ -86,10 +86,13 @@ class Model(object):
                 self.feature_extractor.load(self.filename)
                 self.model.load()
                 Actions().all = self.model.labels[ACTION_AXIS]
-                node_labels = self.feature_extractor.params.get("n")
-                if node_labels is not None and node_labels.size:  # Use same list of node labels as for features
-                    self.labels = node_labels.data
-                    self.model.labels = (Actions().all, self.labels.all)
+                if len(self.model.labels) > 1:
+                    node_labels = self.feature_extractor.params.get("n")
+                    if node_labels is not None and node_labels.size:  # Use same list of node labels as for features
+                        self.labels = node_labels.data
+                        self.model.labels = (Actions().all, self.labels.all)
+                    else:
+                        self.labels.all = self.model.labels[LABEL_AXIS]
             except FileNotFoundError:
                 raise
             except Exception as e:
