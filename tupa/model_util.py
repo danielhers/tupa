@@ -47,8 +47,8 @@ class DefaultOrderedDict(OrderedDict):
     def __repr__(self):
         return "%s(%s, %s)" % (type(self), self.default_factory, OrderedDict.__repr__(self))
 
-    def __setitem__(self, key, value):
-        super(DefaultOrderedDict, self).__setitem__(key, value)
+    def __setitem__(self, key, value, **kwargs):
+        super(DefaultOrderedDict, self).__setitem__(key, value, **kwargs)
         self._all.append(key)
 
     @property
@@ -108,7 +108,6 @@ class DropoutDict(AutoIncrementDict):
         """
         :param d: base dict to initialize by
         :param dropout: dropout parameter
-        :param reverse: whether to keep reverse map (simply list) from numeric id to value
         """
         super(DropoutDict, self).__init__(max_size, keys, d=d)
         assert dropout >= 0, "Dropout value must be >= 0, but given %f" % dropout
@@ -120,7 +119,7 @@ class DropoutDict(AutoIncrementDict):
             self.counts = Counter() if self.dropout > 0 else None
 
     def __getitem__(self, item):
-        if item != None and self.dropout > 0:
+        if item is not None and self.dropout > 0:
             self.counts[item] += 1
             if self.dropout / (self.counts[item] + self.dropout) > np.random.random_sample():
                 item = None
