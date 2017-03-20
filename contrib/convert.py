@@ -1,7 +1,7 @@
 import re
 
 from contrib import amrutil
-from ucca import core, layer0, layer1, convert, textutil
+from ucca import core, layer0, layer1, convert
 
 
 COMMENT_PREFIX = "#"
@@ -55,7 +55,6 @@ class AmrConverter(convert.FormatConverter):
         nodes = self._build_layer1(amr, l1, self.remove_cycles)
         self._build_layer0(amr, l0, l1, nodes)
         self._update_implicit(l1)
-        textutil.annotate(p)
         self._update_label(l1)
         return (p, amr(alignments=False), self.amr_id) if self.return_amr else p
 
@@ -132,16 +131,15 @@ class AmrConverter(convert.FormatConverter):
     def _update_label(l1):
         # change labels for nodes with terminal children, replacing the child's text, if present, by *
         for node in l1.all:
-            label = node.attrib.get(amrutil.NODE_LABEL_ATTRIB)
-            if label is not None:
-                lemma = AmrConverter._get_lemma(node)
-                if lemma:
-                    node.attrib[amrutil.NODE_LABEL_ATTRIB] = label.replace(lemma, amrutil.LABEL_TEXT_PLACEHOLDER)
+            if node.tag == layer1.NodeTags.Foundational and node.terminals:
+                text = node.terminals[0].text
+                label = node.attrib.get(amrutil.NODE_LABEL_ATTRIB)
+                if label is not None:
+                    node.attrib[amrutil.NODE_LABEL_ATTRIB] = label.replace(text, amrutil.LABEL_TEXT_PLACEHOLDER)
 
     def to_format(self, passage, **kwargs):
         del kwargs
         import penman
-        textutil.annotate(passage)
         return penman.encode(penman.Graph(list(self._to_triples(passage)))),
 
     @staticmethod
@@ -158,10 +156,9 @@ class AmrConverter(convert.FormatConverter):
             label = labels.get(node.ID, node.attrib.get(amrutil.NODE_LABEL_ATTRIB))
             if label is None:
                 label = "%s%d" % (VARIABLE_LABEL_PREFIX, id_generator())
-            else:
-                lemma = AmrConverter._get_lemma(node)
-                if lemma:
-                    label = label.replace(amrutil.LABEL_TEXT_PLACEHOLDER, lemma)
+            elif node.tag == layer1.NodeTags.Foundational and node.terminals:
+                terminal = node.terminals[0]
+                label = label.replace(amrutil.LABEL_TEXT_PLACEHOLDER, terminal.text)
             labels[node.ID] = label
             return label
 
@@ -176,13 +173,6 @@ class AmrConverter(convert.FormatConverter):
                 pending += edge.child
                 tag = DEP_REPLACEMENT.get(edge.tag, edge.tag)
                 yield _node_label(edge.parent), tag, _node_label(edge.child)
-
-    @staticmethod
-    def _get_lemma(node):
-        if node.tag == layer1.NodeTags.Foundational and node.terminals:
-            terminal = node.terminals[0]
-            return terminal.attrib.get(textutil.LEMMA_KEY, terminal.text)
-        return None
 
 
 def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):
