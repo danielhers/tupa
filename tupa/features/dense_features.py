@@ -9,7 +9,7 @@ FEATURE_TEMPLATES = (
     "s0lws0rws0uws1lws1rws1uw"  # children
     "s0llws0lrws0luws0rlws0rrws0ruws0ulws0urw"
     "s0uuws1llws1lrws1luws1rlws1rrws1ruw"  # grandchildren
-    "s0Uws1Uwb0Uw",  # parents
+    "s0Lws0Rws0Uws1Lws1Rws1Uwb0Lwb0Rwb0Uw",  # parents
     # POS tags
     "s0ts1ts2ts3t"  # stack
     "b0tb1tb2tb3t",  # buffer
@@ -32,7 +32,7 @@ FEATURE_TEMPLATES = (
     "s0lns0rns0uns1lns1rns1un"  # children
     "s0llns0lrns0luns0rlns0rrns0runs0ulns0urn"
     "s0uuns1llns1lrns1luns1rlns1rrns1run"  # grandchildren
-    "s0Uns1Unb0Un",  # parents
+    "s0Lns0Rns0Uns1Lns1Rns1Unb0Lnb0Rnb0Un",  # parents
     # separators
     "s0ps1p",
     # gap types
