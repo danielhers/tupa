@@ -105,6 +105,7 @@ class Constraints(constraints.Constraints):
 
     def allow_edge(self, edge):
         return edge not in edge.parent.outgoing and (
+            not edge.parent.implicit or edge.tag != constraints.EdgeTags.Terminal) and (
             edge.parent.label is None or edge.tag == constraints.EdgeTags.Terminal) and (
             edge.child.label is not None and edge.child.label.startswith("Concept(") or edge.tag != INSTANCE_OF)
 
