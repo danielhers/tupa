@@ -16,9 +16,9 @@ try:
 finally:
     os.chdir(prev_dir)
 
-NODE_LABEL_ATTRIB = "label"
+LABEL_ATTRIB = "label"
 INSTANCE_OF = "instance-of"
-LABEL_TEXT_PLACEHOLDER = "*"
+LABEL_PLACEHOLDER = "*"
 
 
 def parse(*args, **kwargs):
@@ -104,7 +104,9 @@ class Constraints(constraints.Constraints):
                                     "^(instance-of|op\d+|%s)$" % constraints.EdgeTags.Terminal)}))
 
     def allow_edge(self, edge):
-        return edge not in edge.parent.outgoing and (edge.parent.label is None or edge.tag != INSTANCE_OF)
+        return edge not in edge.parent.outgoing and (
+            edge.parent.label is None or edge.tag == constraints.EdgeTags.Terminal) and (
+            edge.child.label is not None and edge.child.label.startswith("Concept(") or edge.tag != INSTANCE_OF)
 
     def allow_node(self, node, labels):
         label = self.resolve_label(node)
@@ -114,5 +116,5 @@ class Constraints(constraints.Constraints):
         if node.label is not None:
             for child in node.children:
                 if child.text:
-                    return node.label.replace(LABEL_TEXT_PLACEHOLDER, child.text)
+                    return node.label.replace(LABEL_PLACEHOLDER, child.text)
         return node.label

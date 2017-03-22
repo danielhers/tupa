@@ -92,7 +92,7 @@ class AmrConverter(convert.FormatConverter):
                 node = l1.top_node if rel == TOP_DEP else l1.add_fnode(nodes[head], rel)
                 label = _node_label(dep)
                 if label is not None:
-                    node.attrib[amrutil.NODE_LABEL_ATTRIB] = label
+                    node.attrib[amrutil.LABEL_ATTRIB] = label
                 nodes[dep] = node
             elif not remove_cycles or not _reachable(dep, head):  # reentrancy; do not add if results in a cycle
                 l1.add_remote(nodes[head], rel, node)
@@ -133,9 +133,9 @@ class AmrConverter(convert.FormatConverter):
         for node in l1.all:
             if node.tag == layer1.NodeTags.Foundational and node.terminals:
                 text = node.terminals[0].text
-                label = node.attrib.get(amrutil.NODE_LABEL_ATTRIB)
+                label = node.attrib.get(amrutil.LABEL_ATTRIB)
                 if label is not None:
-                    node.attrib[amrutil.NODE_LABEL_ATTRIB] = label.replace(text, amrutil.LABEL_TEXT_PLACEHOLDER)
+                    node.attrib[amrutil.LABEL_ATTRIB] = AmrConverter.replace(label, text, amrutil.LABEL_PLACEHOLDER)
 
     def to_format(self, passage, **kwargs):
         del kwargs
@@ -153,12 +153,12 @@ class AmrConverter(convert.FormatConverter):
                 return self._id
 
         def _node_label(node):
-            label = labels.get(node.ID, node.attrib.get(amrutil.NODE_LABEL_ATTRIB))
+            label = labels.get(node.ID, node.attrib.get(amrutil.LABEL_ATTRIB))
             if label is None:
                 label = "%s%d" % (VARIABLE_LABEL_PREFIX, id_generator())
             elif node.tag == layer1.NodeTags.Foundational and node.terminals:
                 terminal = node.terminals[0]
-                label = label.replace(amrutil.LABEL_TEXT_PLACEHOLDER, terminal.text)
+                label = AmrConverter.replace(label, amrutil.LABEL_PLACEHOLDER, terminal.text)
             labels[node.ID] = label
             m = re.match("\w+\((.*)\)", label)
             return m.group(1) if m else label
@@ -174,6 +174,11 @@ class AmrConverter(convert.FormatConverter):
                 pending += edge.child
                 tag = DEP_REPLACEMENT.get(edge.tag, edge.tag)
                 yield _node_label(edge.parent), tag, _node_label(edge.child)
+
+    @staticmethod
+    def replace(label, old, new):
+        m = re.match("(\w+\()(.*)(\))", label)
+        return (m.group(1) + m.group(2).replace(old, new) + m.group(3)) if m else label.replace(old, new)
 
 
 def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):

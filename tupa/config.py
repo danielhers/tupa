@@ -160,7 +160,7 @@ class Config(object, metaclass=Singleton):
                 self.args.max_edge_labels = max(self.args.max_edge_labels, 500)
                 from contrib import amrutil
                 self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
-                self.args.node_label_attrib = amrutil.NODE_LABEL_ATTRIB
+                self.args.node_label_attrib = amrutil.LABEL_ATTRIB
                 self.constraints = amrutil.Constraints(self.args)
         else:
             self.input_converter = self.output_converter = None
