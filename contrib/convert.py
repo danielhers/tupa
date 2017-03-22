@@ -10,6 +10,7 @@ TOK_PATTERN = "#\s*::(?:tok|snt)\s+(.*)"
 DEP_PREFIX = ":"
 TOP_DEP = "top"
 DEP_REPLACEMENT = {amrutil.INSTANCE_OF: "instance"}
+IGNORED_EDGES = {"wiki"}
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
 TERMINAL_EDGE_TAG = layer1.EdgeTags.Terminal
@@ -86,6 +87,8 @@ class AmrConverter(convert.FormatConverter):
             visited.add(triple)
             head, rel, dep = triple
             rel = rel.lstrip(DEP_PREFIX)
+            if rel in IGNORED_EDGES:
+                continue
             node = nodes.get(dep)
             if node is None:  # first occurrence of dep
                 pending += amr.triples(head=dep)
