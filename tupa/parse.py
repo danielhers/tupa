@@ -240,17 +240,18 @@ class Parser(object):
     def label_node(self, action, features, train):
         labels = self.model.labels
         if labels and action.has_label:  # Node-creating action that requires a label
+            if train:
+                true_label = action.orig_node.attrib.get(self.args.node_label_attrib)
+                true_label_id = labels[true_label]
             scores = self.model.model.score(features, axis=LABEL_AXIS)
             if self.args.verbose > 2:
                 print("  label scores: " + ",".join(("%s: %g" % x for x in zip(labels.all, scores))))
             try:
                 label = self.predict(scores, labels.all, self.state.is_valid_label)
-            except StopIteration:
-                label = None  # No label
-            if train:
-                true_label = action.orig_node.attrib.get(self.args.node_label_attrib)
-                if not (label == true_label and self.update_only_on_error):
-                    self.model.model.update(features, axis=LABEL_AXIS, pred=labels[label], true=labels[true_label])
+            except StopIteration as e:
+                raise ParserException("No valid label available\n%s" % labels.all) from e
+            if train and not (label == true_label and self.update_only_on_error):
+                self.model.model.update(features, axis=LABEL_AXIS, pred=labels[label], true=true_label_id)
             self.state.label_node(label)
 
     def get_oracle_actions(self, train):
