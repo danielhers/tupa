@@ -252,7 +252,7 @@ class Parser(object):
             if self.args.verbose > 2:
                 print("  label scores: " + ",".join(("%s: %g" % x for x in zip(labels.all, scores))))
             try:
-                label = self.predict(scores, labels.all, self.state.is_valid_label)
+                label = predicted_label = self.predict(scores, labels.all, self.state.is_valid_label)
             except StopIteration as e:
                 raise ParserException("No valid label available\n%s" % labels.all) from e
             if self.oracle:
@@ -261,11 +261,12 @@ class Parser(object):
                     self.correct_label_count += 1
                 if train and not (is_correct and self.update_only_on_error):
                     self.model.model.update(features, axis=LABEL_AXIS, pred=labels[label], true=true_label_id)
+                    label = true_label
             self.label_count += 1
             self.state.label_node(label)
             if self.args.verbose > 1:
                 if self.oracle:
-                    print("  predicted label: %-15s true label: %-15s" % (label, true_label))
+                    print("  predicted label: %-15s true label: %-15s" % (predicted_label, true_label))
                 else:
                     print("  label: %-15s" % label)
 
