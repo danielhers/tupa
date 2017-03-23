@@ -123,6 +123,7 @@ def resolve_label(node, label=None, reverse=False):
         old, new = (lemma, LEMMA_PLACEHOLDER) if reverse else (LEMMA_PLACEHOLDER, lemma)
         if lemma and old in label:
             return _replace()
+    # TODO generalize to multiple terminals: <TEXT>_<TEXT>_<TEXT> or <TEXT>/<TEXT> etc.
     return label
 
 
