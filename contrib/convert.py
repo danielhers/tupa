@@ -102,8 +102,8 @@ class AmrConverter(convert.FormatConverter):
 
     def _build_layer0(self, amr, l0, l1):  # add edges to terminals according to alignments
         reverse_alignments = {}
-        for k, v in amr.alignments().items():
-            node = self.nodes.get(k[2] if isinstance(k, tuple) else k)  # change relation alignments to dependent
+        for (h, r, d), v in {**amr.alignments(), **amr.role_alignments()}.items():
+            node = self.nodes.get(d)  # change relation alignments to dependent
             if node is not None:  # it might be none if it was part of a removed cycle
                 for i in v.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP):  # separate strings to numeric indices
                     reverse_alignments.setdefault(int(i), []).append(node)
