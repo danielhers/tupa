@@ -128,6 +128,9 @@ class Constraints(constraints.Constraints):
             edge.parent.label is None or edge.tag == constraints.EdgeTags.Terminal) and (
             edge.child.outgoing_tags <= {constraints.EdgeTags.Terminal} or edge.tag != INSTANCE_OF)
 
+    def allow_reduce(self, node):
+        return node.text is not None or node.label is not None or INSTANCE_OF in node.outgoing_tags
+
     def allow_label(self, node, label):
         resolved = resolve(node, label)
         return (resolved is None or resolved not in self.existing_labels and

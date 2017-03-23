@@ -119,9 +119,11 @@ class State(object):
                 assert_possible_node()
             elif action.is_type(Actions.Reduce):
                 assert s0 is not self.root or s0.outgoing, "May not reduce the root without children"
-                if self.args.constraints and self.constraints.require_connected:
-                    assert s0 is self.root or s0.is_linkage or s0.text or s0.incoming, \
-                        "May not reduce a non-terminal node without incoming edges"
+                if self.args.constraints:
+                    if self.constraints.require_connected:
+                        assert s0 is self.root or s0.is_linkage or s0.text or s0.incoming, \
+                            "May not reduce a non-terminal node without incoming edges"
+                        assert self.constraints.allow_reduce(s0), "May not reduce node: %s" % s0
             else:  # Binary actions
                 assert len(self.stack) > 1, "Action requires at least two stack elements: %s" % action
                 if action.is_type(Actions.LeftEdge, Actions.RightEdge, Actions.LeftRemote, Actions.RightRemote):

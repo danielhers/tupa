@@ -93,6 +93,9 @@ class Constraints(object):
     def allow_edge(self, edge):
         return edge.child not in edge.parent.children
 
+    def allow_reduce(self, node):
+        return True
+
     def allow_label(self, node, label):
         return True
 
