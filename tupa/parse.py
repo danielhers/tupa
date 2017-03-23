@@ -127,9 +127,7 @@ class Parser(object):
         if not hasattr(passages, "__iter__"):  # Single passage given
             passages = (passages,)
         for passage_index, passage in enumerate(passages):
-            l0 = passage.layer(layer0.LAYER_ID)
-            l1 = passage.layer(layer1.LAYER_ID)
-            labeled = len(l1.all) > 1
+            labeled = len(passage.layer(layer1.LAYER_ID).all) > 1
             assert not train or labeled, "Cannot train on unannotated passage: %s" % passage.ID
             assert not evaluate or labeled, "Cannot evaluate on unannotated passage: %s" % passage.ID
             print("%s %-7s" % (passage_word, passage.ID), end=Config().line_end, flush=True)
