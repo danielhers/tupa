@@ -244,6 +244,7 @@ class State(object):
             return None, None
 
     def label_node(self, label):
+        self.nodes[-1].label = label
         if self.args.constraints:
             label = self.constraints.add_label(self.nodes[-1], label)
         self.log.append("label: %s" % label)
