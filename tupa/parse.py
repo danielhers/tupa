@@ -128,7 +128,6 @@ class Parser(object):
             passages = (passages,)
         for passage_index, passage in enumerate(passages):
             l0 = passage.layer(layer0.LAYER_ID)
-            num_tokens = len(l0.all)
             l1 = passage.layer(layer1.LAYER_ID)
             labeled = len(l1.all) > 1
             assert not train or labeled, "Cannot train on unannotated passage: %s" % passage.ID
@@ -154,7 +153,7 @@ class Parser(object):
                 if not train or self.args.verify else passage
             duration = time.time() - started
             total_duration += duration
-            num_tokens -= len(self.state.buffer)
+            num_tokens = len(set(self.state.terminals).difference(self.state.buffer))
             total_tokens += num_tokens
             if self.oracle:  # We have an oracle to verify by
                 if not failed and self.args.verify:
