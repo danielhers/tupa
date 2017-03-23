@@ -120,7 +120,7 @@ class Constraints(constraints.Constraints):
         self.tag_rules.append(
             constraints.TagRule(trigger={constraints.Direction.incoming: "name"},
                                 allowed={constraints.Direction.outgoing: re.compile(
-                                    "^(instance-of|op\d+|%s)$" % constraints.EdgeTags.Terminal)}))
+                                    "^(%s|%s|op\d+)$" % (INSTANCE_OF, constraints.EdgeTags.Terminal))}))
 
     def allow_edge(self, edge):
         return edge not in edge.parent.outgoing and (
