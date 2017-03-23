@@ -3,7 +3,7 @@ import re
 import penman
 
 from contrib import amrutil
-from ucca import core, layer0, layer1, convert
+from ucca import core, layer0, layer1, convert, textutil
 
 
 COMMENT_PREFIX = "#"
@@ -16,7 +16,7 @@ IGNORED_EDGES = {"wiki"}
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
 TERMINAL_EDGE_TAG = layer1.EdgeTags.Terminal
-VARIABLE_LABEL_PREFIX = "v"
+VARIABLE_PREFIX = "v"
 
 
 class AmrConverter(convert.FormatConverter):
@@ -59,6 +59,7 @@ class AmrConverter(convert.FormatConverter):
         self._build_layer1(amr, l1)
         self._build_layer0(amr, layer0.Layer0(p), l1)
         self._update_implicit(l1)
+        textutil.annotate(p)
         self._update_label(l1)
         # return (p, penman.encode(amr), self.amr_id) if self.return_amr else p
         return (p, amr(alignments=False), self.amr_id) if self.return_amr else p
@@ -129,16 +130,12 @@ class AmrConverter(convert.FormatConverter):
 
     @staticmethod
     def _update_label(l1):
-        # change labels for nodes with terminal children, replacing the child's text, if present, by *
         for node in l1.all:
-            if node.tag == layer1.NodeTags.Foundational and node.terminals:
-                text = node.terminals[0].text
-                label = node.attrib.get(amrutil.LABEL_ATTRIB)
-                if label is not None:
-                    node.attrib[amrutil.LABEL_ATTRIB] = amrutil.replace(label, text, amrutil.LABEL_PLACEHOLDER)
+            node.attrib[amrutil.LABEL_ATTRIB] = amrutil.resolve_label(node, reverse=True)
 
     def to_format(self, passage, **kwargs):
         del kwargs
+        textutil.annotate(passage)
         return penman.encode(penman.Graph(list(self._to_triples(passage)))),
 
     @staticmethod
@@ -152,17 +149,11 @@ class AmrConverter(convert.FormatConverter):
                 return self._id
 
         def _node_label(node):
-            label = labels.get(node.ID, node.attrib.get(amrutil.LABEL_ATTRIB))
-            if label is None:
-                label = "%s%d" % (VARIABLE_LABEL_PREFIX, id_generator())
-            elif node.tag == layer1.NodeTags.Foundational and node.terminals:
-                terminal = node.terminals[0]
-                label = amrutil.replace(label, amrutil.LABEL_PLACEHOLDER, terminal.text)
-            labels[node.ID] = label
+            label = labels.setdefault(node.ID, amrutil.resolve_label(node) or "%s%d" % (VARIABLE_PREFIX, id_gen()))
             m = re.match("\w+\((.*)\)", label)
             return m.group(1) if m else label
 
-        id_generator = _IdGenerator()
+        id_gen = _IdGenerator()
         pending = list(passage.layer(layer1.LAYER_ID).top_node)
         visited = set()  # to avoid cycles
         labels = {}

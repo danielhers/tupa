@@ -28,7 +28,8 @@ class State(object):
         self.terminals = [Node(i + 1, orig_node=t, text=t.text, paragraph=t.paragraph, tag=t.tag,
                                pos_tag=t.extra.get(textutil.TAG_KEY),
                                dep_rel=t.extra.get(textutil.DEP_KEY),
-                               dep_head=t.extra.get(textutil.HEAD_KEY))
+                               dep_head=t.extra.get(textutil.HEAD_KEY),
+                               lemma=t.extra.get(textutil.LEMMA_KEY))
                           for i, t in enumerate(l0.all)]
         self.stack = []
         self.buffer = deque()

@@ -4,6 +4,7 @@ import re
 import sys
 
 from tupa import constraints
+from ucca import textutil
 
 sys.path.insert(0, os.path.dirname(importlib.util.find_spec("smatch.smatch").origin))  # to find amr.py from smatch
 from smatch import smatch
@@ -18,7 +19,8 @@ finally:
 
 LABEL_ATTRIB = "label"
 INSTANCE_OF = "instance-of"
-LABEL_PLACEHOLDER = "*"
+TEXT_PLACEHOLDER = "<TEXT>"
+LEMMA_PLACEHOLDER = "<LEMMA>"
 
 
 def parse(*args, **kwargs):
@@ -91,18 +93,36 @@ class Scores(object):
         print(",".join(self.fields()))
 
 
-def replace(label, old, new):
-    m = re.match("(\w+\()(.*)(\))", label)
-    return (m.group(1) + m.group(2).replace(old, new) + m.group(3)) if m else label.replace(old, new)
+LABEL_PATTERN = re.compile("(\w+\(|\")(.*)(\)|\")")
 
 
-def resolve(node, label=None):
+def resolve_label(node, label=None, reverse=False):
+    def _replace():  # replace only inside the label value/name
+        m = LABEL_PATTERN.match(label)
+        return (m.group(1) + m.group(2).replace(old, new) + m.group(3)) if m else label.replace(old, new)
+
     if label is None:
-        label = node.label
-    if label is not None:
-        for child in node.children:
-            if child.text:
-                return replace(label, LABEL_PLACEHOLDER, child.text)
+        try:
+            label = node.label
+        except AttributeError:
+            label = node.attrib.get(LABEL_ATTRIB)
+    if label is None:
+        return None
+    for child in node.children:
+        try:
+            text = child.text
+        except AttributeError:
+            continue  # if it doesn't have a text attribute then it won't have a lemma attribute
+        old, new = (text, TEXT_PLACEHOLDER) if reverse else (TEXT_PLACEHOLDER, text)
+        if text and old in label:
+            return _replace()
+        try:
+            lemma = child.lemma
+        except AttributeError:
+            lemma = child.extra.get(textutil.LEMMA_KEY)
+        old, new = (lemma, LEMMA_PLACEHOLDER) if reverse else (LEMMA_PLACEHOLDER, lemma)
+        if lemma and old in label:
+            return _replace()
     return label
 
 
@@ -132,17 +152,17 @@ class Constraints(constraints.Constraints):
         return node.text is not None or node.label is not None or INSTANCE_OF in node.outgoing_tags
 
     def allow_label(self, node, label):
-        resolved = resolve(node, label)
+        resolved = resolve_label(node, label)
         return (resolved is None or resolved not in self.existing_labels and
                 node.outgoing_tags <= {constraints.EdgeTags.Terminal}) and (
             is_concept(resolved) == (node.incoming_tags == {INSTANCE_OF})) and (
-            constraints.EdgeTags.Terminal in node.outgoing_tags or label is None or LABEL_PLACEHOLDER not in label)
+            constraints.EdgeTags.Terminal in node.outgoing_tags or label is None or TEXT_PLACEHOLDER not in label)
 
     def clear_labels(self):
         self.existing_labels = set()
 
     def add_label(self, node, label):
-        resolved = resolve(node, label)
+        resolved = resolve_label(node, label)
         if resolved is not None and not is_concept(resolved):  # Concepts may repeat; constants may not
             self.existing_labels.add(resolved)
         return resolved

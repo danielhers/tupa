@@ -11,7 +11,7 @@ class Node(object):
     Temporary representation for core.Node with only relevant information for parsing
     """
     def __init__(self, index, swap_index=None, orig_node=None, text=None, paragraph=None, tag=None, label=None,
-                 implicit=False, pos_tag=None, dep_rel=None, dep_head=None):
+                 implicit=False, pos_tag=None, dep_rel=None, dep_head=None, lemma=None):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated core.Node from the original Passage, during training
         self.node_id = orig_node.ID if orig_node else None  # ID of the original node
@@ -31,6 +31,7 @@ class Node(object):
         self.pos_tag = pos_tag
         self.dep_rel = dep_rel
         self.dep_head = dep_head
+        self.lemma = lemma
         self.swap_index = self.index if swap_index is None else swap_index  # To avoid swapping nodes more than once
         self.height = 0
         self._terminals = None
