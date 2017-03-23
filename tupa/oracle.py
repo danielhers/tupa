@@ -134,9 +134,7 @@ class Oracle(object):
         self.edge_found = True
         remote = edge.attrib.get("remote", False)
         node = (edge.parent, edge.child)[direction] if kind == NODE else None
-        return ACTIONS[kind][direction][remote](
-            tag=edge.tag, label=None if node is None else node.attrib.get(self.args.node_label_attrib),
-            orig_edge=edge, orig_node=node, oracle=self)
+        return ACTIONS[kind][direction][remote](tag=edge.tag, orig_edge=edge, orig_node=node, oracle=self)
 
     def remove(self, edge, node=None):
         self.edges_remaining.discard(edge)

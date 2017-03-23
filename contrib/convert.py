@@ -1,5 +1,7 @@
 import re
 
+import penman
+
 from contrib import amrutil
 from ucca import core, layer0, layer1, convert
 
@@ -19,7 +21,8 @@ VARIABLE_LABEL_PREFIX = "v"
 
 class AmrConverter(convert.FormatConverter):
     def __init__(self):
-        self.passage_id = self.amr_id = self.lines = self.tokens = self.return_amr = self.remove_cycles = None
+        self.passage_id = self.amr_id = self.lines = self.tokens = self.nodes = self.return_amr = \
+            self.remove_cycles = None
 
     def from_format(self, lines, passage_id, return_amr=False, remove_cycles=True, **kwargs):
         del kwargs
@@ -47,20 +50,20 @@ class AmrConverter(convert.FormatConverter):
             yield self._build_passage()
 
     def _build_passage(self):
-        amr = amrutil.parse(" ".join(self.lines), tokens=self.tokens)
+        # amr = penman.decode(re.sub("~e\.[\d,]+", "", " ".join(self.lines)))
+        amr = amrutil.parse(" ".join(self.lines), tokens=self.tokens, merge_repeating_concepts=False)
         p = core.Passage(self.amr_id or self.passage_id)
-        l0 = layer0.Layer0(p)
-        l1 = layer1.Layer1(p)
         self.lines = []
         self.amr_id = self.tokens = None
-        nodes = self._build_layer1(amr, l1, self.remove_cycles)
-        self._build_layer0(amr, l0, l1, nodes)
+        l1 = layer1.Layer1(p)
+        self._build_layer1(amr, l1)
+        self._build_layer0(amr, layer0.Layer0(p), l1)
         self._update_implicit(l1)
         self._update_label(l1)
+        # return (p, penman.encode(amr), self.amr_id) if self.return_amr else p
         return (p, amr(alignments=False), self.amr_id) if self.return_amr else p
 
-    @staticmethod
-    def _build_layer1(amr, l1, remove_cycles):
+    def _build_layer1(self, amr, l1):
         def _reachable(x, y):  # is there a path from x to y? used to detect cycles
             q = [x]
             v = set()
@@ -74,10 +77,7 @@ class AmrConverter(convert.FormatConverter):
                 q += [d for _, _, d in amr.triples(head=x)]
             return False
 
-        def _node_label(n):
-            return None if isinstance(n, amrutil.amr_lib.Var) else repr(n)
-
-        nodes = {}
+        self.nodes = {}
         visited = set()  # to avoid cycles
         pending = amr.triples(rel=DEP_PREFIX + TOP_DEP)
         while pending:  # add normal nodes
@@ -89,23 +89,21 @@ class AmrConverter(convert.FormatConverter):
             rel = rel.lstrip(DEP_PREFIX)
             if rel in IGNORED_EDGES:
                 continue
-            node = nodes.get(dep)
-            if node is None:  # first occurrence of dep
+            node = self.nodes.get(dep)
+            if node is None:  # first occurrence of dep, or not a variable
                 pending += amr.triples(head=dep)
-                node = l1.top_node if rel == TOP_DEP else l1.add_fnode(nodes[head], rel)
-                label = _node_label(dep)
-                if label is not None:
-                    node.attrib[amrutil.LABEL_ATTRIB] = label
-                nodes[dep] = node
-            elif not remove_cycles or not _reachable(dep, head):  # reentrancy; do not add if results in a cycle
-                l1.add_remote(nodes[head], rel, node)
-        return nodes
+                node = l1.top_node if rel == TOP_DEP else l1.add_fnode(self.nodes[head], rel)
+                if isinstance(dep, amrutil.amr_lib.Var):
+                    self.nodes[dep] = node
+                else:
+                    node.attrib[amrutil.LABEL_ATTRIB] = repr(dep)
+            elif not self.remove_cycles or not _reachable(dep, head):  # reentrancy; do not add if results in a cycle
+                l1.add_remote(self.nodes[head], rel, node)
 
-    @staticmethod
-    def _build_layer0(amr, l0, l1, nodes):  # add edges to terminals according to alignments
+    def _build_layer0(self, amr, l0, l1):  # add edges to terminals according to alignments
         reverse_alignments = {}
         for k, v in amr.alignments().items():
-            node = nodes.get(k[2] if isinstance(k, tuple) else k)  # change relation alignments to the dependent instead
+            node = self.nodes.get(k)
             if node is not None:  # it might be none if it was part of a removed cycle
                 for i in v.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP):  # separate strings to numeric indices
                     reverse_alignments.setdefault(int(i), []).append(node)
@@ -138,11 +136,10 @@ class AmrConverter(convert.FormatConverter):
                 text = node.terminals[0].text
                 label = node.attrib.get(amrutil.LABEL_ATTRIB)
                 if label is not None:
-                    node.attrib[amrutil.LABEL_ATTRIB] = AmrConverter.replace(label, text, amrutil.LABEL_PLACEHOLDER)
+                    node.attrib[amrutil.LABEL_ATTRIB] = amrutil.replace(label, text, amrutil.LABEL_PLACEHOLDER)
 
     def to_format(self, passage, **kwargs):
         del kwargs
-        import penman
         return penman.encode(penman.Graph(list(self._to_triples(passage)))),
 
     @staticmethod
@@ -161,7 +158,7 @@ class AmrConverter(convert.FormatConverter):
                 label = "%s%d" % (VARIABLE_LABEL_PREFIX, id_generator())
             elif node.tag == layer1.NodeTags.Foundational and node.terminals:
                 terminal = node.terminals[0]
-                label = AmrConverter.replace(label, amrutil.LABEL_PLACEHOLDER, terminal.text)
+                label = amrutil.replace(label, amrutil.LABEL_PLACEHOLDER, terminal.text)
             labels[node.ID] = label
             m = re.match("\w+\((.*)\)", label)
             return m.group(1) if m else label
@@ -177,11 +174,6 @@ class AmrConverter(convert.FormatConverter):
                 pending += edge.child
                 tag = DEP_REPLACEMENT.get(edge.tag, edge.tag)
                 yield _node_label(edge.parent), tag, _node_label(edge.child)
-
-    @staticmethod
-    def replace(label, old, new):
-        m = re.match("(\w+\()(.*)(\))", label)
-        return (m.group(1) + m.group(2).replace(old, new) + m.group(3)) if m else label.replace(old, new)
 
 
 def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):

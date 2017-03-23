@@ -219,13 +219,13 @@ class Parser(object):
                 best_action = self.predict(scores[list(true_actions.keys())], list(true_actions.values()))
                 self.model.model.update(features, axis=ACTION_AXIS, pred=predicted_action.id, true=best_action.id,
                                         importance=self.args.swap_importance if best_action.is_swap else 1)
-            self.label_action(action, features, train)
             self.action_count += 1
-            self.model.model.finished_step(train)
             try:
                 self.state.transition(action)
             except AssertionError as e:
                 raise ParserException("Invalid transition (%s): %s" % (action, e)) from e
+            self.label_node(action, features, train)
+            self.model.model.finished_step(train)
             if self.args.verbose > 1:
                 if self.oracle:
                     print("  predicted: %-15s true: %-15s taken: %-15s %s" % (
@@ -237,7 +237,7 @@ class Parser(object):
             if self.state.finished or train and not is_correct_action and self.args.early_update:
                 return  # action is Finish
 
-    def label_action(self, action, features, train):
+    def label_node(self, action, features, train):
         labels = self.model.labels
         if labels and action.has_label:  # Node-creating action that requires a label
             scores = self.model.model.score(features, axis=LABEL_AXIS)
@@ -246,12 +246,12 @@ class Parser(object):
             try:
                 label = self.predict(scores, labels.all, self.state.is_valid_label)
             except StopIteration:
-                label = None  # Empty label
+                label = None  # No label
             if train:
-                if not (label == action.label and self.update_only_on_error):
-                    self.model.model.update(features, axis=LABEL_AXIS, pred=labels[label], true=labels[action.label])
-            else:
-                action.label = label
+                true_label = action.orig_node.attrib.get(self.args.node_label_attrib)
+                if not (label == true_label and self.update_only_on_error):
+                    self.model.model.update(features, axis=LABEL_AXIS, pred=labels[label], true=labels[true_label])
+            self.state.label_node(label)
 
     def get_oracle_actions(self, train):
         true_actions = {}

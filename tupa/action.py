@@ -5,10 +5,9 @@ class Action(object):
     type_to_id = {}
     MAX_SWAP = 15  # default maximum size for compound swap
 
-    def __init__(self, action_type, tag=None, label=None, has_label=False, orig_edge=None, orig_node=None, oracle=None):
+    def __init__(self, action_type, tag=None, has_label=False, orig_edge=None, orig_node=None, oracle=None):
         self.type = action_type  # String
         self.tag = tag  # Usually the tag of the created edge; but if COMPOUND_SWAP, the distance
-        self.label = label  # Label of the created node, if any
         self.has_label = has_label  # Whether this action type requires a label or not
         self.orig_node = orig_node  # Node created by this action, if any (during training)
         self.orig_edge = orig_edge  # Edge created by this action, if any (during training)
@@ -30,14 +29,12 @@ class Action(object):
             self.oracle.remove(self.orig_edge, self.orig_node)
 
     def __repr__(self):
-        return Action.__name__ + "(" + ", ".join(filter(None, (self.type, self.tag, self.label))) + ")"
+        return Action.__name__ + "(" + ", ".join(filter(None, (self.type, self.tag))) + ")"
 
     def __str__(self):
         s = self.type
         if self.tag:
             s += "-%s" % self.tag
-            if self.label:
-                s += "/%s" % self.label
         return s
 
     def __eq__(self, other):

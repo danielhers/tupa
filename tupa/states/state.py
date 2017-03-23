@@ -18,6 +18,7 @@ class State(object):
     def __init__(self, passage):
         self.args = Config().args
         self.constraints = Config().constraints
+        self.constraints.clear_labels()
         self.log = []
         self.finished = False
         l0 = passage.layer(layer0.LAYER_ID)
@@ -39,7 +40,6 @@ class State(object):
         self.nodes += self.terminals
         self.passage_id = passage.ID
         self.actions = []  # History of applied actions
-        self.labels = set()  # Set of resolved labels for all nodes
 
     def is_valid_action(self, action):
         """
@@ -60,8 +60,6 @@ class State(object):
         def assert_possible_node():
             self.assert_node_ratio(extra=1)
             self.assert_height()
-            if action.label:
-                self.assert_valid_label(action.label)
 
         def assert_possible_parent(node):
             assert node.text is None, "Terminals may not have children: %s" % node.text
@@ -154,8 +152,8 @@ class State(object):
 
     def assert_valid_label(self, label):
         if self.args.constraints:
-            assert self.constraints.allow_node(Node(None, label=label), self.labels), \
-                "May not create node with label %s (existing: %s)" % (label, ",".join(self.labels))
+            node = self.nodes[-1]
+            assert self.constraints.allow_label(node, label), "May not label node %s as %s" % (node, label)
 
     @staticmethod
     def swappable(right, left):
@@ -172,11 +170,11 @@ class State(object):
         if action.is_type(Actions.Shift):  # Push buffer head to stack; shift buffer
             self.stack.append(self.buffer.popleft())
         elif action.is_type(Actions.Node, Actions.RemoteNode):  # Create new parent node and add to the buffer
-            parent = self.add_node(orig_node=action.orig_node, label=action.label)
+            parent = self.add_node(orig_node=action.orig_node)
             self.add_edge(Edge(parent, self.stack[-1], action.tag, remote=action.remote))
             self.buffer.appendleft(parent)
         elif action.is_type(Actions.Implicit):  # Create new child node and add to the buffer
-            child = self.add_node(orig_node=action.orig_node, label=action.label, implicit=True)
+            child = self.add_node(orig_node=action.orig_node, implicit=True)
             self.add_edge(Edge(self.stack[-1], child, action.tag))
             self.buffer.appendleft(child)
         elif action.is_type(Actions.Reduce):  # Pop stack (no more edges to create with this node)
@@ -235,10 +233,6 @@ class State(object):
     def add_edge(self, edge):
         edge.add()
         self.heads.discard(edge.child)
-        if self.args.constraints:
-            label = self.constraints.resolve_label(edge.parent)
-            if label is not None:
-                self.labels.add(label)
         self.log.append("edge: %s" % edge)
 
     def get_parent_child(self, action):
@@ -248,6 +242,11 @@ class State(object):
             return self.stack[-2], self.stack[-1]
         else:
             return None, None
+
+    def label_node(self, label):
+        if self.args.constraints:
+            label = self.constraints.add_label(self.nodes[-1], label)
+        self.log.append("label: %s" % label)
 
     def create_passage(self, assert_proper=True):
         """

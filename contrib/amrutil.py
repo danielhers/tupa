@@ -91,6 +91,25 @@ class Scores(object):
         print(",".join(self.fields()))
 
 
+def replace(label, old, new):
+    m = re.match("(\w+\()(.*)(\))", label)
+    return (m.group(1) + m.group(2).replace(old, new) + m.group(3)) if m else label.replace(old, new)
+
+
+def resolve(node, label=None):
+    if label is None:
+        label = node.label
+    if label is not None:
+        for child in node.children:
+            if child.text:
+                return replace(label, LABEL_PLACEHOLDER, child.text)
+    return label
+
+
+def is_concept(label):
+    return label is not None and label.startswith("Concept(")
+
+
 class Constraints(constraints.Constraints):
     def __init__(self, args):
         super(Constraints, self).__init__(args, require_connected=True, require_first_shift=False,
@@ -107,15 +126,19 @@ class Constraints(constraints.Constraints):
         return edge not in edge.parent.outgoing and (
             not edge.parent.implicit or edge.tag != constraints.EdgeTags.Terminal) and (
             edge.parent.label is None or edge.tag == constraints.EdgeTags.Terminal) and (
-            edge.child.label is not None and edge.child.label.startswith("Concept(") or edge.tag != INSTANCE_OF)
+            edge.child.outgoing_tags <= {constraints.EdgeTags.Terminal} or edge.tag != INSTANCE_OF)
 
-    def allow_node(self, node, labels):
-        label = self.resolve_label(node)
-        return label is None or label not in labels
+    def allow_label(self, node, label):
+        label = resolve(node, label)
+        return (label is None or label not in self.existing_labels and
+                node.outgoing_tags <= {constraints.EdgeTags.Terminal}) and (
+            is_concept(label) == (node.incoming_tags == {INSTANCE_OF}))
 
-    def resolve_label(self, node):
-        if node.label is not None:
-            for child in node.children:
-                if child.text:
-                    return node.label.replace(LABEL_PLACEHOLDER, child.text)
-        return node.label
+    def clear_labels(self):
+        self.existing_labels = set()
+
+    def add_label(self, node, label):
+        label = resolve(node, label)
+        if label is not None and not is_concept(label):  # Concepts may repeat; constants may not
+            self.existing_labels.add(label)
+        return label
