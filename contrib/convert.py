@@ -51,7 +51,7 @@ class AmrConverter(convert.FormatConverter):
 
     def _build_passage(self):
         # amr = penman.decode(re.sub("~e\.[\d,]+", "", " ".join(self.lines)))
-        amr = amrutil.parse(" ".join(self.lines), tokens=self.tokens, merge_repeating_concepts=False)
+        amr = amrutil.parse(" ".join(self.lines), tokens=self.tokens)
         p = core.Passage(self.amr_id or self.passage_id)
         self.lines = []
         self.amr_id = self.tokens = None
@@ -103,7 +103,7 @@ class AmrConverter(convert.FormatConverter):
     def _build_layer0(self, amr, l0, l1):  # add edges to terminals according to alignments
         reverse_alignments = {}
         for k, v in amr.alignments().items():
-            node = self.nodes.get(k)
+            node = self.nodes.get(k[2] if isinstance(k, tuple) else k)  # change relation alignments to dependent
             if node is not None:  # it might be none if it was part of a removed cycle
                 for i in v.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP):  # separate strings to numeric indices
                     reverse_alignments.setdefault(int(i), []).append(node)
