@@ -30,10 +30,8 @@ class Parser(object):
         self.args = Config().args
         self.state = None  # State object created at each parse
         self.oracle = None  # Oracle object created at each parse
-        self.action_count = 0
-        self.correct_count = 0
-        self.total_actions = 0
-        self.total_correct = 0
+        self.action_count = self.correct_action_count = self.total_actions = self.total_correct_actions = 0
+        self.label_count = self.correct_label_count = self.total_labels = self.total_correct_labels = 0
         self.model = Model(model_type, model_file)
         self.update_only_on_error = \
             ClassifierProperty.update_only_on_error in self.model.model.get_classifier_properties()
@@ -122,7 +120,7 @@ class Parser(object):
                        "paragraph" if self.args.paragraphs else \
                        "passage"
         self.total_actions = 0
-        self.total_correct = 0
+        self.total_correct_actions = 0
         total_duration = 0
         total_tokens = 0
         passage_index = 0
@@ -137,8 +135,7 @@ class Parser(object):
             assert not evaluate or labeled, "Cannot evaluate on unannotated passage: %s" % passage.ID
             print("%s %-7s" % (passage_word, passage.ID), end=Config().line_end, flush=True)
             started = time.time()
-            self.action_count = 0
-            self.correct_count = 0
+            self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = 0
             textutil.annotate(passage, verbose=self.args.verbose > 1)  # tag POS and parse dependencies
             self.state = State(passage)
             self.state_hash_history = set()
@@ -163,17 +160,22 @@ class Parser(object):
                 if not failed and self.args.verify:
                     self.verify_passage(passage, predicted_passage, train)
                 if self.action_count:
-                    print("%-16s" % ("%d%% (%d/%d)" %
-                          (100 * self.correct_count / self.action_count,
-                           self.correct_count, self.action_count)), end=Config().line_end)
+                    accuracy_str = "%d%% (%d/%d)" % (100*self.correct_action_count/self.action_count,
+                                                     self.correct_action_count, self.action_count)
+                    if self.label_count:
+                        accuracy_str += " %d%% (%d/%d)" % (100*self.correct_label_count/self.label_count,
+                                                           self.correct_label_count, self.label_count)
+                    print("%-30s" % accuracy_str, end=Config().line_end)
             print("%0.3fs" % duration, end="")
             print("%-15s" % (" (failed)" if failed else " (%d tokens/s)" % (num_tokens / duration)), end="")
             print(Config().line_end, end="")
             if self.oracle:
                 print(Config().line_end, flush=True)
             self.model.model.finished_item(train)
-            self.total_correct += self.correct_count
+            self.total_correct_actions += self.correct_action_count
             self.total_actions += self.action_count
+            self.total_correct_labels += self.correct_label_count
+            self.total_labels += self.label_count
             if train and self.args.save_every and (passage_index+1) % self.args.save_every == 0:
                 self.eval_and_save()
                 self.eval_index += 1
@@ -182,10 +184,12 @@ class Parser(object):
         if passages:
             print("Parsed %d %ss" % (passage_index+1, passage_word))
             if self.oracle and self.total_actions:
-                print("Overall %d%% correct transitions (%d/%d) on %s" %
-                      (100 * self.total_correct / self.total_actions,
-                       self.total_correct, self.total_actions,
-                       mode.name))
+                accuracy_str = "%d%% correct actions (%d/%d)" % (100*self.total_correct_actions/self.total_actions,
+                                                                 self.total_correct_actions, self.total_actions)
+                if self.total_labels:
+                    accuracy_str += ", %d%% correct labels (%d/%d)" % (100*self.total_correct_labels/self.total_labels,
+                                                                       self.total_correct_labels, self.total_labels)
+                print("Overall %s on %s" % (accuracy_str, mode.name))
             print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
                 total_duration, passage_word, total_duration / (passage_index+1),
                 total_tokens / total_duration), flush=True)
@@ -210,12 +214,12 @@ class Parser(object):
             except StopIteration as e:
                 raise ParserException("No valid action available\n%s" % (self.oracle.log if self.oracle else "")) from e
             action = true_actions.get(predicted_action.id)
-            is_correct_action = (action is not None)
-            if is_correct_action:
-                self.correct_count += 1
+            is_correct = (action is not None)
+            if is_correct:
+                self.correct_action_count += 1
             else:
                 action = Config().random.choice(list(true_actions.values())) if train else predicted_action
-            if train and not (is_correct_action and self.update_only_on_error):
+            if train and not (is_correct and self.update_only_on_error):
                 best_action = self.predict(scores[list(true_actions.keys())], list(true_actions.values()))
                 self.model.model.update(features, axis=ACTION_AXIS, pred=predicted_action.id, true=best_action.id,
                                         importance=self.args.swap_importance if best_action.is_swap else 1)
@@ -224,23 +228,24 @@ class Parser(object):
                 self.state.transition(action)
             except AssertionError as e:
                 raise ParserException("Invalid transition (%s): %s" % (action, e)) from e
-            self.label_node(action, features, train)
-            self.model.model.finished_step(train)
             if self.args.verbose > 1:
                 if self.oracle:
                     print("  predicted: %-15s true: %-15s taken: %-15s %s" % (
                         predicted_action, "|".join(map(str, true_actions.values())), action, self.state))
                 else:
                     print("  action: %-15s %s" % (action, self.state))
+            self.label_node(action, features, train)
+            self.model.model.finished_step(train)
+            if self.args.verbose > 1:
                 for line in self.state.log:
                     print("    " + line)
-            if self.state.finished or train and not is_correct_action and self.args.early_update:
+            if self.state.finished or train and not is_correct and self.args.early_update:
                 return  # action is Finish
 
     def label_node(self, action, features, train):
         labels = self.model.labels
         if labels and action.has_label:  # Node-creating action that requires a label
-            if train:
+            if self.oracle:
                 true_label = action.orig_node.attrib.get(self.args.node_label_attrib)
                 true_label_id = labels[true_label]
             scores = self.model.model.score(features, axis=LABEL_AXIS)
@@ -250,9 +255,19 @@ class Parser(object):
                 label = self.predict(scores, labels.all, self.state.is_valid_label)
             except StopIteration as e:
                 raise ParserException("No valid label available\n%s" % labels.all) from e
-            if train and not (label == true_label and self.update_only_on_error):
-                self.model.model.update(features, axis=LABEL_AXIS, pred=labels[label], true=true_label_id)
+            if self.oracle:
+                is_correct = (label == true_label)
+                if is_correct:
+                    self.correct_label_count += 1
+                if train and not (is_correct and self.update_only_on_error):
+                    self.model.model.update(features, axis=LABEL_AXIS, pred=labels[label], true=true_label_id)
+            self.label_count += 1
             self.state.label_node(label)
+            if self.args.verbose > 1:
+                if self.oracle:
+                    print("  predicted label: %-15s true label: %-15s" % (label, true_label))
+                else:
+                    print("  label: %-15s" % label)
 
     def get_oracle_actions(self, train):
         true_actions = {}
