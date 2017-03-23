@@ -129,16 +129,17 @@ class Constraints(constraints.Constraints):
             edge.child.outgoing_tags <= {constraints.EdgeTags.Terminal} or edge.tag != INSTANCE_OF)
 
     def allow_label(self, node, label):
-        label = resolve(node, label)
-        return (label is None or label not in self.existing_labels and
+        resolved = resolve(node, label)
+        return (resolved is None or resolved not in self.existing_labels and
                 node.outgoing_tags <= {constraints.EdgeTags.Terminal}) and (
-            is_concept(label) == (node.incoming_tags == {INSTANCE_OF}))
+            is_concept(resolved) == (node.incoming_tags == {INSTANCE_OF})) and (
+            constraints.EdgeTags.Terminal in node.outgoing_tags or label is None or LABEL_PLACEHOLDER not in label)
 
     def clear_labels(self):
         self.existing_labels = set()
 
     def add_label(self, node, label):
-        label = resolve(node, label)
-        if label is not None and not is_concept(label):  # Concepts may repeat; constants may not
-            self.existing_labels.add(label)
-        return label
+        resolved = resolve(node, label)
+        if resolved is not None and not is_concept(resolved):  # Concepts may repeat; constants may not
+            self.existing_labels.add(resolved)
+        return resolved
