@@ -93,9 +93,8 @@ class AmrConverter(convert.FormatConverter):
             if node is None:  # first occurrence of dep, or not a variable
                 pending += amr.triples(head=dep)
                 node = l1.top_node if rel == TOP_DEP else l1.add_fnode(self.nodes[head], rel)
-                if isinstance(dep, amrutil.amr_lib.Var):
-                    self.nodes[dep] = node
-                else:
+                self.nodes[dep] = node
+                if not isinstance(dep, amrutil.amr_lib.Var):
                     node.attrib[amrutil.LABEL_ATTRIB] = repr(dep)
             elif not self.remove_cycles or not _reachable(dep, head):  # reentrancy; do not add if results in a cycle
                 l1.add_remote(self.nodes[head], rel, node)
