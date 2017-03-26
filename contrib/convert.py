@@ -180,9 +180,11 @@ class AmrConverter(convert.FormatConverter):
 
     @staticmethod
     def resolve_label(node, label=None, reverse=False):
-        def _replace():  # replace only inside the label value/name
-            m = LABEL_PATTERN.match(label)
-            return (m.group(1) + m.group(2).replace(old, new) + m.group(3)) if m else label.replace(old, new)
+        def _replace(old, new):  # replace only inside the label value/name
+            if old and old in label:
+                m = LABEL_PATTERN.match(label)
+                return (m.group(1) + m.group(2).replace(old, new) + m.group(3)) if m else label.replace(old, new)
+            return label
 
         if label is None:
             try:
@@ -200,16 +202,14 @@ class AmrConverter(convert.FormatConverter):
             if text is None:
                 continue
             i += 1  # enumerate terminals
-            old, new = (text, TEXT_PLACEHOLDER % i) if reverse else (TEXT_PLACEHOLDER % i, text)
-            if text and old in label:
-                label = _replace()
+            label = _replace(*((text, TEXT_PLACEHOLDER % i) if reverse else (TEXT_PLACEHOLDER % i, text)))
             try:
                 lemma = child.lemma
             except AttributeError:
                 lemma = child.extra.get(textutil.LEMMA_KEY)
-            old, new = (lemma, LEMMA_PLACEHOLDER % i) if reverse else (LEMMA_PLACEHOLDER % i, lemma)
-            if lemma and old in label:
-                label = _replace()
+            if lemma == "-PRON-":
+                lemma = text.lower()
+            label = _replace(*((lemma, LEMMA_PLACEHOLDER % i) if reverse else (LEMMA_PLACEHOLDER % i, lemma)))
         return label
 
 
