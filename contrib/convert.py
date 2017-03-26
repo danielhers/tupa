@@ -3,14 +3,14 @@ import re
 import penman
 
 from contrib import amrutil
-from ucca import core, layer0, layer1, convert, textutil
+from ucca import layer0, layer1, convert, textutil
 
 
 COMMENT_PREFIX = "#"
 ID_PATTERN = "#\s*::id\s+(\S+)"
 TOK_PATTERN = "#\s*::(?:tok|snt)\s+(.*)"
 DEP_PREFIX = ":"
-TOP_DEP = "top"
+TOP_DEP = ":top"
 DEP_REPLACEMENT = {amrutil.INSTANCE_OF: "instance"}
 IGNORED_EDGES = {"wiki"}
 ALIGNMENT_PREFIX = "e."
@@ -52,17 +52,17 @@ class AmrConverter(convert.FormatConverter):
     def _build_passage(self):
         # amr = penman.decode(re.sub("~e\.[\d,]+", "", " ".join(self.lines)))
         amr = amrutil.parse(" ".join(self.lines), tokens=self.tokens)
-        p = core.Passage(self.amr_id or self.passage_id)
+        passage = next(convert.from_text(self.tokens, self.amr_id or self.passage_id))
         self.lines = []
         self.amr_id = self.tokens = None
-        l1 = layer1.Layer1(p)
+        textutil.annotate(passage)
+        l1 = passage.layer(layer1.LAYER_ID)
         self._build_layer1(amr, l1)
-        self._build_layer0(amr, layer0.Layer0(p), l1)
+        self._build_layer0(self.align_nodes(amr), l1, passage.layer(layer0.LAYER_ID))
         self._update_implicit(l1)
-        textutil.annotate(p)
-        self._update_label(l1)
-        # return (p, penman.encode(amr), self.amr_id) if self.return_amr else p
-        return (p, amr(alignments=False), self.amr_id) if self.return_amr else p
+        self._update_labels(l1)
+        # return (passage, penman.encode(amr), self.amr_id) if self.return_amr else passage
+        return (passage, amr(alignments=False), self.amr_id) if self.return_amr else passage
 
     def _build_layer1(self, amr, l1):
         def _reachable(x, y):  # is there a path from x to y? used to detect cycles
@@ -78,10 +78,14 @@ class AmrConverter(convert.FormatConverter):
                 q += [d for _, _, d in amr.triples(head=x)]
             return False
 
-        self.nodes = {}
+        top = amr.triples(rel=TOP_DEP)  # start breadth-first search from :top relation
+        assert len(top) == 1, "There must be exactly one %s edge, but %d are found" % (TOP_DEP, len(top))
+        _, _, root = top[0]  # init with child of TOP
+        pending = amr.triples(head=root)
+        self.nodes = {}  # map triples to UCCA nodes: dep gets a new node each time unless it's a variable
+        variables = {root: l1.top_node}  # map AMR variables to UCCA nodes
         visited = set()  # to avoid cycles
-        pending = amr.triples(rel=DEP_PREFIX + TOP_DEP)
-        while pending:  # add normal nodes
+        while pending:  # breadth-first search creating layer 1 nodes
             triple = pending.pop(0)
             if triple in visited:
                 continue
@@ -90,31 +94,37 @@ class AmrConverter(convert.FormatConverter):
             rel = rel.lstrip(DEP_PREFIX)
             if rel in IGNORED_EDGES:
                 continue
-            node = self.nodes.get(dep)
-            if node is None:  # first occurrence of dep, or not a variable
-                pending += amr.triples(head=dep)
-                node = l1.top_node if rel == TOP_DEP else l1.add_fnode(self.nodes[head], rel)
-                self.nodes[dep] = node
-                if not isinstance(dep, amrutil.amr_lib.Var):
+            parent = variables.get(head)
+            assert parent is not None, "Outgoing edge from a non-variable: " + str(triple)
+            node = variables.get(dep)
+            if node is None:  # first occurrence of dep, or dep is not a variable
+                pending += amr.triples(head=dep)  # to continue breadth-first search
+                node = l1.add_fnode(parent, rel)
+                if isinstance(dep, amrutil.amr_lib.Var):
+                    variables[dep] = node
+                else:  # save concept name / constant value in node attributes
                     node.attrib[amrutil.LABEL_ATTRIB] = repr(dep)
             elif not self.remove_cycles or not _reachable(dep, head):  # reentrancy; do not add if results in a cycle
-                l1.add_remote(self.nodes[head], rel, node)
+                l1.add_remote(parent, rel, node)
+            self.nodes[triple] = node
 
-    def _build_layer0(self, amr, l0, l1):  # add edges to terminals according to alignments
+    @staticmethod
+    def _build_layer0(reverse_alignments, l1, l0, ):  # add edges to terminals according to alignments
+        for i, parents in reverse_alignments.items():
+            terminal = l0.all[i]
+            parents[0].add(TERMINAL_EDGE_TAG, terminal)
+            for parent in parents[1:]:  # add as remote terminal child to all parents but the first
+                if parent not in terminal.parents:  # avoid multiple identical edges (e.g. :polarity~e.68 -~e.68)
+                    l1.add_remote(parent, TERMINAL_EDGE_TAG, terminal)
+
+    def align_nodes(self, amr):
         reverse_alignments = {}
-        for (h, r, d), v in {**amr.alignments(), **amr.role_alignments()}.items():
-            node = self.nodes.get(d)  # change relation alignments to dependent
+        for triple, align in {**amr.alignments(), **amr.role_alignments()}.items():
+            node = self.nodes.get(triple)  # add relation alignments to dependent node
             if node is not None:  # it might be none if it was part of a removed cycle
-                for i in v.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP):  # separate strings to numeric indices
+                for i in align.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP):  # separate strings to numeric indices
                     reverse_alignments.setdefault(int(i), []).append(node)
-        for i, token in enumerate(amr.tokens()):  # add terminals, unaligned tokens will be the root's children
-            terminal = l0.add_terminal(text=token, punct=False)
-            parents = reverse_alignments.get(i)
-            if parents:
-                parents[0].add(TERMINAL_EDGE_TAG, terminal)
-                for parent in parents[1:]:  # add as remote terminal child to all parents but the first
-                    if parent not in terminal.parents:  # avoid multiple identical edges (e.g. :polarity~e.68 -~e.68)
-                        l1.add_remote(parent, TERMINAL_EDGE_TAG, terminal)
+        return reverse_alignments
 
     @staticmethod
     def _update_implicit(l1):
@@ -129,7 +139,7 @@ class AmrConverter(convert.FormatConverter):
                 pending += node.parents
 
     @staticmethod
-    def _update_label(l1):
+    def _update_labels(l1):
         for node in l1.all:
             node.attrib[amrutil.LABEL_ATTRIB] = amrutil.resolve_label(node, reverse=True)
 
