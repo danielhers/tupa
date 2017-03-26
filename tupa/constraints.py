@@ -77,7 +77,6 @@ class Constraints(object):
         self.allow_root_terminal_children = allow_root_terminal_children
         self.top_level = top_level
         self.possible_multiple_incoming = possible_multiple_incoming if self.args.linkage else ()
-        self.existing_labels = None
         self.tag_rules = \
             [TagRule(trigger={Direction.incoming: childless_incoming_trigger},
                      allowed={Direction.outgoing: childless_outgoing_allowed})] + \
@@ -91,16 +90,20 @@ class Constraints(object):
     # TagRule(trigger=(LinkerIncoming, None), allowed=(LinkerIncoming, None)),  # disabled due to passage 106 unit 1.300
 
     def allow_edge(self, edge):
+        return self.allow_parent(edge.parent, edge.tag) and self.allow_child(edge.child, edge.tag) and \
+               self._allow_edge(edge)
+
+    def _allow_edge(self, edge):
         return edge.child not in edge.parent.children
 
-    def allow_reduce(self, node):
+    def allow_parent(self, node, tag):
+        return True
+
+    def allow_child(self, node, tag):
         return True
 
     def allow_label(self, node, label):
         return True
 
-    def clear_labels(self):
-        pass
-
-    def add_label(self, node, label):
-        return label
+    def allow_reduce(self, node):
+        return True

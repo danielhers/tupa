@@ -18,7 +18,6 @@ class State(object):
     def __init__(self, passage):
         self.args = Config().args
         self.constraints = Config().constraints
-        self.constraints.clear_labels()
         self.log = []
         self.finished = False
         l0 = passage.layer(layer0.LAYER_ID)
@@ -65,10 +64,12 @@ class State(object):
         def assert_possible_parent(node):
             assert node.text is None, "Terminals may not have children: %s" % node.text
             if self.args.constraints:
-                assert not self.constraints.require_implicit_childless or not node.implicit, \
-                    "Implicit nodes may not have children: %s" % s0
                 for rule in self.constraints.tag_rules:
                     rule.check(node, action.tag, Direction.outgoing)
+                assert self.constraints.allow_parent(node, action.tag), \
+                    "%s may not be a '%s' parent" % (node, action.tag)
+                assert not self.constraints.require_implicit_childless or not node.implicit, \
+                    "Implicit nodes may not have children: %s" % s0
 
         def assert_possible_child(node):
             assert node is not self.root, "The root may not have parents"
@@ -78,6 +79,8 @@ class State(object):
             if self.args.constraints:
                 for rule in self.constraints.tag_rules:
                     rule.check(node, action.tag, Direction.incoming)
+                assert self.constraints.allow_child(node, action.tag), \
+                    "%s may not be a '%s' child" % (node, action.tag)
                 assert self.constraints.possible_multiple_incoming is None or \
                     action.remote or action.tag in self.constraints.possible_multiple_incoming or \
                     all(e.remote or e.tag in self.constraints.possible_multiple_incoming for e in node.incoming), \
@@ -248,8 +251,6 @@ class State(object):
 
     def label_node(self, label):
         self.nodes[-1].label = label
-        if self.args.constraints:
-            label = self.constraints.add_label(self.nodes[-1], label)
         self.log.append("label: %s" % label)
 
     def create_passage(self, assert_proper=True):

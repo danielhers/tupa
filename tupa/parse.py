@@ -251,7 +251,8 @@ class Parser(object):
             try:
                 label = predicted_label = self.predict(scores, labels.all, self.state.is_valid_label)
             except StopIteration as e:
-                raise ParserException("No valid label available\n%s" % labels.all) from e
+                raise ParserException("No valid label available\n%s" % (("True label: %s" % true_label) if self.oracle
+                                                                        else labels.all)) from e
             if self.oracle:
                 is_correct = (label == true_label)
                 if is_correct:

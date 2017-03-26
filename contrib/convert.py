@@ -17,6 +17,7 @@ ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
 TERMINAL_EDGE_TAG = layer1.EdgeTags.Terminal
 VARIABLE_PREFIX = "v"
+LABEL_PATTERN = re.compile("(\w+\(|\")(.*)(\)|\")")
 
 
 class AmrConverter(convert.FormatConverter):
@@ -141,7 +142,7 @@ class AmrConverter(convert.FormatConverter):
     @staticmethod
     def _update_labels(l1):
         for node in l1.all:
-            node.attrib[amrutil.LABEL_ATTRIB] = amrutil.resolve_label(node, reverse=True)
+            node.attrib[amrutil.LABEL_ATTRIB] = AmrConverter.resolve_label(node, reverse=True)
 
     def to_format(self, passage, **kwargs):
         del kwargs
@@ -159,7 +160,7 @@ class AmrConverter(convert.FormatConverter):
                 return self._id
 
         def _node_label(node):
-            label = labels.setdefault(node.ID, amrutil.resolve_label(node) or "%s%d" % (VARIABLE_PREFIX, id_gen()))
+            label = labels.setdefault(node.ID, AmrConverter.resolve_label(node) or "%s%d" % (VARIABLE_PREFIX, id_gen()))
             m = re.match("\w+\((.*)\)", label)
             return m.group(1) if m else label
 
@@ -174,6 +175,37 @@ class AmrConverter(convert.FormatConverter):
                 pending += edge.child
                 tag = DEP_REPLACEMENT.get(edge.tag, edge.tag)
                 yield _node_label(edge.parent), tag, _node_label(edge.child)
+
+    @staticmethod
+    def resolve_label(node, label=None, reverse=False):
+        def _replace():  # replace only inside the label value/name
+            m = LABEL_PATTERN.match(label)
+            return (m.group(1) + m.group(2).replace(old, new) + m.group(3)) if m else label.replace(old, new)
+
+        if label is None:
+            try:
+                label = node.label
+            except AttributeError:
+                label = node.attrib.get(amrutil.LABEL_ATTRIB)
+        if label is None:
+            return None
+        for child in node.children:
+            try:
+                text = child.text
+            except AttributeError:
+                continue  # if it doesn't have a text attribute then it won't have a lemma attribute
+            old, new = (text, amrutil.TEXT_PLACEHOLDER) if reverse else (amrutil.TEXT_PLACEHOLDER, text)
+            if text and old in label:
+                return _replace()
+            try:
+                lemma = child.lemma
+            except AttributeError:
+                lemma = child.extra.get(textutil.LEMMA_KEY)
+            old, new = (lemma, amrutil.LEMMA_PLACEHOLDER) if reverse else (amrutil.LEMMA_PLACEHOLDER, lemma)
+            if lemma and old in label:
+                return _replace()
+        # TODO generalize to multiple terminals: <TEXT>_<TEXT>_<TEXT> or <TEXT>/<TEXT> etc.
+        return label
 
 
 def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):

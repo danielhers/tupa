@@ -4,7 +4,6 @@ import re
 import sys
 
 from tupa import constraints
-from ucca import textutil
 
 sys.path.insert(0, os.path.dirname(importlib.util.find_spec("smatch.smatch").origin))  # to find amr.py from smatch
 from smatch import smatch
@@ -93,44 +92,6 @@ class Scores(object):
         print(",".join(self.fields()))
 
 
-LABEL_PATTERN = re.compile("(\w+\(|\")(.*)(\)|\")")
-
-
-def resolve_label(node, label=None, reverse=False):
-    def _replace():  # replace only inside the label value/name
-        m = LABEL_PATTERN.match(label)
-        return (m.group(1) + m.group(2).replace(old, new) + m.group(3)) if m else label.replace(old, new)
-
-    if label is None:
-        try:
-            label = node.label
-        except AttributeError:
-            label = node.attrib.get(LABEL_ATTRIB)
-    if label is None:
-        return None
-    for child in node.children:
-        try:
-            text = child.text
-        except AttributeError:
-            continue  # if it doesn't have a text attribute then it won't have a lemma attribute
-        old, new = (text, TEXT_PLACEHOLDER) if reverse else (TEXT_PLACEHOLDER, text)
-        if text and old in label:
-            return _replace()
-        try:
-            lemma = child.lemma
-        except AttributeError:
-            lemma = child.extra.get(textutil.LEMMA_KEY)
-        old, new = (lemma, LEMMA_PLACEHOLDER) if reverse else (LEMMA_PLACEHOLDER, lemma)
-        if lemma and old in label:
-            return _replace()
-    # TODO generalize to multiple terminals: <TEXT>_<TEXT>_<TEXT> or <TEXT>/<TEXT> etc.
-    return label
-
-
-def is_concept(label):
-    return label is not None and label.startswith("Concept(")
-
-
 class Constraints(constraints.Constraints):
     def __init__(self, args):
         super(Constraints, self).__init__(args, require_connected=True, require_first_shift=False,
@@ -143,27 +104,29 @@ class Constraints(constraints.Constraints):
                                 allowed={constraints.Direction.outgoing: re.compile(
                                     "^(%s|%s|op\d+)$" % (INSTANCE_OF, constraints.EdgeTags.Terminal))}))
 
-    def allow_edge(self, edge):
-        return edge not in edge.parent.outgoing and (
-            not edge.parent.implicit or edge.tag != constraints.EdgeTags.Terminal) and (
-            edge.parent.label is None or edge.tag == constraints.EdgeTags.Terminal) and (
-            edge.child.outgoing_tags <= {constraints.EdgeTags.Terminal} or edge.tag != INSTANCE_OF)
+    def _allow_edge(self, edge):
+        return edge not in edge.parent.outgoing
 
-    def allow_reduce(self, node):
-        return node.text is not None or node.label is not None or INSTANCE_OF in node.outgoing_tags
+    def allow_parent(self, node, tag):
+        return not (node.implicit and tag == constraints.EdgeTags.Terminal or
+                    not self.is_variable(node.label) and tag != constraints.EdgeTags.Terminal)
+
+    def allow_child(self, node, tag):
+        return self.is_concept(node.label) == (tag == INSTANCE_OF)
 
     def allow_label(self, node, label):
-        resolved = resolve_label(node, label)
-        return (resolved is None or resolved not in self.existing_labels and
-                node.outgoing_tags <= {constraints.EdgeTags.Terminal}) and (
-            is_concept(resolved) == (node.incoming_tags == {INSTANCE_OF})) and (
-            constraints.EdgeTags.Terminal in node.outgoing_tags or label is None or TEXT_PLACEHOLDER not in label)
+        return (self.is_variable(label) or node.outgoing_tags <= {constraints.EdgeTags.Terminal}) and (
+            not self.is_concept(label) or node.incoming_tags <= {INSTANCE_OF}) and (
+            constraints.EdgeTags.Terminal in node.outgoing_tags or self.is_variable(label) or
+            (TEXT_PLACEHOLDER not in label and LEMMA_PLACEHOLDER not in label))
 
-    def clear_labels(self):
-        self.existing_labels = set()
+    def allow_reduce(self, node):
+        return node.text is not None or not self.is_variable(node.label) or INSTANCE_OF in node.outgoing_tags
 
-    def add_label(self, node, label):
-        resolved = resolve_label(node, label)
-        if resolved is not None and not is_concept(resolved):  # Concepts may repeat; constants may not
-            self.existing_labels.add(resolved)
-        return resolved
+    @staticmethod
+    def is_variable(label):
+        return label is None
+
+    @staticmethod
+    def is_concept(label):
+        return label is not None and label.startswith("Concept(")
