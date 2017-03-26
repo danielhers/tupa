@@ -27,6 +27,7 @@ before_install:
   - pip install pytest-pep8
   - pip install -r requirements.txt
   - python -m spacy download en > spacy.log
+  - python -m nltk.downloader wordnet
   - ci/install-dynet.sh
   - export LD_LIBRARY_PATH="$HOME/dynet:$LD_LIBRARY_PATH"
 install:

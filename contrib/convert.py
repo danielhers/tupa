@@ -1,6 +1,7 @@
 import re
 
 import penman
+from nltk.corpus import wordnet as wn
 
 from contrib import amrutil
 from ucca import layer0, layer1, convert, textutil
@@ -20,6 +21,7 @@ VARIABLE_PREFIX = "v"
 LABEL_PATTERN = re.compile("(\w+\(|\")(.*)(\)|\")")
 TEXT_PLACEHOLDER = "<TEXT%d>"
 LEMMA_PLACEHOLDER = "<LEMMA%d>"
+VERB_PLACEHOLDER = "<VERB%d>"
 
 
 class AmrConverter(convert.FormatConverter):
@@ -181,6 +183,8 @@ class AmrConverter(convert.FormatConverter):
     @staticmethod
     def resolve_label(node, label=None, reverse=False):
         def _replace(old, new):  # replace only inside the label value/name
+            if reverse:
+                old, new = new, old
             if old and old in label:
                 m = LABEL_PATTERN.match(label)
                 return (m.group(1) + m.group(2).replace(old, new) + m.group(3)) if m else label.replace(old, new)
@@ -202,14 +206,20 @@ class AmrConverter(convert.FormatConverter):
             if text is None:
                 continue
             i += 1  # enumerate terminals
-            label = _replace(*((text, TEXT_PLACEHOLDER % i) if reverse else (TEXT_PLACEHOLDER % i, text)))
+            label = _replace(TEXT_PLACEHOLDER % i, text)
             try:
                 lemma = child.lemma
             except AttributeError:
                 lemma = child.extra.get(textutil.LEMMA_KEY)
             if lemma == "-PRON-":
                 lemma = text.lower()
-            label = _replace(*((lemma, LEMMA_PLACEHOLDER % i) if reverse else (LEMMA_PLACEHOLDER % i, lemma)))
+            label = _replace(LEMMA_PLACEHOLDER % i, lemma)
+            try:
+                verb = next(v.name() for l in wn.lemmas(lemma) for v in l.derivationally_related_forms()
+                            if v.synset().pos() == "v")
+            except StopIteration:
+                continue
+            label = _replace(VERB_PLACEHOLDER % i, verb)
         return label
 
 
