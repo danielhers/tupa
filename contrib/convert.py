@@ -18,6 +18,8 @@ ALIGNMENT_SEP = ","
 TERMINAL_EDGE_TAG = layer1.EdgeTags.Terminal
 VARIABLE_PREFIX = "v"
 LABEL_PATTERN = re.compile("(\w+\(|\")(.*)(\)|\")")
+TEXT_PLACEHOLDER = "<TEXT%d>"
+LEMMA_PLACEHOLDER = "<LEMMA%d>"
 
 
 class AmrConverter(convert.FormatConverter):
@@ -189,22 +191,25 @@ class AmrConverter(convert.FormatConverter):
                 label = node.attrib.get(amrutil.LABEL_ATTRIB)
         if label is None:
             return None
+        i = 0
         for child in node.children:
             try:
                 text = child.text
             except AttributeError:
-                continue  # if it doesn't have a text attribute then it won't have a lemma attribute
-            old, new = (text, amrutil.TEXT_PLACEHOLDER) if reverse else (amrutil.TEXT_PLACEHOLDER, text)
+                continue  # not a terminal
+            if text is None:
+                continue
+            i += 1  # enumerate terminals
+            old, new = (text, TEXT_PLACEHOLDER % i) if reverse else (TEXT_PLACEHOLDER % i, text)
             if text and old in label:
-                return _replace()
+                label = _replace()
             try:
                 lemma = child.lemma
             except AttributeError:
                 lemma = child.extra.get(textutil.LEMMA_KEY)
-            old, new = (lemma, amrutil.LEMMA_PLACEHOLDER) if reverse else (amrutil.LEMMA_PLACEHOLDER, lemma)
+            old, new = (lemma, LEMMA_PLACEHOLDER % i) if reverse else (LEMMA_PLACEHOLDER % i, lemma)
             if lemma and old in label:
-                return _replace()
-        # TODO generalize to multiple terminals: <TEXT>_<TEXT>_<TEXT> or <TEXT>/<TEXT> etc.
+                label = _replace()
         return label
 
 

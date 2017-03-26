@@ -18,8 +18,7 @@ finally:
 
 LABEL_ATTRIB = "label"
 INSTANCE_OF = "instance-of"
-TEXT_PLACEHOLDER = "<TEXT>"
-LEMMA_PLACEHOLDER = "<LEMMA>"
+PLACEHOLDER = re.compile("<(TEXT|LEMMA).*>")
 
 
 def parse(*args, **kwargs):
@@ -118,7 +117,7 @@ class Constraints(constraints.Constraints):
         return (self.is_variable(label) or node.outgoing_tags <= {constraints.EdgeTags.Terminal}) and (
             not self.is_concept(label) or node.incoming_tags <= {INSTANCE_OF}) and (
             constraints.EdgeTags.Terminal in node.outgoing_tags or self.is_variable(label) or
-            (TEXT_PLACEHOLDER not in label and LEMMA_PLACEHOLDER not in label))
+            not PLACEHOLDER.match(label))
 
     def allow_reduce(self, node):
         return node.text is not None or not self.is_variable(node.label) or INSTANCE_OF in node.outgoing_tags
