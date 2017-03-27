@@ -110,7 +110,7 @@ class AmrConverter(convert.FormatConverter):
             self.nodes[triple] = node
 
     @staticmethod
-    def _build_layer0(reverse_alignments, l1, l0, ):  # add edges to terminals according to alignments
+    def _build_layer0(reverse_alignments, l1, l0):  # add edges to terminals according to alignments
         for i, parents in reverse_alignments.items():
             terminal = l0.all[i]
             parents[0].add(TERMINAL_EDGE_TAG, terminal)
@@ -120,11 +120,19 @@ class AmrConverter(convert.FormatConverter):
 
     def align_nodes(self, amr):
         reverse_alignments = {}
+        tokens = amr.tokens()
         for triple, align in {**amr.alignments(), **amr.role_alignments()}.items():
             node = self.nodes.get(triple)  # add relation alignments to dependent node
             if node is not None:  # it might be none if it was part of a removed cycle
-                for i in align.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP):  # separate strings to numeric indices
-                    reverse_alignments.setdefault(int(i), []).append(node)
+                indices = list(map(int, align.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP)))  # separate numeric indices
+                label = str(triple[2])  # correct missing alignment by expanding to terminals contained in label
+                for start, offset in ((0, -1), (-1, 1)):
+                    i = indices[start] + offset
+                    while 0 <= i < len(tokens) and tokens[i] in label:
+                        indices.append(i)
+                        i += offset
+                for i in indices:
+                    reverse_alignments.setdefault(i, []).append(node)
         return reverse_alignments
 
     @staticmethod
