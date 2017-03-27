@@ -111,7 +111,8 @@ class Constraints(constraints.Constraints):
                     not self.is_variable(node.label) and tag != constraints.EdgeTags.Terminal)
 
     def allow_child(self, node, tag):
-        return self.is_concept(node.label) == (tag == INSTANCE_OF)
+        return self.is_concept(node.label) == (tag == INSTANCE_OF) and \
+               (node.label == "Const(-)") == (tag == "polarity")
 
     def allow_label(self, node, label):
         return (self.is_variable(label) or node.outgoing_tags <= {constraints.EdgeTags.Terminal}) and (
