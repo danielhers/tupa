@@ -18,10 +18,6 @@ ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
 TERMINAL_EDGE_TAG = layer1.EdgeTags.Terminal
 VARIABLE_PREFIX = "v"
-LABEL_PATTERN = re.compile("(\w+\(|\")(.*)(\)|\")")
-TEXT_PLACEHOLDER = "<TEXT%d>"
-LEMMA_PLACEHOLDER = "<LEMMA%d>"
-VERB_PLACEHOLDER = "<VERB%d>"
 
 
 class AmrConverter(convert.FormatConverter):
@@ -185,10 +181,7 @@ class AmrConverter(convert.FormatConverter):
         def _replace(old, new):  # replace only inside the label value/name
             if reverse:
                 old, new = new, old
-            if old and old in label:
-                m = LABEL_PATTERN.match(label)
-                return (m.group(1) + m.group(2).replace(old, new) + m.group(3)) if m else label.replace(old, new)
-            return label
+            return re.sub(re.escape(old) + "(?![^<]*>|[^(]*\()", new, label) if old else label
 
         if label is None:
             try:
@@ -206,20 +199,20 @@ class AmrConverter(convert.FormatConverter):
             if text is None:
                 continue
             i += 1  # enumerate terminals
-            label = _replace(TEXT_PLACEHOLDER % i, text)
+            label = _replace("<TEXT%d>" % i, text)
             try:
                 lemma = child.lemma
             except AttributeError:
                 lemma = child.extra.get(textutil.LEMMA_KEY)
             if lemma == "-PRON-":
                 lemma = text.lower()
-            label = _replace(LEMMA_PLACEHOLDER % i, lemma)
+            label = _replace("<LEMMA%d>" % i, lemma)
             try:
                 verb = next(v.name() for l in wn.lemmas(lemma) for v in l.derivationally_related_forms()
                             if v.synset().pos() == "v")
             except StopIteration:
                 continue
-            label = _replace(VERB_PLACEHOLDER % i, verb)
+            label = _replace("<VERB%d>" % i, verb)
         return label
 
 
