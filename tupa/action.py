@@ -11,6 +11,7 @@ class Action(object):
         self.has_label = has_label  # Whether this action type requires a label or not
         self.orig_node = orig_node  # Node created by this action, if any (during training)
         self.orig_edge = orig_edge  # Edge created by this action, if any (during training)
+        self.node = None  # Will be set by State when the node created by this action is known
         self.edge = None  # Will be set by State when the edge created by this action is known
         self.oracle = oracle  # Reference to oracle, to inform it of actually created nodes/edges
         self.index = None  # Index of this action in history

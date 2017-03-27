@@ -58,7 +58,7 @@ def set_prod(set1, set2=None):
 
 
 class Constraints(object):
-    def __init__(self, args, require_first_shift=True, require_connected=True, require_implicit_childless=True,
+    def __init__(self, args, require_connected=True, require_implicit_childless=True,
                  allow_root_terminal_children=False,
                  top_level={EdgeTags.ParallelScene, EdgeTags.Linker, EdgeTags.Function, EdgeTags.Ground,
                             EdgeTags.Punctuation},
@@ -71,7 +71,6 @@ class Constraints(object):
                  mutually_exclusive_incoming=(),
                  mutually_exclusive_outgoing={EdgeTags.Process, EdgeTags.State}):
         self.args = args
-        self.require_first_shift = require_first_shift and not args.implicit
         self.require_connected = require_connected
         self.require_implicit_childless = require_implicit_childless
         self.allow_root_terminal_children = allow_root_terminal_children
@@ -89,12 +88,15 @@ class Constraints(object):
     # LinkerIncoming = {EdgeTags.Linker, EdgeTags.LinkRelation}
     # TagRule(trigger=(LinkerIncoming, None), allowed=(LinkerIncoming, None)),  # disabled due to passage 106 unit 1.300
 
+    def allow_action(self, action, history):
+        return self.args.implicit or history or action.tag is None  # First action must not create nodes/edges
+
     def allow_edge(self, edge):
         return self.allow_parent(edge.parent, edge.tag) and self.allow_child(edge.child, edge.tag) and \
                self._allow_edge(edge)
 
     def _allow_edge(self, edge):
-        return edge.child not in edge.parent.children
+        return edge.child not in edge.parent.children  # Prevent multiple edges between the same pair of nodes
 
     def allow_parent(self, node, tag):
         return True

@@ -93,9 +93,8 @@ class Scores(object):
 
 class Constraints(constraints.Constraints):
     def __init__(self, args):
-        super(Constraints, self).__init__(args, require_connected=True, require_first_shift=False,
-                                          require_implicit_childless=False, allow_root_terminal_children=True,
-                                          possible_multiple_incoming=(),
+        super(Constraints, self).__init__(args, require_connected=True, require_implicit_childless=False,
+                                          allow_root_terminal_children=True, possible_multiple_incoming=(),
                                           unique_outgoing={INSTANCE_OF}, childless_incoming_trigger=INSTANCE_OF,
                                           unique_incoming=(), mutually_exclusive_outgoing=(), top_level=None)
         self.tag_rules.append(
@@ -103,8 +102,11 @@ class Constraints(constraints.Constraints):
                                 allowed={constraints.Direction.outgoing: re.compile(
                                     "^(%s|%s|op\d+)$" % (INSTANCE_OF, constraints.EdgeTags.Terminal))}))
 
+    def allow_action(self, action, history):
+        return True
+
     def _allow_edge(self, edge):
-        return edge not in edge.parent.outgoing
+        return edge not in edge.parent.outgoing  # Prevent multiple identical edges between the same pair of nodes
 
     def allow_parent(self, node, tag):
         return not (node.implicit and tag == constraints.EdgeTags.Terminal or
@@ -117,8 +119,9 @@ class Constraints(constraints.Constraints):
     def allow_label(self, node, label):
         return (self.is_variable(label) or node.outgoing_tags <= {constraints.EdgeTags.Terminal}) and (
             not self.is_concept(label) or node.incoming_tags <= {INSTANCE_OF}) and (
+            (label == "Const(-)") == (node.incoming_tags == {"polarity"})) and (
             constraints.EdgeTags.Terminal in node.outgoing_tags or self.is_variable(label) or
-            not PLACEHOLDER.search(label))
+            not PLACEHOLDER.search(label))  # Prevent text placeholder in implicit node
 
     def allow_reduce(self, node):
         return node.text is not None or not self.is_variable(node.label) or INSTANCE_OF in node.outgoing_tags

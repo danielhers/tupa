@@ -100,6 +100,10 @@ class State(object):
                 assert self.constraints.allow_edge(edge), "Edge not allowed: %s" % edge
             assert parent not in child.descendants, "Detected cycle created by edge: %s->%s" % (parent, child)
 
+        if self.args.constraints:
+            assert self.constraints.allow_action(action, self.actions), \
+                "Action not allowed: %s " % action + (("after " + ", ".join("%s" % a for a in self.actions[-3:]))
+                                                      if self.actions else "as first action")
         if action.is_type(Actions.Finish):
             if self.args.swap:  # Without swap, the oracle may be incapable even of single action
                 assert self.root.outgoing, \
@@ -111,8 +115,6 @@ class State(object):
         elif action.is_type(Actions.Shift):
             assert self.buffer, "Buffer must not be empty in order to shift from it"
         else:  # Unary actions
-            if self.args.constraints and self.constraints.require_first_shift:
-                assert self.actions, "First action must be %s, but was %s" % (Actions.Shift, action)
             assert self.stack, "Action requires non-empty stack: %s" % action
             s0 = self.stack[-1]
             if action.is_type(Actions.Node, Actions.RemoteNode):
@@ -176,18 +178,18 @@ class State(object):
         if action.is_type(Actions.Shift):  # Push buffer head to stack; shift buffer
             self.stack.append(self.buffer.popleft())
         elif action.is_type(Actions.Node, Actions.RemoteNode):  # Create new parent node and add to the buffer
-            parent = self.add_node(orig_node=action.orig_node)
-            self.add_edge(Edge(parent, self.stack[-1], action.tag, remote=action.remote))
-            self.buffer.appendleft(parent)
+            action.node = self.add_node(orig_node=action.orig_node)
+            self.add_edge(Edge(action.node, self.stack[-1], action.tag, remote=action.remote))
+            self.buffer.appendleft(action.node)
         elif action.is_type(Actions.Implicit):  # Create new child node and add to the buffer
-            child = self.add_node(orig_node=action.orig_node, implicit=True)
-            self.add_edge(Edge(self.stack[-1], child, action.tag))
-            self.buffer.appendleft(child)
+            action.node = self.add_node(orig_node=action.orig_node, implicit=True)
+            self.add_edge(Edge(self.stack[-1], action.node, action.tag))
+            self.buffer.appendleft(action.node)
         elif action.is_type(Actions.Reduce):  # Pop stack (no more edges to create with this node)
             self.stack.pop()
         elif action.is_type(Actions.LeftEdge, Actions.LeftRemote, Actions.RightEdge, Actions.RightRemote):
             parent, child = self.get_parent_child(action)
-            self.add_edge(Edge(parent, child, action.tag, remote=action.remote))
+            action.edge = self.add_edge(Edge(parent, child, action.tag, remote=action.remote))
         elif action.is_type(Actions.Swap):  # Place second (or more) stack item back on the buffer
             distance = action.tag or 1
             s = slice(-distance - 1, -1)
@@ -240,6 +242,7 @@ class State(object):
         edge.add()
         self.heads.discard(edge.child)
         self.log.append("edge: %s" % edge)
+        return edge
 
     def get_parent_child(self, action):
         if action.is_type(Actions.LeftEdge, Actions.LeftRemote):
