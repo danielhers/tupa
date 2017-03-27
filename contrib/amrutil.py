@@ -18,7 +18,7 @@ finally:
 
 LABEL_ATTRIB = "label"
 INSTANCE_OF = "instance-of"
-PLACEHOLDER = re.compile("<(TEXT|LEMMA|VERB).*>")
+PLACEHOLDER = re.compile("<[^>]*>")
 
 
 def parse(*args, **kwargs):

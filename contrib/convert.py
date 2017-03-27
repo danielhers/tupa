@@ -190,22 +190,16 @@ class AmrConverter(convert.FormatConverter):
                 label = node.attrib.get(amrutil.LABEL_ATTRIB)
         if label is None:
             return None
-        i = 0
-        for child in node.children:
+        terminals = [c for c in node.children if getattr(c, "text", None)]
+        label = _replace("<TEXT>", "".join(t.text for t in terminals))
+        for i, terminal in enumerate(terminals):
+            label = _replace("<TEXT%d>" % i, terminal.text)
             try:
-                text = child.text
+                lemma = terminal.lemma
             except AttributeError:
-                continue  # not a terminal
-            if text is None:
-                continue
-            i += 1  # enumerate terminals
-            label = _replace("<TEXT%d>" % i, text)
-            try:
-                lemma = child.lemma
-            except AttributeError:
-                lemma = child.extra.get(textutil.LEMMA_KEY)
+                lemma = terminal.extra.get(textutil.LEMMA_KEY)
             if lemma == "-PRON-":
-                lemma = text.lower()
+                lemma = terminal.text.lower()
             label = _replace("<LEMMA%d>" % i, lemma)
             try:
                 verb = next(v.name() for l in wn.lemmas(lemma) for v in l.derivationally_related_forms()
