@@ -165,6 +165,7 @@ class NeuralNetwork(Classifier):
         """
         Apply MLP and log softmax to input features
         :param features: dictionary of suffix, values for each feature type
+        :param axis: axis of the label we are predicting
         :param train: whether to apply dropout
         :return: expression corresponding to log softmax applied to MLP output
         """

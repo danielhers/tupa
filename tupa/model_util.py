@@ -96,8 +96,10 @@ class AutoIncrementDict(UnknownDict):
             self.__missing__(key)
 
     def __missing__(self, key):
-        ret = self[key] = len(self) if self.max is not None and len(self) < self.max else self.unknown
-        return ret
+        if self.max is not None and len(self) < self.max:
+            ret = self[key] = len(self)
+            return ret
+        return self.unknown
 
 
 class DropoutDict(AutoIncrementDict):
