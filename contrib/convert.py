@@ -199,7 +199,8 @@ class AmrConverter(convert.FormatConverter):
         if label is None:
             return None
         terminals = [c for c in node.children if getattr(c, "text", None)]
-        label = _replace("<TEXT>", "".join(t.text for t in terminals))
+        if len(terminals) > 1:
+            label = _replace("<TEXT>", "".join(t.text for t in terminals))
         for i, terminal in enumerate(terminals):
             label = _replace("<TEXT%d>" % i, terminal.text)
             try:
