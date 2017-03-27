@@ -58,7 +58,7 @@ class State(object):
         :param action: action to check for validity
         """
         def assert_possible_node():
-            self.assert_node_ratio(extra=1)
+            self.assert_node_ratio()
             self.assert_height()
 
         def assert_possible_parent(node):
@@ -356,13 +356,12 @@ class State(object):
             node.outgoing.sort(key=lambda x: x.child.node_index or self.nodes.index(x.child))
             node.incoming.sort(key=lambda x: x.parent.node_index or self.nodes.index(x.parent))
 
-    def node_ratio(self, extra=0):
-        return (len(self.nodes) + extra) / len(self.terminals) - 1
+    def node_ratio(self):
+        return len(self.nodes) / len(self.terminals) - 1
 
-    def assert_node_ratio(self, extra=0):
-        max_ratio = self.args.max_nodes
-        assert self.node_ratio(extra=extra) <= max_ratio, \
-            "Reached maximum ratio (%.3f) of non-terminals to terminals" % max_ratio
+    def assert_node_ratio(self):
+        assert self.node_ratio() < self.args.max_node_ratio, \
+            "Reached maximum ratio (%.3f) of non-terminals to terminals" % self.args.max_node_ratio
 
     def assert_height(self):
         max_height = self.args.max_height
