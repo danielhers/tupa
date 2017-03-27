@@ -117,7 +117,7 @@ class Constraints(constraints.Constraints):
         return (self.is_variable(label) or node.outgoing_tags <= {constraints.EdgeTags.Terminal}) and (
             not self.is_concept(label) or node.incoming_tags <= {INSTANCE_OF}) and (
             constraints.EdgeTags.Terminal in node.outgoing_tags or self.is_variable(label) or
-            not PLACEHOLDER.match(label))
+            not PLACEHOLDER.search(label))
 
     def allow_reduce(self, node):
         return node.text is not None or not self.is_variable(node.label) or INSTANCE_OF in node.outgoing_tags
