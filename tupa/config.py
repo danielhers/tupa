@@ -153,9 +153,10 @@ class Config(object, metaclass=Singleton):
             self.input_converter, self.output_converter = convert.CONVERTERS[self.args.format]
             if self.args.format == "amr":
                 self.args.implicit = True
-                self.args.max_nodes = max(self.args.max_nodes, 10.0)
-                self.args.node_label_dim = max(self.args.node_label_dim, 20)
-                self.args.max_node_labels = max(self.args.max_node_labels, 1000)
+                if not self.args.node_label_dim:
+                    self.args.node_label_dim = 20
+                if not self.args.max_node_labels:
+                    self.args.max_node_labels = 1000
                 self.args.max_action_labels = max(self.args.max_action_labels, 600)
                 self.args.max_edge_labels = max(self.args.max_edge_labels, 500)
                 from contrib import amrutil
