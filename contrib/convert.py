@@ -57,7 +57,7 @@ class AmrConverter(convert.FormatConverter):
     def _build_passage(self):
         # amr = penman.decode(re.sub("~e\.[\d,]+", "", " ".join(self.lines)))
         amr = amrutil.parse(" ".join(self.lines), tokens=self.tokens)
-        passage = next(convert.from_text(self.tokens, self.amr_id or self.passage_id))
+        passage = next(convert.from_text(self.tokens, self.amr_id or self.passage_id, tokenized=True))
         self.lines = []
         self.amr_id = self.tokens = None
         textutil.annotate(passage)
