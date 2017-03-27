@@ -181,7 +181,7 @@ class AmrConverter(convert.FormatConverter):
         def _replace(old, new):  # replace only inside the label value/name
             if reverse:
                 old, new = new, old
-            return re.sub(re.escape(old) + "(?![^<]*>|[^(]*\()", new, label) if old else label
+            return re.sub(re.escape(old) + "(?![^<]*>|[^(]*\(|\d+$)", new, label) if old and len(old) > 2 else label
 
         if label is None:
             try:
