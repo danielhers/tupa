@@ -75,7 +75,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--implicit", action="store_true", help="include implicit nodes and edges")
         group.add_argument("--no-remote", action="store_false", dest="remote", help="ignore remote edges")
         group.add_argument("--no-constraints", action="store_false", dest="constraints", help="ignore UCCA rules")
-        group.add_argument("--max-node-ratio", type=float, default=3.0, help="max node/terminal ratio")
+        group.add_argument("--max-node-ratio", type=float, default=4, help="max node/terminal ratio")
         group.add_argument("--max-height", type=int, default=20, help="max graph height")
         group = argparser.add_mutually_exclusive_group()
         group.add_argument("--no-swap", action="store_false", dest="swap", help="disable Swap transitions entirely")
