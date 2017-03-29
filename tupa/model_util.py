@@ -113,12 +113,7 @@ class DropoutDict(AutoIncrementDict):
         """
         super(DropoutDict, self).__init__(max_size, keys, d=d)
         assert dropout >= 0, "Dropout value must be >= 0, but given %f" % dropout
-        if d is not None and isinstance(d, DropoutDict):
-            self.dropout = d.dropout
-            self.counts = d.counts if self.dropout > 0 else None
-        else:
-            self.dropout = dropout
-            self.counts = Counter() if self.dropout > 0 else None
+        self.dropout, self.counts = (d.dropout, d.counts) if d and isinstance(d, DropoutDict) else (dropout, Counter())
 
     def __getitem__(self, item):
         if item is not None and self.dropout > 0:
