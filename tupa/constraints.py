@@ -55,7 +55,7 @@ def set_prod(set1, set2=None):
 
 
 class Constraints(object):
-    def __init__(self, args, require_connected=True, require_implicit_childless=True,
+    def __init__(self, args, root_label=None, require_connected=True, require_implicit_childless=True,
                  allow_root_terminal_children=False,
                  top_level={EdgeTags.ParallelScene, EdgeTags.Linker, EdgeTags.Function, EdgeTags.Ground,
                             EdgeTags.Punctuation},
@@ -68,6 +68,7 @@ class Constraints(object):
                  mutually_exclusive_incoming=(),
                  mutually_exclusive_outgoing={EdgeTags.Process, EdgeTags.State}):
         self.args = args
+        self.root_label = root_label
         self.require_connected = require_connected
         self.require_implicit_childless = require_implicit_childless
         self.allow_root_terminal_children = allow_root_terminal_children

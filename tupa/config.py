@@ -51,6 +51,7 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("-B", "--beam", choices=(1,), default=1, help="beam size for beam search (1 for greedy)")
         argparser.add_argument("-e", "--evaluate", action="store_true", help="evaluate parsed passages")
         argparser.add_argument("-v", "--verbose", nargs="?", action=VAction, default=0, help="detailed parse output")
+        argparser.add_argument("--unknown-label", help="label to use as unknown value")
         constructions.add_argument(argparser)
         group = argparser.add_mutually_exclusive_group()
         group.add_argument("-s", "--sentences", action="store_true", help="separate passages to sentences")
@@ -162,6 +163,7 @@ class Config(object, metaclass=Singleton):
                 from contrib import amrutil
                 self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
                 self.args.node_label_attrib = amrutil.LABEL_ATTRIB
+                self.args.unknown_label = "Concept(amr-unknown)"
                 self.constraints = amrutil.Constraints(self.args)
         else:
             self.input_converter = self.output_converter = None

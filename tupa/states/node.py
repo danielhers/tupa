@@ -72,13 +72,21 @@ class Node(object):
             self.node = l1.add_punct(parent.node, terminals[edge.child.index - 1])
             edge.child.node = self.node[0].child
         else:  # The usual case
-            if parent.node is None:  # If parent is an orphan, attach it to the root with F label
-                parent.node = l1.add_fnode(None, EdgeTags.Function)
-            self.node = l1.add_fnode(parent.node, tag, implicit=self.implicit)
-        if labeled and self.node is not None and self.node_id is not None:  # In training
+            if parent is not None and parent.node is None:  # If parent is an orphan, attach it to the root with F label
+                parent.add_to_l1(l1, None, EdgeTags.Function, terminals, labeled)
+            self.node = l1.add_fnode(None if parent is None else parent.node, tag, implicit=self.implicit)
+        if labeled:  # In training
+            self.set_node_id()
+        self.set_node_label()
+
+    def set_node_id(self):
+        if self.node is not None and self.node_id is not None:
             self.node.extra["remarks"] = self.node_id  # Keep original node ID for reference
-        if self.label is not None:
-            self.node.attrib[Config().args.node_label_attrib] = self.label
+
+    def set_node_label(self):
+        label = self.label or Config().args.unknown_label
+        if self.node is not None and label is not None:
+            self.node.attrib[Config().args.node_label_attrib] = label
 
     @property
     def is_linkage(self):

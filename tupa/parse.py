@@ -8,7 +8,7 @@ from tupa.action import Actions
 from tupa.config import Config
 from tupa.model import Model, ACTION_AXIS, LABEL_AXIS
 from tupa.oracle import Oracle
-from ucca import diffutil, ioutil, textutil, layer0, layer1
+from ucca import diffutil, ioutil, textutil, layer1
 
 
 class ParserException(Exception):
@@ -240,25 +240,24 @@ class Parser(object):
                 return  # action is Finish
 
     def label_node(self, action, features, train):
-        labels = self.model.labels
-        if labels and action.has_label:  # Node-creating action that requires a label
+        if self.model.labels and action.has_label:  # Node-creating action that requires a label
             if self.oracle:
                 true_label = action.orig_node.attrib.get(self.args.node_label_attrib)
-                true_label_id = labels[true_label]
+                true_id = self.model.labels[true_label]
             scores = self.model.model.score(features, axis=LABEL_AXIS)
             if self.args.verbose > 2:
-                print("  label scores: " + ",".join(("%s: %g" % x for x in zip(labels.all, scores))))
+                print("  label scores: " + ",".join(("%s: %g" % x for x in zip(self.model.labels.all, scores))))
             try:
-                label = predicted_label = self.predict(scores, labels.all, self.state.is_valid_label)
+                label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label)
             except StopIteration as e:
                 raise ParserException("No valid label available\n%s" % (("True label: %s" % true_label) if self.oracle
-                                                                        else labels.all)) from e
+                                                                        else self.model.labels.all)) from e
             if self.oracle:
                 is_correct = (label == true_label)
                 if is_correct:
                     self.correct_label_count += 1
                 if train and not (is_correct and self.update_only_on_error):
-                    self.model.model.update(features, axis=LABEL_AXIS, pred=labels[label], true=true_label_id)
+                    self.model.model.update(features, axis=LABEL_AXIS, pred=self.model.labels[label], true=true_id)
                     label = true_label
             self.label_count += 1
             self.state.label_node(label)
@@ -290,7 +289,7 @@ class Parser(object):
     @staticmethod
     def generate_descending(scores):
         yield scores.argmax()
-        yield from scores.argsort()[-2::-1]
+        yield from scores.argsort()[::-1]  # Contains the max, but otherwise items might be missed (different order)
 
     def check_loop(self):
         """

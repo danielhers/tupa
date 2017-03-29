@@ -19,6 +19,7 @@ finally:
 LABEL_ATTRIB = "label"
 INSTANCE_OF = "instance-of"
 PLACEHOLDER = re.compile("<[^>]*>")
+VARIABLE_LABEL = "v"
 
 
 def parse(*args, **kwargs):
@@ -93,10 +94,11 @@ class Scores(object):
 
 class Constraints(constraints.Constraints):
     def __init__(self, args):
-        super(Constraints, self).__init__(args, require_connected=True, require_implicit_childless=False,
-                                          allow_root_terminal_children=True, possible_multiple_incoming=(),
-                                          unique_outgoing={INSTANCE_OF}, childless_incoming_trigger=INSTANCE_OF,
-                                          unique_incoming=(), mutually_exclusive_outgoing=(), top_level=None)
+        super(Constraints, self).__init__(args, root_label=VARIABLE_LABEL, require_connected=True,
+                                          require_implicit_childless=False, allow_root_terminal_children=True,
+                                          possible_multiple_incoming=(), unique_outgoing={INSTANCE_OF},
+                                          childless_incoming_trigger=INSTANCE_OF, unique_incoming=(),
+                                          mutually_exclusive_outgoing=(), top_level=None)
         self.tag_rules.append(
             constraints.TagRule(trigger={constraints.Direction.incoming: "name"},
                                 allowed={constraints.Direction.outgoing: re.compile(
@@ -128,7 +130,7 @@ class Constraints(constraints.Constraints):
 
     @staticmethod
     def is_variable(label):
-        return label is None
+        return label == VARIABLE_LABEL
 
     @staticmethod
     def is_concept(label):

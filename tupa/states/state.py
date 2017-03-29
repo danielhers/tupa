@@ -40,7 +40,7 @@ class State(object):
         self.buffer = deque()
         self.nodes = []
         self.heads = set()
-        self.root = self.add_node(orig_node=l1.heads[0])  # The root is not part of the buffer
+        self.root = self.add_node(orig_node=l1.heads[0], label=self.constraints.root_label)  # Root is not in the buffer
         self.stack.append(self.root)
         self.buffer += self.terminals
         self.nodes += self.terminals
@@ -181,7 +181,7 @@ class State(object):
         return True
 
     def check_valid_label(self, label, message=False):
-        if self.args.constraints:
+        if self.args.constraints and label is not None:
             node = self.nodes[-1]
             self.check(self.constraints.allow_label(node, label), message and "May not label %s as %s" % (node, label))
 
@@ -292,8 +292,9 @@ class State(object):
                                      paragraph=terminal.paragraph) for terminal in self.terminals]
         l1 = layer1.Layer1(passage)
         self.root.node = l1.heads[0]
+        self.root.set_node_label()
         if self.labeled:  # We have a reference passage
-            l1.heads[0].extra["remarks"] = self.root.node_id  # For reference
+            self.root.set_node_id()
             self.fix_terminal_tags(terminals)
         remotes = []  # To be handled after all nodes are created
         linkages = []  # To be handled after all non-linkage nodes are created

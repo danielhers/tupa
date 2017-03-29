@@ -17,7 +17,7 @@ IGNORED_EDGES = {"wiki"}
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
 TERMINAL_EDGE_TAG = layer1.EdgeTags.Terminal
-VARIABLE_PREFIX = "v"
+
 
 
 class AmrConverter(convert.FormatConverter):
@@ -84,6 +84,7 @@ class AmrConverter(convert.FormatConverter):
         _, _, root = top[0]  # init with child of TOP
         pending = amr.triples(head=root)
         self.nodes = {}  # map triples to UCCA nodes: dep gets a new node each time unless it's a variable
+        l1.top_node.attrib[amrutil.LABEL_ATTRIB] = amrutil.VARIABLE_LABEL  # the root is always a variable
         variables = {root: l1.top_node}  # map AMR variables to UCCA nodes
         visited = set()  # to avoid cycles
         while pending:  # breadth-first search creating layer 1 nodes
@@ -103,8 +104,10 @@ class AmrConverter(convert.FormatConverter):
                 node = l1.add_fnode(parent, rel)
                 if isinstance(dep, amrutil.amr_lib.Var):
                     variables[dep] = node
+                    label = amrutil.VARIABLE_LABEL
                 else:  # save concept name / constant value in node attributes
-                    node.attrib[amrutil.LABEL_ATTRIB] = repr(dep)
+                    label = repr(dep)
+                node.attrib[amrutil.LABEL_ATTRIB] = label
             elif not self.remove_cycles or not _reachable(dep, head):  # reentrancy; do not add if results in a cycle
                 l1.add_remote(parent, rel, node)
             self.nodes[triple] = node
@@ -166,14 +169,14 @@ class AmrConverter(convert.FormatConverter):
             def __init__(self):
                 self._id = 0
 
-            def __call__(self):
-                self._id += 1
-                return self._id
+            def __call__(self, label):
+                if label == amrutil.VARIABLE_LABEL:
+                    self._id += 1
+                    return label + str(self._id)
+                return label
 
         def _node_label(node):
-            label = labels.setdefault(node.ID, AmrConverter.resolve_label(node) or "%s%d" % (VARIABLE_PREFIX, id_gen()))
-            m = re.match("\w+\((.*)\)", label)
-            return m.group(1) if m else label
+            return re.sub("\w+\((.*)\)", "\\1", labels.setdefault(node.ID, id_gen(AmrConverter.resolve_label(node))))
 
         id_gen = _IdGenerator()
         pending = list(passage.layer(layer1.LAYER_ID).top_node)
@@ -208,15 +211,13 @@ class AmrConverter(convert.FormatConverter):
             try:
                 label = node.label
             except AttributeError:
-                label = node.attrib.get(amrutil.LABEL_ATTRIB)
-        if label is None:
-            return None
+                label = node.attrib[amrutil.LABEL_ATTRIB]
         terminals = [c for c in node.children if getattr(c, "text", None)]
         if len(terminals) > 1:
             label = _replace("<T>", "".join(t.text for t in terminals))
         for i, terminal in enumerate(terminals):
             label = _replace("<T%d>" % i, terminal.text)
-            try:  # TODO add lemma and verb to classifier features
+            try:  # TODO add lemma and related forms to classifier features
                 lemma = terminal.lemma
             except AttributeError:
                 lemma = terminal.extra.get(textutil.LEMMA_KEY)
@@ -228,7 +229,7 @@ class AmrConverter(convert.FormatConverter):
         return label
 
 
-REPLACEMENTS = {"~": "about"}
+# REPLACEMENTS = {"~": "about"}
 
 
 def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):
