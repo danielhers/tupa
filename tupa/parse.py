@@ -290,7 +290,7 @@ class Parser(object):
     @staticmethod
     def generate_descending(scores):
         yield scores.argmax()
-        yield from scores.argsort()[::-1]
+        yield from scores.argsort()[-2::-1]
 
     def check_loop(self):
         """
