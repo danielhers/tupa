@@ -192,8 +192,17 @@ class AmrConverter(convert.FormatConverter):
         def _replace(old, new):  # replace only inside the label value/name
             if reverse:
                 old, new = new, old
-            replaceable = old and (len(old) > 2 or len(label) < 4)
+            replaceable = old and (len(old) > 2 or len(label) < 5)
             return re.sub(re.escape(old) + "(?![^<]*>|[^(]*\(|\d+$)", new, label) if replaceable else label
+
+        def _related_forms(w):  # list of all derivationally related forms and their part of speech
+            num_related = 0
+            related = {None: w}
+            while len(related) > num_related:
+                num_related = len(related)
+                related.update({v.synset().pos(): v.name() for x in related.values()
+                                for l in wn.lemmas(x) for v in l.derivationally_related_forms()})
+            return [(v, k) for k, v in related.items() if v != w]
 
         if label is None:
             try:
@@ -204,23 +213,22 @@ class AmrConverter(convert.FormatConverter):
             return None
         terminals = [c for c in node.children if getattr(c, "text", None)]
         if len(terminals) > 1:
-            label = _replace("<TEXT>", "".join(t.text for t in terminals))
+            label = _replace("<T>", "".join(t.text for t in terminals))
         for i, terminal in enumerate(terminals):
-            label = _replace("<TEXT%d>" % i, terminal.text)
-            try:
+            label = _replace("<T%d>" % i, terminal.text)
+            try:  # TODO add lemma and verb to classifier features
                 lemma = terminal.lemma
             except AttributeError:
                 lemma = terminal.extra.get(textutil.LEMMA_KEY)
             if lemma == "-PRON-":
                 lemma = terminal.text.lower()
-            label = _replace("<LEMMA%d>" % i, lemma)
-            try:
-                verb = next(v.name() for l in wn.lemmas(lemma) for v in l.derivationally_related_forms()
-                            if v.synset().pos() == "v")
-            except StopIteration:
-                continue
-            label = _replace("<VERB%d>" % i, verb)
+            label = _replace("<L%d>" % i, lemma)
+            for form, pos in _related_forms(lemma):
+                label = _replace("<%s%d>" % (pos, i), form)
         return label
+
+
+REPLACEMENTS = {"~": "about"}
 
 
 def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):
