@@ -1,5 +1,6 @@
 from tupa.action import Actions
 from tupa.config import Config
+from tupa.states.state import InvalidActionError
 from ucca import layer1
 
 # Constants for readability, used by Oracle.action
@@ -51,9 +52,9 @@ class Oracle(object):
         for action in self.generate_actions(state):
             action.generate_id()
             try:
-                state.assert_valid_action(action)
+                state.check_valid_action(action, message=True)
                 actions[action.id] = action
-            except AssertionError as e:
+            except InvalidActionError as e:
                 invalid.append((action, e))
         assert actions, self.generate_log(invalid, state)
         return actions

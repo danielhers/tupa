@@ -22,33 +22,30 @@ class TagRule:
         self.allowed = allowed
         self.disallowed = disallowed
 
-    def check(self, node, tag, direction):
+    def violation(self, node, tag, direction, message=False):
         for d in Direction:
             trigger = self.trigger.get(d)
             if any(contains(trigger, t) for t in tags(node, d)):  # Trigger on edges that node already has
                 allowed = None if self.allowed is None else self.allowed.get(direction)
-                if allowed is not None:
-                    assert contains(allowed, tag), \
-                        "Units with %s '%s' edges must get only %s '%s' edges, but got '%s' for '%s'" % (
-                            d.name, trigger, direction.name, allowed, tag, node)
+                if allowed is not None and not contains(allowed, tag):
+                    return message and "Units with %s '%s' edges must get only %s '%s' edges, but got '%s' for '%s'" % (
+                        d.name, trigger, direction.name, allowed, tag, node)
                 disallowed = None if self.disallowed is None else self.disallowed.get(direction)
-                if disallowed is not None:
-                    assert not contains(disallowed, tag), \
-                        "Units with %s '%s' edges must not get %s '%s' edges, but got '%s' for '%s'" % (
-                            d.name, trigger, direction.name, disallowed, tag, node)
+                if disallowed is not None and contains(disallowed, tag):
+                    return message and "Units with %s '%s' edges must not get %s '%s' edges, but got '%s' for '%s'" % (
+                        d.name, trigger, direction.name, disallowed, tag, node)
         trigger = self.trigger.get(direction)
         if contains(trigger, tag):  # Trigger on edges that node is getting now
             for d in Direction:
                 allowed = None if self.allowed is None else self.allowed.get(d)
-                if allowed is not None:
-                    assert all(contains(allowed, t) for t in tags(node, d)), \
-                        "Units getting %s '%s' edges must have only %s '%s' edges, but '%s' has '%s'" % (
-                            direction.name, tag, d.name, allowed, node, tags(node, d))
+                if allowed is not None and not all(contains(allowed, t) for t in tags(node, d)):
+                    return message and "Units getting %s '%s' edges must have only %s '%s' edges, but '%s' has '%s'" % (
+                        direction.name, tag, d.name, allowed, node, tags(node, d))
                 disallowed = None if self.disallowed is None else self.disallowed.get(d)
-                if disallowed is not None:
-                    assert not any(contains(disallowed, t) for t in tags(node, d)), \
-                        "Units getting %s '%s' edges must not have %s '%s' edges, but got '%s' has '%s'" % (
-                            direction.name, tag, d.name, disallowed, node, tags(node, d))
+                if disallowed is not None and any(contains(disallowed, t) for t in tags(node, d)):
+                    return message and "Units getting %s '%s' edges must not have %s '%s' edges, but '%s' has '%s'" % (
+                        direction.name, tag, d.name, disallowed, node, tags(node, d))
+        return None
 
 
 def set_prod(set1, set2=None):

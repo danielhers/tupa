@@ -147,7 +147,7 @@ class Parser(object):
                     raise
                 Config().log("%s %s: %s" % (passage_word, passage.ID, e))
                 failed = True
-            predicted_passage = self.state.create_passage(assert_proper=self.args.verify) \
+            predicted_passage = self.state.create_passage(verify=self.args.verify) \
                 if not train or self.args.verify else passage
             duration = time.time() - started
             total_duration += duration
