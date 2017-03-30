@@ -18,7 +18,9 @@ Install the required modules:
     python -m spacy.en.download all
     python -m nltk.downloader wordnet
     ci/install-dynet.sh
-    python ucca/setup.py install
+    cd ucca
+    python setup.py install
+    cd ..
     python setup.py install
 
 ### Train the parser
