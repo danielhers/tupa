@@ -102,3 +102,5 @@ class Model(object):
             else:  # Not used as a feature, just get labels
                 self.labels = UnknownDict()
                 self.labels.all = self.model.labels[LABEL_AXIS]
+        else:
+            self.labels = None
