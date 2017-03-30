@@ -67,13 +67,13 @@ class UnknownDict(DefaultOrderedDict):
     """
     DefaultOrderedDict that has a single default value for missing keys
     """
-    def __init__(self, d, unknown=None):
+    def __init__(self, d=None, unknown=UNKNOWN_VALUE):
         """
         :param d: base dict to initialize by
         :param unknown: value to return for missing keys
         """
         # noinspection PyTypeChecker
-        super(UnknownDict, self).__init__(None, d)
+        super(UnknownDict, self).__init__(None, {} if d is None else d)
         self.unknown = self.setdefault(None, unknown)
 
     def __missing__(self, key):
@@ -90,7 +90,7 @@ class AutoIncrementDict(UnknownDict):
         :param keys: initial sequence of keys
         :param d: dictionary to initialize from
         """
-        super(AutoIncrementDict, self).__init__({} if d is None else d, unknown=UNKNOWN_VALUE)
+        super(AutoIncrementDict, self).__init__(d)
         self.max = max_size
         for key in keys:
             self.__missing__(key)

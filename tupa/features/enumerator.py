@@ -27,10 +27,11 @@ class FeatureEnumerator(FeatureExtractorWrapper):
                 del params[param.suffix]
         return params
 
-    def init_data(self, param):
+    @staticmethod
+    def init_data(param):
         keys = ()
         if param.dim and param.external:
-            vectors = self.get_word_vectors(param)
+            vectors = FeatureExtractorWrapper.get_word_vectors(param)
             keys = vectors.keys()
             param.init = np.array(list(vectors.values()))
         param.data = DropoutDict(max_size=param.size, keys=keys, dropout=param.dropout, min_count=param.min_count)
