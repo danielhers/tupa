@@ -21,7 +21,8 @@ class Model(object):
             return
         max_labels = (Config().args.max_action_labels,)
         labels = (Actions().all,)
-        node_labels = FeatureParameters("n", Config().args.node_label_dim, Config().args.max_node_labels)
+        node_labels = FeatureParameters("n", Config().args.node_label_dim, Config().args.max_node_labels,
+                                        min_count=Config().args.min_node_label_count)
         FeatureEnumerator().init_data(node_labels)
         if node_labels.size:
             self.labels = node_labels.data

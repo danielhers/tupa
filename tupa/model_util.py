@@ -106,19 +106,22 @@ class DropoutDict(AutoIncrementDict):
     """
     UnknownDict that sometimes returns the unknown value even for existing keys
     """
-    def __init__(self, d=None, dropout=0, max_size=None, keys=()):
+    def __init__(self, d=None, dropout=0, max_size=None, keys=(), min_count=1):
         """
         :param d: base dict to initialize by
         :param dropout: dropout parameter
+        :param min_count: minimum number of occurrences for a key before it is actually added to the dict
         """
         super(DropoutDict, self).__init__(max_size, keys, d=d)
         assert dropout >= 0, "Dropout value must be >= 0, but given %f" % dropout
-        self.dropout, self.counts = (d.dropout, d.counts) if d and isinstance(d, DropoutDict) else (dropout, Counter())
+        self.dropout, self.counts, self.min_count = (d.dropout, d.counts, d.min_count) \
+            if d is not None and isinstance(d, DropoutDict) else (dropout, Counter(), min_count)
 
     def __getitem__(self, item):
-        if item is not None and self.dropout > 0:
+        if item is not None:
             self.counts[item] += 1
-            if self.dropout / (self.counts[item] + self.dropout) > np.random.random_sample():
+            count = self.counts[item]
+            if count < self.min_count or self.dropout and self.dropout/(count+self.dropout) > np.random.random_sample():
                 item = None
         return super(DropoutDict, self).__getitem__(item)
 

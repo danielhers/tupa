@@ -215,7 +215,6 @@ class AmrConverter(convert.FormatConverter):
         terminals = [c for c in node.children if getattr(c, "text", None)]
         if len(terminals) > 1:
             label = _replace("<t>", "".join(t.text for t in terminals))
-            label = _replace("<T>", "".join(t.text.title() for t in terminals))
         for i, terminal in enumerate(terminals):
             label = _replace("<t%d>" % i, terminal.text)
             label = _replace("<T%d>" % i, terminal.text.title())
