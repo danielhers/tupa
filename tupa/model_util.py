@@ -1,5 +1,6 @@
 import os
 import pickle
+import sys
 import time
 from collections import OrderedDict, Counter
 
@@ -132,6 +133,7 @@ def save_dict(filename, d):
     :param filename: file to write to
     :param d: dictionary to save
     """
+    sys.setrecursionlimit(1000)
     print("Saving to '%s'... " % filename, end="", flush=True)
     started = time.time()
     with open(filename, 'wb') as h:

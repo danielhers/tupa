@@ -1,10 +1,9 @@
-from tupa.model_util import UnknownDict
-
 from features.enumerator import FeatureEnumerator
 from features.feature_params import FeatureParameters
 from features.indexer import FeatureIndexer
 from tupa.action import Actions
 from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN
+from tupa.model_util import UnknownDict
 
 ACTION_AXIS = 0
 LABEL_AXIS = 1

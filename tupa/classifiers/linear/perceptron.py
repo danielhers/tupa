@@ -33,6 +33,9 @@ class Perceptron(Classifier):
         super(Perceptron, self).update(features, axis, pred, true, importance)
         self._update_index += 1
 
+    def resize(self, axis=None):
+        raise NotImplementedError()
+
     def finalize(self, finished_epoch=False, average=True):
         """
         Average all weights over all updates, as a form of regularization
