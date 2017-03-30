@@ -212,22 +212,23 @@ class AmrConverter(convert.FormatConverter):
                 label = node.label
             except AttributeError:
                 label = node.attrib[amrutil.LABEL_ATTRIB]
-        terminals = [c for c in node.children if getattr(c, "text", None)]
-        if len(terminals) > 1:
-            label = _replace("<t>", "".join(t.text for t in terminals))
-        for i, terminal in enumerate(terminals):
-            label = _replace("<t%d>" % i, terminal.text)
-            label = _replace("<T%d>" % i, terminal.text.title())
-            try:  # TODO add lemma and related forms to classifier features
-                lemma = terminal.lemma
-            except AttributeError:
-                lemma = terminal.extra.get(textutil.LEMMA_KEY)
-            if lemma == "-PRON-":
-                lemma = terminal.text.lower()
-            label = _replace("<l%d>" % i, lemma)
-            label = _replace("<L%d>" % i, lemma.title())
-            for form, pos in _related_forms(lemma):
-                label = _replace("<%s%d>" % (pos, i), form)
+        if label != amrutil.VARIABLE_LABEL:
+            terminals = [c for c in node.children if getattr(c, "text", None)]
+            if len(terminals) > 1:
+                label = _replace("<t>", "".join(t.text for t in terminals))
+            for i, terminal in enumerate(terminals):
+                label = _replace("<t%d>" % i, terminal.text)
+                label = _replace("<T%d>" % i, terminal.text.title())
+                try:  # TODO add lemma and related forms to classifier features
+                    lemma = terminal.lemma
+                except AttributeError:
+                    lemma = terminal.extra.get(textutil.LEMMA_KEY)
+                if lemma == "-PRON-":
+                    lemma = terminal.text.lower()
+                label = _replace("<l%d>" % i, lemma)
+                label = _replace("<L%d>" % i, lemma.title())
+                for form, pos in _related_forms(lemma):
+                    label = _replace("<%s%d>" % (pos, i), form)
         return label
 
 
