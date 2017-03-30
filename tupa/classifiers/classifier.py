@@ -38,8 +38,7 @@ class Classifier(object):
         return "x".join("%d" % l for l in self.num_labels)
 
     def score(self, features, axis):
-        if not self.is_frozen:
-            self._update_num_labels(axis)
+        self._update_num_labels(axis)
 
     def init_features(self, features, train=False):
         pass
@@ -54,6 +53,7 @@ class Classifier(object):
         but we need to update the weights whenever that happens
         """
         if self.num_labels != self._num_labels:
+            assert not self.is_frozen, "Cannot add new labels to a frozen model"
             self._num_labels = self.num_labels
             self.resize(axis)
 
