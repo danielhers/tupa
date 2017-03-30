@@ -119,6 +119,8 @@ class State(object):
             self.check(parent not in child.descendants,
                        message and "Detected cycle by edge: %s->%s" % (parent, child), is_type=True)
 
+        self.check(len(self.actions) / len(self.terminals) < self.args.max_action_ratio,
+                   message and "Actions/terminals ratio: %.3f" % self.args.max_action_ratio, is_type=True)
         if self.args.constraints:
             self.check(self.constraints.allow_action(action, self.actions),
                        message and "Action not allowed: %s " % action + (
