@@ -13,6 +13,7 @@ class BiLSTM(NeuralNetwork):
         self._lstm_layer_dim = Config().args.lstm_layer_dim
         self._embedding_layers = Config().args.embedding_layers
         self._embedding_layer_dim = Config().args.embedding_layer_dim
+        self._max_length = Config().args.max_length
         self._input_reps = None
         self._empty_rep = None
 
@@ -41,7 +42,7 @@ class BiLSTM(NeuralNetwork):
             bilstm.set_dropout(self._dropout)
         else:
             bilstm.disable_dropout()
-        self._input_reps = bilstm.transduce(inputs)
+        self._input_reps = bilstm.transduce(inputs[:self._max_length])
         self._empty_rep = self.zero_input(self._lstm_layer_dim)
 
     def evaluate_embeddings(self, embeddings, train=False):
@@ -65,7 +66,8 @@ class BiLSTM(NeuralNetwork):
         :param indices: indices of inputs
         :return: BiLSTM outputs at given indices
         """
-        return dy.concatenate([self._empty_rep if i == MISSING_VALUE else self._input_reps[i] for i in indices])
+        return dy.concatenate([self._empty_rep if i == MISSING_VALUE else self._input_reps[min(i, self._max_length - 1)]
+                               for i in indices])
 
     def save_extra(self):
         return {

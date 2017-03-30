@@ -133,6 +133,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--word-dropout", type=float, default=0.25, help="word dropout parameter")
         group.add_argument("--word-dropout-external", type=float, default=0.25, help="word dropout for word vectors")
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter between layers")
+        group.add_argument("--max-length", type=int, default=120, help="maximum length of input sentence")
         group = argparser.add_argument_group(title="DyNet parameters")
         group.add_argument("--dynet-mem", help="memory for dynet")
         group.add_argument("--dynet-weight-decay", type=float, help="weight decay for parameters (default 1e-6)")
