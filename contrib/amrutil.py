@@ -20,6 +20,7 @@ LABEL_ATTRIB = "label"
 INSTANCE_OF = "instance-of"
 PLACEHOLDER = re.compile("<[^>]*>")
 VARIABLE_LABEL = "v"
+UNKNOWN_LABEL = "Concept(amr-unknown)"
 
 
 def parse(*args, **kwargs):

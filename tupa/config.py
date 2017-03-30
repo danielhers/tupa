@@ -166,7 +166,7 @@ class Config(object, metaclass=Singleton):
                 from contrib import amrutil
                 self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
                 self.args.node_label_attrib = amrutil.LABEL_ATTRIB
-                self.args.unknown_label = "Concept(amr-unknown)"
+                self.args.unknown_label = amrutil.UNKNOWN_LABEL
                 self.constraints = amrutil.Constraints(self.args)
         else:
             self.input_converter = self.output_converter = None
