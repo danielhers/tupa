@@ -77,6 +77,8 @@ class Parser(object):
         model = self.model
         self.model = self.model.finalize(finished_epoch=finished_epoch)
         if self.dev:
+            if not self.best_score:
+                self.model.save()
             print("Evaluating on dev passages")
             scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev, evaluate=True)]
             scores = Config().Scores.aggregate(scores)
@@ -91,8 +93,9 @@ class Parser(object):
                     print(",".join([".".join(map(str, prefix))] + scores.fields()), file=f)
             if score >= self.best_score:
                 print("Better than previous best score (%.3f)" % self.best_score)
+                if self.best_score:
+                    self.model.save()
                 self.best_score = score
-                self.model.save()
             else:
                 print("Not better than previous best score (%.3f)" % self.best_score)
         elif last or self.args.save_every is not None:
