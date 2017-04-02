@@ -5,7 +5,7 @@ class Action(object):
     type_to_id = {}
     MAX_SWAP = 15  # default maximum size for compound swap
 
-    def __init__(self, action_type, tag=None, has_label=False, orig_edge=None, orig_node=None, oracle=None):
+    def __init__(self, action_type, tag=None, has_label=False, orig_edge=None, orig_node=None, oracle=None, _id=None):
         self.type = action_type  # String
         self.tag = tag  # Usually the tag of the created edge; but if COMPOUND_SWAP, the distance
         self.has_label = has_label  # Whether this action type requires a label or not
@@ -20,7 +20,7 @@ class Action(object):
         if self.type_id is None:
             self.type_id = len(Action.type_to_id)
             Action.type_to_id[self.type] = self.type_id
-        self._id = None
+        self._id = _id
 
     def is_type(self, *others):
         return self.type_id in (o.type_id for o in others)
@@ -68,7 +68,7 @@ class Action(object):
             if self._id is None:  # New action, add to list
                 # noinspection PyTypeChecker
                 self._id = len(actions.all)
-                actions.all.append(self)
+                actions.all.append(self(tag=self.tag, _id=self._id))
                 actions.ids[key] = self._id
 
 
