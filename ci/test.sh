@@ -28,4 +28,7 @@ tune)
     done
     column -t -s, params.csv
     ;;
+convert)
+    python contrib/convert_and_evaluate.py alignment-release-*-bio.txt
+    ;;
 esac
