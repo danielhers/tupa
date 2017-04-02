@@ -133,7 +133,7 @@ def save_dict(filename, d):
     :param filename: file to write to
     :param d: dictionary to save
     """
-    sys.setrecursionlimit(1000)
+    sys.setrecursionlimit(2000)
     print("Saving to '%s'... " % filename, end="", flush=True)
     started = time.time()
     with open(filename, 'wb') as h:
