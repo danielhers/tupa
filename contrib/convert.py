@@ -193,6 +193,7 @@ class AmrConverter(convert.FormatConverter):
     @staticmethod
     def resolve_label(node, label=None, reverse=False):
         def _replace(old, new):  # replace only inside the label value/name
+            new = new.strip('"()')
             if reverse:
                 old, new = new, old
             replaceable = old and (len(old) > 2 or len(label) < 5)
