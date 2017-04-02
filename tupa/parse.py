@@ -245,7 +245,8 @@ class Parser(object):
     def label_node(self, action, features, train):
         if self.model.labels and action.has_label:  # Node-creating action that requires a label
             if self.oracle:
-                true_label = action.orig_node.attrib.get(self.args.node_label_attrib)
+                true_label = None if action.orig_node is None else action.orig_node.attrib.get(
+                    self.args.node_label_attrib)
                 true_id = self.model.labels[true_label]
             scores = self.model.model.score(features, axis=LABEL_AXIS)
             if self.args.verbose > 2:
