@@ -119,8 +119,6 @@ class State(object):
             self.check(parent not in child.descendants,
                        message and "Detected cycle by edge: %s->%s" % (parent, child), is_type=True)
 
-        self.check(len(self.actions) / len(self.terminals) < self.args.max_action_ratio,
-                   message and "Actions/terminals ratio: %.3f" % self.args.max_action_ratio, is_type=True)
         if self.args.constraints:
             self.check(self.constraints.allow_action(action, self.actions),
                        message and "Action not allowed: %s " % action + (
@@ -132,40 +130,43 @@ class State(object):
                     for n in self.nodes:
                         self.check(n is self.root or n.is_linkage or n.text or n.incoming,
                                    message and "Non-terminal %s has no parent at parse end" % n, is_type=True)
-        elif action.is_type(Actions.Shift):
-            self.check(self.buffer, message and "Shifting from empty buffer", is_type=True)
-        else:  # Unary actions
-            self.check(self.stack, message and "Empty stack at %s" % action, is_type=True)
-            s0 = self.stack[-1]
-            if action.is_type(Actions.Node, Actions.RemoteNode):
-                _check_possible_child(s0)
-                _check_possible_node()
-            elif action.is_type(Actions.Implicit):
-                _check_possible_parent(s0)
-                _check_possible_node()
-            elif action.is_type(Actions.Reduce):
-                self.check(s0 is not self.root or s0.outgoing, message and "Reducing childless root", is_type=True)
-                if self.args.constraints:
-                    if self.constraints.require_connected:
-                        self.check(s0 is self.root or s0.is_linkage or s0.text or s0.incoming,
-                                   message and "Reducing parentless non-terminal %s" % s0, is_type=True)
-                        self.check(self.constraints.allow_reduce(s0), message and "Reducing %s" % s0, is_type=True)
-            else:  # Binary actions
-                self.check(len(self.stack) > 1, message and "%s with len(stack) < 2" % action, is_type=True)
-                if action.is_type(Actions.LeftEdge, Actions.RightEdge, Actions.LeftRemote, Actions.RightRemote):
-                    _check_possible_edge()
-                elif action.is_type(Actions.Swap):
-                    # A regular swap is possible since the stack has at least two elements;
-                    # A compound swap is possible if the stack is longer than the distance
-                    distance = action.tag or 1
-                    self.check(1 <= distance < len(self.stack), message and "Invalid swap distance: %d" % distance)
-                    swapped = self.stack[-distance - 1]
-                    # To prevent swap loops: only swap if the nodes are currently in their original order
-                    self.check(self.swappable(s0, swapped),
-                               message and "Swapping already-swapped nodes: %s (swap index %g) <--> %s (swap index %g)"
-                               % (swapped, swapped.swap_index, s0, s0.swap_index))
-                else:
-                    raise ValueError("Invalid action: %s" % action)
+        else:
+            self.check(len(self.actions) / len(self.terminals) < self.args.max_action_ratio,
+                       message and "Actions/terminals ratio: %.3f" % self.args.max_action_ratio, is_type=True)
+            if action.is_type(Actions.Shift):
+                self.check(self.buffer, message and "Shifting from empty buffer", is_type=True)
+            else:  # Unary actions
+                self.check(self.stack, message and "Empty stack at %s" % action, is_type=True)
+                s0 = self.stack[-1]
+                if action.is_type(Actions.Node, Actions.RemoteNode):
+                    _check_possible_child(s0)
+                    _check_possible_node()
+                elif action.is_type(Actions.Implicit):
+                    _check_possible_parent(s0)
+                    _check_possible_node()
+                elif action.is_type(Actions.Reduce):
+                    self.check(s0 is not self.root or s0.outgoing, message and "Reducing childless root", is_type=True)
+                    if self.args.constraints:
+                        if self.constraints.require_connected:
+                            self.check(s0 is self.root or s0.is_linkage or s0.text or s0.incoming,
+                                       message and "Reducing parentless non-terminal %s" % s0, is_type=True)
+                            self.check(self.constraints.allow_reduce(s0), message and "Reducing %s" % s0, is_type=True)
+                else:  # Binary actions
+                    self.check(len(self.stack) > 1, message and "%s with len(stack) < 2" % action, is_type=True)
+                    if action.is_type(Actions.LeftEdge, Actions.RightEdge, Actions.LeftRemote, Actions.RightRemote):
+                        _check_possible_edge()
+                    elif action.is_type(Actions.Swap):
+                        # A regular swap is possible since the stack has at least two elements;
+                        # A compound swap is possible if the stack is longer than the distance
+                        distance = action.tag or 1
+                        self.check(1 <= distance < len(self.stack), message and "Invalid swap distance: %d" % distance)
+                        swapped = self.stack[-distance - 1]
+                        # To prevent swap loops: only swap if the nodes are currently in their original order
+                        self.check(self.swappable(s0, swapped),
+                                   message and "Already swapped nodes: %s (swap index %g) <--> %s (swap index %g)"
+                                   % (swapped, swapped.swap_index, s0, s0.swap_index))
+                    else:
+                        raise ValueError("Invalid action: %s" % action)
 
     @staticmethod
     def swappable(right, left):
