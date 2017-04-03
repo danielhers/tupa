@@ -3,7 +3,7 @@
 import unittest
 
 from states.state import State
-from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN
+from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP
 from tupa.oracle import Oracle
 from tupa.parse import Parser
 from ucca import convert, evaluation, ioutil
@@ -49,6 +49,9 @@ class ParserTests(unittest.TestCase):
 
     def test_parser_bilstm(self):
         self.train_test(BILSTM_NN)
+
+    def test_parser_noop(self):
+        self.train_test(NOOP)
 
     def train_test(self, model_type, compare=True):
         scores = []
