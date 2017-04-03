@@ -19,7 +19,6 @@ ALIGNMENT_SEP = ","
 TERMINAL_EDGE_TAG = layer1.EdgeTags.Terminal
 
 
-
 class AmrConverter(convert.FormatConverter):
     def __init__(self):
         self.passage_id = self.amr_id = self.lines = self.tokens = self.nodes = self.return_amr = \
@@ -135,7 +134,8 @@ class AmrConverter(convert.FormatConverter):
                         indices.append(i)
                         i += offset
                 for i, token in enumerate(tokens):
-                    if token in label and tokens.count(token) == 1 and i not in indices:
+                    if i not in indices and len(token) > 2 and \
+                                    token in self.strip(label).strip('"') and tokens.count(token) == 1:
                         indices.append(i)
                 for i in indices:
                     reverse_alignments.setdefault(i, []).append(node)
@@ -176,7 +176,7 @@ class AmrConverter(convert.FormatConverter):
                 return label
 
         def _node_label(node):
-            return re.sub("\w+\((.*)\)", "\\1", labels.setdefault(node.ID, id_gen(AmrConverter.resolve_label(node))))
+            return AmrConverter.strip(labels.setdefault(node.ID, id_gen(AmrConverter.resolve_label(node))))
 
         id_gen = _IdGenerator()
         pending = list(passage.layer(layer1.LAYER_ID).top_node)
@@ -189,6 +189,10 @@ class AmrConverter(convert.FormatConverter):
                 pending += edge.child
                 tag = DEP_REPLACEMENT.get(edge.tag, edge.tag)
                 yield _node_label(edge.parent), tag, _node_label(edge.child)
+
+    @staticmethod
+    def strip(label):
+        return re.sub("\w+\((.*)\)", "\\1", label)
 
     @staticmethod
     def resolve_label(node, label=None, reverse=False):
