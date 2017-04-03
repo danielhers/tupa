@@ -13,10 +13,9 @@ TOK_PATTERN = "#\s*::(?:tok|snt)\s+(.*)"
 DEP_PREFIX = ":"
 TOP_DEP = ":top"
 DEP_REPLACEMENT = {amrutil.INSTANCE_OF: "instance"}
-IGNORED_EDGES = {"wiki"}
+IGNORED_AMR_EDGES = {"wiki"}
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
-TERMINAL_EDGE_TAG = layer1.EdgeTags.Terminal
 
 
 class AmrConverter(convert.FormatConverter):
@@ -93,7 +92,7 @@ class AmrConverter(convert.FormatConverter):
             visited.add(triple)
             head, rel, dep = triple
             rel = rel.lstrip(DEP_PREFIX)
-            if rel in IGNORED_EDGES:
+            if rel in IGNORED_AMR_EDGES:
                 continue
             parent = variables.get(head)
             assert parent is not None, "Outgoing edge from a non-variable: " + str(triple)
@@ -115,10 +114,16 @@ class AmrConverter(convert.FormatConverter):
     def _build_layer0(reverse_alignments, l1, l0):  # add edges to terminals according to alignments
         for i, parents in reverse_alignments.items():
             terminal = l0.all[i]
-            parents[0].add(TERMINAL_EDGE_TAG, terminal)
+            if layer0.is_punct(terminal):
+                tag = layer1.EdgeTags.Punctuation
+                terminal = l1.add_punct(parents[0], terminal)
+                terminal.attrib[amrutil.LABEL_ATTRIB] = layer1.NodeTags.Punctuation
+            else:
+                tag = layer1.EdgeTags.Terminal
+                parents[0].add(tag, terminal)
             for parent in parents[1:]:  # add as remote terminal child to all parents but the first
                 if parent not in terminal.parents:  # avoid multiple identical edges (e.g. :polarity~e.68 -~e.68)
-                    l1.add_remote(parent, TERMINAL_EDGE_TAG, terminal)
+                    l1.add_remote(parent, tag, terminal)
 
     def align_nodes(self, amr):
         reverse_alignments = {}
@@ -184,7 +189,7 @@ class AmrConverter(convert.FormatConverter):
         labels = {}
         while pending:
             edge = pending.pop(0)
-            if edge not in visited and edge.tag != TERMINAL_EDGE_TAG:  # skip cycles and terminals
+            if edge not in visited and edge.tag not in amrutil.TERMINAL_TAGS:  # skip cycles and terminals
                 visited.add(edge)
                 pending += edge.child
                 tag = DEP_REPLACEMENT.get(edge.tag, edge.tag)

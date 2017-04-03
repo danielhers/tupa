@@ -21,6 +21,7 @@ INSTANCE_OF = "instance-of"
 PLACEHOLDER = re.compile("<[^>]*>")
 VARIABLE_LABEL = "v"
 UNKNOWN_LABEL = "Concept(amr-unknown)"
+TERMINAL_TAGS = {constraints.EdgeTags.Terminal, constraints.EdgeTags.Punctuation}
 
 
 def parse(*args, **kwargs):
@@ -103,7 +104,7 @@ class Constraints(constraints.Constraints):
         self.tag_rules.append(
             constraints.TagRule(trigger={constraints.Direction.incoming: "name"},
                                 allowed={constraints.Direction.outgoing: re.compile(
-                                    "^(%s|%s|op\d+)$" % (INSTANCE_OF, constraints.EdgeTags.Terminal))}))
+                                    "^(%s|%s|op\d+)$" % (INSTANCE_OF, "|".join(TERMINAL_TAGS)))}))
 
     def allow_action(self, action, history):
         return True
@@ -112,18 +113,18 @@ class Constraints(constraints.Constraints):
         return edge not in edge.parent.outgoing  # Prevent multiple identical edges between the same pair of nodes
 
     def allow_parent(self, node, tag):
-        return not (node.implicit and tag == constraints.EdgeTags.Terminal or
-                    not self.is_variable(node.label) and tag != constraints.EdgeTags.Terminal)
+        return not (node.implicit and tag in TERMINAL_TAGS or
+                    not self.is_variable(node.label) and tag not in TERMINAL_TAGS)
 
     def allow_child(self, node, tag):
         return self.is_concept(node.label) == (tag == INSTANCE_OF) and \
                (node.label == "Const(-)" or tag != "polarity")
 
     def allow_label(self, node, label):
-        return (self.is_variable(label) or node.outgoing_tags <= {constraints.EdgeTags.Terminal}) and (
+        return (self.is_variable(label) or node.outgoing_tags <= TERMINAL_TAGS) and (
             not self.is_concept(label) or node.incoming_tags <= {INSTANCE_OF}) and (
             (label == "Const(-)") == (node.incoming_tags == {"polarity"})) and (
-            constraints.EdgeTags.Terminal in node.outgoing_tags or self.is_variable(label) or
+            TERMINAL_TAGS & node.outgoing_tags or self.is_variable(label) or
             not PLACEHOLDER.search(label))  # Prevent text placeholder in implicit node
 
     def allow_reduce(self, node):
