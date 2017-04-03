@@ -139,7 +139,7 @@ class Parser(object):
             textutil.annotate(passage, verbose=self.args.verbose > 1)  # tag POS and parse dependencies
             self.state = State(passage)
             self.state_hash_history = set()
-            self.oracle = Oracle(passage) if train or self.args.verbose and labeled else None
+            self.oracle = Oracle(passage) if train or self.args.verbose and labeled or self.args.verify else None
             failed = False
             if ClassifierProperty.require_init_features in self.model.model.get_classifier_properties():
                 self.model.init_features(self.state, train)
