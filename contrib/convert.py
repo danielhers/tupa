@@ -152,7 +152,9 @@ class AmrConverter(convert.FormatConverter):
         pending = [n for n in l1.all if not n.children]
         while pending:
             node = pending.pop(0)
-            if any(n in pending for n in node.children):
+            if node in l1.heads:
+                pass
+            elif any(n in pending for n in node.children):
                 pending.append(node)
             elif all(n.attrib.get("implicit") for n in node.children):
                 node.attrib["implicit"] = True
