@@ -2,7 +2,7 @@ from features.enumerator import FeatureEnumerator
 from features.feature_params import FeatureParameters
 from features.indexer import FeatureIndexer
 from tupa.action import Actions
-from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN
+from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP
 from tupa.model_util import UnknownDict
 
 ACTION_AXIS = 0
@@ -44,6 +44,11 @@ class Model(object):
             from nn.bilstm import BiLSTM
             self.feature_extractor = FeatureIndexer(self.dense_features_wrapper(node_labels))
             self.model = BiLSTM(filename, labels, input_params=self.feature_extractor.params, max_num_labels=max_labels)
+        elif model_type == NOOP:
+            from features.empty_features import EmptyFeatureExtractor
+            from classifiers.noop import NoOp
+            self.feature_extractor = EmptyFeatureExtractor()
+            self.model = NoOp(filename, labels)
         else:
             raise ValueError("Invalid model type: '%s'" % model_type)
 

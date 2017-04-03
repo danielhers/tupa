@@ -33,7 +33,8 @@ class VAction(argparse.Action):
 SPARSE = "sparse"
 MLP_NN = "mlp"
 BILSTM_NN = "bilstm"
-CLASSIFIERS = (SPARSE, MLP_NN, BILSTM_NN)
+NOOP = "noop"
+CLASSIFIERS = (SPARSE, MLP_NN, BILSTM_NN, NOOP)
 
 # Multiple choice options: the first one is always the default
 ACTIVATIONS = ("sigmoid", "tanh", "relu", "cube")
