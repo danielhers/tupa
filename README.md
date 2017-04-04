@@ -62,6 +62,18 @@ Author
 * Daniel Hershcovich: danielh@cs.huji.ac.il
 
 
+Citation
+--------
+If you make use of this software, please cite the following:
+
+	@inproceedings{hershcovich2017a,
+	  title={A Transition-Based Directed Acyclic Graph Parser for {UCCA}},
+	  author={Hershcovich, Daniel and Abend, Omri and Rappoport, Ari},
+	  booktitle={Proc. of ACL},
+	  year={2017}
+	}
+
+
 License
 -------
 This package is licensed under the GPLv3 or later license (see [`LICENSE.txt`](LICENSE.txt)).
