@@ -13,7 +13,7 @@ class ConversionTests(unittest.TestCase):
         for passage, ref, amr_id in read_test_amr():
             converted = convert.to_amr(passage)[0]
             scores = amrutil.evaluate(converted, ref, amr_id)
-            self.assertAlmostEqual(scores.f1, 1)
+            self.assertAlmostEqual(scores.f1, 1, msg=converted)
 
 
 class UtilTests(unittest.TestCase):
