@@ -110,8 +110,8 @@ class AmrConverter(convert.FormatConverter):
             self.nodes[triple] = node
 
     @staticmethod
-    def _build_layer0(reverse_alignments, l1, l0):  # add edges to terminals according to alignments
-        for i, parents in reverse_alignments.items():
+    def _build_layer0(preterminals, l1, l0):  # add edges to terminals according to alignments
+        for i, parents in preterminals.items():
             terminal = l0.all[i]
             if layer0.is_punct(terminal):
                 tag = layer1.EdgeTags.Punctuation
@@ -125,25 +125,31 @@ class AmrConverter(convert.FormatConverter):
                     l1.add_remote(parent, tag, terminal)
 
     def align_nodes(self, amr):
-        reverse_alignments = {}
+        preterminals = {}
+        alignments = (amr.alignments(), amr.role_alignments())
         tokens = amr.tokens()
-        for triple, align in {**amr.alignments(), **amr.role_alignments()}.items():
-            node = self.nodes.get(triple)  # add relation alignments to dependent node
-            if node is not None:  # it might be none if it was part of a removed cycle
-                indices = list(map(int, align.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP)))  # split numeric indices
-                label = str(triple[2])  # correct missing alignment by expanding to terminals contained in label
+        for triple, node in self.nodes.items():
+            indices = []
+            for alignment in alignments:
+                align = alignment.get(triple)
+                if align is not None:
+                    indices += list(map(int, align.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP)))  # split numeric
+            # correct missing alignment by expanding to neighboring terminals contained in label
+            label = str(triple[2])
+            if indices:
                 for start, offset in ((0, -1), (-1, 1)):
                     i = indices[start] + offset
                     while 0 <= i < len(tokens) and tokens[i] in label:
                         indices.append(i)
                         i += offset
-                for i, token in enumerate(tokens):
-                    if i not in indices and len(token) > 2 and \
-                                    token in self.strip(label).strip('"') and tokens.count(token) == 1:
-                        indices.append(i)
-                for i in indices:
-                    reverse_alignments.setdefault(i, []).append(node)
-        return reverse_alignments
+            # also expand to any contained token if it is not too short and it occurs only once
+            for i, token in enumerate(tokens):
+                if i not in indices and len(token) > 2 and \
+                                token in self.strip(label).strip('"') and tokens.count(token) == 1:
+                    indices.append(i)
+            for i in indices:
+                preterminals.setdefault(i, []).append(node)
+        return preterminals
 
     @staticmethod
     def _update_implicit(l1):
