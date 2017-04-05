@@ -3,7 +3,10 @@ import os
 import re
 import sys
 
+from nltk.corpus import wordnet as wn, propbank as pb
+
 from tupa import constraints
+from ucca import textutil
 
 sys.path.insert(0, os.path.dirname(importlib.util.find_spec("smatch.smatch").origin))  # to find amr.py from smatch
 from smatch import smatch
@@ -21,6 +24,7 @@ INSTANCE_OF = "instance-of"
 PLACEHOLDER = re.compile("<[^>]*>")
 VARIABLE_LABEL = "v"
 UNKNOWN_LABEL = "Concept(amr-unknown)"
+ROLESET_PATTERN = re.compile("Concept\((.*)-(\d+)\)")
 TERMINAL_TAGS = {constraints.EdgeTags.Terminal, constraints.EdgeTags.Punctuation}
 
 
@@ -114,26 +118,93 @@ class Constraints(constraints.Constraints):
 
     def allow_parent(self, node, tag):
         return not (node.implicit and tag in TERMINAL_TAGS or
-                    not self.is_variable(node.label) and tag not in TERMINAL_TAGS)
+                    not is_variable(node.label) and tag not in TERMINAL_TAGS) and \
+               is_valid_arg(node, node.label, tag)
 
     def allow_child(self, node, tag):
-        return self.is_concept(node.label) == (tag == INSTANCE_OF) and \
+        return is_concept(node.label) == (tag == INSTANCE_OF) and \
                (node.label == "Const(-)" or tag != "polarity")
 
     def allow_label(self, node, label):
-        return (self.is_variable(label) or node.outgoing_tags <= TERMINAL_TAGS) and (
-            not self.is_concept(label) or node.incoming_tags <= {INSTANCE_OF}) and (
+        return (is_variable(label) or node.outgoing_tags <= TERMINAL_TAGS) and (
+            not is_concept(label) or node.incoming_tags <= {INSTANCE_OF}) and (
             (label == "Const(-)") == (node.incoming_tags == {"polarity"})) and (
-            TERMINAL_TAGS & node.outgoing_tags or self.is_variable(label) or
+            not node.parents or is_valid_arg(node, label, *node.parents[0].outgoing_tags)) and (
+            TERMINAL_TAGS & node.outgoing_tags or is_variable(label) or
             not PLACEHOLDER.search(label))  # Prevent text placeholder in implicit node
 
     def allow_reduce(self, node):
-        return node.text is not None or not self.is_variable(node.label) or INSTANCE_OF in node.outgoing_tags
+        return node.text is not None or not is_variable(node.label) or INSTANCE_OF in node.outgoing_tags
 
-    @staticmethod
-    def is_variable(label):
-        return label == VARIABLE_LABEL
 
-    @staticmethod
-    def is_concept(label):
-        return label is not None and label.startswith("Concept(")
+def is_variable(label):
+    return label == VARIABLE_LABEL
+
+
+def is_concept(label):
+    return label is not None and label.startswith("Concept(")
+
+
+def is_valid_arg(node, label, *tags, is_parent=True):
+    args = [t for t in tags if t.startswith("ARG") and (t.endswith("-of") != is_parent)]
+    if not args:
+        return True
+    if label == VARIABLE_LABEL:
+        for edge in node.outgoing:
+            if edge.tag == INSTANCE_OF:
+                node = edge.child
+                label = node.label
+                break
+        else:
+            return True
+    try:
+        roleset = pb.roleset(".".join(ROLESET_PATTERN.match(resolve_label(node, label)).groups()))
+    except (AttributeError, ValueError):
+        return True
+    valid_args = tuple(r.attrib["n"] for r in roleset.findall("roles/role"))
+    return all(t.replace("-of", "").endswith(valid_args) for t in args)
+
+
+def resolve_label(node, label=None, reverse=False):
+    def _replace(old, new):  # replace only inside the label value/name
+        new = new.strip('"()')
+        if reverse:
+            old, new = new, old
+        replaceable = old and (len(old) > 2 or len(label) < 5)
+        return re.sub(re.escape(old) + "(?![^<]*>|[^(]*\(|\d+$)", new, label) if replaceable else label
+
+    def _related_forms(w):  # list of all derivationally related forms and their part of speech
+        num_related = 0
+        related = {None: w}
+        while len(related) > num_related:
+            num_related = len(related)
+            related.update({v.synset().pos(): v.name() for x in related.values()
+                            for l in wn.lemmas(x) for v in l.derivationally_related_forms()})
+        return [(v, k) for k, v in related.items() if v != w]
+
+    if label is None:
+        try:
+            label = node.label
+        except AttributeError:
+            label = node.attrib[LABEL_ATTRIB]
+    if label != VARIABLE_LABEL:
+        terminals = [c for c in node.children if getattr(c, "text", None)]
+        if len(terminals) > 1:
+            label = _replace("<t>", "".join(t.text for t in terminals))
+        for i, terminal in enumerate(terminals):
+            label = _replace("<t%d>" % i, terminal.text)
+            label = _replace("<T%d>" % i, terminal.text.title())
+            try:  # TODO add lemma and related forms to classifier features
+                lemma = terminal.lemma
+            except AttributeError:
+                lemma = terminal.extra.get(textutil.LEMMA_KEY)
+            if lemma == "-PRON-":
+                lemma = terminal.text.lower()
+            label = _replace("<l%d>" % i, lemma)
+            label = _replace("<L%d>" % i, lemma.title())
+            for form, pos in _related_forms(lemma):
+                label = _replace("<%s%d>" % (pos, i), form)
+    return label
+
+
+# REPLACEMENTS = {"~": "about"}

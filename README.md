@@ -16,7 +16,8 @@ Install the required modules:
     source bin/activate.csh  # on csh
     pip install -r requirements.txt
     python -m spacy.en.download all
-    python -m nltk.downloader wordnet
+    python -m nltk.downloader wordnet propbank
+    git clone https://github.com/propbank/propbank-frames ~/nltk_data/corpora/propbank
     ci/install-dynet.sh
     cd ucca
     python setup.py install

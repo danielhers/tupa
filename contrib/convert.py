@@ -1,7 +1,6 @@
 import re
 
 import penman
-from nltk.corpus import wordnet as wn
 
 from contrib import amrutil
 from ucca import layer0, layer1, convert, textutil
@@ -163,7 +162,7 @@ class AmrConverter(convert.FormatConverter):
     @staticmethod
     def _update_labels(l1):
         for node in l1.all:
-            node.attrib[amrutil.LABEL_ATTRIB] = AmrConverter.resolve_label(node, reverse=True)
+            node.attrib[amrutil.LABEL_ATTRIB] = amrutil.resolve_label(node, reverse=True)
 
     def to_format(self, passage, **kwargs):
         del kwargs
@@ -183,7 +182,7 @@ class AmrConverter(convert.FormatConverter):
                 return label
 
         def _node_label(node):
-            return AmrConverter.strip(labels.setdefault(node.ID, id_gen(AmrConverter.resolve_label(node))))
+            return AmrConverter.strip(labels.setdefault(node.ID, id_gen(amrutil.resolve_label(node))))
 
         id_gen = _IdGenerator()
         pending = list(passage.layer(layer1.LAYER_ID).top_node)
@@ -200,51 +199,6 @@ class AmrConverter(convert.FormatConverter):
     @staticmethod
     def strip(label):
         return re.sub("\w+\((.*)\)", "\\1", label)
-
-    @staticmethod
-    def resolve_label(node, label=None, reverse=False):
-        def _replace(old, new):  # replace only inside the label value/name
-            new = new.strip('"()')
-            if reverse:
-                old, new = new, old
-            replaceable = old and (len(old) > 2 or len(label) < 5)
-            return re.sub(re.escape(old) + "(?![^<]*>|[^(]*\(|\d+$)", new, label) if replaceable else label
-
-        def _related_forms(w):  # list of all derivationally related forms and their part of speech
-            num_related = 0
-            related = {None: w}
-            while len(related) > num_related:
-                num_related = len(related)
-                related.update({v.synset().pos(): v.name() for x in related.values()
-                                for l in wn.lemmas(x) for v in l.derivationally_related_forms()})
-            return [(v, k) for k, v in related.items() if v != w]
-
-        if label is None:
-            try:
-                label = node.label
-            except AttributeError:
-                label = node.attrib[amrutil.LABEL_ATTRIB]
-        if label != amrutil.VARIABLE_LABEL:
-            terminals = [c for c in node.children if getattr(c, "text", None)]
-            if len(terminals) > 1:
-                label = _replace("<t>", "".join(t.text for t in terminals))
-            for i, terminal in enumerate(terminals):
-                label = _replace("<t%d>" % i, terminal.text)
-                label = _replace("<T%d>" % i, terminal.text.title())
-                try:  # TODO add lemma and related forms to classifier features
-                    lemma = terminal.lemma
-                except AttributeError:
-                    lemma = terminal.extra.get(textutil.LEMMA_KEY)
-                if lemma == "-PRON-":
-                    lemma = terminal.text.lower()
-                label = _replace("<l%d>" % i, lemma)
-                label = _replace("<L%d>" % i, lemma.title())
-                for form, pos in _related_forms(lemma):
-                    label = _replace("<%s%d>" % (pos, i), form)
-        return label
-
-
-# REPLACEMENTS = {"~": "about"}
 
 
 def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):
