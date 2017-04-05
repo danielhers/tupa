@@ -336,7 +336,8 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 guessed_passage = result
                 print()
             if guessed_passage is not None and not args.no_write:
-                ioutil.write_passage(guessed_passage, args)
+                ioutil.write_passage(guessed_passage, output_format=args.format, binary=args.binary,
+                                     outdir=args.outdir, prefix=args.prefix)
         if passage_scores and (not args.verbose or len(passage_scores) > 1):
             test_scores = evaluation.Scores.aggregate(passage_scores)
             print("\nAverage labeled F1 score on test: %.3f" % test_scores.average_f1())
