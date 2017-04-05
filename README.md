@@ -64,7 +64,7 @@ Author
 
 Citation
 --------
-If you make use of this software, please cite the following:
+If you make use of this software, please cite [the following paper](http://www.cs.huji.ac.il/~danielh/acl2017.pdf):
 
 	@inproceedings{hershcovich2017a,
 	  title={A Transition-Based Directed Acyclic Graph Parser for {UCCA}},
