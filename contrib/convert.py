@@ -168,7 +168,12 @@ class AmrConverter(convert.FormatConverter):
     @staticmethod
     def _update_labels(l1):
         for node in l1.all:
-            node.attrib[amrutil.LABEL_ATTRIB] = amrutil.resolve_label(node, reverse=True)
+            label = amrutil.resolve_label(node, reverse=True)
+            if label and label.startswith("Num("):
+                label = re.sub("\([^<]+<", "(<", label)
+                label = re.sub(">[^>]+\)", ">)", label)
+                label = re.sub("\([\d.,]+\)", "(1)", label)
+            node.attrib[amrutil.LABEL_ATTRIB] = label
 
     def to_format(self, passage, **kwargs):
         del kwargs
