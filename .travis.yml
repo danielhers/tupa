@@ -25,11 +25,7 @@ before_install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy libgcc
   - pip install pytest-pep8
-  - pip install -r requirements.txt
-  - python -m spacy download en > spacy.log
-  - python -m nltk.downloader wordnet propbank
-  - git clone https://github.com/propbank/propbank-frames ~/nltk_data/corpora/propbank
-  - ci/install-dynet.sh
+  - ci/install-prerequisites.sh
   - export LD_LIBRARY_PATH="$HOME/dynet:$LD_LIBRARY_PATH"
 install:
   - python setup.py install
