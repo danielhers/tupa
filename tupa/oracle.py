@@ -110,6 +110,9 @@ class Oracle(object):
                     for edge in outgoing:
                         if edge.child.ID == s1.node_id:
                             yield self.action(edge, EDGE, LEFT)  # LeftEdge or LeftRemote
+                        elif state.buffer and edge.child.ID == state.buffer[0].node_id and \
+                                len(state.buffer[0].orig_node.incoming) == 1:
+                            yield Actions.Shift  # Special case to allow getting rid of simple children quickly
 
                     if not self.edge_found:
                         # Check if a swap is necessary, and how far (if compound swap is enabled)
