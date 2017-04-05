@@ -123,13 +123,16 @@ class Constraints(constraints.Constraints):
 
     def allow_child(self, node, tag):
         return is_concept(node.label) == (tag == INSTANCE_OF) and \
-               (node.label == "Const(-)" or tag != "polarity")
+               (node.label == "Const(-)" or tag != "polarity") and \
+               is_valid_arg(node, node.label, tag, is_parent=False)
 
     def allow_label(self, node, label):
         return (is_variable(label) or node.outgoing_tags <= TERMINAL_TAGS) and (
             not is_concept(label) or node.incoming_tags <= {INSTANCE_OF}) and (
             (label == "Const(-)") == (node.incoming_tags == {"polarity"})) and (
-            not node.parents or is_valid_arg(node, label, *node.parents[0].outgoing_tags)) and (
+            not node.parents or
+            is_valid_arg(node, label, *node.parents[0].outgoing_tags) and
+            is_valid_arg(node, label, *node.parents[0].incoming_tags, is_parent=False)) and (
             TERMINAL_TAGS & node.outgoing_tags or is_variable(label) or
             not PLACEHOLDER.search(label))  # Prevent text placeholder in implicit node
 
@@ -194,7 +197,7 @@ def resolve_label(node, label=None, reverse=False):
         for i, terminal in enumerate(terminals):
             label = _replace("<t%d>" % i, terminal.text)
             label = _replace("<T%d>" % i, terminal.text.title())
-            try:  # TODO add lemma and related forms to classifier features
+            try:
                 lemma = terminal.lemma
             except AttributeError:
                 lemma = terminal.extra.get(textutil.LEMMA_KEY)
