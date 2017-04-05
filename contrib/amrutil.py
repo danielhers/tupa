@@ -162,7 +162,7 @@ def is_valid_arg(node, label, *tags, is_parent=True):
             return True
     try:
         roleset = pb.roleset(".".join(ROLESET_PATTERN.match(resolve_label(node, label)).groups()))
-    except (AttributeError, ValueError):
+    except (AttributeError, ValueError, TypeError):
         return True
     valid_args = tuple(r.attrib["n"] for r in roleset.findall("roles/role"))
     return all(t.replace("-of", "").endswith(valid_args) for t in args)
