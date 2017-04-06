@@ -6,7 +6,7 @@ import os
 import re
 import sys
 
-from scheme import convert
+from conversion.amr import from_amr
 from ucca.ioutil import passage2file
 
 desc = """Parses files in AMR PENMAN format, and writes UCCA standard format, as XML or binary pickle.
@@ -40,7 +40,7 @@ def main():
                 passage_id = basename
 
             with open(filename, encoding="utf-8") as f:
-                for passage in convert.from_amr(f, passage_id):
+                for passage in from_amr(f, passage_id):
                     outfile = "%s/%s.%s" % (args.outdir, args.prefix + passage.ID,
                                             "pickle" if args.binary else "xml")
                     sys.stderr.write("Writing '%s'...\n" % outfile)

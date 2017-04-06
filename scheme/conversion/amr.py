@@ -1,21 +1,7 @@
-import re
-
 import penman
 
-from scheme import amrutil
-from ucca import layer0, layer1, convert, textutil
-
-
-COMMENT_PREFIX = "#"
-ID_PATTERN = "#\s*::id\s+(\S+)"
-TOK_PATTERN = "#\s*::(?:tok|snt)\s+(.*)"
-DEP_PREFIX = ":"
-TOP_DEP = ":top"
-DEP_REPLACEMENT = {amrutil.INSTANCE_OF: "instance"}
-ALIGNMENT_PREFIX = "e."
-ALIGNMENT_SEP = ","
-LAYERS = {"wiki": ("wiki",),
-          "numbers": ()}
+from ucca import layer0, layer1, convert
+from util.amr import *
 
 
 class AmrConverter(convert.FormatConverter):
@@ -50,7 +36,7 @@ class AmrConverter(convert.FormatConverter):
 
     def _build_passage(self):
         # amr = penman.decode(re.sub("~e\.[\d,]+", "", " ".join(self.lines)))
-        amr = amrutil.parse(" ".join(self.lines), tokens=self.tokens)
+        amr = parse(" ".join(self.lines), tokens=self.tokens)
         passage = next(convert.from_text(self.tokens, self.amr_id or self.passage_id, tokenized=True))
         self.lines = []
         self.amr_id = self.tokens = None
@@ -82,7 +68,7 @@ class AmrConverter(convert.FormatConverter):
         _, _, root = top[0]  # init with child of TOP
         pending = amr.triples(head=root)
         self.nodes = {}  # map triples to UCCA nodes: dep gets a new node each time unless it's a variable
-        l1.top_node.attrib[amrutil.LABEL_ATTRIB] = amrutil.VARIABLE_LABEL  # the root is always a variable
+        l1.top_node.attrib[LABEL_ATTRIB] = VARIABLE_LABEL  # the root is always a variable
         variables = {root: l1.top_node}  # map AMR variables to UCCA nodes
         visited = set()  # to avoid cycles
         while pending:  # breadth-first search creating layer 1 nodes
@@ -101,12 +87,12 @@ class AmrConverter(convert.FormatConverter):
             if node is None:  # first occurrence of dep, or dep is not a variable
                 pending += amr.triples(head=dep)  # to continue breadth-first search
                 node = l1.add_fnode(parent, rel)
-                if isinstance(dep, amrutil.amr_lib.Var):
+                if isinstance(dep, amr_lib.Var):
                     variables[dep] = node
-                    label = amrutil.VARIABLE_LABEL
+                    label = VARIABLE_LABEL
                 else:  # save concept name / constant value in node attributes
                     label = repr(dep)
-                node.attrib[amrutil.LABEL_ATTRIB] = label
+                node.attrib[LABEL_ATTRIB] = label
             elif not self.remove_cycles or not _reachable(dep, head):  # reentrancy; do not add if results in a cycle
                 l1.add_remote(parent, rel, node)
             self.nodes[triple] = node
@@ -118,7 +104,7 @@ class AmrConverter(convert.FormatConverter):
             if layer0.is_punct(terminal):
                 tag = layer1.EdgeTags.Punctuation
                 terminal = l1.add_punct(parents[0], terminal)
-                terminal.attrib[amrutil.LABEL_ATTRIB] = layer1.NodeTags.Punctuation
+                terminal.attrib[LABEL_ATTRIB] = layer1.NodeTags.Punctuation
             else:
                 tag = layer1.EdgeTags.Terminal
                 parents[0].add(tag, terminal)
@@ -169,12 +155,12 @@ class AmrConverter(convert.FormatConverter):
 
     def _update_labels(self, l1):
         for node in l1.all:
-            label = amrutil.resolve_label(node, reverse=True)
+            label = resolve_label(node, reverse=True)
             if "numbers" not in self.layers and label and label.startswith("Num("):
                 label = re.sub("\([^<]+<", "(<", label)
                 label = re.sub(">[^>]+\)", ">)", label)
                 label = re.sub("\([\d.,]+\)", "(1)", label)
-            node.attrib[amrutil.LABEL_ATTRIB] = label
+            node.attrib[LABEL_ATTRIB] = label
 
     def to_format(self, passage, **kwargs):
         del kwargs
@@ -188,13 +174,13 @@ class AmrConverter(convert.FormatConverter):
                 self._id = 0
 
             def __call__(self, label):
-                if label == amrutil.VARIABLE_LABEL:
+                if label == VARIABLE_LABEL:
                     self._id += 1
                     return label + str(self._id)
                 return label
 
         def _node_label(node):
-            return AmrConverter.strip(labels.setdefault(node.ID, id_gen(amrutil.resolve_label(node))))
+            return AmrConverter.strip(labels.setdefault(node.ID, id_gen(resolve_label(node))))
 
         id_gen = _IdGenerator()
         pending = list(passage.layer(layer1.LAYER_ID).top_node)
@@ -202,7 +188,7 @@ class AmrConverter(convert.FormatConverter):
         labels = {}
         while pending:
             edge = pending.pop(0)
-            if edge not in visited and edge.tag not in amrutil.TERMINAL_TAGS:  # skip cycles and terminals
+            if edge not in visited and edge.tag not in TERMINAL_TAGS:  # skip cycles and terminals
                 visited.add(edge)
                 pending += edge.child
                 tag = DEP_REPLACEMENT.get(edge.tag, edge.tag)

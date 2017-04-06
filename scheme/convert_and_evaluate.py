@@ -5,8 +5,8 @@ import glob
 import os
 import sys
 
-from scheme import convert
-from scheme.amrutil import evaluate, Scores
+from conversion.amr import from_amr, to_amr
+from evaluation.amr import evaluate, Scores
 from tupa.config import VAction
 from ucca.ioutil import passage2file
 
@@ -34,13 +34,13 @@ def main():
             sys.stdout.flush()
             basename = os.path.basename(os.path.splitext(filename)[0])
             with open(filename, encoding="utf-8") as f:
-                for passage, ref, amr_id in convert.from_amr(f, passage_id=basename, return_amr=True):
+                for passage, ref, amr_id in from_amr(f, passage_id=basename, return_amr=True):
                     if args.outdir:
                         outfile = "%s/%s.xml" % (args.outdir, passage.ID)
                         print("Writing '%s'..." % outfile, file=sys.stderr, flush=True)
                         passage2file(passage, outfile)
                     try:
-                        guessed = convert.to_amr(passage, amr_id)[0]
+                        guessed = to_amr(passage, amr_id)[0]
                     except Exception as e:
                         raise ValueError("Error converting %s back from AMR" % filename) from e
                     if args.outdir:

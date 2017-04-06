@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 
-from scheme import convert
+from conversion.amr import CONVERTERS
 from tupa import constraints
 from ucca import evaluation, constructions
 
@@ -90,8 +90,8 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--verify", action="store_true", help="verify oracle reproduces original passage")
         group = group.add_mutually_exclusive_group()
         group.add_argument("-b", "--binary", action="store_true", help="read and write passages in Pickle")
-        group.add_argument("-f", "--format", choices=convert.CONVERTERS, help="input and output format (default: UCCA)")
-        argparser.add_argument("--output-format", choices=convert.CONVERTERS, help="output format for parsed files")
+        group.add_argument("-f", "--format", choices=CONVERTERS, help="input and output format (default: UCCA)")
+        argparser.add_argument("--output-format", choices=CONVERTERS, help="output format for parsed files")
         group = argparser.add_argument_group(title="General classifier training parameters")
         group.add_argument("--swap-importance", type=int, default=1, help="learning rate factor for Swap")
         group.add_argument("--early-update", action="store_true", help="move to next example on incorrect prediction")
@@ -155,7 +155,7 @@ class Config(object, metaclass=Singleton):
         elif not self.args.log:
             self.args.log = "parse.log"
         self.constraints = constraints.Constraints(self.args)
-        self.input_converter, self.output_converter = convert.CONVERTERS.get(self.args.format, (None, None))
+        self.input_converter, self.output_converter = CONVERTERS.get(self.args.format, (None, None))
         self.evaluate, self.Scores = evaluation.evaluate, evaluation.Scores
         if self.args.format == "amr":
             self.args.implicit = True
@@ -165,13 +165,14 @@ class Config(object, metaclass=Singleton):
                 self.args.max_node_labels = 1000
             self.args.max_action_labels = max(self.args.max_action_labels, 600)
             self.args.max_edge_labels = max(self.args.max_edge_labels, 500)
-            from scheme import amrutil
-            self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
-            self.args.node_label_attrib = amrutil.LABEL_ATTRIB
-            self.args.unknown_label = amrutil.UNKNOWN_LABEL
-            self.constraints = amrutil.Constraints(self.args)
+            from evaluation.amr import evaluate, Scores, LABEL_ATTRIB, UNKNOWN_LABEL
+            from constraint.amr import Constraints
+            self.evaluate, self.Scores = evaluate, Scores
+            self.args.node_label_attrib = LABEL_ATTRIB
+            self.args.unknown_label = UNKNOWN_LABEL
+            self.constraints = Constraints(self.args)
         if self.args.output_format:
-            _, self.output_converter = convert.CONVERTERS[self.args.output_format]
+            _, self.output_converter = CONVERTERS[self.args.output_format]
         else:
             self.args.output_format = self.args.format
         self._log_file = None
