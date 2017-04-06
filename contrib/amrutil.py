@@ -24,8 +24,9 @@ INSTANCE_OF = "instance-of"
 PLACEHOLDER = re.compile("<[^>]*>")
 VARIABLE_LABEL = "v"
 UNKNOWN_LABEL = "Concept(amr-unknown)"
-ROLESET_PATTERN = re.compile("Concept\((.*)-(\d+)\)")
 TERMINAL_TAGS = {constraints.EdgeTags.Terminal, constraints.EdgeTags.Punctuation}
+ROLESET_PATTERN = re.compile("Concept\((.*)-(\d+)\)")
+ROLES = {"Concept(ablate-01)": ("0", "1", "2", "3")}  # cache and fix for roles missing in PropBank
 
 
 def parse(*args, **kwargs):
@@ -160,12 +161,16 @@ def is_valid_arg(node, label, *tags, is_parent=True):
                 break
         else:
             return True
-    try:
-        roleset = pb.roleset(".".join(ROLESET_PATTERN.match(resolve_label(node, label)).groups()))
-    except (AttributeError, ValueError, TypeError):
-        return True
-    valid_args = tuple(r.attrib["n"] for r in roleset.findall("roles/role"))
-    return all(t.replace("-of", "").endswith(valid_args) for t in args)
+    label = resolve_label(node, label)
+    valid_args = ROLES.get(label)
+    if valid_args is None:
+        try:
+            roleset = pb.roleset(".".join(ROLESET_PATTERN.match(label).groups()))
+            valid_args = tuple(r.attrib["n"] for r in roleset.findall("roles/role"))
+        except (AttributeError, ValueError, TypeError):
+            valid_args = ()
+        ROLES[label] = valid_args
+    return not valid_args or all(t.replace("-of", "").endswith(valid_args) for t in args)
 
 
 def resolve_label(node, label=None, reverse=False):
