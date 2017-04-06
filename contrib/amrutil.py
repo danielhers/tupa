@@ -150,6 +150,8 @@ def is_concept(label):
 
 
 def is_valid_arg(node, label, *tags, is_parent=True):
+    if label is None:
+        return True
     args = [t for t in tags if t.startswith("ARG") and (t.endswith("-of") != is_parent)]
     if not args:
         return True
