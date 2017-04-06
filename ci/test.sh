@@ -22,8 +22,7 @@ bilstm-ucca)
     python tupa/parse.py -v -c bilstm --max-words-external=5000 --layer-dim=100 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle --dynet-mem=1500
     ;;
 noop-ucca)
-    python tupa/parse.py -v -c noop -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle #|| exit 1
-#    python tupa/parse.py -v -c noop -We -f amr alignment-release-dev-bio.txt -t alignment-release-training-bio.txt
+    python tupa/parse.py -v -c noop -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle
     ;;
 tune-ucca)
     export PARAMS_NUM=5
@@ -31,6 +30,9 @@ tune-ucca)
       python tupa/tune.py ucca/doc/toy.xml -t ucca/doc/toy.xml --max-words-external=5000 --dynet-mem=1500 && break
     done
     column -t -s, params.csv
+    ;;
+noop-amr)
+    python tupa/parse.py -v -c noop -We -f amr alignment-release-dev-bio.txt -t alignment-release-training-bio.txt
     ;;
 convert-amr)
     python contrib/convert_and_evaluate.py alignment-release-dev-bio.txt -v

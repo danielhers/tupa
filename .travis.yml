@@ -41,6 +41,7 @@ env:
   - TEST_SUITE=bilstm-ucca
   - TEST_SUITE=noop-ucca
   - TEST_SUITE=tune-ucca
+  - TEST_SUITE=noop-amr
   - TEST_SUITE=convert-amr
 script:
   - ci/test.sh
