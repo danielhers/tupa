@@ -1,5 +1,6 @@
 import os
 import time
+from collections import defaultdict
 from enum import Enum
 
 from classifiers.classifier import ClassifierProperty
@@ -9,6 +10,7 @@ from tupa.config import Config
 from tupa.model import Model, ACTION_AXIS, LABEL_AXIS
 from tupa.oracle import Oracle
 from ucca import diffutil, ioutil, textutil, layer1
+from ucca.convert import FROM_FORMAT, TO_FORMAT, from_text, to_text
 
 
 class ParserException(Exception):
@@ -348,7 +350,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
             if guessed_passage is not None and not args.no_write:
                 ioutil.write_passage(guessed_passage, output_format=args.output_format, binary=args.binary,
                                      outdir=args.outdir, prefix=args.prefix,
-                                     default_converter=Config().output_converter)
+                                     converter=TO_FORMAT.get(args.output_format, Config().output_converter or to_text))
         if passage_scores and (args.verbose <= 1 or len(passage_scores) > 1):
             test_scores = Config().Scores.aggregate(passage_scores)
             print("\nAverage labeled F1 score on test: %.3f" % test_scores.average_f1())
@@ -370,6 +372,11 @@ def evaluate_passage(guessed, ref):
     return score
 
 
+def read_passages(args, files):
+    return ioutil.read_files_and_dirs(files, args.sentences, args.paragraphs,
+                                      defaultdict(lambda: Config().input_converter or from_text, FROM_FORMAT))
+
+
 # noinspection PyTypeChecker,PyStringFormat
 def main():
     args = Config().args
@@ -385,8 +392,7 @@ def main():
             print(",".join(Config().Scores.field_titles(args.constructions)), file=f)
     if args.folds is not None:
         fold_scores = []
-        all_passages = list(ioutil.read_files_and_dirs(
-            args.passages, args.sentences, args.paragraphs, Config().input_converter))
+        all_passages = list(read_passages(args, args.passages))
         assert len(all_passages) >= args.folds, \
             "%d folds are not possible with only %d passages" % (args.folds, len(all_passages))
         Config().random.shuffle(all_passages)
@@ -408,8 +414,7 @@ def main():
             print("Aggregated scores across folds:\n")
             test_scores.print()
     else:  # Simple train/dev/test by given arguments
-        train_passages, dev_passages, test_passages = [ioutil.read_files_and_dirs(
-            arg, args.sentences, args.paragraphs, Config().input_converter) for arg in
+        train_passages, dev_passages, test_passages = [read_passages(args, arg) for arg in
                                                        (args.train, args.dev, args.passages)]
         test_scores, dev_scores = train_test(train_passages, dev_passages, test_passages, args)
     return test_scores, dev_scores
