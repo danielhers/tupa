@@ -12,27 +12,27 @@ unit)
     python tupa/parse.py -f amr -I 10 -t test_files/LDC2014T12.txt -d test_files/LDC2014T12.txt -sm model_LDC2014T12 -v || exit 1
     python tupa/parse.py -f amr test_files/LDC2014T12.txt -esm model_LDC2014T12 -v || exit 1
     ;;
-sparse)
+sparse-ucca)
     python tupa/parse.py -v -c sparse --max-words-external=5000 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle
     ;;
-mlp)
+mlp-ucca)
     python tupa/parse.py -v -c mlp --max-words-external=5000 --layer-dim=100 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle --dynet-mem=1500
     ;;
-bilstm)
+bilstm-ucca)
     python tupa/parse.py -v -c bilstm --max-words-external=5000 --layer-dim=100 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle --dynet-mem=1500
     ;;
-noop)
+noop-ucca)
     python tupa/parse.py -v -c noop -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle #|| exit 1
 #    python tupa/parse.py -v -c noop -We -f amr alignment-release-dev-bio.txt -t alignment-release-training-bio.txt
     ;;
-tune)
+tune-ucca)
     export PARAMS_NUM=5
     while :; do
       python tupa/tune.py ucca/doc/toy.xml -t ucca/doc/toy.xml --max-words-external=5000 --dynet-mem=1500 && break
     done
     column -t -s, params.csv
     ;;
-convert)
+convert-amr)
     python contrib/convert_and_evaluate.py alignment-release-dev-bio.txt -v
     ;;
 esac

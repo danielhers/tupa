@@ -36,11 +36,11 @@ before_script:
   - wget http://amr.isi.edu/download/2016-03-14/alignment-release-{training,dev,test}-bio.txt
 env:
   - TEST_SUITE=unit
-  - TEST_SUITE=sparse
-  - TEST_SUITE=mlp
-  - TEST_SUITE=bilstm
-  - TEST_SUITE=noop
-  - TEST_SUITE=tune
-  - TEST_SUITE=convert
+  - TEST_SUITE=sparse-ucca
+  - TEST_SUITE=mlp-ucca
+  - TEST_SUITE=bilstm-ucca
+  - TEST_SUITE=noop-ucca
+  - TEST_SUITE=tune-ucca
+  - TEST_SUITE=convert-amr
 script:
   - ci/test.sh
