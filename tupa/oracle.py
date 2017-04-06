@@ -1,6 +1,6 @@
+from states.state import InvalidActionError
 from tupa.action import Actions
 from tupa.config import Config
-from states.state import InvalidActionError
 from ucca import layer1
 
 # Constants for readability, used by Oracle.action

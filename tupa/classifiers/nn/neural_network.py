@@ -3,9 +3,9 @@ import sys
 import time
 from collections import OrderedDict
 
+import dynet as dy
 import numpy as np
 
-import dynet as dy
 from classifiers.classifier import Classifier
 from classifiers.classifier import ClassifierProperty
 from features.feature_params import MISSING_VALUE
