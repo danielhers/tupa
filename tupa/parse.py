@@ -330,7 +330,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
     :return: pair of (test scores, list of dev scores per iteration) where each one is a Scores object
     """
     test_scores = None
-    model_base, model_ext = os.path.splitext(args.model or "ucca_" + args.classifier)
+    model_base, model_ext = os.path.splitext(args.model or "%s_%s" % (args.format or "ucca", args.classifier))
     p = Parser(model_file=model_base + model_suffix + model_ext, model_type=args.classifier, beam=args.beam)
     p.train(train_passages, dev=dev_passages, iterations=args.iterations)
     if test_passages:
