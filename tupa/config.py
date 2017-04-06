@@ -155,24 +155,21 @@ class Config(object, metaclass=Singleton):
         elif not self.args.log:
             self.args.log = "parse.log"
         self.constraints = constraints.Constraints(self.args)
-        if self.args.format:
-            self.input_converter, self.output_converter = convert.CONVERTERS[self.args.format]
-            if self.args.format == "amr":
-                self.args.implicit = True
-                if not self.args.node_label_dim:
-                    self.args.node_label_dim = 20
-                if not self.args.max_node_labels:
-                    self.args.max_node_labels = 1000
-                self.args.max_action_labels = max(self.args.max_action_labels, 600)
-                self.args.max_edge_labels = max(self.args.max_edge_labels, 500)
-                from contrib import amrutil
-                self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
-                self.args.node_label_attrib = amrutil.LABEL_ATTRIB
-                self.args.unknown_label = amrutil.UNKNOWN_LABEL
-                self.constraints = amrutil.Constraints(self.args)
-        else:
-            self.input_converter = self.output_converter = None
-            self.evaluate, self.Scores = evaluation.evaluate, evaluation.Scores
+        self.input_converter, self.output_converter = convert.CONVERTERS.get(self.args.format, (None, None))
+        self.evaluate, self.Scores = evaluation.evaluate, evaluation.Scores
+        if self.args.format == "amr":
+            self.args.implicit = True
+            if not self.args.node_label_dim:
+                self.args.node_label_dim = 20
+            if not self.args.max_node_labels:
+                self.args.max_node_labels = 1000
+            self.args.max_action_labels = max(self.args.max_action_labels, 600)
+            self.args.max_edge_labels = max(self.args.max_edge_labels, 500)
+            from contrib import amrutil
+            self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
+            self.args.node_label_attrib = amrutil.LABEL_ATTRIB
+            self.args.unknown_label = amrutil.UNKNOWN_LABEL
+            self.constraints = amrutil.Constraints(self.args)
         if self.args.output_format:
             _, self.output_converter = convert.CONVERTERS[self.args.output_format]
         else:
