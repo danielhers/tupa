@@ -163,6 +163,8 @@ def is_valid_arg(node, label, *tags, is_parent=True):
                 break
         else:
             return True
+    if label is None:
+        return True
     label = resolve_label(node, label)
     valid_args = ROLES.get(label)
     if valid_args is None:
