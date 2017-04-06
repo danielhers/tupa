@@ -167,7 +167,7 @@ def is_valid_arg(node, label, *tags, is_parent=True):
         try:
             roleset = pb.roleset(".".join(ROLESET_PATTERN.match(label).groups()))
             valid_args = tuple(r.attrib["n"] for r in roleset.findall("roles/role"))
-        except (AttributeError, ValueError, TypeError):
+        except (AttributeError, ValueError):
             valid_args = ()
         ROLES[label] = valid_args
     return not valid_args or all(t.replace("-of", "").endswith(valid_args) for t in args)
@@ -195,7 +195,7 @@ def resolve_label(node, label=None, reverse=False):
             label = node.label
         except AttributeError:
             label = node.attrib[LABEL_ATTRIB]
-    if label != VARIABLE_LABEL:
+    if label not in (VARIABLE_LABEL, None):
         terminals = [c for c in node.children if getattr(c, "text", None)]
         if len(terminals) > 1:
             label = _replace("<t>", "".join(t.text for t in terminals))
