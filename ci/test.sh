@@ -21,6 +21,10 @@ mlp)
 bilstm)
     python tupa/parse.py -v -c bilstm --max-words-external=5000 --layer-dim=100 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle --dynet-mem=1500
     ;;
+noop)
+    python tupa/parse.py -v -c noop -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle #|| exit 1
+#    python tupa/parse.py -v -c noop -We -f amr alignment-release-dev-bio.txt -t alignment-release-training-bio.txt
+    ;;
 tune)
     export PARAMS_NUM=5
     while :; do
