@@ -12,21 +12,22 @@ TOK_PATTERN = "#\s*::(?:tok|snt)\s+(.*)"
 DEP_PREFIX = ":"
 TOP_DEP = ":top"
 DEP_REPLACEMENT = {amrutil.INSTANCE_OF: "instance"}
-IGNORED_AMR_EDGES = {"wiki"}
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
+LAYERS = {"wiki": ("wiki",),
+          "numbers": ()}
 
 
 class AmrConverter(convert.FormatConverter):
     def __init__(self):
         self.passage_id = self.amr_id = self.lines = self.tokens = self.nodes = self.return_amr = \
-            self.remove_cycles = None
+            self.remove_cycles = self.layers = None
 
     def from_format(self, lines, passage_id, return_amr=False, remove_cycles=True, **kwargs):
-        del kwargs
         self.passage_id = passage_id
         self.return_amr = return_amr
         self.remove_cycles = remove_cycles
+        self.layers = [l for l in LAYERS if kwargs.get(l)]
         self.lines = []
         self.amr_id = self.tokens = None
         for line in lines:
@@ -91,8 +92,9 @@ class AmrConverter(convert.FormatConverter):
             visited.add(triple)
             head, rel, dep = triple
             rel = rel.lstrip(DEP_PREFIX)
-            if rel in IGNORED_AMR_EDGES:
-                continue
+            for layer, rels in LAYERS.items():
+                if layer not in self.layers and rel in rels:
+                    continue
             parent = variables.get(head)
             assert parent is not None, "Outgoing edge from a non-variable: " + str(triple)
             node = variables.get(dep)
@@ -165,11 +167,10 @@ class AmrConverter(convert.FormatConverter):
                 node.attrib["implicit"] = True
                 pending += node.parents
 
-    @staticmethod
-    def _update_labels(l1):
+    def _update_labels(self, l1):
         for node in l1.all:
             label = amrutil.resolve_label(node, reverse=True)
-            if label and label.startswith("Num("):
+            if "numbers" not in self.layers and label and label.startswith("Num("):
                 label = re.sub("\([^<]+<", "(<", label)
                 label = re.sub(">[^>]+\)", ">)", label)
                 label = re.sub("\([\d.,]+\)", "(1)", label)
