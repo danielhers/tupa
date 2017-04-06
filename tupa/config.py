@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 
-from contrib import convert
+from scheme import convert
 from tupa import constraints
 from ucca import evaluation, constructions
 
@@ -165,7 +165,7 @@ class Config(object, metaclass=Singleton):
                 self.args.max_node_labels = 1000
             self.args.max_action_labels = max(self.args.max_action_labels, 600)
             self.args.max_edge_labels = max(self.args.max_edge_labels, 500)
-            from contrib import amrutil
+            from scheme import amrutil
             self.evaluate, self.Scores = amrutil.evaluate, amrutil.Scores
             self.args.node_label_attrib = amrutil.LABEL_ATTRIB
             self.args.unknown_label = amrutil.UNKNOWN_LABEL

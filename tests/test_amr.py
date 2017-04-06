@@ -2,7 +2,7 @@
 
 import unittest
 
-from contrib import amrutil, convert
+from scheme import amrutil, convert
 
 
 class ConversionTests(unittest.TestCase):

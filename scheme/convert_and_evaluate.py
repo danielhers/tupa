@@ -5,11 +5,10 @@ import glob
 import os
 import sys
 
-from ucca.ioutil import passage2file
+from scheme import convert
+from scheme.amrutil import evaluate, Scores
 from tupa.config import VAction
-
-from contrib import convert
-from contrib.amrutil import evaluate, Scores
+from ucca.ioutil import passage2file
 
 desc = """Parses files in AMR format, converts to UCCA standard format,
 converts back to the original format and evaluates using smatch.

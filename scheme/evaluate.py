@@ -2,7 +2,7 @@
 
 import argparse
 
-from contrib.amrutil import evaluate
+from scheme.amrutil import evaluate
 from tupa.config import VAction
 
 desc = """Parses files in AMR format, and evaluates using smatch.

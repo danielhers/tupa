@@ -2,8 +2,8 @@
 	path = ucca
 	url = https://github.com/danielhers/ucca
 [submodule "smatch"]
-	path = contrib/smatch
+	path = scheme/smatch
 	url = https://github.com/danielhers/pSMATCH
 [submodule "amr"]
-	path = contrib/amr
+	path = scheme/amr
 	url = https://github.com/danielhers/amr-hackathon

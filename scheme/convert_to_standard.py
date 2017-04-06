@@ -6,7 +6,7 @@ import os
 import re
 import sys
 
-from contrib import convert
+from scheme import convert
 from ucca.ioutil import passage2file
 
 desc = """Parses files in AMR PENMAN format, and writes UCCA standard format, as XML or binary pickle.

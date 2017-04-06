@@ -2,7 +2,7 @@ import re
 
 import penman
 
-from contrib import amrutil
+from scheme import amrutil
 from ucca import layer0, layer1, convert, textutil
 
 
