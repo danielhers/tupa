@@ -85,7 +85,7 @@ class State(object):
                     self.check(violation is None, violation)
                 self.check(self.constraints.allow_parent(node, action.tag),
                            message and "%s may not be a '%s' parent (currently %s)" % (
-                               node, action.tag, ", ".join(map(str, node.outgoing))))
+                               node, action.tag, ", ".join(map(str, node.outgoing)) or "childless"))
                 self.check(not self.constraints.require_implicit_childless or not node.implicit,
                            message and "Implicit nodes may not have children: %s" % s0, is_type=True)
 
@@ -100,7 +100,7 @@ class State(object):
                     self.check(violation is None, violation)
                 self.check(self.constraints.allow_child(node, action.tag),
                            message and "%s may not be a '%s' child (currently %s)" % (
-                               node, action.tag, ", ".join(map(str, node.incoming))))
+                               node, action.tag, ", ".join(map(str, node.incoming)) or "parentless"))
                 self.check(self.constraints.possible_multiple_incoming is None or
                            action.remote or action.tag in self.constraints.possible_multiple_incoming or
                            all(e.remote or e.tag in self.constraints.possible_multiple_incoming for e in node.incoming),
