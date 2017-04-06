@@ -27,7 +27,6 @@ addons:
 before_install:
   - ci/install-miniconda.sh
   - export PATH="$HOME/miniconda/bin:$PATH"
-  - pip install pytest-pep8
   - ci/install-prerequisites.sh
 install:
   - python setup.py install
