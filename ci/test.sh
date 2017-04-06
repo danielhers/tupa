@@ -32,7 +32,7 @@ tune-ucca)
     column -t -s, params.csv
     ;;
 noop-amr)
-    python tupa/parse.py -v -c noop -We -f amr alignment-release-dev-bio.txt -t alignment-release-training-bio.txt
+    python tupa/parse.py -v -c noop -We -f amr -t alignment-release-dev-bio.txt
     ;;
 convert-amr)
     python contrib/convert_and_evaluate.py alignment-release-dev-bio.txt -v
