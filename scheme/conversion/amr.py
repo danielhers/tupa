@@ -78,9 +78,8 @@ class AmrConverter(convert.FormatConverter):
             visited.add(triple)
             head, rel, dep = triple
             rel = rel.lstrip(DEP_PREFIX)
-            for layer, rels in LAYERS.items():
-                if layer not in self.layers and rel in rels:
-                    continue
+            if any(l not in self.layers and rel in r for l, r in LAYERS.items()):
+                continue
             parent = variables.get(head)
             assert parent is not None, "Outgoing edge from a non-variable: " + str(triple)
             node = variables.get(dep)
