@@ -252,7 +252,7 @@ class Parser(object):
         if self.oracle:
             true_label = None if node is None else node.attrib.get(self.args.node_label_attrib)
             if true_label is not None and not self.state.is_valid_label(true_label):
-                raise ParserException("True label is invalid: %s for '%s'" % (true_label, node))
+                raise ParserException("True label is invalid: %s for %s" % (true_label, self.state.node))
             true_id = self.model.labels[true_label]
         scores = self.model.model.score(features, axis=LABEL_AXIS)
         if self.args.verbose > 2:
