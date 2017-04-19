@@ -33,5 +33,4 @@ class Constraints(constraints.Constraints):
                ((label == MINUS) == (node.incoming_tags == {POLARITY})) and \
                (not node.parents or
                 is_valid_arg(node, label, *node.parents[0].outgoing_tags) and
-                is_valid_arg(node, label, *node.parents[0].incoming_tags, is_parent=False)) and \
-               (TERMINAL_TAGS & node.outgoing_tags or not PLACEHOLDER.search(label))
+                is_valid_arg(node, label, *node.parents[0].incoming_tags, is_parent=False))
