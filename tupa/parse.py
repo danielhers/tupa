@@ -251,15 +251,13 @@ class Parser(object):
     def label_node(self, features, node, train):
         if self.oracle:
             true_label = None if node is None else node.attrib.get(self.args.node_label_attrib)
+            if not self.state.is_valid_label(true_label):
+                raise ParserException("True label is invalid: %s" % true_label)
             true_id = self.model.labels[true_label]
         scores = self.model.model.score(features, axis=LABEL_AXIS)
         if self.args.verbose > 2:
             print("  label scores: " + ",".join(("%s: %g" % x for x in zip(self.model.labels.all, scores))))
-        try:
-            label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label)
-        except StopIteration as e:
-            raise ParserException("No valid label available\n%s" % (("True label: %s" % true_label) if self.oracle
-                                                                    else self.model.labels.all)) from e
+        label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label)
         if self.oracle:
             is_correct = (label == true_label)
             if is_correct:
