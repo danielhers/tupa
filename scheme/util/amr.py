@@ -14,36 +14,34 @@ try:
 finally:
     os.chdir(prev_dir)
 
-LABEL_ATTRIB = "label"
-INSTANCE_OF = "instance-of"
-PLACEHOLDER = re.compile("<[^>]*>")
-VARIABLE_LABEL = "v"
-UNKNOWN_LABEL = "Concept(amr-unknown)"
+
 TERMINAL_TAGS = {constraints.EdgeTags.Terminal, constraints.EdgeTags.Punctuation}
 COMMENT_PREFIX = "#"
 ID_PATTERN = "#\s*::id\s+(\S+)"
 TOK_PATTERN = "#\s*::(?:tok|snt)\s+(.*)"
 DEP_PREFIX = ":"
 TOP_DEP = ":top"
-DEP_REPLACEMENT = {INSTANCE_OF: "instance"}
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
 LAYERS = {"wiki": ("wiki",),
           "numbers": ()}
-ROLESET_PATTERN = re.compile("Concept\((.*)-(\d+)\)")
-ROLES = {"Concept(ablate-01)": ("0", "1", "2", "3")}  # cache and fix for roles missing in PropBank
+PLACEHOLDER = re.compile("<[^>]*>")
+LABEL_ATTRIB = "label"
+INSTANCE = "instance"
+CONCEPT = "Concept"
+POLARITY = "polarity"
+MINUS = "Const(-)"
+UNKNOWN_LABEL = CONCEPT + "(amr-unknown)"
+ROLESET_PATTERN = re.compile(CONCEPT + "\((.*)-(\d+)\)")
+ROLES = {CONCEPT + "(ablate-01)": ("0", "1", "2", "3")}  # cache and fix for roles missing in PropBank
 
 
 def parse(*args, **kwargs):
     return amr_lib.AMR(*args, **kwargs)
 
 
-def is_variable(label):
-    return label == VARIABLE_LABEL
-
-
 def is_concept(label):
-    return label is not None and label.startswith("Concept(")
+    return label is not None and label.startswith(CONCEPT + "(")
 
 
 def is_valid_arg(node, label, *tags, is_parent=True):
@@ -51,16 +49,6 @@ def is_valid_arg(node, label, *tags, is_parent=True):
         return True
     args = [t for t in tags if t.startswith("ARG") and (t.endswith("-of") != is_parent)]
     if not args:
-        return True
-    if label == VARIABLE_LABEL:
-        for edge in node.outgoing:
-            if edge.tag == INSTANCE_OF:
-                node = edge.child
-                label = node.label
-                break
-        else:
-            return True
-    if label is None:
         return True
     label = resolve_label(node, label)
     valid_args = ROLES.get(label)
@@ -95,8 +83,8 @@ def resolve_label(node, label=None, reverse=False):
         try:
             label = node.label
         except AttributeError:
-            label = node.attrib[LABEL_ATTRIB]
-    if label not in (VARIABLE_LABEL, None):
+            label = node.attrib.get(LABEL_ATTRIB)
+    if label is not None:
         terminals = sorted([c for c in node.children if getattr(c, "text", None)],
                            key=lambda c: getattr(c, "index", getattr(c, "position", None)))
         if len(terminals) > 1:

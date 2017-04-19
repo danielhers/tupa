@@ -40,7 +40,8 @@ class State(object):
         self.buffer = deque()
         self.nodes = []
         self.heads = set()
-        self.root = self.add_node(orig_node=l1.heads[0], label=self.constraints.root_label)  # Root is not in the buffer
+        self.node = None
+        self.root = self.add_node(orig_node=l1.heads[0])  # Root is not in the buffer
         self.stack.append(self.root)
         self.buffer += self.terminals
         self.nodes += self.terminals
@@ -152,7 +153,6 @@ class State(object):
                         if self.constraints.require_connected:
                             self.check(s0 is self.root or s0.is_linkage or s0.text or s0.incoming,
                                        message and "Reducing parentless non-terminal %s" % s0, is_type=True)
-                            self.check(self.constraints.allow_reduce(s0), message and "Reducing %s" % s0, is_type=True)
                 else:  # Binary actions
                     self.check(len(self.stack) > 1, message and "%s with len(stack) < 2" % action, is_type=True)
                     if action.is_type(Actions.LeftEdge, Actions.RightEdge, Actions.LeftRemote, Actions.RightRemote):
@@ -187,8 +187,8 @@ class State(object):
 
     def check_valid_label(self, label, message=False):
         if self.args.constraints and label is not None:
-            node = self.nodes[-1]
-            self.check(self.constraints.allow_label(node, label), message and "May not label %s as %s" % (node, label))
+            self.check(self.constraints.allow_label(self.node, label),
+                       message and "May not label %s as %s" % (self.node, label))
 
     @staticmethod
     def check(condition, *args, **kwargs):
@@ -240,13 +240,13 @@ class State(object):
         Called during parsing to add a new Node (not core.Node) to the temporary representation
         :param kwargs: keyword arguments for Node()
         """
-        node = Node(len(self.nodes), swap_index=self.calculate_swap_index(), **kwargs)
+        self.node = Node(len(self.nodes), swap_index=self.calculate_swap_index(), **kwargs)
         if self.args.verify:
-            assert node not in self.nodes, "Node already exists"
-        self.nodes.append(node)
-        self.heads.add(node)
-        self.log.append("node: %s (swap_index: %g)" % (node, node.swap_index))
-        return node
+            assert self.node not in self.nodes, "Node already exists"
+        self.nodes.append(self.node)
+        self.heads.add(self.node)
+        self.log.append("node: %s (swap_index: %g)" % (self.node, self.node.swap_index))
+        return self.node
 
     def calculate_swap_index(self):
         """
@@ -281,7 +281,7 @@ class State(object):
             return None, None
 
     def label_node(self, label):
-        self.nodes[-1].label = label
+        self.node.label = label
         self.log.append("label: %s" % label)
         self.type_validity_cache = {}
 

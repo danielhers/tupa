@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import penman
 
 from ucca import layer0, layer1, convert
@@ -68,7 +70,6 @@ class AmrConverter(convert.FormatConverter):
         _, _, root = top[0]  # init with child of TOP
         pending = amr.triples(head=root)
         self.nodes = {}  # map triples to UCCA nodes: dep gets a new node each time unless it's a variable
-        l1.top_node.attrib[LABEL_ATTRIB] = VARIABLE_LABEL  # the root is always a variable
         variables = {root: l1.top_node}  # map AMR variables to UCCA nodes
         visited = set()  # to avoid cycles
         while pending:  # breadth-first search creating layer 1 nodes
@@ -79,19 +80,17 @@ class AmrConverter(convert.FormatConverter):
             head, rel, dep = triple
             rel = rel.lstrip(DEP_PREFIX)
             if any(l not in self.layers and rel in r for l, r in LAYERS.items()):
-                continue
+                continue  # skip edges belonging to non-included layers
             parent = variables.get(head)
             assert parent is not None, "Outgoing edge from a non-variable: " + str(triple)
             node = variables.get(dep)
             if node is None:  # first occurrence of dep, or dep is not a variable
                 pending += amr.triples(head=dep)  # to continue breadth-first search
-                node = l1.add_fnode(parent, rel)
+                node = parent if isinstance(dep, amr_lib.Concept) else l1.add_fnode(parent, rel)
                 if isinstance(dep, amr_lib.Var):
                     variables[dep] = node
-                    label = VARIABLE_LABEL
-                else:  # save concept name / constant value in node attributes
-                    label = repr(dep)
-                node.attrib[LABEL_ATTRIB] = label
+                else:  # concept or constant: save value in node attributes
+                    node.attrib[LABEL_ATTRIB] = repr(dep)  # concepts are saved as variable labels, not as actual nodes
             elif not self.remove_cycles or not _reachable(dep, head):  # reentrancy; do not add if results in a cycle
                 l1.add_remote(parent, rel, node)
             self.nodes[triple] = node
@@ -172,29 +171,33 @@ class AmrConverter(convert.FormatConverter):
             def __init__(self):
                 self._id = 0
 
-            def __call__(self, label):
-                if label == VARIABLE_LABEL:
-                    self._id += 1
-                    return label + str(self._id)
-                return label
+            def __call__(self):
+                self._id += 1
+                return "v" + str(self._id)
 
-        def _node_label(node):
-            return AmrConverter.strip(labels.setdefault(node.ID, id_gen(resolve_label(node))))
-
-        id_gen = _IdGenerator()
         pending = list(passage.layer(layer1.LAYER_ID).top_node)
         visited = set()  # to avoid cycles
-        labels = {}
+        labels = defaultdict(_IdGenerator())
         while pending:
             edge = pending.pop(0)
             if edge not in visited and edge.tag not in TERMINAL_TAGS:  # skip cycles and terminals
                 visited.add(edge)
                 pending += edge.child
-                tag = DEP_REPLACEMENT.get(edge.tag, edge.tag)
-                yield _node_label(edge.parent), tag, _node_label(edge.child)
+                head_dep = []  # will be pair of (parent label, child label)
+                for node in edge.parent, edge.child:
+                    label = resolve_label(node)
+                    if is_concept(label):
+                        concept = None if node.ID in labels else AmrConverter.strip(label)
+                        label = labels[node.ID]
+                        if concept is not None:  # first time we encounter the variable
+                            yield label, INSTANCE, concept  # add instance-of edge
+                    else:  # constant
+                        label = AmrConverter.strip(label)
+                    head_dep.append(label)
+                yield head_dep[0], edge.tag, head_dep[1]
 
     @staticmethod
-    def strip(label):
+    def strip(label):  # remove type name
         return re.sub("\w+\((.*)\)", "\\1", label)
 
 
