@@ -32,5 +32,5 @@ class Constraints(constraints.Constraints):
         return (is_concept(label) or node.outgoing_tags <= TERMINAL_TAGS) and \
                (label != MINUS or node.incoming_tags <= {POLARITY}) and \
                (not node.parents or
-                is_valid_arg(node, label, *node.parents[0].outgoing_tags) and
-                is_valid_arg(node, label, *node.parents[0].incoming_tags, is_parent=False))
+                is_valid_arg(node, label, *node.outgoing_tags) and
+                is_valid_arg(node, label, *node.incoming_tags, is_parent=False))
