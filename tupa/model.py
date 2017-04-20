@@ -15,13 +15,14 @@ class Model(object):
             model_type = SPARSE
         self.model_type = model_type
         self.filename = filename
+        self.actions = Actions()
         if feature_extractor is not None or model is not None:
             self.feature_extractor = feature_extractor
             self.model = model
             self.load_labels()
             return
         max_labels = (Config().args.max_action_labels,)
-        labels = (Actions().all,)
+        labels = (self.actions.all,)
         node_labels = FeatureParameters("n", Config().args.node_label_dim, Config().args.max_node_labels,
                                         min_count=Config().args.min_node_label_count)
         FeatureEnumerator.init_data(node_labels)
@@ -91,7 +92,6 @@ class Model(object):
             try:
                 self.feature_extractor.load(self.filename)
                 self.model.load()
-                Actions().all = self.model.labels[ACTION_AXIS]
                 self.load_labels()
             except FileNotFoundError:
                 raise
@@ -99,13 +99,14 @@ class Model(object):
                 raise IOError("Failed loading model from '%s'" % self.filename) from e
 
     def load_labels(self):
+        self.actions.all = self.model.labels[ACTION_AXIS]
         if len(self.model.labels) > 1:
             node_labels = self.feature_extractor.params.get("n")
             if node_labels is not None and node_labels.size:  # Use same list of node labels as for features
                 self.labels = node_labels.data
-                self.model.labels = (Actions().all, self.labels.all)
+                self.model.labels = (self.actions.all, self.labels.all)
             else:  # Not used as a feature, just get labels
                 self.labels = UnknownDict()
-                self.labels.all = self.model.labels[LABEL_AXIS]
+                _, self.labels.all = self.model.labels
         else:
             self.labels = None

@@ -5,7 +5,6 @@ from enum import Enum
 
 from classifiers.classifier import ClassifierProperty
 from states.state import State
-from tupa.action import Actions
 from tupa.config import Config
 from tupa.model import Model, ACTION_AXIS, LABEL_AXIS
 from tupa.oracle import Oracle
@@ -213,9 +212,9 @@ class Parser(object):
             true_actions = self.get_oracle_actions(train)
             scores = self.model.model.score(features, axis=ACTION_AXIS)  # Returns NumPy array
             if self.args.verbose > 2:
-                print("  action scores: " + ",".join(("%s: %g" % x for x in zip(Actions().all, scores))))
+                print("  action scores: " + ",".join(("%s: %g" % x for x in zip(self.model.actions.all, scores))))
             try:
-                predicted_action = self.predict(scores, Actions().all, self.state.is_valid_action)
+                predicted_action = self.predict(scores, self.model.actions.all, self.state.is_valid_action)
             except StopIteration as e:
                 raise ParserException("No valid action available\n%s" % (self.oracle.log if self.oracle else "")) from e
             action = true_actions.get(predicted_action.id)
@@ -277,7 +276,7 @@ class Parser(object):
         true_actions = {}
         if self.oracle:
             try:
-                true_actions = self.oracle.get_actions(self.state)
+                true_actions = self.oracle.get_actions(self.state, self.model.actions)
             except (AttributeError, AssertionError) as e:
                 if train:
                     raise ParserException("Error in oracle during training") from e

@@ -3,6 +3,7 @@
 import unittest
 
 from states.state import State
+from tupa.action import Actions
 from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP
 from tupa.oracle import Oracle
 from tupa.parse import Parser
@@ -29,9 +30,10 @@ class ParserTests(unittest.TestCase):
         for passage in self.load_passages():
             oracle = Oracle(passage)
             state = State(passage)
+            actions = Actions()
             actions_taken = []
             while True:
-                action = min(oracle.get_actions(state).values(), key=str)
+                action = min(oracle.get_actions(state, actions).values(), key=str)
                 state.transition(action)
                 actions_taken.append("%s\n" % action)
                 if state.finished:

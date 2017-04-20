@@ -1,11 +1,11 @@
-from tupa.config import Config, Singleton
+from tupa.config import Config
 
 
 class Action(object):
     type_to_id = {}
     MAX_SWAP = 15  # default maximum size for compound swap
 
-    def __init__(self, action_type, tag=None, has_label=False, orig_edge=None, orig_node=None, oracle=None, _id=None):
+    def __init__(self, action_type, tag=None, has_label=False, orig_edge=None, orig_node=None, oracle=None, id_=None):
         self.type = action_type  # String
         self.tag = tag  # Usually the tag of the created edge; but if COMPOUND_SWAP, the distance
         self.has_label = has_label  # Whether this action type requires a label or not
@@ -20,7 +20,7 @@ class Action(object):
         if self.type_id is None:
             self.type_id = len(Action.type_to_id)
             Action.type_to_id[self.type] = self.type_id
-        self._id = _id
+        self.id = id_
 
     def is_type(self, *others):
         return self.type_id in (o.type_id for o in others)
@@ -55,24 +55,8 @@ class Action(object):
     def is_swap(self):
         return self.is_type(Actions.Swap)
 
-    @property
-    def id(self):
-        self.generate_id()
-        return self._id
 
-    def generate_id(self):
-        if self._id is None:
-            key = (self.type_id, self.tag)
-            actions = Actions()
-            self._id = actions.ids.get(key)
-            if self._id is None:  # New action, add to list
-                # noinspection PyTypeChecker
-                self._id = len(actions.all)
-                actions.all.append(self(tag=self.tag, _id=self._id))
-                actions.ids[key] = self._id
-
-
-class Actions(object, metaclass=Singleton):
+class Actions(object):
     Shift = Action("SHIFT")
     Node = Action("NODE", has_label=True)
     RemoteNode = Action("REMOTE-NODE", has_label=True)
@@ -105,9 +89,21 @@ class Actions(object, metaclass=Singleton):
     def all(self, actions):
         self._all = list(actions)
         self._ids = {(action.type_id, action.tag): i for i, action in enumerate(actions)}
+        for action in self._all:
+            self.generate_id(action)
 
     @property
     def ids(self):
         if self._all is None:
             self.init()
         return self._ids
+
+    def generate_id(self, action):
+        if action.id is None:
+            key = (action.type_id, action.tag)
+            action.id = self.ids.get(key)
+            if action.id is None:  # New action, add to list
+                # noinspection PyTypeChecker
+                action.id = len(self.all)
+                self.all.append(action(tag=action.tag, id_=action.id))
+                self.ids[key] = action.id
