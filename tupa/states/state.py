@@ -105,7 +105,7 @@ class State(object):
                 self.check(self.constraints.possible_multiple_incoming is None or
                            action.remote or action.tag in self.constraints.possible_multiple_incoming or
                            all(e.remote or e.tag in self.constraints.possible_multiple_incoming for e in node.incoming),
-                           message and "Multiple parents only allowed if remote or linkage: %s, %s" % (action, node))
+                           message and "Multiple non-remote '%s' parents not allowed for %s" % (action.tag, node))
 
         def _check_possible_edge():
             parent, child = self.get_parent_child(action)

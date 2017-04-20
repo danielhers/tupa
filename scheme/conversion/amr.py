@@ -105,10 +105,9 @@ class AmrConverter(convert.FormatConverter):
                 terminal.attrib[LABEL_ATTRIB] = layer1.NodeTags.Punctuation
             else:
                 tag = layer1.EdgeTags.Terminal
-                parents[0].add(tag, terminal)
-            for parent in parents[1:]:  # add as remote terminal child to all parents but the first
+            for parent in parents:
                 if parent not in terminal.parents:  # avoid multiple identical edges (e.g. :polarity~e.68 -~e.68)
-                    l1.add_remote(parent, tag, terminal)
+                    parent.add(tag, terminal)
 
     def align_nodes(self, amr):
         preterminals = {}

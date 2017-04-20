@@ -72,7 +72,7 @@ class Constraints(object):
         self.require_implicit_childless = require_implicit_childless
         self.allow_root_terminal_children = allow_root_terminal_children
         self.top_level = top_level
-        self.possible_multiple_incoming = possible_multiple_incoming if self.args.linkage else ()
+        self.possible_multiple_incoming = possible_multiple_incoming
         self.tag_rules = \
             [TagRule(trigger={Direction.incoming: childless_incoming_trigger},
                      allowed={Direction.outgoing: childless_outgoing_allowed})] + \

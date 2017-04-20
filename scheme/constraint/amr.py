@@ -5,7 +5,7 @@ class Constraints(constraints.Constraints):
     def __init__(self, args):
         super(Constraints, self).__init__(args, require_connected=True,
                                           require_implicit_childless=False, allow_root_terminal_children=True,
-                                          possible_multiple_incoming=(), unique_outgoing=(),
+                                          possible_multiple_incoming=TERMINAL_TAGS, unique_outgoing=(),
                                           childless_incoming_trigger=(), unique_incoming=(),
                                           mutually_exclusive_outgoing=(), top_level=None)
         self.tag_rules.append(

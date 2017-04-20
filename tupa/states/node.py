@@ -57,21 +57,25 @@ class Node(object):
         :param terminals: all terminals strings in the passage
         :param labeled: there is a reference passage, so keep original node IDs in the "remarks" field
         """
-        if Config().args.verify:
-            assert self.node is None or self.text is not None,\
-                "Trying to create the same node twice: %s, parent: %s" % (self.node.ID, parent)
         edge = self.outgoing[0] if len(self.outgoing) == 1 else None
         if self.text:  # For Word terminals (Punctuation already created by add_punct for parent)
-            if self.node is None and parent.node is not None:
-                self.node = parent.node.add(EdgeTags.Terminal,
-                                            terminals[self.index - 1]).child
+            if parent.node is not None:
+                if self.node is None:
+                    self.node = parent.node.add(EdgeTags.Terminal, terminals[self.index - 1]).child
+                elif self.node not in parent.node.children:
+                    parent.node.add(EdgeTags.Terminal, self.node)
         elif edge and edge.child.text and layer0.is_punct(terminals[edge.child.index - 1]):
             if Config().args.verify:
                 assert tag == EdgeTags.Punctuation, "Tag for %s is %s" % (parent.node_id, tag)
                 assert edge.tag == EdgeTags.Terminal, "Tag for %s is %s" % (self.node_id, edge.tag)
-            self.node = l1.add_punct(parent.node, terminals[edge.child.index - 1])
-            edge.child.node = self.node[0].child
+            if self.node is None:
+                self.node = l1.add_punct(parent.node, terminals[edge.child.index - 1])
+                edge.child.node = self.node[0].child
+            elif self.node not in parent.node.children:
+                parent.node.add(EdgeTags.Punctuation, self.node)
         else:  # The usual case
+            if Config().args.verify:
+                assert self.node is None, "Trying to create the same node twice: %s, parent: %s" % (self.node, parent)
             if parent is not None and parent.node is None:  # If parent is an orphan, attach it to the root with F label
                 parent.add_to_l1(l1, None, EdgeTags.Function, terminals, labeled)
             self.node = l1.add_fnode(None if parent is None else parent.node, tag, implicit=self.implicit)
