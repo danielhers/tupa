@@ -207,7 +207,7 @@ class Parser(object):
             if self.args.check_loops:
                 self.check_loop()
             features = self.model.feature_extractor.extract_features(self.state)
-            if self.model.labels and self.state.root.label is None:  # Root node requires label before first action
+            if self.model.labels and not self.label_count:  # Root node requires label before first action
                 self.label_node(features, self.state.root.orig_node, train)
                 continue
             true_actions = self.get_oracle_actions(train)
