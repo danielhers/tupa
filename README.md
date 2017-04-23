@@ -42,10 +42,10 @@ be sure to include it when parsing too.
 
 To download and extract the pre-trained models, run:
 
-    wget http://www.cs.huji.ac.il/~danielh/ucca/{sparse,mlp,bilstm}.tgz
-    tar xvzf sparse.tgz
-    tar xvzf mlp.tgz
-    tar xvzf bilstm.tgz
+    wget http://www.cs.huji.ac.il/~danielh/ucca/{sparse,mlp,bilstm}.tar.gz
+    tar xvzf sparse.tar.gz
+    tar xvzf mlp.tar.gz
+    tar xvzf bilstm.tar.gz
 
 Run the parser using any of them:
 
