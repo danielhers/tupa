@@ -15,6 +15,7 @@ git clone https://github.com/clab/dynet
 cd dynet
 hg clone https://bitbucket.org/eigen/eigen
 mkdir build
+ln -s eigen build/
 cd build
 cmake .. -DEIGEN3_INCLUDE_DIR=eigen -DPYTHON=`which python`
 make
