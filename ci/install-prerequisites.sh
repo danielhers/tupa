@@ -29,7 +29,11 @@ mkdir -p build
 [ -d build/eigen ] || ln -sf eigen build/
 cd build
 export CXX="g++-4.8" CC="gcc-4.8"
-cmake .. -DEIGEN3_INCLUDE_DIR=eigen -DPYTHON=`which python`
+if [ -z ${BOOST+x} ]; then
+  cmake .. -DEIGEN3_INCLUDE_DIR=eigen -DBOOST_ROOT:PATHNAME=$BOOST -DBoost_NO_BOOST_CMAKE=TRUE -DBoost_NO_SYSTEM_PATHS=TRUE -DBoost_LIBRARY_DIRS:FILEPATH=$BOOST/lib -DPYTHON=`which python`
+else
+  cmake .. -DEIGEN3_INCLUDE_DIR=eigen -DPYTHON=`which python`
+fi
 make
 cd python
 python setup.py install
