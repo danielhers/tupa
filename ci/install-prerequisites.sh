@@ -26,7 +26,7 @@ else
   hg clone https://bitbucket.org/eigen/eigen
 fi
 mkdir -p build
-[ -d build/eigen ] || ln -sf eigen build/
+[ -d build/eigen ] || ln -sf ../eigen build/eigen
 cd build
 export CXX="g++-4.8" CC="gcc-4.8"
 if [ -z ${BOOST+x} ]; then
