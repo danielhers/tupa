@@ -1,2 +1,2 @@
-spacy>=1.7.3
+spacy>=1.8.0
 cython>=0.25.2

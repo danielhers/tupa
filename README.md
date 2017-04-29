@@ -10,14 +10,10 @@ TUPA is a transition-based parser for [Universal Conceptual Cognitive Annotation
 
 Install the required modules:
     
-    git submodule update --init --recursive
     virtualenv --python=/usr/bin/python3 .
-    . bin/activate  # on bash
-    source bin/activate.csh  # on csh
-    pip install -r requirements.txt
-    python -m spacy.en.download all
-    ci/install-dynet.sh
-    python ucca/setup.py install
+    . bin/activate              # on bash
+    source bin/activate.csh     # on csh
+    ci/install-prerequisites.sh
     python setup.py install
 
 ### Train the parser

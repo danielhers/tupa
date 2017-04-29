@@ -1,6 +1,10 @@
 cache: apt
 sudo: false
 language: python
+cache:
+  pip: true
+  directories:
+  - $HOME/miniconda
 python:
   - "3.5"
 addons:
@@ -20,15 +24,9 @@ addons:
     - libboost-test1.55-dev
     - libboost-regex1.55-dev
 before_install:
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-  - bash miniconda.sh -b -p $HOME/miniconda
+  - ci/install-miniconda.sh
   - export PATH="$HOME/miniconda/bin:$PATH"
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy libgcc
-  - pip install pytest-pep8
-  - pip install -r requirements.txt
-  - python -m spacy.en.download all > spacy.log
-  - ci/install-dynet.sh
-  - export LD_LIBRARY_PATH="$HOME/dynet:$LD_LIBRARY_PATH"
+  - ci/install-prerequisites.sh
 install:
   - python setup.py install
 before_script:
