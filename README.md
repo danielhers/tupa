@@ -49,9 +49,9 @@ To download and extract the pre-trained models, run:
 
 Run the parser using any of them:
 
-    python tupa/parse.py example.txt -c sparse -m models/ucca-sparse
-    python tupa/parse.py example.txt -c mlp -m models/ucca-mlp
-    python tupa/parse.py example.txt -c bilstm -m models/ucca-bilstm
+    python tupa/parse.py example.txt -c sparse -m models/sparse
+    python tupa/parse.py example.txt -c mlp -m models/mlp
+    python tupa/parse.py example.txt -c bilstm -m models/bilstm
 
 Author
 ------
