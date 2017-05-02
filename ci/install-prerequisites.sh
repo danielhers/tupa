@@ -25,7 +25,11 @@ fi
 mkdir -p build
 [ -d build/eigen ] || ln -sf ../eigen build/
 cd build
-export CXX="g++-4.8" CC="gcc-4.8"
+if hash g++-4.9 2>/dev/null; then
+  export CXX="g++-4.9" CC="gcc-4.9"
+elif hash g++-4.8 2>/dev/null; then
+  export CXX="g++-4.8" CC="gcc-4.8"
+fi
 if [ -z ${BOOST+x} ]; then
   cmake .. -DEIGEN3_INCLUDE_DIR=eigen -DPYTHON=`which python`
 else
