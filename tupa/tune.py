@@ -14,7 +14,7 @@ MODELS_DIR = "models"
 class Params(object):
     def __init__(self, params):
         self.params = params
-        self.params["model"] = "%s/ucca-%s-%d" % (MODELS_DIR, self.params["classifier"], self.params["seed"])
+        self.params["model"] = "%s/%s-%d" % (MODELS_DIR, self.params["classifier"], self.params["seed"])
         self.test_scores = None
         self.dev_scores = ()
 
