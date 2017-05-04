@@ -71,7 +71,7 @@ class Node(object):
             if self.node is None:
                 self.node = l1.add_punct(parent.node, terminals[edge.child.index - 1])
                 edge.child.node = self.node[0].child
-            elif self.node not in parent.node.children:
+            elif parent.node is not None and self.node not in parent.node.children:
                 parent.node.add(EdgeTags.Punctuation, self.node)
         else:  # The usual case
             if Config().args.verify:
