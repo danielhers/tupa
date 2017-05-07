@@ -9,8 +9,8 @@ unit)
       python tupa/parse.py -I 10 -t ucca/doc/toy.xml -d ucca/doc/toy.xml -"$m"m model_toy$m -v || exit 1
       python tupa/parse.py ucca/doc/toy.xml -e"$m"m model_toy$m -v || exit 1
     done
-    python tupa/parse.py -f amr -I 10 -t test_files/LDC2014T12.txt -d test_files/LDC2014T12.txt -sm model_LDC2014T12 -v || exit 1
-    python tupa/parse.py -f amr test_files/LDC2014T12.txt -esm model_LDC2014T12 -v || exit 1
+    python tupa/parse.py -f amr -I 10 -t test_files/LDC2014T12.txt -d test_files/LDC2014T12.txt -m model_LDC2014T12 -v || exit 1
+    python tupa/parse.py -f amr test_files/LDC2014T12.txt -em model_LDC2014T12 -v || exit 1
     ;;
 sparse-ucca)
     python tupa/parse.py -v -c sparse --max-words-external=5000 -Web pickle/dev/*0.pickle -t pickle/train/*0.pickle
