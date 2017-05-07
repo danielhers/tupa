@@ -226,7 +226,7 @@ class Parser(object):
                 action = Config().random.choice(list(true_actions.values())) if train else predicted_action
             if train and not (is_correct and self.update_only_on_error):
                 assert max(true_actions.keys()) < len(scores), \
-                    "Invalid action IDs: %s, model: %s" % (",".join(true_actions.keys()), self.model.model)
+                    "Invalid action IDs: %s; model: %s" % (", ".join(map(str, true_actions.keys())), self.model.model)
                 best_action = self.predict(scores[list(true_actions.keys())], list(true_actions.values()))
                 self.model.model.update(features, axis=ACTION_AXIS, pred=predicted_action.id, true=best_action.id,
                                         importance=self.args.swap_importance if best_action.is_swap else 1)
