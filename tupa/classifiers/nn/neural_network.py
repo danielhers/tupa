@@ -240,7 +240,11 @@ class NeuralNetwork(Classifier):
             if Config().args.verbose > 2:
                 print("Total loss from %d time steps: %g" % (len(self._losses), loss.value()))
             loss.backward()
-            self._trainer.update()
+            # if np.linalg.norm(loss.gradient()) not in (np.inf, np.nan):
+            try:
+                self._trainer.update()
+            except RuntimeError as e:
+                Config().log("Error in update(): %s\n" % e)
             self.init_cg()
             self._losses = []
             self._iteration += 1
