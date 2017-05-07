@@ -8,6 +8,11 @@ desc = """Split AMRs to separate files (important for shuffling before training 
 
 
 def main(args):
+    try:
+        os.mkdir(args.outdir)
+        print("Created " + args.outdir)
+    except FileExistsError:
+        pass
     lines = []
     amr_id = None
     with open(args.filename, encoding="utf-8") as f:
