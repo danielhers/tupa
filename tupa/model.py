@@ -48,15 +48,14 @@ class Model(object):
             raise ValueError("Invalid model type: '%s'" % model_type)
 
     def init_node_labels(self, labels, max_labels):
-        if Config().node_labels:
-            node_labels = FeatureParameters("n", Config().args.node_label_dim, Config().args.max_node_labels,
-                                            min_count=Config().args.min_node_label_count)
-            FeatureEnumerator.init_data(node_labels)
-            self.extra_feature_params.append(node_labels)
-            if node_labels.size:
-                self.labels = node_labels.data
-                labels.append(self.labels.all)
-                max_labels.append(Config().args.max_node_labels)
+        node_labels = FeatureParameters("n", Config().args.node_label_dim, Config().args.max_node_labels,
+                                        min_count=Config().args.min_node_label_count)
+        FeatureEnumerator.init_data(node_labels)
+        self.extra_feature_params.append(node_labels)
+        if Config().node_labels and node_labels.size:
+            self.labels = node_labels.data
+            labels.append(self.labels.all)
+            max_labels.append(Config().args.max_node_labels)
 
     def dense_features_wrapper(self):
         from features.dense_features import DenseFeatureExtractor
