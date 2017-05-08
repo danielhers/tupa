@@ -104,9 +104,10 @@ class Model(object):
             node_labels = self.feature_extractor.params.get("n")
             if node_labels is not None and node_labels.size:  # Use same list of node labels as for features
                 self.labels = node_labels.data
-                self.model.labels = (self.actions.all, self.labels.all)
             else:  # Not used as a feature, just get labels
                 self.labels = UnknownDict()
                 _, self.labels.all = self.model.labels
+            self.model.labels = (self.actions.all, self.labels.all)
         else:
             self.labels = None
+            self.model.labels = (self.actions.all,)
