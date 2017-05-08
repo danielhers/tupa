@@ -39,6 +39,7 @@ FEATURE_TEMPLATES = (
     "s0xs1xs2xs3x",
     # numeric
     "s0s1xs1s0xs0b0xb0s0x"
+    "s0s1ds0b0d"
     "s0hqyPCIRs1hqys2hys3hy"
     "b0hPCIR",
 )
@@ -59,15 +60,13 @@ class DenseFeatureExtractor(FeatureExtractor):
             if feature_template.suffix in NON_NUMERIC_FEATURE_SUFFIXES:
                 self.non_numeric_feature_templates.append(feature_template)
             else:
-                assert self.numeric_features_template is None, \
-                    "More than one numeric feature template: %s and %s" % (
+                assert self.numeric_features_template is None, "More than one numeric feature template: %s and %s" % (
                         self.numeric_features_template, feature_template)
                 self.numeric_features_template = feature_template
         self.non_numeric_by_suffix = {}
         for feature_template in self.non_numeric_feature_templates:
             for element in feature_template.elements:
-                assert len(element.properties) <= 1,\
-                    "Non-numeric element with %d properties: %s in feature %s" % (
+                assert len(element.properties) <= 1, "Non-numeric element with %d properties: %s in feature %s" % (
                         len(element.properties), element, feature_template)
                 if element.properties:
                     assert element.properties == feature_template.elements[0].properties, \
@@ -75,8 +74,7 @@ class DenseFeatureExtractor(FeatureExtractor):
                             element, feature_template.elements[0])
             assert feature_template.suffix not in self.non_numeric_by_suffix, \
                 "More than one non-numeric feature with '%s' suffix: %s and %s" % (
-                    feature_template.suffix,
-                    self.non_numeric_by_suffix[feature_template.suffix],
+                    feature_template.suffix, self.non_numeric_by_suffix[feature_template.suffix],
                     feature_template)
             self.non_numeric_by_suffix[feature_template.suffix] = feature_template
 
@@ -120,14 +118,12 @@ class DenseFeatureExtractor(FeatureExtractor):
                     template.elements = [e for e in template.elements if e not in longest.elements]
 
     def num_features_numeric(self):
-        assert self.numeric_features_template is not None, \
-            "Missing numeric features template"
+        assert self.numeric_features_template is not None, "Missing numeric features template"
         return sum(len(e.properties) for e in self.numeric_features_template.elements) + EXTRA_NUMERIC_FEATURES
 
     def num_features_non_numeric(self, suffix):
         feature_template = self.non_numeric_by_suffix.get(suffix)
-        assert feature_template is not None, \
-            "Missing feature template for suffix '%s'" % suffix
+        assert feature_template is not None, "Missing feature template for suffix '%s'" % suffix
         return sum(len(e.properties) for e in feature_template.elements)
 
     def features_exist(self, suffix):
