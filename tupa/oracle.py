@@ -40,23 +40,25 @@ class Oracle(object):
         self.edge_found = False
         self.log = None
 
-    def get_actions(self, state, all_actions):
+    def get_actions(self, state, all_actions, create=True):
         """
         Determine all zero-cost action according to current state
         Asserts that the returned action is valid before returning
         :param state: current State of the parser
         :param all_actions: Actions object used to map actions to IDs
+        :param create: whether to create new actions if they do not exist yet
         :return: dict of action ID to Action
         """
         actions = {}
         invalid = []
         for action in self.generate_actions(state):
-            all_actions.generate_id(action)
-            try:
-                state.check_valid_action(action, message=True)
-                actions[action.id] = action
-            except InvalidActionError as e:
-                invalid.append((action, e))
+            all_actions.generate_id(action, create=create)
+            if action.id is not None:
+                try:
+                    state.check_valid_action(action, message=True)
+                    actions[action.id] = action
+                except InvalidActionError as e:
+                    invalid.append((action, e))
         assert actions, self.generate_log(invalid, state)
         return actions
 

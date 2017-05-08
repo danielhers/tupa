@@ -98,11 +98,11 @@ class Actions(object):
             self.init()
         return self._ids
 
-    def generate_id(self, action):
+    def generate_id(self, action, create=True):
         if action.id is None:
             key = (action.type_id, action.tag)
             action.id = self.ids.get(key)
-            if action.id is None:  # New action, add to list
+            if create and action.id is None:  # New action, add to list
                 # noinspection PyTypeChecker
                 action.id = len(self.all)
                 self.all.append(action(tag=action.tag, id_=action.id))

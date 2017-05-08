@@ -278,7 +278,7 @@ class Parser(object):
         true_actions = {}
         if self.oracle:
             try:
-                true_actions = self.oracle.get_actions(self.state, self.model.actions)
+                true_actions = self.oracle.get_actions(self.state, self.model.actions, create=train)
             except (AttributeError, AssertionError) as e:
                 if train:
                     raise ParserException("Error in oracle during training") from e
