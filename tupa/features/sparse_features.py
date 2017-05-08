@@ -38,7 +38,7 @@ FEATURE_TEMPLATES = (
     "s0s1", "s1s0", "s0b0", "b0s0",
     "s0b0e", "b0s0e",
     # dependency distance:
-    "s0s1d", "s1s0d", "s0b0d", "b0s0d",
+    "s0s1d", "s0b0d",
     # past actions (Tokgöz and Eryiğit 2015):
     "a0Ae", "a1Ae",
     # implicit and remote
