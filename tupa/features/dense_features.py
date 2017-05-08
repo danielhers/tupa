@@ -79,7 +79,7 @@ class DenseFeatureExtractor(FeatureExtractor):
             self.non_numeric_by_suffix[feature_template.suffix] = feature_template
 
     def init_features(self, state, suffix):
-        return [self.get_prop(None, n, None, suffix, state) for n in state.terminals]
+        return [self.get_prop(None, n, None, None, suffix, state) for n in state.terminals]
 
     def extract_features(self, state, params=None):
         """
