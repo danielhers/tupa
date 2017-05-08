@@ -38,9 +38,9 @@ FEATURE_TEMPLATES = (
     # gap types
     "s0xs1xs2xs3x",
     # numeric
+    "s0s1xs1s0xs0b0xb0s0x"
     "s0hqyPCIRs1hqys2hys3hy"
-    "b0hPCIR"
-    "s0s1s0b0s0",
+    "b0hPCIR",
 )
 EXTRA_NUMERIC_FEATURES = 2  # bias, node ratio
 
@@ -122,9 +122,7 @@ class DenseFeatureExtractor(FeatureExtractor):
     def num_features_numeric(self):
         assert self.numeric_features_template is not None, \
             "Missing numeric features template"
-        return sum([len(e.properties) for e in self.numeric_features_template.elements] +
-                   [len([e for e in self.numeric_features_template.elements
-                         if not e.properties])]) - 1 + EXTRA_NUMERIC_FEATURES
+        return sum(len(e.properties) for e in self.numeric_features_template.elements) + EXTRA_NUMERIC_FEATURES
 
     def num_features_non_numeric(self, suffix):
         feature_template = self.non_numeric_by_suffix.get(suffix)

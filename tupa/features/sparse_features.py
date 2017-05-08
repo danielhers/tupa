@@ -35,7 +35,7 @@ FEATURE_TEMPLATES = (
     "s0P", "s0C", "s0wP", "s0wC",
     "b0P", "b0C", "b0wP", "b0wC",
     # existing edges (Tokgöz and Eryiğit 2015):
-    "s0s1", "s1s0", "s0b0", "b0s0",
+    "s0s1x", "s1s0x", "s0b0x", "b0s0x",
     "s0b0e", "b0s0e",
     # dependency distance:
     "s0s1d", "s0b0d",

@@ -59,11 +59,12 @@ class FeatureTemplateElement(object):
                            C: number of children
                            I: number of implicit children
                            R: number of remote children
-                           If empty, the value will be 1 if there is an edge from this node to the
-                           next one in the template, or 0 otherwise. Also, if the next node comes
-                           with the "e" property, then the edge with this node will be considered.
-                           If the next node comes with the "d" property, then the value will be the
-                           dependency distance between the head terminals of the nodes.
+                           If empty,
+                             If the next node comes with the "x" property, the value will be 1 if there is an edge from
+                             this node to the next one in the template, or 0 otherwise.
+                             If the next node comes with the "e" property, the edge with this node will be considered.
+                             If the next node comes with the "d" property, the value will be the dependency distance
+                             between the head terminals of the nodes.
         """
         self.source = source
         self.index = int(index)
@@ -130,6 +131,7 @@ class FeatureExtractor(object):
         values = []
         prev_elem = None
         prev_node = None
+        binary = False
         for element in feature_template.elements:
             node = FeatureExtractor.get_node(element, state)
             if not element.properties:
@@ -139,30 +141,32 @@ class FeatureExtractor(object):
                             return None
                         values.append(default)
                     else:
-                        values.append(int(prev_node in node.parents))
+                        raise ValueError("Too many property-less consecutive elements: %s%s" % (prev_elem, element))
                 prev_elem = element
                 prev_node = node
+                binary = True
             else:
-                prev_elem = None
-                prev_node = None
                 for p in ("i",) if indexed else element.properties:
-                    v = FeatureExtractor.get_prop(element, node, prev_node, p, state)
+                    v = FeatureExtractor.get_prop(element, node, prev_node, binary, p, state)
                     if v is None:
                         if default is None:
                             return None
                         values.append(default)
                     else:
                         values.append(v)
+                prev_elem = None
+                prev_node = None
+                binary = False
         return values
 
     @staticmethod
-    def get_prop(element, node, prev_node, p, state):
+    def get_prop(element, node, prev_node, binary, p, state):
         try:
             if element is not None and element.source == "a":
                 return FeatureExtractor.get_action_prop(node, p)
             elif p in "pq":
                 return FeatureExtractor.get_separator_prop(state.stack[-1:-3:-1], state.terminals, p)
-            return FeatureExtractor.get_node_prop(node, p, prev_node)
+            return FeatureExtractor.get_node_prop(node, p, prev_node, binary)
         except (AttributeError, StopIteration):
             return None
 
@@ -197,25 +201,25 @@ class FeatureExtractor(object):
         return node
 
     NODE_PROP_GETTERS = {
-        "w": lambda node, _: FeatureExtractor.get_head_terminal(node).text,
-        "t": lambda node, _: FeatureExtractor.get_head_terminal(node).pos_tag,
-        "d": lambda node, prev_node: (FeatureExtractor.get_head_terminal(node).dep_rel if prev_node is None else
-                                      FeatureExtractor.get_dependency_distance(prev_node, node)),
-        "h": lambda node, _: FeatureExtractor.get_height(node),
-        "i": lambda node, _: FeatureExtractor.get_head_terminal(node).index - 1,
-        "e": lambda node, prev_node: next(e.tag for e in node.incoming if prev_node is None or e.parent == prev_node),
-        "n": lambda node, _: node.label,
-        "x": lambda node, _: FeatureExtractor.gap_type(node),
-        "y": lambda node, _: FeatureExtractor.gap_length_sum(node),
-        "P": lambda node, _: len(node.incoming),
-        "C": lambda node, _: len(node.outgoing),
-        "I": lambda node, _: len([n for n in node.children if n.implicit]),
-        "R": lambda node, _: len([e for e in node.outgoing if e.remote]),
+        "w": lambda node, *_: FeatureExtractor.get_head_terminal(node).text,
+        "t": lambda node, *_: FeatureExtractor.get_head_terminal(node).pos_tag,
+        "d": lambda node, prev_node, binary: (FeatureExtractor.get_dependency_distance(prev_node, node) if binary else
+                                              FeatureExtractor.get_head_terminal(node).dep_rel),
+        "h": lambda node, *_: FeatureExtractor.get_height(node),
+        "i": lambda node, *_: FeatureExtractor.get_head_terminal(node).index - 1,
+        "e": lambda node, prev_node, binary: next(e.tag for e in node.incoming if not binary or e.parent == prev_node),
+        "n": lambda node, *_: node.label,
+        "x": lambda node, prev_node, binary: (prev_node in node.parents) if binary else FeatureExtractor.gap_type(node),
+        "y": lambda node, *_: FeatureExtractor.gap_length_sum(node),
+        "P": lambda node, *_: len(node.incoming),
+        "C": lambda node, *_: len(node.outgoing),
+        "I": lambda node, *_: len([n for n in node.children if n.implicit]),
+        "R": lambda node, *_: len([e for e in node.outgoing if e.remote]),
     }
 
     @staticmethod
-    def get_node_prop(node, p, prev_node=None):
-        return FeatureExtractor.NODE_PROP_GETTERS[p](node, prev_node)
+    def get_node_prop(node, p, prev_node, binary):
+        return FeatureExtractor.NODE_PROP_GETTERS[p](node, prev_node, binary)
 
     ACTION_PROPS = {
         "A": "type",
