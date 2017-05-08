@@ -4,6 +4,7 @@ import unittest
 
 from conversion.amr import from_amr, to_amr
 from evaluation.amr import evaluate
+from ucca.convert import split2sentences
 
 
 class ConversionTests(unittest.TestCase):
@@ -13,6 +14,16 @@ class ConversionTests(unittest.TestCase):
         """Test that converting an AMR to UCCA and back retains perfect Smatch F1"""
         for passage, ref, amr_id in read_test_amr():
             converted = to_amr(passage)[0]
+            scores = evaluate(converted, ref, amr_id)
+            self.assertAlmostEqual(scores.f1, 1, msg=converted)
+
+    def test_split(self):
+        """Test that splitting a single-sentence AMR converted to UCCA returns the same AMR"""
+        for passage, ref, amr_id in read_test_amr():
+            sentences = split2sentences(passage)
+            self.assertEqual(len(sentences), 1, "Should be one sentence: %s" % passage)
+            sentence = sentences[0]
+            converted = to_amr(sentence)[0]
             scores = evaluate(converted, ref, amr_id)
             self.assertAlmostEqual(scores.f1, 1, msg=converted)
 
