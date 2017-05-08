@@ -131,23 +131,19 @@ class FeatureExtractor(object):
         values = []
         prev_elem = None
         prev_node = None
-        binary = False
         for element in feature_template.elements:
             node = FeatureExtractor.get_node(element, state)
             if not element.properties:
                 if prev_elem is not None:
-                    if node is None or prev_node is None:
-                        if default is None:
-                            return None
-                        values.append(default)
-                    else:
-                        raise ValueError("Too many property-less consecutive elements: %s%s" % (prev_elem, element))
+                    assert node is None or prev_node is None, "Property-less elements: %s%s" % (prev_elem, element)
+                    if default is None:
+                        return None
+                    values.append(default)
                 prev_elem = element
                 prev_node = node
-                binary = True
             else:
                 for p in ("i",) if indexed else element.properties:
-                    v = FeatureExtractor.get_prop(element, node, prev_node, binary, p, state)
+                    v = FeatureExtractor.get_prop(element, node, prev_node, prev_elem, p, state)
                     if v is None:
                         if default is None:
                             return None
@@ -156,17 +152,16 @@ class FeatureExtractor(object):
                         values.append(v)
                 prev_elem = None
                 prev_node = None
-                binary = False
         return values
 
     @staticmethod
-    def get_prop(element, node, prev_node, binary, p, state):
+    def get_prop(element, node, prev_node, prev_elem, p, state):
         try:
             if element is not None and element.source == "a":
                 return FeatureExtractor.get_action_prop(node, p)
             elif p in "pq":
                 return FeatureExtractor.get_separator_prop(state.stack[-1:-3:-1], state.terminals, p)
-            return FeatureExtractor.get_node_prop(node, p, prev_node, binary)
+            return FeatureExtractor.get_node_prop(node, p, prev_node, prev_elem)
         except (AttributeError, StopIteration):
             return None
 
@@ -218,8 +213,8 @@ class FeatureExtractor(object):
     }
 
     @staticmethod
-    def get_node_prop(node, p, prev_node, binary):
-        return FeatureExtractor.NODE_PROP_GETTERS[p](node, prev_node, binary)
+    def get_node_prop(node, p, prev_node, prev_elem):
+        return FeatureExtractor.NODE_PROP_GETTERS[p](node, prev_node, prev_elem is not None)
 
     ACTION_PROPS = {
         "A": "type",
