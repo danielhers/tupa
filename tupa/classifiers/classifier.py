@@ -23,7 +23,7 @@ class Classifier(object):
         self.model = None
         self.model_type = model_type
         self.filename = filename
-        self.labels = labels
+        self.labels = tuple(labels)
         self._num_labels = self.num_labels
         self._input_dim = None
         self.is_frozen = model is not None

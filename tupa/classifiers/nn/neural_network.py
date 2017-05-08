@@ -50,7 +50,7 @@ class NeuralNetwork(Classifier):
         :param input_params: dict of feature type name -> FeatureInformation
         """
         super(NeuralNetwork, self).__init__(*args)
-        self.max_num_labels = max_num_labels
+        self.max_num_labels = tuple(max_num_labels)
         self._layers = Config().args.layers
         self._layer_dim = Config().args.layer_dim
         self._output_dim = Config().args.output_dim

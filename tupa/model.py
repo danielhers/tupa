@@ -21,40 +21,44 @@ class Model(object):
             self.model = model
             self.load_labels()
             return
-        max_labels = (Config().args.max_action_labels,)
-        labels = (self.actions.all,)
-        node_labels = FeatureParameters("n", Config().args.node_label_dim, Config().args.max_node_labels,
-                                        min_count=Config().args.min_node_label_count)
-        FeatureEnumerator.init_data(node_labels)
-        if node_labels.size:
-            self.labels = node_labels.data
-            labels += (self.labels.all,)
-            max_labels += (Config().args.max_node_labels,)
-        else:
-            self.labels = None
+        max_values = [Config().args.max_action_labels]
+        values = [self.actions.all]
+        self.labels = None
+        self.extra_feature_params = []
+        self.init_node_labels(values, max_values)
         if model_type == SPARSE:
             from features.sparse_features import SparseFeatureExtractor
             from linear.sparse_perceptron import SparsePerceptron
             self.feature_extractor = SparseFeatureExtractor()
-            self.model = SparsePerceptron(filename, labels)
+            self.model = SparsePerceptron(filename, values)
         elif model_type == MLP_NN:
             from nn.feedforward import MLP
-            self.feature_extractor = self.dense_features_wrapper(node_labels)
-            self.model = MLP(filename, labels, input_params=self.feature_extractor.params, max_num_labels=max_labels)
+            self.feature_extractor = self.dense_features_wrapper()
+            self.model = MLP(filename, values, input_params=self.feature_extractor.params, max_num_labels=max_values)
         elif model_type == BILSTM_NN:
             from nn.bilstm import BiLSTM
-            self.feature_extractor = FeatureIndexer(self.dense_features_wrapper(node_labels))
-            self.model = BiLSTM(filename, labels, input_params=self.feature_extractor.params, max_num_labels=max_labels)
+            self.feature_extractor = FeatureIndexer(self.dense_features_wrapper())
+            self.model = BiLSTM(filename, values, input_params=self.feature_extractor.params, max_num_labels=max_values)
         elif model_type == NOOP:
             from features.empty_features import EmptyFeatureExtractor
             from classifiers.noop import NoOp
             self.feature_extractor = EmptyFeatureExtractor()
-            self.model = NoOp(filename, labels)
+            self.model = NoOp(filename, values)
         else:
             raise ValueError("Invalid model type: '%s'" % model_type)
 
-    @staticmethod
-    def dense_features_wrapper(*args):
+    def init_node_labels(self, labels, max_labels):
+        if Config().node_labels:
+            node_labels = FeatureParameters("n", Config().args.node_label_dim, Config().args.max_node_labels,
+                                            min_count=Config().args.min_node_label_count)
+            FeatureEnumerator.init_data(node_labels)
+            self.extra_feature_params.append(node_labels)
+            if node_labels.size:
+                self.labels = node_labels.data
+                labels.append(self.labels.all)
+                max_labels.append(Config().args.max_node_labels)
+
+    def dense_features_wrapper(self):
         from features.dense_features import DenseFeatureExtractor
         params = [
             FeatureParameters("W", Config().args.word_dim_external, Config().args.max_words_external,
@@ -67,7 +71,7 @@ class Model(object):
             FeatureParameters("p", Config().args.punct_dim, Config().args.max_puncts),
             FeatureParameters("x", Config().args.gap_dim, Config().args.max_gaps),
             FeatureParameters("A", Config().args.action_dim, Config().args.max_action_types),
-        ] + list(args)
+        ] + self.extra_feature_params
         return FeatureEnumerator(DenseFeatureExtractor(), params)
 
     def init_features(self, state, train):

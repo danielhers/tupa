@@ -158,6 +158,7 @@ class Config(object, metaclass=Singleton):
         self.input_converter, self.output_converter = CONVERTERS.get(self.args.format, (None, None))
         self.evaluate, self.Scores = evaluation.evaluate, evaluation.Scores
         if self.args.format == "amr":
+            self.node_labels = True
             self.args.implicit = True
             if not self.args.node_label_dim:
                 self.args.node_label_dim = 20
@@ -171,6 +172,8 @@ class Config(object, metaclass=Singleton):
             self.args.node_label_attrib = LABEL_ATTRIB
             self.args.unknown_label = UNKNOWN_LABEL
             self.constraints = Constraints(self.args)
+        else:
+            self.node_labels = False
         if self.args.output_format:
             _, self.output_converter = CONVERTERS[self.args.output_format]
         else:
