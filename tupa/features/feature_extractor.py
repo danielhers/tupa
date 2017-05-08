@@ -62,6 +62,8 @@ class FeatureTemplateElement(object):
                            If empty, the value will be 1 if there is an edge from this node to the
                            next one in the template, or 0 otherwise. Also, if the next node comes
                            with the "e" property, then the edge with this node will be considered.
+                           If the next node comes with the "d" property, then the value will be the
+                           dependency distance between the head terminals of the nodes.
         """
         self.source = source
         self.index = int(index)
@@ -159,10 +161,8 @@ class FeatureExtractor(object):
             if element is not None and element.source == "a":
                 return FeatureExtractor.get_action_prop(node, p)
             elif p in "pq":
-                return FeatureExtractor.get_separator_prop(
-                    state.stack[-1:-3:-1], state.terminals, p)
-            else:
-                return FeatureExtractor.get_node_prop(node, p, prev_node)
+                return FeatureExtractor.get_separator_prop(state.stack[-1:-3:-1], state.terminals, p)
+            return FeatureExtractor.get_node_prop(node, p, prev_node)
         except (AttributeError, StopIteration):
             return None
 
@@ -199,11 +199,11 @@ class FeatureExtractor(object):
     NODE_PROP_GETTERS = {
         "w": lambda node, _: FeatureExtractor.get_head_terminal(node).text,
         "t": lambda node, _: FeatureExtractor.get_head_terminal(node).pos_tag,
-        "d": lambda node, _: FeatureExtractor.get_head_terminal(node).dep_rel,
+        "d": lambda node, prev_node: (FeatureExtractor.get_head_terminal(node).dep_rel if prev_node is None else
+                                      FeatureExtractor.get_dependency_distance(prev_node, node)),
         "h": lambda node, _: FeatureExtractor.get_height(node),
         "i": lambda node, _: FeatureExtractor.get_head_terminal(node).index - 1,
-        "e": lambda node, prev_node: next(e.tag for e in node.incoming
-                                          if prev_node is None or e.parent == prev_node),
+        "e": lambda node, prev_node: next(e.tag for e in node.incoming if prev_node is None or e.parent == prev_node),
         "n": lambda node, _: node.label,
         "x": lambda node, _: FeatureExtractor.gap_type(node),
         "y": lambda node, _: FeatureExtractor.gap_length_sum(node),
@@ -230,10 +230,8 @@ class FeatureExtractor(object):
     def get_separator_prop(nodes, terminals, p):
         if len(nodes) < 2:
             return None
-        t0, t1 = sorted([FeatureExtractor.get_head_terminal(node) for node in nodes],
-                        key=lambda t: t.index)
-        punctuation = [terminal for terminal in terminals[t0.index:t1.index - 1]
-                       if terminal.tag == layer0.NodeTags.Punct]
+        t0, t1 = sorted([FeatureExtractor.get_head_terminal(node) for node in nodes], key=lambda t: t.index)
+        punctuation = [t for t in terminals[t0.index:t1.index - 1] if t.tag == layer0.NodeTags.Punct]
         if p == "p" and len(punctuation) == 1:
             return punctuation[0].text
         if p == "q":
@@ -272,12 +270,10 @@ class FeatureExtractor(object):
     def get_head_terminal_height(node, return_height=False):
         height = 0
         while node.text is None:  # Not a terminal
-            edges = [edge for edge in node.outgoing
-                     if not edge.remote and not edge.child.implicit]
+            edges = [edge for edge in node.outgoing if not edge.remote and not edge.child.implicit]
             if not edges or height > 30:
                 return None
-            node = min(edges, key=lambda edge: FeatureExtractor.EDGE_PRIORITY.get(
-                edge.tag, 0)).child
+            node = min(edges, key=lambda edge: FeatureExtractor.EDGE_PRIORITY.get(edge.tag, 0)).child
             height += 1
         return height if return_height else node
 
@@ -305,3 +301,12 @@ class FeatureExtractor(object):
                for child in node.children):
             return "s"  # Source
         return "n"  # None
+
+    @staticmethod
+    def get_dependency_distance(node1, node2):
+        t1, t2 = FeatureExtractor.get_head_terminal(node1), FeatureExtractor.get_head_terminal(node2)
+        if t1.dep_head == t2.index:
+            return 1
+        elif t2.dep_head == t1.index:
+            return -1
+        return None
