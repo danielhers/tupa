@@ -32,10 +32,10 @@ class Classifier(object):
 
     @property
     def num_labels(self):
-        return tuple(len(l) for l in self.labels)
+        return tuple(map(len, self.labels))
 
     def num_labels_str(self):
-        return "x".join("%d" % l for l in self.num_labels)
+        return "x".join(map(str, self.num_labels))
 
     def score(self, features, axis):
         if not self.is_frozen:
