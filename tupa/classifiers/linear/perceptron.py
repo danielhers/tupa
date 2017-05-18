@@ -16,7 +16,6 @@ class Perceptron(Classifier):
         super(Perceptron, self).__init__(*args, model=model)
         if self.is_frozen:
             self.model = model
-        self._update_index = 0  # Counter for calls to update()
         self.initial_learning_rate = self.learning_rate
         self.epoch = epoch
         self.update_learning_rate()
@@ -31,7 +30,7 @@ class Perceptron(Classifier):
         :param importance: how much to scale the feature vector for the weight update
         """
         super(Perceptron, self).update(features, axis, pred, true, importance)
-        self._update_index += 1
+        self.updates += 1
 
     def resize(self, axis=None):
         raise NotImplementedError()
@@ -53,7 +52,7 @@ class Perceptron(Classifier):
         if average:
             print("Done (%.3fs)." % (time.time() - started))
         print("Labels: " + self.num_labels_str())
-        print("Features: %d" % self._input_dim)
+        print("Features: %d" % self.input_dim)
         return finalized
 
     def _finalize_model(self, average):
@@ -67,9 +66,7 @@ class Perceptron(Classifier):
         Save all parameters to file
         """
         d = {
-            "_update_index": self._update_index,
             "initial_learning_rate": self.initial_learning_rate,
-            "epoch": self.epoch,
         }
         d.update(self.save_extra())
         return d
@@ -78,9 +75,7 @@ class Perceptron(Classifier):
         return {"model": self.model}
 
     def load_model(self, d):
-        self._update_index = d["_update_index"]
         self.initial_learning_rate = d["initial_learning_rate"]
-        self.epoch = d["epoch"]
         self.load_extra(d)
 
     def load_extra(self, d):

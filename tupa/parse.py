@@ -335,6 +335,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
     test_scores = None
     model_base, model_ext = os.path.splitext(args.model or "%s_%s" % (args.format or "ucca", args.classifier))
     p = Parser(model_file=model_base + model_suffix + model_ext, model_type=args.classifier, beam=args.beam)
+    print("%s %s" % (os.path.basename(__file__), Config()))
     p.train(train_passages, dev=dev_passages, iterations=args.iterations)
     if test_passages:
         if args.train or args.folds:
@@ -385,7 +386,6 @@ def main():
     assert args.model or args.train or args.folds, "Either --model or --train or --folds is required"
     assert not (args.train or args.dev) or args.folds is None, "--train and --dev are incompatible with --folds"
     assert args.train or not args.dev, "--dev is only possible together with --train"
-    print("%s %s" % (os.path.basename(__file__), Config()))
     test_scores = None
     dev_scores = None
     if args.testscores:

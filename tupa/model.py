@@ -92,10 +92,58 @@ class Model(object):
                 self.feature_extractor.load(self.filename)
                 self.model.load()
                 self.load_labels()
+                self.load_params_to_config()
             except FileNotFoundError:
                 raise
             except Exception as e:
                 raise IOError("Failed loading model from '%s'" % self.filename) from e
+
+    def load_params_to_config(self):
+        p = self.feature_extractor.params.get("n")
+        if p is not None:
+            Config().args.node_label_dim = p.dim
+            Config().args.max_node_labels = p.size
+            Config().args.min_node_label_count = p.min_count
+        p = self.feature_extractor.params.get("W")
+        if p is not None:
+            Config().args.word_dim_external = p.dim
+            Config().args.max_words_external = p.size
+            Config().args.word_dropout_external = p.dropout
+            Config().args.update_word_vectors = p.updated
+            Config().args.word_vectors = p.filename
+        p = self.feature_extractor.params.get("w")
+        if p is not None:
+            Config().args.word_dim = p.dim
+            Config().args.max_words = p.size
+            Config().args.word_dropout = p.dropout
+        p = self.feature_extractor.params.get("t")
+        if p is not None:
+            Config().args.tag_dim = p.dim
+            Config().args.max_tags = p.size
+        p = self.feature_extractor.params.get("d")
+        if p is not None:
+            Config().args.dep_dim = p.dim
+            Config().args.max_deps = p.size
+        p = self.feature_extractor.params.get("e")
+        if p is not None:
+            Config().args.edge_label_dim = p.dim
+            Config().args.max_edge_labels = p.size
+        p = self.feature_extractor.params.get("p")
+        if p is not None:
+            Config().args.punct_dim = p.dim
+            Config().args.max_puncts = p.size
+        p = self.feature_extractor.params.get("x")
+        if p is not None:
+            Config().args.gap_dim = p.dim
+            Config().args.max_gaps = p.size
+        p = self.feature_extractor.params.get("A")
+        if p is not None:
+            Config().args.action_dim = p.dim
+            Config().args.max_action_types = p.size
+        if hasattr(self.model, "max_num_labels"):
+            Config().args.max_action_labels = self.model.max_num_labels[ACTION_AXIS]
+            if len(self.model.labels) > 1:
+                Config().args.max_node_labels = self.model.max_num_labels[LABEL_AXIS]
 
     def load_labels(self):
         self.actions.all = self.model.labels[ACTION_AXIS]

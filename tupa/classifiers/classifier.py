@@ -25,8 +25,10 @@ class Classifier(object):
         self.filename = filename
         self.labels = tuple(labels)
         self._num_labels = self.num_labels
-        self._input_dim = None
+        self.input_dim = None
         self.is_frozen = model is not None
+        self.updates = 0
+        self.epoch = 0
         self.learning_rate = Config().args.learning_rate
         self.learning_rate_decay = Config().args.learning_rate_decay
 
@@ -86,6 +88,8 @@ class Classifier(object):
             "is_frozen": self.is_frozen,
             "learning_rate": self.learning_rate,
             "learning_rate_decay": self.learning_rate_decay,
+            "updates": self.updates,
+            "epoch": self.epoch,
         }
         d.update(self.save_model())
         save_dict(self.filename, d)
@@ -105,8 +109,10 @@ class Classifier(object):
         assert model_type is None or model_type == self.model_type, "Model type does not match: %s" % model_type
         self.labels = tuple(map(list, d["labels"]))
         self.is_frozen = d["is_frozen"]
-        self.learning_rate = d["learning_rate"]
-        self.learning_rate_decay = d["learning_rate_decay"]
+        self.updates = d.get("updates", d.get("_update_index", 0))
+        self.epoch = d.get("epoch", 0)
+        Config().args.learning_rate = self.learning_rate = d["learning_rate"]
+        Config().args.learning_rate_decay = self.learning_rate_decay = d["learning_rate_decay"]
         self.load_model(d)
 
     def load_model(self, d):
@@ -119,4 +125,4 @@ class Classifier(object):
         return ()
 
     def __str__(self):
-        return "%s labels, %d features" % (self.num_labels_str(), self._input_dim)
+        return "%s labels, %d features" % (self.num_labels_str(), self.input_dim)
