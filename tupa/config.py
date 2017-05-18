@@ -222,4 +222,6 @@ class Config(object, metaclass=Singleton):
             self._log_file.close()
 
     def __str__(self):
-        return " ".join("%s=%s" % item for item in sorted(vars(self.args).items()))
+        return " ".join("--" + k.replace("_", "-") + ("" if v is True else
+                        (" " + str(" ".join(v) if hasattr(v, "__iter__") and not isinstance(v, str) else v)))
+                        for (k, v) in sorted(vars(self.args).items()) if v not in (None, False, (), ""))

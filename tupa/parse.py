@@ -385,7 +385,7 @@ def main():
     assert args.model or args.train or args.folds, "Either --model or --train or --folds is required"
     assert not (args.train or args.dev) or args.folds is None, "--train and --dev are incompatible with --folds"
     assert args.train or not args.dev, "--dev is only possible together with --train"
-    print("Running parser with %s" % Config())
+    print("%s %s" % (os.path.basename(__file__), Config()))
     test_scores = None
     dev_scores = None
     if args.testscores:
