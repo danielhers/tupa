@@ -1,5 +1,6 @@
 import os
 import pickle
+import pprint as pp
 import sys
 import time
 from collections import OrderedDict, Counter
@@ -137,7 +138,10 @@ def save_dict(filename, d):
     print("Saving to '%s'... " % filename, end="", flush=True)
     started = time.time()
     with open(filename, 'wb') as h:
-        pickle.dump(d, h, protocol=pickle.HIGHEST_PROTOCOL)
+        try:
+            pickle.dump(d, h, protocol=pickle.HIGHEST_PROTOCOL)
+        except RecursionError as e:
+            raise IOError("Failed dumping dictionary:\n" + pp.pformat(d, compact=True)) from e
     print("Done (%.3fs)." % (time.time() - started))
 
 
