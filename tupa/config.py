@@ -145,6 +145,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--dynet-gpus", type=int, help="how many GPUs you want to use")
         group.add_argument("--dynet-gpu-ids", help="the GPUs that you want to use by device ID")
         group.add_argument("--dynet-viz", action="store_true", help="visualize NN and exit")
+        group.add_argument("--dynet-autobatch", choices=(0, 1), default=0, help="auto-batch training examples")
         self.args = argparser.parse_args(args if args else None)
         
         if self.args.model:
@@ -199,6 +200,8 @@ class Config(object, metaclass=Singleton):
             sys.argv += ["--dynet-gpu-ids", str(self.args.dynet_gpu_ids)]
         if self.args.dynet_viz:
             sys.argv += ["--dynet-viz"]
+        if self.args.dynet_autobatch:
+            sys.argv += ["--dynet-autobatch", str(self.args.dynet_autobatch)]
 
     def update(self, params):
         for name, value in params.items():
