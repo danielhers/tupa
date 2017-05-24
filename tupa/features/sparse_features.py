@@ -52,6 +52,8 @@ FEATURE_TEMPLATES = (
     "b0Ln", "b0Rn", "b0Un",
     # height
     "s0h", "s1h", "b0h", "b1h",
+    # NER
+    "s0NT", "s1NT", "b0NT", "b1NT",
 )
 
 

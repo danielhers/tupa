@@ -39,6 +39,7 @@ class Model(object):
             FeatureParameters("p", Config().args.punct_dim, Config().args.max_puncts),
             FeatureParameters("x", Config().args.gap_dim, Config().args.max_gaps),
             FeatureParameters("A", Config().args.action_dim, Config().args.max_action_types),
+            FeatureParameters("T", Config().args.ner_dim, Config().args.max_ner_types),
         ]
         FeatureEnumerator.init_data(node_labels)
         if Config().node_labels and node_labels.size:

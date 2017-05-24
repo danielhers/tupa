@@ -3,7 +3,7 @@ import re
 from ucca import layer0
 from ucca.layer1 import EdgeTags
 
-FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lruLRU]*)([wtdhenpqxyAPCIR]*)")
+FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lruLRU]*)([wtdhenpqxyAPCIRNT]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile("^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 
 
@@ -59,6 +59,8 @@ class FeatureTemplateElement(object):
                            C: number of children
                            I: number of implicit children
                            R: number of remote children
+                           N: numeric value of named entity IOB
+                           T: named entity type
                            If empty,
                              If the next node comes with the "x" property, the value will be 1 if there is an edge from
                              this node to the next one in the template, or 0 otherwise.
@@ -210,6 +212,8 @@ class FeatureExtractor(object):
         "C": lambda node, *_: len(node.outgoing),
         "I": lambda node, *_: len([n for n in node.children if n.implicit]),
         "R": lambda node, *_: len([e for e in node.outgoing if e.remote]),
+        "N": lambda node, *_: int(FeatureExtractor.get_head_terminal(node).ner_iob),
+        "T": lambda node, *_: FeatureExtractor.get_head_terminal(node).ner_type,
     }
 
     @staticmethod
