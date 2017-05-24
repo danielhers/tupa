@@ -74,8 +74,8 @@ class BiLSTM(NeuralNetwork):
         return {
             "lstm_layers": self.lstm_layers,
             "lstm_layer_dim": self.lstm_layer_dim,
-            "embedding_layers": self.lstm_layers,
-            "embedding_layer_dim": self.lstm_layer_dim,
+            "embedding_layers": self.embedding_layers,
+            "embedding_layer_dim": self.embedding_layer_dim,
             "max_length": self.max_length,
         }
 
