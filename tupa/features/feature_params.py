@@ -35,9 +35,10 @@ class FeatureParameters(object):
         self.min_count = min_count
 
     def __repr__(self):
-        return "%s(%s, %d, %d, %f, %s, %s, %s, %s, %s, %s, %s, %d)" % (
-            type(self).__name__, self.suffix, self.dim, self.size, self.dropout, self.updated, self.num, self.init,
-            self.data, self.indexed, self.copy_from, self.filename, self.min_count)
+        return type(self).__name__ + "(" + ", ".join(map(str, (self.suffix,
+            self.dim, self.size, self.dropout, self.updated, self.num,
+            self.init, self.data, self.indexed, self.copy_from, self.filename,
+            self.min_count))) + ")"
 
     @property
     def numeric(self):
