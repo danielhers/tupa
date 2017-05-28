@@ -145,7 +145,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--dynet-gpus", type=int, help="how many GPUs you want to use")
         group.add_argument("--dynet-gpu-ids", help="the GPUs that you want to use by device ID")
         group.add_argument("--dynet-viz", action="store_true", help="visualize NN and exit")
-        group.add_argument("--dynet-autobatch", choices=(0, 1), default=0, help="auto-batch training examples")
+        group.add_argument("--dynet-autobatch", type=int, choices=(0, 1), default=0, help="auto-batch training examples")
         self.args = argparser.parse_args(args if args else None)
         
         if self.args.model:
