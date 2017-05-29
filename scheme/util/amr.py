@@ -88,7 +88,8 @@ def resolve_label(node, label=None, reverse=False):
         except AttributeError:
             label = node.attrib.get(LABEL_ATTRIB)
     if label is not None:
-        terminals = sorted([c for c in node.children if getattr(c, "text", None)],
+        children = [c.children[0] if c.tag == "PNCT" else c for c in node.children]
+        terminals = sorted([c for c in children if getattr(c, "text", None)],
                            key=lambda c: getattr(c, "index", getattr(c, "position", None)))
         if len(terminals) > 1:
             label = _replace("<t>", "".join(t.text for t in terminals))
