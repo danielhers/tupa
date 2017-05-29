@@ -124,8 +124,8 @@ class AmrConverter(convert.FormatConverter):
             # correct missing alignment by expanding to neighboring terminals contained in label
             label = str(triple[2])
             if indices:
-                for start, offset in ((0, -1), (-1, 1)):
-                    i = indices[start] + offset
+                for start, offset in ((indices[0], -1), (indices[-1], 1)):
+                    i = start + offset
                     while 0 <= i < len(tokens) and tokens[i] in label:
                         indices.append(i)
                         i += offset
