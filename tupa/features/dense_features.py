@@ -1,7 +1,7 @@
 from features.feature_extractor import FeatureExtractor
 from features.feature_params import MISSING_VALUE
 
-NON_NUMERIC_FEATURE_SUFFIXES = "wtdenpxAT"
+NON_NUMERIC_FEATURE_SUFFIXES = "wtdenpAT"
 FEATURE_TEMPLATES = (
     # words
     "s0ws1ws2ws3w"  # stack
@@ -35,13 +35,12 @@ FEATURE_TEMPLATES = (
     "s0Lns0Rns0Uns1Lns1Rns1Unb0Lnb0Rnb0Un",  # parents
     # separators
     "s0ps1p",
-    # gap types
-    "s0xs1xs2xs3x",
     # NER
     "s0Ts1Ts2Ts3T"  # stack
     "b0Tb1Tb2Tb3T",  # buffer
     # numeric
     "s0s1xs1s0xs0b0xb0s0x"
+    "s0xs1xs2xs3x"
     "s0s1ds0b0d"
     "s0hqyPCIRNs1hqyNs2hys3hyN"
     "b0hPCIRN",

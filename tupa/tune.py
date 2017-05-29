@@ -71,7 +71,6 @@ def main():
         ("edge_label_dim",          (5, 10, 20)),
         ("node_label_dim",          (10, 20, 30)),
         ("punct_dim",               (1, 2, 3)),
-        ("gap_dim",                 (1, 2, 3)),
         ("action_dim",              (3, 5, 10)),
         ("ner_dim",                 (3, 5, 10)),
         ("max_node_labels",         (500, 750, 1000, 1500, 2000)),

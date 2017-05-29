@@ -37,7 +37,6 @@ class Model(object):
             FeatureParameters("d", Config().args.dep_dim, Config().args.max_deps),
             FeatureParameters("e", Config().args.edge_label_dim, Config().args.max_edge_labels),
             FeatureParameters("p", Config().args.punct_dim, Config().args.max_puncts),
-            FeatureParameters("x", Config().args.gap_dim, Config().args.max_gaps),
             FeatureParameters("A", Config().args.action_dim, Config().args.max_action_types),
             FeatureParameters("T", Config().args.ner_dim, Config().args.max_ner_types),
         ]
@@ -133,10 +132,6 @@ class Model(object):
         if p is not None:
             Config().args.punct_dim = p.dim
             Config().args.max_puncts = p.size
-        p = self.feature_extractor.params.get("x")
-        if p is not None:
-            Config().args.gap_dim = p.dim
-            Config().args.max_gaps = p.size
         p = self.feature_extractor.params.get("A")
         if p is not None:
             Config().args.action_dim = p.dim

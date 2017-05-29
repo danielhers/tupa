@@ -52,7 +52,7 @@ class FeatureTemplateElement(object):
                            n: node label
                            ,: unique separator punctuation between nodes
                            q: count of any separator punctuation between nodes
-                           x: gap type
+                           x: numeric value of gap type
                            y: sum of gap lengths
                            A: action type label
                            P: number of parents
@@ -296,14 +296,12 @@ class FeatureExtractor(object):
 
     @staticmethod
     def gap_type(node):
-        if node.text is not None:
-            return "n"  # None
-        if FeatureExtractor.has_gaps(node):
-            return "p"  # Pass
-        if any(child.text is None and FeatureExtractor.has_gaps(child)
-               for child in node.children):
-            return "s"  # Source
-        return "n"  # None
+        if node.text is None:  # Not a terminal
+            if FeatureExtractor.has_gaps(node):
+                return 1  # Pass
+            if any(child.text is None and FeatureExtractor.has_gaps(child) for child in node.children):
+                return 2  # Source
+        return 0  # None
 
     @staticmethod
     def get_dependency_distance(node1, node2):
