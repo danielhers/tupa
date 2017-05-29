@@ -45,11 +45,12 @@ class AmrConverter(convert.FormatConverter):
         self.lines = []
         self.amr_id = self.tokens = None
         textutil.annotate(passage)
+        l0 = passage.layer(layer0.LAYER_ID)
         l1 = passage.layer(layer1.LAYER_ID)
         self._build_layer1(amr, l1)
-        self._build_layer0(self.align_nodes(amr), l1, passage.layer(layer0.LAYER_ID))
+        self._build_layer0(self.align_nodes(amr), l1, l0)
         self._update_implicit(l1)
-        self._update_labels(l1)
+        self._update_labels(l1, self._get_named_entities(l0))
         # return (passage, penman.encode(amr), self.amr_id) if self.return_amr else passage
         return (passage, amr(alignments=False), self.amr_id) if self.return_amr else passage
 
@@ -131,7 +132,7 @@ class AmrConverter(convert.FormatConverter):
                         i += offset
                 r = range(min(indices), max(indices) + 1)
                 if "".join(tokens[i] for i in r) in label:
-                    indices = r
+                    indices = list(r)
             # also expand to any contained token if it is not too short and it occurs only once
             for i, token in enumerate(tokens):
                 if i not in indices and len(token) > 2 and \
@@ -155,13 +156,27 @@ class AmrConverter(convert.FormatConverter):
                 node.attrib["implicit"] = True
                 pending += node.parents
 
-    def _update_labels(self, l1):
+    @staticmethod
+    def _get_named_entities(l0):
+        entities = {}
+        for terminal in l0.all:
+            entity_type = terminal.extra.get(textutil.NER_KEY)
+            if entity_type:
+                entities[terminal.ID] = entity_type
+        return entities
+
+    def _update_labels(self, l1, entities):
         for node in l1.all:
             label = resolve_label(node, reverse=True)
-            if "numbers" not in self.layers and label and label.startswith("Num("):
-                label = re.sub("\([^<]+<", "(<", label)
-                label = re.sub(">[^>]+\)", ">)", label)
-                label = re.sub("\([\d.,]+\)", "(1)", label)
+            if label:
+                if "numbers" not in self.layers and label.startswith("Num("):
+                    label = re.sub("(?<=\()[^<]+(?=<)|(?<=>)[^>]+(?=\))", "", label)  # remove text in () but out of <>
+                    label = re.sub("(?<=\()[\d.,]+(?=\))", "1", label)
+                elif "ner" not in self.layers:
+                    for terminal in node.terminals:
+                        entity_type = entities.get(terminal.ID)
+                        if entity_type is not None:
+                            label = re.sub("(?<=\()" + re.escape(terminal.text) + "(?=\))", entity_type, label)
             node.attrib[LABEL_ATTRIB] = label
 
     def to_format(self, passage, **kwargs):
