@@ -5,7 +5,7 @@ import penman
 from ucca import layer0, layer1, convert
 from util.amr import *
 
-DELETE_PATTERN = re.compile("\\\\|(?<=<)[^<>]+(?=>)")
+DELETE_PATTERN = re.compile("\\\\|(?<=(?<!<)<)[^<>]+(?=>(?!>))")  # Delete text inside single angle brackets
 
 
 class AmrConverter(convert.FormatConverter):
