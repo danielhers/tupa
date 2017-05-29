@@ -5,6 +5,8 @@ import penman
 from ucca import layer0, layer1, convert
 from util.amr import *
 
+DELETE_PATTERN = re.compile("\\\\|(?<=<)[^<>]+(?=>)")
+
 
 class AmrConverter(convert.FormatConverter):
     def __init__(self):
@@ -30,7 +32,7 @@ class AmrConverter(convert.FormatConverter):
                 else:
                     m = re.match(TOK_PATTERN, line)
                     if m:
-                        self.tokens = [t.strip("@") for t in re.sub("\\\\|(?<=<)[^<>]+(?=>)", "", m.group(1)).split()]
+                        self.tokens = [t.strip("@") or "@" for t in DELETE_PATTERN.sub("", m.group(1)).split()]
             if self.lines:
                 yield self._build_passage()
         if self.lines:
