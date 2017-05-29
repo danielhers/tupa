@@ -33,7 +33,10 @@ POLARITY = "polarity"
 MINUS = "Const(-)"
 UNKNOWN_LABEL = CONCEPT + "(amr-unknown)"
 ROLESET_PATTERN = re.compile(CONCEPT + "\((.*)-(\d+)\)")
-ROLES = {CONCEPT + "(ablate-01)": ("0", "1", "2", "3")}  # cache and fix for roles missing in PropBank
+ROLES = {  # cache + fix for roles missing in PropBank
+    CONCEPT + "(ablate-01)": ("0", "1", "2", "3"),
+    CONCEPT + "(play-11)": ("0", "1", "2", "3"),
+}
 
 
 def parse(*args, **kwargs):
