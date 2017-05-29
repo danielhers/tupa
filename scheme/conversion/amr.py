@@ -129,6 +129,9 @@ class AmrConverter(convert.FormatConverter):
                     while 0 <= i < len(tokens) and tokens[i] in label:
                         indices.append(i)
                         i += offset
+                r = range(min(indices), max(indices) + 1)
+                if "".join(tokens[i] for i in r) in label:
+                    indices = r
             # also expand to any contained token if it is not too short and it occurs only once
             for i, token in enumerate(tokens):
                 if i not in indices and len(token) > 2 and \
