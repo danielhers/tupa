@@ -28,9 +28,11 @@ LABEL_ATTRIB = "label"
 INSTANCE = "instance"
 CONCEPT = "Concept"
 UNKNOWN_LABEL = CONCEPT + "(amr-unknown)"
-LAYERS = {"wiki": (":wiki",),
-          "numbers": (),
-          "urls": (CONCEPT + "(url-entity)",)}
+LAYERS = {  # things to exclude from the graph because they are a separate task
+    "wiki": (":wiki",),
+    "numbers": (),
+    "urls": (CONCEPT + "(url-entity)",),
+}
 ROLESET_PATTERN = re.compile(CONCEPT + "\((.*)-(\d+)\)")
 ROLES = {  # cache + fix for roles missing in PropBank
     CONCEPT + "(ablate-01)": ("0", "1", "2", "3"),
