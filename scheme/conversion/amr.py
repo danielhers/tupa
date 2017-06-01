@@ -179,12 +179,11 @@ class AmrConverter(convert.FormatConverter):
                 label = NUM + "(1)"  # replace all numbers with "1"
             node.attrib[LABEL_ATTRIB] = label
 
-    def to_format(self, passage, **kwargs):
-        del kwargs
+    def to_format(self, passage, metadata=True):
         textutil.annotate(passage)
-        return "\n".join(("# ::id " + passage.ID,
-                          "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all),
-                          penman.encode(penman.Graph(list(self._to_triples(passage)))))),
+        lines = ["# ::id " + passage.ID,
+                 "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all)] if metadata else []
+        return "\n".join(lines + [penman.encode(penman.Graph(list(self._to_triples(passage))))]),
 
     @staticmethod
     def _to_triples(passage):
@@ -247,15 +246,16 @@ def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):
     return AmrConverter().from_format(lines, passage_id, return_amr)
 
 
-def to_amr(passage, *args, **kwargs):
+def to_amr(passage, metadata=True, *args, **kwargs):
     """ Convert from a Passage object to a string in AMR PENMAN format (export)
 
     :param passage: the Passage object to convert
+    :param metadata: whether to print ::id and ::tok lines
 
     :return list of lines representing an AMR in PENMAN format, constructed from the passage
     """
     del args, kwargs
-    return AmrConverter().to_format(passage)
+    return AmrConverter().to_format(passage, metadata)
 
 
 CONVERTERS = dict(convert.CONVERTERS)
