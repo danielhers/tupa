@@ -3,6 +3,7 @@ import os
 import re
 
 from nltk.corpus import wordnet as wn, propbank as pb
+from word2number import w2n
 
 from tupa import constraints
 from ucca import textutil
@@ -31,6 +32,7 @@ PLACEHOLDER = re.compile("<[^>]*>")
 LABEL_ATTRIB = "label"
 INSTANCE = "instance"
 CONCEPT = "Concept"
+NUM = "Num"
 UNKNOWN_LABEL = CONCEPT + "(amr-unknown)"
 ROLESET_PATTERN = re.compile(CONCEPT + "\((.*)-(\d+)\)")
 ROLES = {  # cache + fix for roles missing in PropBank
@@ -94,6 +96,15 @@ def resolve_label(node, label=None, reverse=False):
         children = [c.children[0] if c.tag == "PNCT" else c for c in node.children]
         terminals = sorted([c for c in children if getattr(c, "text", None)],
                            key=lambda c: getattr(c, "index", getattr(c, "position", None)))
+        if not reverse and label.startswith(NUM + "("):  # try replacing spelled-out numbers with digits
+            number = None
+            # noinspection PyBroadException
+            try:
+                number = w2n.word_to_num(" ".join(t.text for t in terminals))
+            except:
+                pass
+            if number is not None:
+                label = "%s(%s)" % (NUM, number)
         if len(terminals) > 1:
             label = _replace("<t>", "".join(t.text for t in terminals))
         for i, terminal in enumerate(terminals):

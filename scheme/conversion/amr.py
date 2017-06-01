@@ -167,8 +167,8 @@ class AmrConverter(convert.FormatConverter):
     def _update_labels(self, l1):
         for node in l1.all:
             label = resolve_label(node, reverse=True)
-            if label and "numbers" not in self.layers and label.startswith("Num("):
-                label = "Num(1)"  # replace all numbers with "1"
+            if label and "numbers" not in self.layers and label.startswith(NUM + "("):
+                label = NUM + "(1)"  # replace all numbers with "1"
             node.attrib[LABEL_ATTRIB] = label
 
     def to_format(self, passage, **kwargs):
