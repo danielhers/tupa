@@ -130,7 +130,8 @@ class State(object):
                            ("after " + ", ".join("%s" % a for a in self.actions[-3:])) if self.actions else "as first"))
         if action.is_type(Actions.Finish):
             if self.args.swap:  # Without swap, the oracle may be incapable even of single action
-                self.check(self.root.outgoing, message and "Root has no child at parse end", is_type=True)
+                self.check(self.root.outgoing or all(n is self.root or n.is_linkage or n.text for n in self.nodes),
+                           message and "Root has no child at parse end", is_type=True)
                 if self.args.constraints and self.constraints.require_connected:
                     for n in self.nodes:
                         self.check(n is self.root or n.is_linkage or n.text or n.incoming,
