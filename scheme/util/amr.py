@@ -23,8 +23,9 @@ DEP_PREFIX = ":"
 TOP_DEP = ":top"
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
-LAYERS = {"wiki": ("wiki",),
-          "numbers": ()}
+LAYERS = {"wiki": (":wiki",),
+          "numbers": (),
+          "urls": ("url-entity",)}
 PLACEHOLDER = re.compile("<[^>]*>")
 LABEL_ATTRIB = "label"
 INSTANCE = "instance"

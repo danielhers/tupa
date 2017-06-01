@@ -81,9 +81,9 @@ class AmrConverter(convert.FormatConverter):
                 continue
             visited.add(triple)
             head, rel, dep = triple
+            if any(l not in self.layers and (rel in r or head in r) for l, r in LAYERS.items()):
+                continue  # skip edges whose head or relation belong to non-included layers
             rel = rel.lstrip(DEP_PREFIX)
-            if any(l not in self.layers and rel in r for l, r in LAYERS.items()):
-                continue  # skip edges belonging to non-included layers
             parent = variables.get(head)
             assert parent is not None, "Outgoing edge from a non-variable: " + str(triple)
             node = variables.get(dep)
