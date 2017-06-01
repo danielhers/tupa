@@ -25,12 +25,10 @@ class Constraints(constraints.Constraints):
                is_valid_arg(node, node.label, tag)
 
     def allow_child(self, node, tag):
-        return (node.label == MINUS or tag != POLARITY) and \
-               is_valid_arg(node, node.label, tag, is_parent=False)
+        return is_valid_arg(node, node.label, tag, is_parent=False)
 
     def allow_label(self, node, label):
         return (is_concept(label) or node.outgoing_tags <= TERMINAL_TAGS) and \
-               (label != MINUS or node.incoming_tags <= {POLARITY}) and \
                (not node.parents or
                 is_valid_arg(node, label, *node.outgoing_tags) and
                 is_valid_arg(node, label, *node.incoming_tags, is_parent=False))

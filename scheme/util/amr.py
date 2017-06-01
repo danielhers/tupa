@@ -30,8 +30,6 @@ PLACEHOLDER = re.compile("<[^>]*>")
 LABEL_ATTRIB = "label"
 INSTANCE = "instance"
 CONCEPT = "Concept"
-POLARITY = "polarity"
-MINUS = "Const(-)"
 UNKNOWN_LABEL = CONCEPT + "(amr-unknown)"
 ROLESET_PATTERN = re.compile(CONCEPT + "\((.*)-(\d+)\)")
 ROLES = {  # cache + fix for roles missing in PropBank
@@ -51,6 +49,8 @@ def is_concept(label):
 def is_valid_arg(node, label, *tags, is_parent=True):
     if label is None:
         return True
+    if not is_parent and node.label == "Const(-)":
+        return {"polarity", "ARG2"}.issuperset(tags)
     args = [t for t in tags if t.startswith("ARG") and (t.endswith("-of") != is_parent)]
     if not args:
         return True
