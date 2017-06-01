@@ -170,7 +170,9 @@ class AmrConverter(convert.FormatConverter):
     def to_format(self, passage, **kwargs):
         del kwargs
         textutil.annotate(passage)
-        return penman.encode(penman.Graph(list(self._to_triples(passage)))),
+        return "\n".join("# ::id " + passage.ID,
+                         "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all),
+                         penman.encode(penman.Graph(list(self._to_triples(passage))))),
 
     @staticmethod
     def _to_triples(passage):
