@@ -11,13 +11,14 @@ DELETE_PATTERN = re.compile("\\\\|(?<=(?<!<)<)[^<>]+(?=>(?!>))")  # Delete text 
 class AmrConverter(convert.FormatConverter):
     def __init__(self):
         self.passage_id = self.amr_id = self.lines = self.tokens = self.nodes = self.return_amr = \
-            self.remove_cycles = self.layers = None
+            self.remove_cycles = self.layers = self.excluded = None
 
     def from_format(self, lines, passage_id, return_amr=False, remove_cycles=True, **kwargs):
         self.passage_id = passage_id
         self.return_amr = return_amr
         self.remove_cycles = remove_cycles
         self.layers = [l for l in LAYERS if kwargs.get(l)]
+        self.excluded = {i for l, r in LAYERS.items() if l not in self.layers for i in r}
         self.lines = []
         self.amr_id = self.tokens = None
         for line in lines:
@@ -75,6 +76,7 @@ class AmrConverter(convert.FormatConverter):
         pending = amr.triples(head=root)
         self.nodes = {}  # map triples to UCCA nodes: dep gets a new node each time unless it's a variable
         variables = {root: l1.top_node}  # map AMR variables to UCCA nodes
+        excluded = set()
         visited = set()  # to avoid cycles
         while pending:  # breadth-first search creating layer 1 nodes
             triple = pending.pop(0)
@@ -82,8 +84,10 @@ class AmrConverter(convert.FormatConverter):
                 continue
             visited.add(triple)
             head, rel, dep = triple
-            if any(l not in self.layers and (rel in r or head in r) for l, r in LAYERS.items()):
-                continue  # skip edges whose head or relation belong to non-included layers
+            if rel in self.excluded or head in excluded:
+                continue  # skip edges whose relation belongs to excluded layers
+            if dep in self.excluded:
+                excluded.add(head)  # skip outgoing edges from variables with excluded concepts
             rel = rel.lstrip(DEP_PREFIX)
             parent = variables.get(head)
             assert parent is not None, "Outgoing edge from a non-variable: " + str(triple)

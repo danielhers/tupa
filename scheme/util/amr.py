@@ -14,7 +14,11 @@ try:
 finally:
     os.chdir(prev_dir)
 
-
+LAYERS = {  # things to exclude from the graph because they are a separate task
+    "wiki": (":wiki",),
+    "numbers": (),
+    "urls": (amr_lib.Concept("url-entity"),),
+}
 TERMINAL_TAGS = {constraints.EdgeTags.Terminal, constraints.EdgeTags.Punctuation}
 COMMENT_PREFIX = "#"
 ID_PATTERN = "#\s*::id\s+(\S+)"
@@ -28,11 +32,6 @@ LABEL_ATTRIB = "label"
 INSTANCE = "instance"
 CONCEPT = "Concept"
 UNKNOWN_LABEL = CONCEPT + "(amr-unknown)"
-LAYERS = {  # things to exclude from the graph because they are a separate task
-    "wiki": (":wiki",),
-    "numbers": (),
-    "urls": (CONCEPT + "(url-entity)",),
-}
 ROLESET_PATTERN = re.compile(CONCEPT + "\((.*)-(\d+)\)")
 ROLES = {  # cache + fix for roles missing in PropBank
     CONCEPT + "(ablate-01)": ("0", "1", "2", "3"),
