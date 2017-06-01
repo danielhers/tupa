@@ -35,6 +35,7 @@ ROLESET_PATTERN = re.compile(CONCEPT + "\((.*)-(\d+)\)")
 ROLES = {  # cache + fix for roles missing in PropBank
     CONCEPT + "(ablate-01)": ("0", "1", "2", "3"),
     CONCEPT + "(play-11)": ("0", "1", "2", "3"),
+    CONCEPT + "(raise-02)": ("0", "1", "2", "3"),
 }
 
 
