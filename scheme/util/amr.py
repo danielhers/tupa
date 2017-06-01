@@ -54,7 +54,7 @@ def is_valid_arg(node, label, *tags, is_parent=True):
     if label is None:
         return True
     if not is_parent and node.label == "Const(-)":
-        return {"polarity", "ARG2"}.issuperset(tags)
+        return {"polarity", "ARG2", "value"}.issuperset(tags)
     args = [t for t in tags if t.startswith("ARG") and (t.endswith("-of") != is_parent)]
     if not args:
         return True
