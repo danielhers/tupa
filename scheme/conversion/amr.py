@@ -152,9 +152,10 @@ class AmrConverter(convert.FormatConverter):
             full_range = range(min(indices), max(indices) + 1)  # make this a contiguous range if valid
             if AmrConverter._contains_substring(stripped, tokens, full_range):
                 indices = list(full_range)
-        for i, token in enumerate(tokens):  # add any equal token if it occurs only once
-            if i not in indices and token == stripped and tokens.count(token) == 1:
-                indices.append(i)
+        else:  # no given alignment
+            for i, token in enumerate(tokens):  # use any equal token if it occurs only once
+                if token == stripped and tokens.count(token) == 1:
+                    return [i]
         return indices
 
     @staticmethod
