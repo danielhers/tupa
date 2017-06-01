@@ -50,7 +50,7 @@ class AmrConverter(convert.FormatConverter):
         self._build_layer1(amr, l1)
         self._build_layer0(self.align_nodes(amr), l1, l0)
         self._update_implicit(l1)
-        self._update_labels(l1, self._get_named_entities(l0))
+        self._update_labels(l1)
         # return (passage, penman.encode(amr), self.amr_id) if self.return_amr else passage
         return (passage, amr(alignments=False), self.amr_id) if self.return_amr else passage
 
@@ -159,27 +159,11 @@ class AmrConverter(convert.FormatConverter):
                 node.attrib["implicit"] = True
                 pending += node.parents
 
-    @staticmethod
-    def _get_named_entities(l0):
-        entities = {}
-        for terminal in l0.all:
-            entity_type = terminal.extra.get(textutil.NER_KEY)
-            if entity_type:
-                entities[terminal.ID] = entity_type
-        return entities
-
-    def _update_labels(self, l1, entities):
+    def _update_labels(self, l1):
         for node in l1.all:
             label = resolve_label(node, reverse=True)
-            if label:
-                if "numbers" not in self.layers and label.startswith("Num("):
-                    label = re.sub("(?<=\()[^<]+(?=<)|(?<=>)[^>]+(?=\))", "", label)  # remove text in () but out of <>
-                    label = re.sub("(?<=\()[\d.,]+(?=\))", "1", label)
-                elif "ner" not in self.layers:
-                    for terminal in node.terminals:
-                        entity_type = entities.get(terminal.ID)
-                        if entity_type is not None:
-                            label = re.sub("(?<=\()" + re.escape(terminal.text) + "(?=\))", entity_type, label)
+            if label and "numbers" not in self.layers and label.startswith("Num("):
+                label = "Num(1)"  # replace all numbers with "1"
             node.attrib[LABEL_ATTRIB] = label
 
     def to_format(self, passage, **kwargs):
