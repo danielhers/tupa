@@ -42,7 +42,7 @@ def main(args):
 
 
 def write_passage(passage, args):
-    ext = {None: UCCA_EXT[args.binary], ".amr": ".txt"}.get(args.output_format, args.output_format)
+    ext = {None: UCCA_EXT[args.binary], ".amr": ".txt"}.get(args.output_format, "." + args.output_format)
     outfile = args.outdir + os.path.sep + args.prefix + passage.ID + ext
     sys.stderr.write("Writing '%s'...\n" % outfile)
     if args.output_format is None:  # UCCA output
