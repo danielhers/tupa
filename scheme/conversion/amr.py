@@ -188,7 +188,8 @@ class AmrConverter(convert.FormatConverter):
         textutil.annotate(passage)
         lines = ["# ::id " + passage.ID,
                  "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all)] if metadata else []
-        return "\n".join(lines + [penman.encode(penman.Graph(list(self._to_triples(passage))))]),
+        return "\n".join(lines + [penman.encode(penman.Graph(list(self._to_triples(passage)))) or
+                                  "(v / amr-unknown)"]),
 
     @staticmethod
     def _to_triples(passage):
