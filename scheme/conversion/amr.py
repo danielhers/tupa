@@ -127,8 +127,11 @@ class AmrConverter(convert.FormatConverter):
             if indices:
                 for start, offset in ((indices[0], -1), (indices[-1], 1)):
                     i = start + offset
-                    while 0 <= i < len(tokens) and tokens[i] in label:
-                        indices.append(i)
+                    while 0 <= i < len(tokens):
+                        if tokens[i] in label:
+                            indices.append(i)
+                        elif not re.match("[<>@]+", tokens[i]):  # skip meaningless tokens
+                            break
                         i += offset
                 r = range(min(indices), max(indices) + 1)
                 if "".join(tokens[i] for i in r) in label:
