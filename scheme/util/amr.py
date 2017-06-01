@@ -23,14 +23,14 @@ DEP_PREFIX = ":"
 TOP_DEP = ":top"
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
-LAYERS = {"wiki": (":wiki",),
-          "numbers": (),
-          "urls": ("url-entity",)}
 PLACEHOLDER = re.compile("<[^>]*>")
 LABEL_ATTRIB = "label"
 INSTANCE = "instance"
 CONCEPT = "Concept"
 UNKNOWN_LABEL = CONCEPT + "(amr-unknown)"
+LAYERS = {"wiki": (":wiki",),
+          "numbers": (),
+          "urls": (CONCEPT + "(url-entity)",)}
 ROLESET_PATTERN = re.compile(CONCEPT + "\((.*)-(\d+)\)")
 ROLES = {  # cache + fix for roles missing in PropBank
     CONCEPT + "(ablate-01)": ("0", "1", "2", "3"),
