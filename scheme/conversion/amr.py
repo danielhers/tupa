@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 
 import penman
 
@@ -121,34 +121,42 @@ class AmrConverter(convert.FormatConverter):
         preterminals = {}
         alignments = (amr.alignments(), amr.role_alignments())
         tokens = amr.tokens()
+        lower = list(map(str.lower, tokens))
         for triple, node in self.nodes.items():
             indices = []
             for alignment in alignments:
                 align = alignment.get(triple)
                 if align is not None:
                     indices += list(map(int, align.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP)))  # split numeric
+            orig_indices = list(indices)
             # correct missing alignment by expanding to neighboring terminals contained in label
             label = str(triple[2])
+            stripped = self.strip(label, strip_sense=True, strip_quotes=True).lower()
             if indices:
-                for start, offset in ((indices[0], -1), (indices[-1], 1)):
+                for start, offset in ((indices[0], -1), (indices[-1], 1)):  # try adding tokens around existing
                     i = start + offset
                     while 0 <= i < len(tokens):
-                        if tokens[i] in label:
+                        if self._contained_substring(lower, indices + [i], stripped):
                             indices.append(i)
-                        elif not re.match("[<>@]+", tokens[i]):  # skip meaningless tokens
+                        elif not re.match("[<>@]+", lower[i]):  # skip meaningless tokens
                             break
                         i += offset
-                r = range(min(indices), max(indices) + 1)
-                if "".join(tokens[i] for i in r) in label:
-                    indices = list(r)
-            # also expand to any contained token if it is not too short and it occurs only once
-            for i, token in enumerate(tokens):
-                if i not in indices and len(token) > 2 and \
-                                token in self.strip(label).strip('"') and tokens.count(token) == 1:
+                full_range = range(min(indices), max(indices) + 1)  # make this a contiguous range if valid
+                if self._contained_substring(lower, full_range, stripped):
+                    indices = list(full_range)
+            for i, token in enumerate(lower):  # add any equal token if it occurs only once
+                if i not in indices and token == stripped and lower.count(token) == 1:
                     indices.append(i)
+            if indices != orig_indices:
+                print(label + ": " + " ".join(tokens[i] for i in orig_indices) + " -> " + " ".join(tokens[i] for i in indices))
             for i in indices:
                 preterminals.setdefault(i, []).append(node)
         return preterminals
+
+    @staticmethod
+    def _contained_substring(all_tokens, indices, label):
+        tokens = [all_tokens[i] for i in sorted(indices)]
+        return "".join(tokens) in label or "-".join(tokens) in label
 
     @staticmethod
     def _update_implicit(l1):
@@ -188,16 +196,22 @@ class AmrConverter(convert.FormatConverter):
                 self._id += 1
                 return "v" + str(self._id)
 
-        pending = list(passage.layer(layer1.LAYER_ID).top_node)
+        root = passage.layer(layer1.LAYER_ID).top_node
+        pending = list(root)
+        if not pending:  # there is nothing but the root node
+            pending = [namedtuple("Edge", ["parent", "child", "tag"])(root, None, None)]
         visited = set()  # to avoid cycles
         labels = defaultdict(_IdGenerator())
         while pending:
             edge = pending.pop(0)
-            if edge not in visited and edge.tag not in TERMINAL_TAGS:  # skip cycles and terminals
+            if edge not in visited:  # skip cycles
                 visited.add(edge)
-                pending += edge.child
+                nodes = [edge.parent]
+                if edge.child is not None and edge.tag not in TERMINAL_TAGS:  # skip terminals
+                    nodes.append(edge.child)
+                    pending += edge.child
                 head_dep = []  # will be pair of (parent label, child label)
-                for node in edge.parent, edge.child:
+                for node in nodes:
                     label = resolve_label(node)
                     if is_concept(label):
                         concept = None if node.ID in labels else AmrConverter.strip(label)
@@ -207,11 +221,17 @@ class AmrConverter(convert.FormatConverter):
                     else:  # constant
                         label = AmrConverter.strip(label)
                     head_dep.append(label)
-                yield head_dep[0], edge.tag, head_dep[1]
+                if len(head_dep) > 1:
+                    yield head_dep[0], edge.tag, head_dep[1]
 
     @staticmethod
-    def strip(label):  # remove type name
-        return re.sub("\w+\((.*)\)", "\\1", label)
+    def strip(label, strip_sense=False, strip_quotes=False):  # remove type name
+        label = re.sub("\w+\((.*)\)", "\\1", label)
+        if strip_sense:
+            label = re.sub("-\d\d$", "", label)
+        if strip_quotes:
+            label = label.strip('"')
+        return label
 
 
 def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):
