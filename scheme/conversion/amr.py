@@ -128,35 +128,39 @@ class AmrConverter(convert.FormatConverter):
                 align = alignment.get(triple)
                 if align is not None:
                     indices += list(map(int, align.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP)))  # split numeric
-            orig_indices = list(indices)
-            # correct missing alignment by expanding to neighboring terminals contained in label
-            label = str(triple[2])
-            stripped = self.strip(label, strip_sense=True, strip_quotes=True).lower()
-            if indices:
-                for start, offset in ((indices[0], -1), (indices[-1], 1)):  # try adding tokens around existing
-                    i = start + offset
-                    while 0 <= i < len(tokens):
-                        if self._contained_substring(lower, indices + [i], stripped):
-                            indices.append(i)
-                        elif not re.match("[<>@]+", lower[i]):  # skip meaningless tokens
-                            break
-                        i += offset
-                full_range = range(min(indices), max(indices) + 1)  # make this a contiguous range if valid
-                if self._contained_substring(lower, full_range, stripped):
-                    indices = list(full_range)
-            for i, token in enumerate(lower):  # add any equal token if it occurs only once
-                if i not in indices and token == stripped and lower.count(token) == 1:
-                    indices.append(i)
-            if indices != orig_indices:
-                print(label + ": " + " ".join(tokens[i] for i in orig_indices) + " -> " + " ".join(tokens[i] for i in indices))
+            dep = triple[2]
+            if not isinstance(dep, amr_lib.Var):
+                indices = self._expand_alignments(str(dep), indices, lower)
             for i in indices:
                 preterminals.setdefault(i, []).append(node)
         return preterminals
 
     @staticmethod
-    def _contained_substring(all_tokens, indices, label):
-        tokens = [all_tokens[i] for i in sorted(indices)]
-        return "".join(tokens) in label or "-".join(tokens) in label
+    def _expand_alignments(label, orig_indices, tokens):
+        # correct missing alignment by expanding to neighboring terminals contained in label
+        indices = sorted(orig_indices)
+        stripped = AmrConverter.strip(label, strip_sense=True, strip_quotes=True).lower()
+        if indices:
+            for start, offset in ((indices[0], -1), (indices[-1], 1)):  # try adding tokens around existing
+                i = start + offset
+                while 0 <= i < len(tokens):
+                    if AmrConverter._contains_substring(stripped, tokens, indices + [i]):
+                        indices.append(i)
+                    elif not re.match("[<>@]+", tokens[i]):  # skip meaningless tokens
+                        break
+                    i += offset
+            full_range = range(min(indices), max(indices) + 1)  # make this a contiguous range if valid
+            if AmrConverter._contains_substring(stripped, tokens, full_range):
+                indices = list(full_range)
+        for i, token in enumerate(tokens):  # add any equal token if it occurs only once
+            if i not in indices and token == stripped and tokens.count(token) == 1:
+                indices.append(i)
+        return indices
+
+    @staticmethod
+    def _contains_substring(label, tokens, indices):
+        selected = [tokens[i] for i in sorted(indices)]
+        return "".join(selected) in label or "-".join(selected) in label
 
     @staticmethod
     def _update_implicit(l1):
