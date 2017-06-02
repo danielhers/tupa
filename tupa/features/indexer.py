@@ -1,6 +1,6 @@
 from features.feature_extractor_wrapper import FeatureExtractorWrapper
 
-INDEXED_FEATURES = "W", "w", "t", "d"  # external word embeddings, learned word embeddings, POS tags, dep rels
+INDEXED_FEATURES = "W", "w", "t", "d", "N", "T"  # external word embeddings, learned word embeddings, POS tags, dep rels, entity IOB & type
 
 
 class FeatureIndexer(FeatureExtractorWrapper):
