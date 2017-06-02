@@ -20,6 +20,7 @@ class Model(object):
         if feature_extractor is not None or model is not None:
             self.feature_extractor = feature_extractor
             self.model = model
+            self.model.input_params = self.feature_extractor.params
             self.load_labels()
             return
 
@@ -55,12 +56,12 @@ class Model(object):
             from nn.feedforward import MLP
             from features.dense_features import DenseFeatureExtractor
             self.feature_extractor = FeatureEnumerator(DenseFeatureExtractor(), self.feature_params)
-            self.model = MLP(filename, values, input_params=self.feature_extractor.params, max_num_labels=max_values)
+            self.model = MLP(filename, values, self.feature_extractor.params, max_num_labels=max_values)
         elif model_type == BILSTM_NN:
             from nn.bilstm import BiLSTM
             from features.dense_features import DenseFeatureExtractor
             self.feature_extractor = FeatureIndexer(FeatureEnumerator(DenseFeatureExtractor(), self.feature_params))
-            self.model = BiLSTM(filename, values, input_params=self.feature_extractor.params, max_num_labels=max_values)
+            self.model = BiLSTM(filename, values, self.feature_extractor.params, max_num_labels=max_values)
         elif model_type == NOOP:
             from features.empty_features import EmptyFeatureExtractor
             from classifiers.noop import NoOp
@@ -91,6 +92,7 @@ class Model(object):
             try:
                 self.feature_extractor.load(self.filename)
                 self.model.load()
+                self.model.input_params = self.feature_extractor.params
                 self.load_labels()
                 self.load_params_to_config()
             except FileNotFoundError:

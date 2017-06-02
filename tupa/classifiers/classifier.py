@@ -15,15 +15,17 @@ class Classifier(object):
     Interface for classifier used by the parser.
     """
 
-    def __init__(self, model_type, filename, labels, model=None):
+    def __init__(self, model_type, filename, labels, input_params=None, model=None):
         """
         :param labels: tuple of lists of labels that can be updated later to add new labels
+        :param input_params: dict of feature type name -> FeatureInformation
         :param model: if given, copy the weights (from a trained model)
         """
         self.model = None
         self.model_type = model_type
         self.filename = filename
         self.labels = tuple(labels)
+        self.input_params = input_params
         self._num_labels = self.num_labels
         self.input_dim = None
         self.is_frozen = model is not None

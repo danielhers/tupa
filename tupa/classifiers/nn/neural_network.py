@@ -43,11 +43,10 @@ class NeuralNetwork(Classifier):
     Expects features from FeatureEnumerator.
     """
 
-    def __init__(self, *args, input_params, max_num_labels):
+    def __init__(self, *args, max_num_labels):
         """
         Create a new untrained NN
         :param labels: tuple of lists of labels that can be updated later to add new labels
-        :param input_params: dict of feature type name -> FeatureInformation
         """
         super(NeuralNetwork, self).__init__(*args)
         self.max_num_labels = tuple(max_num_labels)
@@ -64,7 +63,6 @@ class NeuralNetwork(Classifier):
         self.optimizer = TRAINERS[self.optimizer_str]
         self.params = OrderedDict()
         self.empty_values = OrderedDict()
-        self.input_params = input_params
         self.indexed_num = None
         self.indexed_dim = None
         self.losses = []
@@ -256,7 +254,6 @@ class NeuralNetwork(Classifier):
     def save_model(self):
         self.finalize()
         d = {
-            "input_params": self.input_params,
             "param_keys": list(self.params.keys()),
             "max_num_labels": self.max_num_labels,
             "layers": self.layers,
@@ -283,7 +280,6 @@ class NeuralNetwork(Classifier):
 
     def load_model(self, d):
         self.init_model()
-        self.input_params = d["input_params"]
         param_keys = d["param_keys"]
         self.max_num_labels = d["max_num_labels"]
         Config().args.layers = self.layers = d["layers"]
