@@ -251,6 +251,10 @@ class NeuralNetwork(Classifier):
             self.trainer.status()
         return self
 
+    def save_labels(self):
+        node_labels = self.input_params.get("n")  # Do not save node labels as they are saved as features already
+        return (self.labels[0], []) if node_labels is not None and node_labels.size else self.labels
+
     def save_model(self):
         self.finalize()
         d = {

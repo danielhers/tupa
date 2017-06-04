@@ -86,7 +86,7 @@ class Classifier(object):
         """
         d = {
             "type": self.model_type,
-            "labels": self.labels,
+            "labels": self.save_labels(),
             "is_frozen": self.is_frozen,
             "learning_rate": self.learning_rate,
             "learning_rate_decay": self.learning_rate_decay,
@@ -95,6 +95,9 @@ class Classifier(object):
         }
         d.update(self.save_model())
         save_dict(self.filename, d)
+
+    def save_labels(self):
+        return self.labels
 
     def save_model(self):
         return self.save_extra()
