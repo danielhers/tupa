@@ -16,7 +16,7 @@ class Perceptron(Classifier):
         super(Perceptron, self).__init__(*args, model=model)
         if self.is_frozen:
             self.model = model
-        self.initial_learning_rate = self.learning_rate
+        self.initial_learning_rate = self.learning_rate if self.learning_rate else 1.0
         self.epoch = epoch
         self.update_learning_rate()
 

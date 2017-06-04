@@ -98,7 +98,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--word-dim-external", type=int, default=300, help="dimension for external word embeddings")
         group.add_argument("--word-vectors", help="file to load external word embeddings from (default: GloVe)")
         group = argparser.add_argument_group(title="Perceptron parameters")
-        group.add_argument("--learning-rate", type=float, default=1.0, help="rate for model weight updates")
+        group.add_argument("--learning-rate", type=float, help="rate for model weight updates (default: by trainer/1)")
         group.add_argument("--learning-rate-decay", type=float, default=0.0, help="learning rate decay per iteration")
         group.add_argument("--min-update", type=int, default=5, help="minimum #updates for using a feature")
         group = argparser.add_argument_group(title="Neural network parameters")
