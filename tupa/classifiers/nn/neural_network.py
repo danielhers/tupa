@@ -13,9 +13,11 @@ from tupa.config import Config
 
 TRAINERS = {
     "sgd": dy.SimpleSGDTrainer,
+    "cyclic": dy.CyclicalSGDTrainer,
     "momentum": dy.MomentumSGDTrainer,
     "adagrad": dy.AdagradTrainer,
     "adadelta": dy.AdadeltaTrainer,
+    "rmsprop": dy.RMSPropTrainer,
     "adam": dy.AdamTrainer,
 }
 

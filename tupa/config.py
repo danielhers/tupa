@@ -39,7 +39,7 @@ CLASSIFIERS = (SPARSE, MLP_NN, BILSTM_NN, NOOP)
 # Multiple choice options: the first one is always the default
 ACTIVATIONS = ("sigmoid", "tanh", "relu", "cube")
 INITIALIZATIONS = ("glorot_uniform", "normal", "uniform", "const")
-OPTIMIZERS = ("adam", "sgd", "momentum", "adagrad", "adadelta")
+OPTIMIZERS = ("adam", "sgd", "cyclic", "momentum", "adagrad", "adadelta", "rmsprop")
 
 
 class Config(object, metaclass=Singleton):
