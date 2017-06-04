@@ -62,6 +62,7 @@ def main():
     domains = (
         ("seed",                    2147483647),  # max value for int
         ("classifier",              (config.MLP_NN, config.BILSTM_NN)),
+        ("learning_rate_decay",     (0.0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5)),
         ("update_word_vectors",     [True, False]),
         ("word_vectors",            [None] + word_vectors_files),
         ("word_dim_external",       (0, 300)),
