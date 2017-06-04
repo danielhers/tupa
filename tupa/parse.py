@@ -142,7 +142,8 @@ class Parser(object):
             textutil.annotate(passage, verbose=self.args.verbose > 1)  # tag POS and parse dependencies
             self.state = State(passage)
             self.state_hash_history = set()
-            self.oracle = Oracle(passage) if train or self.args.verbose and labeled or self.args.verify else None
+            self.oracle = Oracle(passage) if train or (
+                  self.args.verbose or Config().args.use_gold_node_labels) and labeled or self.args.verify else None
             failed = False
             if ClassifierProperty.require_init_features in self.model.model.get_classifier_properties():
                 self.model.init_features(self.state, train)
@@ -250,26 +251,31 @@ class Parser(object):
                 return  # action is Finish
 
     def label_node(self, features, node, train):
+        true_label = None
         if self.oracle:
-            true_label = None if node is None else node.attrib.get(self.args.node_label_attrib)
+            if node is not None:
+                true_label = node.attrib.get(self.args.node_label_attrib)
             if true_label is not None and not self.state.is_valid_label(true_label):
                 raise ParserException("True label is invalid: %s for %s" % (true_label, self.state.node))
             true_id = self.model.labels[true_label]
-        scores = self.model.model.score(features, axis=LABEL_AXIS)
-        if self.args.verbose > 2:
-            print("  label scores: " + ",".join(("%s: %g" % x for x in zip(self.model.labels.all, scores))))
-        label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label)
-        if self.oracle:
-            is_correct = (label == true_label)
-            if is_correct:
-                self.correct_label_count += 1
-            if train and not (is_correct and self.update_only_on_error):
-                self.model.model.update(features, axis=LABEL_AXIS, pred=self.model.labels[label], true=true_id)
-                label = true_label
-        self.label_count += 1
+        if Config().args.use_gold_node_labels:
+            label = true_label
+        else:
+            scores = self.model.model.score(features, axis=LABEL_AXIS)
+            if self.args.verbose > 2:
+                print("  label scores: " + ",".join(("%s: %g" % x for x in zip(self.model.labels.all, scores))))
+            label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label)
+            if self.oracle:
+                is_correct = (label == true_label)
+                if is_correct:
+                    self.correct_label_count += 1
+                if train and not (is_correct and self.update_only_on_error):
+                    self.model.model.update(features, axis=LABEL_AXIS, pred=self.model.labels[label], true=true_id)
+                    label = true_label
+            self.label_count += 1
         self.state.label_node(label)
         if self.args.verbose > 1:
-            if self.oracle:
+            if self.oracle and not Config().args.use_gold_node_labels:
                 print("  predicted label: %-15s true label: %-15s" % (predicted_label, true_label))
             else:
                 print("  label: %-15s" % label)

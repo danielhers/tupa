@@ -57,6 +57,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--unknown-label", help="label to use as unknown value")
         group.add_argument("--max-node-labels", type=int, default=0, help="max number of node labels to allow")
         group.add_argument("--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
+        group.add_argument("--use-gold-node-labels", action="store_true", help="do not learn node labels; use gold")
         constructions.add_argument(argparser)
         group = argparser.add_mutually_exclusive_group()
         group.add_argument("-s", "--sentences", action="store_true", help="separate passages to sentences")
