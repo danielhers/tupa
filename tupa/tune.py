@@ -85,7 +85,7 @@ def main():
         ("init",                    5 * [config.INITIALIZATIONS[0]] + list(config.INITIALIZATIONS)),
         ("batch_size",              (10, 30, 50, 100, 200, 500)),
         ("minibatch_size",          (50, 100, 200, 300, 500, 1000)),
-        ("optimizer",               5 * [config.OPTIMIZERS[0]] + list(config.OPTIMIZERS)),
+        ("optimizer",               config.OPTIMIZERS),
         ("swap_importance",         (1, 2)),
         ("iterations",              range(1, 51)),
         ("word_dropout",            (0, .1, .2, .25, .3)),
