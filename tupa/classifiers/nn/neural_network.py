@@ -12,13 +12,13 @@ from features.feature_params import MISSING_VALUE
 from tupa.config import Config
 
 TRAINERS = {
-    "sgd": dy.SimpleSGDTrainer,
-    "cyclic": dy.CyclicalSGDTrainer,
-    "momentum": dy.MomentumSGDTrainer,
-    "adagrad": dy.AdagradTrainer,
-    "adadelta": dy.AdadeltaTrainer,
-    "rmsprop": dy.RMSPropTrainer,
-    "adam": dy.AdamTrainer,
+    "sgd": (dy.SimpleSGDTrainer, "e0"),
+    "cyclic": (dy.CyclicalSGDTrainer, "e0_min"),
+    "momentum": (dy.MomentumSGDTrainer, "e0"),
+    "adagrad": (dy.AdagradTrainer, "e0"),
+    "adadelta": (dy.AdadeltaTrainer, None),
+    "rmsprop": (dy.RMSPropTrainer, "e0"),
+    "adam": (dy.AdamTrainer, "alpha"),
 }
 
 INITIALIZERS = {
@@ -59,10 +59,10 @@ class NeuralNetwork(Classifier):
         self.init_str = Config().args.init
         self.minibatch_size = Config().args.minibatch_size
         self.dropout = Config().args.dropout
-        self.optimizer_str = Config().args.optimizer
+        self.trainer_str = Config().args.optimizer
         self.activation = ACTIVATIONS[self.activation_str]
         self.init = INITIALIZERS[self.init_str]
-        self.optimizer = TRAINERS[self.optimizer_str]
+        self.trainer_type, self.learning_rate_param_name = TRAINERS[self.trainer_str]
         self.params = OrderedDict()
         self.empty_values = OrderedDict()
         self.indexed_num = None
@@ -78,7 +78,10 @@ class NeuralNetwork(Classifier):
 
     def init_model(self):
         self.model = dy.Model()
-        self.trainer = self.optimizer(self.model, edecay=self.learning_rate_decay)
+        trainer_kwargs = {"edecay": self.learning_rate_decay}
+        if self.learning_rate_param_name and self.learning_rate:
+            trainer_kwargs[self.learning_rate_param_name] = self.learning_rate
+        self.trainer = self.trainer_type(self.model, **trainer_kwargs)
         self.init_input_params()
         self.init_mlp_params()
         self.init_cg()
