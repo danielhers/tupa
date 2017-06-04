@@ -2,7 +2,7 @@ import importlib.util  # needed for amr.peg
 import os
 import re
 
-from nltk.corpus import wordnet as wn, propbank as pb
+from nltk.corpus import propbank as pb
 from word2number import w2n
 
 from tupa import constraints
@@ -78,15 +78,6 @@ def resolve_label(node, label=None, reverse=False):
         replaceable = old and (len(old) > 2 or len(label) < 5)
         return re.sub(re.escape(old) + "(?![^<]*>|[^(]*\(|\d+$)", new, label) if replaceable else label
 
-    def _related_forms(w):  # list of all derivationally related forms and their part of speech
-        num_related = 0
-        related = {None: w}
-        while len(related) > num_related:
-            num_related = len(related)
-            related.update({v.synset().pos(): v.name() for x in related.values()
-                            for l in wn.lemmas(x) for v in l.derivationally_related_forms()})
-        return [(v, k) for k, v in related.items() if v != w]
-
     if label is None:
         try:
             label = node.label
@@ -118,8 +109,6 @@ def resolve_label(node, label=None, reverse=False):
                 lemma = terminal.text.lower()
             label = _replace("<l%d>" % i, lemma)
             label = _replace("<L%d>" % i, lemma.title())
-            for form, pos in _related_forms(lemma):
-                label = _replace("<%s%d>" % (pos, i), form)
     return label
 
 
