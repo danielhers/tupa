@@ -42,7 +42,3 @@ fi
 make
 cd python
 python setup.py install
-
-# Install UCCA
-cd ../../ucca
-python setup.py install
