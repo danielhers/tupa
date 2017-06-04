@@ -11,10 +11,11 @@ rm -rf ~/nltk_data/corpora/propbank
 git clone https://github.com/propbank/propbank-frames ~/nltk_data/corpora/propbank
 
 # Install DyNet
-if [ -d dynet ]; then
+if [ -d dynet/.git ]; then
   cd dynet
   git pull
 else
+  rm -rf dynet
   git clone https://github.com/clab/dynet
   cd dynet
 fi
