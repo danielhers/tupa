@@ -78,7 +78,7 @@ class NeuralNetwork(Classifier):
 
     def init_model(self):
         self.model = dy.Model()
-        self.trainer = self.optimizer(self.model, )
+        self.trainer = self.optimizer(self.model, edecay=self.learning_rate_decay)
         self.init_input_params()
         self.init_mlp_params()
         self.init_cg()
