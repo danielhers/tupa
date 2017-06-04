@@ -3,7 +3,8 @@
 import unittest
 
 from states.state import State
-from tupa.config import Config, SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP_NN, BILSTM_NN
+from tupa.action import Actions
+from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP
 from tupa.oracle import Oracle
 from tupa.parse import Parser
 from ucca import convert, evaluation, ioutil
@@ -29,28 +30,30 @@ class ParserTests(unittest.TestCase):
         for passage in self.load_passages():
             oracle = Oracle(passage)
             state = State(passage)
+            actions = Actions()
             actions_taken = []
             while True:
-                actions = oracle.get_actions(state)
-                action = next(iter(actions))
+                action = min(oracle.get_actions(state, actions).values(), key=str)
                 state.transition(action)
                 actions_taken.append("%s\n" % action)
                 if state.finished:
                     break
+            # with open("test_files/standard3.oracle_actions.txt", "w") as f:
+            #     f.writelines(actions_taken)
             with open("test_files/standard3.oracle_actions.txt") as f:
                 self.assertSequenceEqual(actions_taken, f.readlines())
 
     def test_parser_sparse(self):
-        self.train_test(SPARSE_PERCEPTRON)
-
-    def test_parser_dense(self):
-        self.train_test(DENSE_PERCEPTRON)
+        self.train_test(SPARSE)
 
     def test_parser_mlp(self):
         self.train_test(MLP_NN)
 
     def test_parser_bilstm(self):
         self.train_test(BILSTM_NN)
+
+    def test_parser_noop(self):
+        self.train_test(NOOP)
 
     def train_test(self, model_type, compare=True):
         scores = []

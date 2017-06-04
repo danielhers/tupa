@@ -10,14 +10,15 @@ class Node(object):
     """
     Temporary representation for core.Node with only relevant information for parsing
     """
-    def __init__(self, index, orig_node=None, text=None, paragraph=None, tag=None, implicit=False,
-                 pos_tag=None, dep_rel=None, dep_head=None):
+    def __init__(self, index, swap_index=None, orig_node=None, text=None, paragraph=None, tag=None, label=None,
+                 implicit=False, pos_tag=None, dep_rel=None, dep_head=None, ner_type=None, ner_iob=None, lemma=None):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated core.Node from the original Passage, during training
         self.node_id = orig_node.ID if orig_node else None  # ID of the original node
         self.text = text  # Text for terminals, None for non-terminals
         self.paragraph = paragraph  # int for terminals, None for non-terminals
         self.tag = tag  # Node tag of the original node (Word/Punctuation)
+        self.label = label  # Node label (if node label prediction is enabled)
         self.node_index = int(self.node_id.split(core.Node.ID_SEPARATOR)[1]) if orig_node else None
         self.outgoing = []  # Edge list
         self.incoming = []  # Edge list
@@ -30,7 +31,10 @@ class Node(object):
         self.pos_tag = pos_tag
         self.dep_rel = dep_rel
         self.dep_head = dep_head
-        self.swap_index = self.index  # Used to make sure nodes are not swapped more than once
+        self.ner_type = ner_type
+        self.ner_iob = ner_iob
+        self.lemma = lemma
+        self.swap_index = self.index if swap_index is None else swap_index  # To avoid swapping nodes more than once
         self.height = 0
         self._terminals = None
 
@@ -46,33 +50,49 @@ class Node(object):
         self.height = max(self.height, edge.child.height + 1)
         self._terminals = None  # Invalidate terminals because we might have added some
 
-    def add_to_l1(self, l1, parent, tag, terminals, train):
+    def add_to_l1(self, l1, parent, tag, terminals, labeled):
         """
         Called when creating final Passage to add a new core.Node
         :param l1: Layer1 of the passage
         :param parent: node
         :param tag: edge tag to link to parent
         :param terminals: all terminals strings in the passage
-        :param train: in training, so keep original node IDs in the "remarks" field
+        :param labeled: there is a reference passage, so keep original node IDs in the "remarks" field
         """
-        if Config().args.verify:
-            assert self.node is None or self.text is not None,\
-                "Trying to create the same node twice: %s, parent: %s" % (self.node.ID, parent)
         edge = self.outgoing[0] if len(self.outgoing) == 1 else None
         if self.text:  # For Word terminals (Punctuation already created by add_punct for parent)
-            if self.node is None and parent.node is not None:
-                self.node = parent.node.add(EdgeTags.Terminal,
-                                            terminals[self.index]).child
-        elif edge and edge.child.text and layer0.is_punct(terminals[edge.child.index]):
+            if parent.node is not None:
+                if self.node is None:
+                    self.node = parent.node.add(EdgeTags.Terminal, terminals[self.index - 1]).child
+                elif self.node not in parent.node.children:
+                    parent.node.add(EdgeTags.Terminal, self.node)
+        elif edge and edge.child.text and layer0.is_punct(terminals[edge.child.index - 1]):
             if Config().args.verify:
                 assert tag == EdgeTags.Punctuation, "Tag for %s is %s" % (parent.node_id, tag)
                 assert edge.tag == EdgeTags.Terminal, "Tag for %s is %s" % (self.node_id, edge.tag)
-            self.node = l1.add_punct(parent.node, terminals[edge.child.index])
-            edge.child.node = self.node[0].child
+            if self.node is None:
+                self.node = l1.add_punct(parent.node, terminals[edge.child.index - 1])
+                edge.child.node = self.node[0].child
+            elif parent.node is not None and self.node not in parent.node.children:
+                parent.node.add(EdgeTags.Punctuation, self.node)
         else:  # The usual case
-            self.node = l1.add_fnode(parent.node, tag, implicit=self.implicit)
-        if train and self.node is not None and self.node_id is not None:  # In training
+            if Config().args.verify:
+                assert self.node is None, "Trying to create the same node twice: %s, parent: %s" % (self.node, parent)
+            if parent is not None and parent.node is None:  # If parent is an orphan, attach it to the root with F label
+                parent.add_to_l1(l1, None, EdgeTags.Function, terminals, labeled)
+            self.node = l1.add_fnode(None if parent is None else parent.node, tag, implicit=self.implicit)
+        if labeled:  # In training
+            self.set_node_id()
+        self.set_node_label()
+
+    def set_node_id(self):
+        if self.node is not None and self.node_id is not None:
             self.node.extra["remarks"] = self.node_id  # Keep original node ID for reference
+
+    def set_node_label(self):
+        label = self.label or Config().args.unknown_label
+        if self.node is not None and label is not None:
+            self.node.attrib[Config().args.node_label_attrib] = label
 
     @property
     def is_linkage(self):
@@ -84,9 +104,9 @@ class Node(object):
     @property
     def descendants(self):
         """
-        Find all children of this node recursively, stopping if a cycle is detected (so self not included)
+        Find all children of this node recursively
         """
-        result = []
+        result = [self]
         queue = deque(node for node in self.children if node is not self)
         while queue:
             node = queue.popleft()
@@ -114,7 +134,10 @@ class Node(object):
                ((", " + self.node_id) if self.node_id else "") + ")"
 
     def __str__(self):
-        return '"%s"' % self.text if self.text else self.node_id or str(self.index)
+        s = '"%s"' % self.text if self.text else self.node_id or str(self.index)
+        if self.label:
+            s += "/" + self.label
+        return s
 
     def __eq__(self, other):
         return self.index == other.index and self.outgoing == other.outgoing

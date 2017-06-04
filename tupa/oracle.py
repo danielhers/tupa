@@ -1,6 +1,21 @@
-from tupa.action import Action, Actions
+from states.state import InvalidActionError
+from tupa.action import Actions
 from tupa.config import Config
 from ucca import layer1
+
+# Constants for readability, used by Oracle.action
+RIGHT = PARENT = NODE = 0
+LEFT = CHILD = EDGE = 1
+ACTIONS = (  # index by [NODE/EDGE][PARENT/CHILD or RIGHT/LEFT][True/False (remote)]
+    (  # node actions
+        (Actions.Node, Actions.RemoteNode),  # creating a parent
+        (Actions.Implicit, None)  # creating a child (remote implicit is not allowed)
+    ),
+    (  # edge actions
+        (Actions.RightEdge, Actions.RightRemote),  # creating a right edge
+        (Actions.LeftEdge, Actions.LeftRemote)  # creating a left edge
+    )
+)
 
 
 class Oracle(object):
@@ -10,36 +25,40 @@ class Oracle(object):
     :param passage gold passage to get the correct edges from
     """
     def __init__(self, passage):
+        self.args = Config().args
         l1 = passage.layer(layer1.LAYER_ID)
         self.nodes_remaining = {node.ID for node in l1.all
                                 if node is not l1.heads[0] and
-                                (Config().args.linkage or node.tag != layer1.NodeTags.Linkage) and
-                                (Config().args.implicit or not node.attrib.get("implicit"))}
+                                (self.args.linkage or node.tag != layer1.NodeTags.Linkage) and
+                                (self.args.implicit or not node.attrib.get("implicit"))}
         self.edges_remaining = {edge for node in passage.nodes.values() for edge in node
-                                if (Config().args.linkage or edge.tag not in (
+                                if (self.args.linkage or edge.tag not in (
                                     layer1.EdgeTags.LinkRelation, layer1.EdgeTags.LinkArgument)) and
-                                (Config().args.implicit or not edge.child.attrib.get("implicit")) and
-                                (Config().args.remote or not edge.attrib.get("remote"))}
+                                (self.args.implicit or not edge.child.attrib.get("implicit")) and
+                                (self.args.remote or not edge.attrib.get("remote"))}
         self.passage = passage
         self.edge_found = False
         self.log = None
 
-    def get_actions(self, state):
+    def get_actions(self, state, all_actions, create=True):
         """
         Determine all zero-cost action according to current state
         Asserts that the returned action is valid before returning
         :param state: current State of the parser
-        :return: list of Action items to perform
+        :param all_actions: Actions object used to map actions to IDs
+        :param create: whether to create new actions if they do not exist yet
+        :return: dict of action ID to Action
         """
-        actions = []
+        actions = {}
         invalid = []
         for action in self.generate_actions(state):
-            action.generate_id()
-            try:
-                state.assert_valid(action)
-                actions.append(action)
-            except AssertionError as e:
-                invalid.append((action, e))
+            all_actions.generate_id(action, create=create)
+            if action.id is not None:
+                try:
+                    state.check_valid_action(action, message=True)
+                    actions[action.id] = action
+                except InvalidActionError as e:
+                    invalid.append((action, e))
         assert actions, self.generate_log(invalid, state)
         return actions
 
@@ -73,23 +92,30 @@ class Oracle(object):
             else:
                 # Check for actions to create new nodes
                 for edge in incoming:
-                    if edge.parent.ID in self.nodes_remaining and not edge.attrib.get("remote"):
-                        yield self.create_node_action(edge, edge.parent, Actions.Node)
+                    if edge.parent.ID in self.nodes_remaining and not edge.parent.attrib.get("implicit") and (
+                                not edge.attrib.get("remote") or
+                                # Allow remote parent if all its children are remote/implicit
+                                all(e.attrib.get("remote") or e.child.attrib.get("implicit") for e in edge.parent)):
+                        yield self.action(edge, NODE, PARENT)  # Node or RemoteNode
 
                 for edge in outgoing:
-                    if edge.child.attrib.get("implicit"):
-                        yield self.create_node_action(edge, edge.child, Actions.Implicit)
+                    if edge.child.ID in self.nodes_remaining and edge.child.attrib.get("implicit") and (
+                            not edge.attrib.get("remote")):  # Allow implicit child if it is not remote
+                        yield self.action(edge, NODE, CHILD)  # Implicit
 
                 if len(state.stack) > 1:
                     s1 = state.stack[-2]
                     # Check for actions to create binary edges
                     for edge in incoming:
                         if edge.parent.ID == s1.node_id:
-                            yield self.create_edge_action(edge, Action.RIGHT)
+                            yield self.action(edge, EDGE, RIGHT)  # RightEdge or RightRemote
 
                     for edge in outgoing:
                         if edge.child.ID == s1.node_id:
-                            yield self.create_edge_action(edge, Action.LEFT)
+                            yield self.action(edge, EDGE, LEFT)  # LeftEdge or LeftRemote
+                        elif state.buffer and edge.child.ID == state.buffer[0].node_id and \
+                                len(state.buffer[0].orig_node.incoming) == 1:
+                            yield Actions.Shift  # Special case to allow getting rid of simple children quickly
 
                     if not self.edge_found:
                         # Check if a swap is necessary, and how far (if compound swap is enabled)
@@ -99,10 +125,10 @@ class Oracle(object):
                         for i, s in enumerate(state.stack[-3::-1]):  # Skip top two, they are not related
                             edge = related.pop(s.node_id, None)
                             if edge is not None:
-                                if not Config().args.swap:  # We have no chance to reach it, so stop trying
+                                if not self.args.swap:  # We have no chance to reach it, so stop trying
                                     self.remove(edge)
                                     continue
-                                if distance is None and Config().args.compound_swap:  # Save the first one
+                                if distance is None and self.args.compound_swap:  # Save the first one
                                     distance = i + 1
                                 if not related:  # All related nodes are in the stack
                                     yield Actions.Swap(distance)
@@ -111,14 +137,11 @@ class Oracle(object):
         if state.buffer and not self.edge_found:
             yield Actions.Shift
 
-    def create_edge_action(self, edge, direction):
+    def action(self, edge, kind, direction):
         self.edge_found = True
-        return Action.edge_action(direction, edge.attrib.get("remote"), edge.tag,
-                                  orig_edge=edge, oracle=self)
-
-    def create_node_action(self, edge, node, action):
-        self.edge_found = True
-        return action(edge.tag, orig_edge=edge, orig_node=node, oracle=self)
+        remote = edge.attrib.get("remote", False)
+        node = (edge.parent, edge.child)[direction] if kind == NODE else None
+        return ACTIONS[kind][direction][remote](tag=edge.tag, orig_edge=edge, orig_node=node, oracle=self)
 
     def remove(self, edge, node=None):
         self.edges_remaining.discard(edge)

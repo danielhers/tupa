@@ -3,7 +3,9 @@ import sys
 
 import numpy as np
 
-from ucca import convert, constructions
+from conversion.amr import CONVERTERS
+from tupa import constraints
+from ucca import evaluation, constructions
 
 
 class Singleton(type):
@@ -28,11 +30,11 @@ class VAction(argparse.Action):
             values = values.count("v") + 1
         setattr(args, self.dest, values)
 
-SPARSE_PERCEPTRON = "sparse"
-DENSE_PERCEPTRON = "dense"
+SPARSE = "sparse"
 MLP_NN = "mlp"
 BILSTM_NN = "bilstm"
-CLASSIFIERS = (SPARSE_PERCEPTRON, DENSE_PERCEPTRON, MLP_NN, BILSTM_NN)
+NOOP = "noop"
+CLASSIFIERS = (SPARSE, MLP_NN, BILSTM_NN, NOOP)
 
 # Multiple choice options: the first one is always the default
 ACTIVATIONS = ("sigmoid", "tanh", "relu", "cube")
@@ -45,11 +47,16 @@ class Config(object, metaclass=Singleton):
         argparser = argparse.ArgumentParser(description="""Transition-based parser for UCCA.""",
                                             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
         argparser.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
-        argparser.add_argument("-m", "--model", help="model file to load/save (default: ucca_<model_type>")
-        argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=SPARSE_PERCEPTRON, help="model type")
+        argparser.add_argument("-m", "--model", help="model file to load/save (default: <format>_<model_type>")
+        argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=SPARSE, help="model type")
         argparser.add_argument("-B", "--beam", choices=(1,), default=1, help="beam size for beam search (1 for greedy)")
         argparser.add_argument("-e", "--evaluate", action="store_true", help="evaluate parsed passages")
         argparser.add_argument("-v", "--verbose", nargs="?", action=VAction, default=0, help="detailed parse output")
+        group = argparser.add_argument_group(title="Node labels")
+        group.add_argument("--node-label-attrib", help="predict node labels and store them in this node attribute")
+        group.add_argument("--unknown-label", help="label to use as unknown value")
+        group.add_argument("--max-node-labels", type=int, default=0, help="max number of node labels to allow")
+        group.add_argument("--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
         constructions.add_argument(argparser)
         group = argparser.add_mutually_exclusive_group()
         group.add_argument("-s", "--sentences", action="store_true", help="separate passages to sentences")
@@ -72,7 +79,8 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--implicit", action="store_true", help="include implicit nodes and edges")
         group.add_argument("--no-remote", action="store_false", dest="remote", help="ignore remote edges")
         group.add_argument("--no-constraints", action="store_false", dest="constraints", help="ignore UCCA rules")
-        group.add_argument("--max-nodes", type=float, default=3.0, help="max non-terminal/terminal ratio")
+        group.add_argument("--max-action-ratio", type=float, default=100, help="max action/terminal ratio")
+        group.add_argument("--max-node-ratio", type=float, default=6, help="max node/terminal ratio")
         group.add_argument("--max-height", type=int, default=20, help="max graph height")
         group = argparser.add_mutually_exclusive_group()
         group.add_argument("--no-swap", action="store_false", dest="swap", help="disable Swap transitions entirely")
@@ -82,7 +90,8 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--verify", action="store_true", help="verify oracle reproduces original passage")
         group = group.add_mutually_exclusive_group()
         group.add_argument("-b", "--binary", action="store_true", help="read and write passages in Pickle")
-        group.add_argument("-f", "--format", choices=convert.CONVERTERS, help="output format for parsed files")
+        group.add_argument("-f", "--format", choices=CONVERTERS, help="input and output format (default: UCCA)")
+        argparser.add_argument("--output-format", choices=CONVERTERS, help="output format for parsed files")
         group = argparser.add_argument_group(title="General classifier training parameters")
         group.add_argument("--swap-importance", type=int, default=1, help="learning rate factor for Swap")
         group.add_argument("--early-update", action="store_true", help="move to next example on incorrect prediction")
@@ -97,10 +106,12 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--word-dim", type=int, default=100, help="dimension for learned word embeddings")
         group.add_argument("--tag-dim", type=int, default=10, help="dimension for POS tag embeddings")
         group.add_argument("--dep-dim", type=int, default=10, help="dimension for dependency relation embeddings")
-        group.add_argument("--label-dim", type=int, default=20, help="dimension for edge label embeddings")
+        group.add_argument("--edge-label-dim", type=int, default=20, help="dimension for edge label embeddings")
+        group.add_argument("--node-label-dim", type=int, default=0, help="dimension for node label embeddings")
         group.add_argument("--punct-dim", type=int, default=2, help="dimension for separator punctuation embeddings")
-        group.add_argument("--gap-dim", type=int, default=2, help="dimension for gap type embeddings")
-        group.add_argument("--action-dim", type=int, default=5, help="dimension for action type embeddings")
+        group.add_argument("--action-dim", type=int, default=5, help="dimension for input action type embeddings")
+        group.add_argument("--ner-dim", type=int, default=5, help="dimension for input entity type embeddings")
+        group.add_argument("--output-dim", type=int, default=50, help="dimension for output action embeddings")
         group.add_argument("--layer-dim", type=int, default=500, help="dimension for hidden layers")
         group.add_argument("--layers", type=int, default=2, help="number of hidden layers")
         group.add_argument("--lstm-layer-dim", type=int, default=500, help="dimension for LSTM hidden layers")
@@ -109,7 +120,6 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--embedding-layers", type=int, default=1, help="number of layers before LSTM")
         group.add_argument("--activation", choices=ACTIVATIONS, default=ACTIVATIONS[0], help="activation function")
         group.add_argument("--init", choices=INITIALIZATIONS, default=INITIALIZATIONS[0], help="weight initialization")
-        group.add_argument("--max-labels", type=int, default=100, help="max number of actions to allow")
         group.add_argument("--save-every", type=int, help="every this many passages, evaluate on dev and save model")
         group.add_argument("--minibatch-size", type=int, default=200, help="mini-batch size for optimization")
         group.add_argument("--optimizer", choices=OPTIMIZERS, default=OPTIMIZERS[0], help="algorithm for optimization")
@@ -119,11 +129,13 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--max-deps", type=int, default=100, help="max number of dep labels to keep embeddings for")
         group.add_argument("--max-edge-labels", type=int, default=15, help="max number of edge labels for embeddings")
         group.add_argument("--max-puncts", type=int, default=5, help="max number of punctuations for embeddings")
-        group.add_argument("--max-gaps", type=int, default=3, help="max number of gap types to keep embeddings for")
-        group.add_argument("--max-actions", type=int, default=10, help="max number of action types for embeddings")
+        group.add_argument("--max-action-types", type=int, default=10, help="max number of action types for embeddings")
+        group.add_argument("--max-action-labels", type=int, default=100, help="max number of action labels to allow")
+        group.add_argument("--max-ner-types", type=int, default=18, help="max number of entity types to allow")
         group.add_argument("--word-dropout", type=float, default=0.25, help="word dropout parameter")
         group.add_argument("--word-dropout-external", type=float, default=0.25, help="word dropout for word vectors")
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter between layers")
+        group.add_argument("--max-length", type=int, default=120, help="maximum length of input sentence")
         group = argparser.add_argument_group(title="DyNet parameters")
         group.add_argument("--dynet-mem", help="memory for dynet")
         group.add_argument("--dynet-weight-decay", type=float, help="weight decay for parameters (default 1e-6)")
@@ -131,6 +143,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--dynet-gpus", type=int, help="how many GPUs you want to use")
         group.add_argument("--dynet-gpu-ids", help="the GPUs that you want to use by device ID")
         group.add_argument("--dynet-viz", action="store_true", help="visualize NN and exit")
+        group.add_argument("--dynet-autobatch", type=int, choices=(0, 1), default=0, help="auto-batch training examples")
         self.args = argparser.parse_args(args if args else None)
         
         if self.args.model:
@@ -142,7 +155,30 @@ class Config(object, metaclass=Singleton):
                 self.args.testscores = self.args.model + ".test.csv"
         elif not self.args.log:
             self.args.log = "parse.log"
-
+        self.constraints = constraints.Constraints(self.args)
+        self.input_converter, self.output_converter = CONVERTERS.get(self.args.format, (None, None))
+        self.evaluate, self.Scores = evaluation.evaluate, evaluation.Scores
+        if self.args.format == "amr":
+            self.node_labels = True
+            self.args.implicit = True
+            if not self.args.node_label_dim:
+                self.args.node_label_dim = 20
+            if not self.args.max_node_labels:
+                self.args.max_node_labels = 1000
+            self.args.max_action_labels = max(self.args.max_action_labels, 600)
+            self.args.max_edge_labels = max(self.args.max_edge_labels, 500)
+            from evaluation.amr import evaluate, Scores, LABEL_ATTRIB, UNKNOWN_LABEL
+            from constraint.amr import Constraints
+            self.evaluate, self.Scores = evaluate, Scores
+            self.args.node_label_attrib = LABEL_ATTRIB
+            self.args.unknown_label = UNKNOWN_LABEL
+            self.constraints = Constraints(self.args)
+        else:
+            self.node_labels = False
+        if self.args.output_format:
+            _, self.output_converter = CONVERTERS[self.args.output_format]
+        else:
+            self.args.output_format = self.args.format
         self._log_file = None
         self.set_external()
         self.random = np.random
@@ -162,6 +198,8 @@ class Config(object, metaclass=Singleton):
             sys.argv += ["--dynet-gpu-ids", str(self.args.dynet_gpu_ids)]
         if self.args.dynet_viz:
             sys.argv += ["--dynet-viz"]
+        if self.args.dynet_autobatch:
+            sys.argv += ["--dynet-autobatch", str(self.args.dynet_autobatch)]
 
     def update(self, params):
         for name, value in params.items():
@@ -170,7 +208,7 @@ class Config(object, metaclass=Singleton):
 
     @property
     def line_end(self):
-        return "\n" if self.args.verbose else " "  # show all in one line unless verbose
+        return "\n" if self.args.verbose > 1 else " "  # show all in one line unless verbose
 
     def log(self, message):
         try:
@@ -187,4 +225,6 @@ class Config(object, metaclass=Singleton):
             self._log_file.close()
 
     def __str__(self):
-        return " ".join("%s=%s" % item for item in sorted(vars(self.args).items()))
+        return " ".join("--" + k.replace("_", "-") + ("" if v is True else
+                        (" " + str(" ".join(v) if hasattr(v, "__iter__") and not isinstance(v, str) else v)))
+                        for (k, v) in sorted(vars(self.args).items()) if v not in (None, False, (), ""))

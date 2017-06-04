@@ -1,7 +1,7 @@
 from features.feature_extractor import FeatureExtractor
 from features.feature_params import MISSING_VALUE
 
-NON_NUMERIC_FEATURE_SUFFIXES = "wtdepxA"
+NON_NUMERIC_FEATURE_SUFFIXES = "wtdenpAT"
 FEATURE_TEMPLATES = (
     # words
     "s0ws1ws2ws3w"  # stack
@@ -9,7 +9,7 @@ FEATURE_TEMPLATES = (
     "s0lws0rws0uws1lws1rws1uw"  # children
     "s0llws0lrws0luws0rlws0rrws0ruws0ulws0urw"
     "s0uuws1llws1lrws1luws1rlws1rrws1ruw"  # grandchildren
-    "s0Uws1Uwb0Uw",  # parents
+    "s0Lws0Rws0Uws1Lws1Rws1Uwb0Lwb0Rwb0Uw",  # parents
     # POS tags
     "s0ts1ts2ts3t"  # stack
     "b0tb1tb2tb3t",  # buffer
@@ -26,14 +26,24 @@ FEATURE_TEMPLATES = (
     "a0ea1e",  # past actions edge tags
     # past action labels
     "a0Aa1A",
+    # node labels
+    "s0ns1ns2ns3n"  # stack
+    "b0nb1nb2nb3n"  # buffer
+    "s0lns0rns0uns1lns1rns1un"  # children
+    "s0llns0lrns0luns0rlns0rrns0runs0ulns0urn"
+    "s0uuns1llns1lrns1luns1rlns1rrns1run"  # grandchildren
+    "s0Lns0Rns0Uns1Lns1Rns1Unb0Lnb0Rnb0Un",  # parents
     # separators
     "s0ps1p",
-    # gap types
-    "s0xs1xs2xs3x",
+    # NER
+    "s0Ts1Ts2Ts3T"  # stack
+    "b0Tb1Tb2Tb3T",  # buffer
     # numeric
-    "s0hqyPCIRs1hqys2hys3hy"
-    "b0hPCIR"
-    "s0s1s0b0s0",
+    "s0s1xs1s0xs0b0xb0s0x"
+    "s0xs1xs2xs3x"
+    "s0s1ds0b0d"
+    "s0hqyPCIRNs1hqyNs2hys3hyN"
+    "b0hPCIRN",
 )
 EXTRA_NUMERIC_FEATURES = 2  # bias, node ratio
 
@@ -41,8 +51,8 @@ EXTRA_NUMERIC_FEATURES = 2  # bias, node ratio
 class DenseFeatureExtractor(FeatureExtractor):
     """
     Object to extract features from the parser state to be used in action classification
-    Requires wrapping by FeatureEmbedding.
-    To be used with DensePerceptron or NeuralNetwork classifier.
+    Requires wrapping by FeatureEnumerator.
+    To be used with a NeuralNetwork classifier.
     """
     def __init__(self, feature_templates=FEATURE_TEMPLATES):
         super(DenseFeatureExtractor, self).__init__(feature_templates=feature_templates)
@@ -52,15 +62,13 @@ class DenseFeatureExtractor(FeatureExtractor):
             if feature_template.suffix in NON_NUMERIC_FEATURE_SUFFIXES:
                 self.non_numeric_feature_templates.append(feature_template)
             else:
-                assert self.numeric_features_template is None, \
-                    "More than one numeric feature template: %s and %s" % (
+                assert self.numeric_features_template is None, "More than one numeric feature template: %s and %s" % (
                         self.numeric_features_template, feature_template)
                 self.numeric_features_template = feature_template
         self.non_numeric_by_suffix = {}
         for feature_template in self.non_numeric_feature_templates:
             for element in feature_template.elements:
-                assert len(element.properties) <= 1,\
-                    "Non-numeric element with %d properties: %s in feature %s" % (
+                assert len(element.properties) <= 1, "Non-numeric element with %d properties: %s in feature %s" % (
                         len(element.properties), element, feature_template)
                 if element.properties:
                     assert element.properties == feature_template.elements[0].properties, \
@@ -68,13 +76,12 @@ class DenseFeatureExtractor(FeatureExtractor):
                             element, feature_template.elements[0])
             assert feature_template.suffix not in self.non_numeric_by_suffix, \
                 "More than one non-numeric feature with '%s' suffix: %s and %s" % (
-                    feature_template.suffix,
-                    self.non_numeric_by_suffix[feature_template.suffix],
+                    feature_template.suffix, self.non_numeric_by_suffix[feature_template.suffix],
                     feature_template)
             self.non_numeric_by_suffix[feature_template.suffix] = feature_template
 
     def init_features(self, state, suffix):
-        return [self.get_prop(None, n, None, suffix, state) for n in state.terminals]
+        return [self.get_prop(None, n, None, None, suffix, state) for n in state.terminals]
 
     def extract_features(self, state, params=None):
         """
@@ -113,16 +120,12 @@ class DenseFeatureExtractor(FeatureExtractor):
                     template.elements = [e for e in template.elements if e not in longest.elements]
 
     def num_features_numeric(self):
-        assert self.numeric_features_template is not None, \
-            "Missing numeric features template"
-        return sum([len(e.properties) for e in self.numeric_features_template.elements] +
-                   [len([e for e in self.numeric_features_template.elements
-                         if not e.properties])]) - 1 + EXTRA_NUMERIC_FEATURES
+        assert self.numeric_features_template is not None, "Missing numeric features template"
+        return sum(len(e.properties) for e in self.numeric_features_template.elements) + EXTRA_NUMERIC_FEATURES
 
     def num_features_non_numeric(self, suffix):
         feature_template = self.non_numeric_by_suffix.get(suffix)
-        assert feature_template is not None, \
-            "Missing feature template for suffix '%s'" % suffix
+        assert feature_template is not None, "Missing feature template for suffix '%s'" % suffix
         return sum(len(e.properties) for e in feature_template.elements)
 
     def features_exist(self, suffix):

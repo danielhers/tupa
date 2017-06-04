@@ -6,7 +6,7 @@ UNKNOWN_VALUE = 0
 
 class FeatureParameters(object):
     def __init__(self, suffix, dim, size, dropout=0, updated=True, num=1, init=None, data=None, indexed=False,
-                 copy_from=None, filename=None):
+                 copy_from=None, filename=None, min_count=1):
         """
         :param suffix: one-character title for feature
         :param dim: vector dimension or, filename to load vectors from, or Word2Vec object
@@ -19,6 +19,7 @@ class FeatureParameters(object):
         :param indexed: whether the feature is to be used as index into initialized values (otherwise used directly)
         :param copy_from: suffix of other parameter to copy values from instead of extracting them directly
         :param filename: name of file to load data from
+        :param min_count: minimum number of occurrences for a feature value before it is actually added
         """
         self.suffix = suffix
         self.dim = dim
@@ -31,11 +32,13 @@ class FeatureParameters(object):
         self.indexed = indexed
         self.copy_from = copy_from
         self.filename = filename
+        self.min_count = min_count
 
     def __repr__(self):
-        return "%s(%s, %d, %d, %f, %s, %s, %s, %s, %s, %s, %s)" % (
-            self.__class__.__name__, self.suffix, self.dim, self.size, self.dropout, self.updated, self.num, self.init,
-            self.data, self.indexed, self.copy_from, self.filename)
+        return type(self).__name__ + "(" + ", ".join(map(str, (self.suffix,
+            self.dim, self.size, self.dropout, self.updated, self.num,
+            self.init, self.data, self.indexed, self.copy_from, self.filename,
+            self.min_count))) + ")"
 
     @property
     def numeric(self):
@@ -58,7 +61,7 @@ class NumericFeatureParameters(FeatureParameters):
 
     def __repr__(self):
         return "%s(%d)" % (
-            self.__class__.__name__, self.num)
+            type(self).__name__, self.num)
 
     @property
     def numeric(self):

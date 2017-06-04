@@ -1,30 +1,82 @@
+import os
 import pickle
+import pprint as pp
+import sys
 import time
+from collections import OrderedDict, Counter
 
 import numpy as np
-import os
-from collections import defaultdict, Counter
 
 from features.feature_params import UNKNOWN_VALUE
 
 
-class UnknownDict(defaultdict):
-    """
-    defaultdict that has a single default value for missing keys
-    """
-    UNKNOWN = "<UNKNOWN>"
+class DefaultOrderedDict(OrderedDict):
+    # Source: http://stackoverflow.com/a/6190500/223267
+    def __init__(self, default_factory=None, *args, **kwargs):
+        if default_factory is not None and not callable(default_factory):
+            raise TypeError("default_factory must be callable")
+        self._all = []
+        OrderedDict.__init__(self, *args, **kwargs)
+        self._all = list(self.keys())
+        self.default_factory = default_factory
 
-    def __init__(self, d, unknown=None):
+    def __getitem__(self, key):
+        try:
+            return OrderedDict.__getitem__(self, key)
+        except KeyError:
+            return self.__missing__(key)
+
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+        self[key] = value = self.default_factory()
+        return value
+
+    def __reduce__(self):
+        args = tuple() if self.default_factory is None else self.default_factory,
+        return type(self), args, None, None, iter(self.items())
+
+    def copy(self):
+        return self.__copy__()
+
+    def __copy__(self):
+        return type(self)(self.default_factory, self)
+
+    def __deepcopy__(self, memo):
+        import copy
+        return type(self)(self.default_factory, copy.deepcopy(tuple(self.items())))
+
+    def __repr__(self):
+        return "%s(%s, %s)" % (type(self), self.default_factory, OrderedDict.__repr__(self))
+
+    def __setitem__(self, key, value, **kwargs):
+        super(DefaultOrderedDict, self).__setitem__(key, value, **kwargs)
+        self._all.append(key)
+
+    @property
+    def all(self):
+        return self._all
+
+    @all.setter
+    def all(self, keys):
+        self._all = []
+        self.clear()
+        for i, key in enumerate(keys):
+            self[key] = i
+
+
+class UnknownDict(DefaultOrderedDict):
+    """
+    DefaultOrderedDict that has a single default value for missing keys
+    """
+    def __init__(self, d=None, unknown=UNKNOWN_VALUE):
         """
         :param d: base dict to initialize by
         :param unknown: value to return for missing keys
         """
         # noinspection PyTypeChecker
-        super(UnknownDict, self).__init__(None, d)
-        if self.UNKNOWN not in self:
-            assert unknown is not None, "Default value must not be None"
-            self[self.UNKNOWN] = unknown
-        self.unknown = self[self.UNKNOWN]
+        super(UnknownDict, self).__init__(None, {} if d is None else d)
+        self.unknown = self.setdefault(None, unknown)
 
     def __missing__(self, key):
         return self.unknown
@@ -40,39 +92,39 @@ class AutoIncrementDict(UnknownDict):
         :param keys: initial sequence of keys
         :param d: dictionary to initialize from
         """
-        super(AutoIncrementDict, self).__init__({} if d is None else d, unknown=UNKNOWN_VALUE)
+        super(AutoIncrementDict, self).__init__(d)
         self.max = max_size
         for key in keys:
             self.__missing__(key)
 
     def __missing__(self, key):
-        ret = self[key] = len(self) if self.max is not None and len(self) < self.max else self.unknown
-        return ret
+        if self.max is not None and len(self) < self.max:
+            ret = self[key] = len(self)
+            return ret
+        return self.unknown
 
 
 class DropoutDict(AutoIncrementDict):
     """
     UnknownDict that sometimes returns the unknown value even for existing keys
     """
-    def __init__(self, d=None, dropout=0, max_size=None, keys=()):
+    def __init__(self, d=None, dropout=0, max_size=None, keys=(), min_count=1):
         """
         :param d: base dict to initialize by
         :param dropout: dropout parameter
+        :param min_count: minimum number of occurrences for a key before it is actually added to the dict
         """
         super(DropoutDict, self).__init__(max_size, keys, d=d)
         assert dropout >= 0, "Dropout value must be >= 0, but given %f" % dropout
-        if d is not None and isinstance(d, DropoutDict):
-            self.dropout = d.dropout
-            self.counts = d.counts if self.dropout > 0 else None
-        else:
-            self.dropout = dropout
-            self.counts = Counter() if self.dropout > 0 else None
+        self.dropout, self.counts, self.min_count = (d.dropout, d.counts, d.min_count) \
+            if d is not None and isinstance(d, DropoutDict) else (dropout, Counter(), min_count)
 
     def __getitem__(self, item):
-        if item != self.UNKNOWN and self.dropout > 0:
+        if item is not None:
             self.counts[item] += 1
-            if self.dropout / (self.counts[item] + self.dropout) > np.random.random_sample():
-                item = UnknownDict.UNKNOWN
+            count = self.counts[item]
+            if count < self.min_count or self.dropout and self.dropout/(count+self.dropout) > np.random.random_sample():
+                item = None
         return super(DropoutDict, self).__getitem__(item)
 
 
@@ -82,10 +134,14 @@ def save_dict(filename, d):
     :param filename: file to write to
     :param d: dictionary to save
     """
+    sys.setrecursionlimit(2000)
     print("Saving to '%s'... " % filename, end="", flush=True)
     started = time.time()
     with open(filename, 'wb') as h:
-        pickle.dump(d, h, protocol=pickle.HIGHEST_PROTOCOL)
+        try:
+            pickle.dump(d, h, protocol=pickle.HIGHEST_PROTOCOL)
+        except RecursionError as e:
+            raise IOError("Failed dumping dictionary:\n" + pp.pformat(d, compact=True)) from e
     print("Done (%.3fs)." % (time.time() - started))
 
 
@@ -102,10 +158,10 @@ def load_dict(filename):
             try:
                 with open(f, 'rb') as h:
                     return pickle.load(h)
-            except Exception as e:
+            except FileNotFoundError as e:
                 exception = e
         if exception is not None:
-            raise FileNotFoundError("File not found: '%s'" % filename) from exception
+            raise FileNotFoundError("File not found: '%s'" % "', '".join(names)) from exception
 
     print("Loading from '%s'... " % filename, end="", flush=True)
     started = time.time()

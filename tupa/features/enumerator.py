@@ -12,28 +12,29 @@ class FeatureEnumerator(FeatureExtractorWrapper):
     To be used with NeuralNetwork classifier.
     """
 
-    def __init__(self, feature_extractor, params):
+    def __init__(self, feature_extractor=None, params=None):
         super(FeatureEnumerator, self).__init__(feature_extractor, params)
 
-    def init_params(self, param_list):
-        params = super(FeatureEnumerator, self).init_params(param_list)
+    def init_params(self, feature_extractor, param_list):
+        params = super(FeatureEnumerator, self).init_params(feature_extractor, param_list)
         for param in list(params.values()):
-            if self.feature_extractor.features_exist(param.effective_suffix):
-                self.init_data(param)
+            if feature_extractor.features_exist(param.effective_suffix):
+                if not isinstance(param, NumericFeatureParameters):
+                    param.num = feature_extractor.num_features_non_numeric(param.effective_suffix)
+                    if param.data is None:
+                        self.init_data(param)
             else:
                 del params[param.suffix]
         return params
 
-    def init_data(self, param):
-        if param.data is not None or isinstance(param, NumericFeatureParameters):
-            return
-        param.num = self.feature_extractor.num_features_non_numeric(param.effective_suffix)
+    @staticmethod
+    def init_data(param):
         keys = ()
         if param.dim and param.external:
-            vectors = self.get_word_vectors(param)
+            vectors = FeatureExtractorWrapper.get_word_vectors(param)
             keys = vectors.keys()
             param.init = np.array(list(vectors.values()))
-        param.data = DropoutDict(max_size=param.size, keys=keys, dropout=param.dropout)
+        param.data = DropoutDict(max_size=param.size, keys=keys, dropout=param.dropout, min_count=param.min_count)
 
     def init_features(self, state, suffix):
         param = self.params[suffix]

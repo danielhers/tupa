@@ -1,29 +1,26 @@
-import re
-
-from tupa.config import Config, Singleton
+from tupa.config import Config
 
 
 class Action(object):
     type_to_id = {}
-
-    RIGHT = 0
-    LEFT = 1
     MAX_SWAP = 15  # default maximum size for compound swap
 
-    def __init__(self, action_type, tag=None, orig_edge=None, orig_node=None, oracle=None):
+    def __init__(self, action_type, tag=None, has_label=False, orig_edge=None, orig_node=None, oracle=None, id_=None):
         self.type = action_type  # String
         self.tag = tag  # Usually the tag of the created edge; but if COMPOUND_SWAP, the distance
+        self.has_label = has_label  # Whether this action type requires a label or not
         self.orig_node = orig_node  # Node created by this action, if any (during training)
-        self.orig_edge = orig_edge
+        self.orig_edge = orig_edge  # Edge created by this action, if any (during training)
+        self.node = None  # Will be set by State when the node created by this action is known
         self.edge = None  # Will be set by State when the edge created by this action is known
-        self.oracle = oracle
-        self.index = None
+        self.oracle = oracle  # Reference to oracle, to inform it of actually created nodes/edges
+        self.index = None  # Index of this action in history
 
         self.type_id = Action.type_to_id.get(self.type)  # Allocate ID for fast comparison
         if self.type_id is None:
             self.type_id = len(Action.type_to_id)
             Action.type_to_id[self.type] = self.type_id
-        self._id = None
+        self.id = id_
 
     def is_type(self, *others):
         return self.type_id in (o.type_id for o in others)
@@ -32,26 +29,14 @@ class Action(object):
         if self.oracle is not None:
             self.oracle.remove(self.orig_edge, self.orig_node)
 
-    @staticmethod
-    def from_string(s):
-        m = re.match("(.*)-(.*)", s)
-        if m:  # String contains tag
-            action_type, tag = m.groups()
-            return Action(action_type, tag)
-        return Action(s)
-
-    @classmethod
-    def edge_action(cls, direction, remote, tag, *args, **kwargs):
-        remote_action, edge_action = (Actions.RightRemote, Actions.RightEdge) \
-            if direction == cls.RIGHT else (Actions.LeftRemote, Actions.LeftEdge)
-        action = remote_action if remote else edge_action
-        return action(tag, *args, **kwargs)
-
     def __repr__(self):
-        return Action.__name__ + "(" + self.type + (", " + self.tag if self.tag else "") + ")"
+        return Action.__name__ + "(" + ", ".join(filter(None, (self.type, self.tag))) + ")"
 
     def __str__(self):
-        return self.type + ("-" + str(self.tag) if self.tag else "")
+        s = self.type
+        if self.tag:
+            s += "-%s" % self.tag
+        return s
 
     def __eq__(self, other):
         return self.id == other.id
@@ -60,38 +45,22 @@ class Action(object):
         return hash(self.id)
 
     def __call__(self, *args, **kwargs):
-        return Action(self.type, *args, **kwargs)
+        return Action(self.type, *args, **kwargs, has_label=self.has_label)
 
     @property
     def remote(self):
-        return self.is_type(Actions.LeftRemote, Actions.RightRemote)
+        return self.is_type(Actions.RemoteNode, Actions.LeftRemote, Actions.RightRemote)
 
     @property
     def is_swap(self):
         return self.is_type(Actions.Swap)
 
-    @property
-    def id(self):
-        self.generate_id()
-        return self._id
 
-    def generate_id(self):
-        if self._id is None:
-            key = (self.type_id, self.tag)
-            actions = Actions()
-            self._id = actions.ids.get(key)
-            if self._id is None:  # New action, add to list
-                # noinspection PyTypeChecker
-                self._id = len(actions.all)
-                actions.all.append(self)
-                actions.ids[key] = self._id
-
-
-class Actions(object, metaclass=Singleton):
-
+class Actions(object):
     Shift = Action("SHIFT")
-    Node = Action("NODE")
-    Implicit = Action("IMPLICIT")
+    Node = Action("NODE", has_label=True)
+    RemoteNode = Action("REMOTE-NODE", has_label=True)
+    Implicit = Action("IMPLICIT", has_label=True)
     Reduce = Action("REDUCE")
     LeftEdge = Action("LEFT-EDGE")
     RightEdge = Action("RIGHT-EDGE")
@@ -120,6 +89,8 @@ class Actions(object, metaclass=Singleton):
     def all(self, actions):
         self._all = list(actions)
         self._ids = {(action.type_id, action.tag): i for i, action in enumerate(actions)}
+        for action in self._all:
+            self.generate_id(action)
 
     @property
     def ids(self):
@@ -127,4 +98,12 @@ class Actions(object, metaclass=Singleton):
             self.init()
         return self._ids
 
-
+    def generate_id(self, action, create=True):
+        if action.id is None:
+            key = (action.type_id, action.tag)
+            action.id = self.ids.get(key)
+            if create and action.id is None:  # New action, add to list
+                # noinspection PyTypeChecker
+                action.id = len(self.all)
+                self.all.append(action(tag=action.tag, id_=action.id))
+                self.ids[key] = action.id

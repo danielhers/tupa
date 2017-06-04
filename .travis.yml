@@ -5,6 +5,7 @@ cache:
   pip: true
   directories:
   - $HOME/miniconda
+  - dynet
 python:
   - "3.5"
 addons:
@@ -33,12 +34,16 @@ before_script:
   - mkdir pickle
   - curl -L http://www.cs.huji.ac.il/~danielh/ucca/ucca_corpus_pickle.tgz | tar xz -C pickle
   - python ucca/scripts/split_corpus.py pickle -t 4282 -d 454 -l
+  - wget http://amr.isi.edu/download/2016-03-14/alignment-release-{training,dev,test}-bio.txt
+  - python scheme/split.py alignment-release-training-bio.txt alignment-release-training-bio
 env:
   - TEST_SUITE=unit
-  - TEST_SUITE=sparse
-  - TEST_SUITE=dense
-  - TEST_SUITE=mlp
-  - TEST_SUITE=bilstm
-  - TEST_SUITE=tune
+  - TEST_SUITE=sparse-ucca
+  - TEST_SUITE=mlp-ucca
+  - TEST_SUITE=bilstm-ucca
+  - TEST_SUITE=noop-ucca
+  - TEST_SUITE=tune-ucca
+  - TEST_SUITE=noop-amr
+  - TEST_SUITE=convert-amr
 script:
   - ci/test.sh

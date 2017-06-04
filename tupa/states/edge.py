@@ -22,7 +22,7 @@ class Edge(object):
         self.child.add_incoming(self)
 
     def __repr__(self):
-        return Edge.__name__ + "(" + self.tag + ", " + self.parent + ", " + self.child +\
+        return Edge.__name__ + "(" + self.tag + ", " + repr(self.parent) + ", " + repr(self.child) +\
                ((", " + str(self.remote)) if self.remote else "") + ")"
 
     def __str__(self):

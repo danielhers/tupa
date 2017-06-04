@@ -17,7 +17,9 @@ FEATURE_TEMPLATES = (
     "s0ruwe", "s0ulwe", "s0urwe", "s0uuwe", "s1llwe",
     "s1lrwe", "s1luwe", "s1rlwe", "s1rrwe", "s1ruwe",
     # parents:
-    "s0Uwe", "s1Uwe", "b0Uwe",
+    "s0Lwe", "s0Rwe", "s0Uwe",
+    "s1Lwe", "s1Rwe", "s1Uwe",
+    "b0Lwe", "b0Rwe", "b0Uwe",
     # separator (Zhu et al. 2013):
     "s0wp", "s0wep", "s0wq", "s0weq", "s0es1ep", "s0es1eq",
     "s1wp", "s1wep", "s1wq", "s1weq",
@@ -33,15 +35,25 @@ FEATURE_TEMPLATES = (
     "s0P", "s0C", "s0wP", "s0wC",
     "b0P", "b0C", "b0wP", "b0wC",
     # existing edges (Tokgöz and Eryiğit 2015):
-    "s0s1", "s1s0", "s0b0", "b0s0",
+    "s0s1x", "s1s0x", "s0b0x", "b0s0x",
     "s0b0e", "b0s0e",
+    # dependency distance:
+    "s0s1d", "s0b0d",
     # past actions (Tokgöz and Eryiğit 2015):
     "a0Ae", "a1Ae",
-    # UCCA-specific
+    # implicit and remote
     "s0I", "s0R", "s0wI", "s0wR",
     "b0I", "b0R", "b0wI", "b0wR",
+    # node labels
+    "s0n", "s0wn",
+    "b0n", "b0wn",
+    "s0Ln", "s0Rn", "s0Un",
+    "s1Ln", "s1Rn", "s1Un",
+    "b0Ln", "b0Rn", "b0Un",
     # height
     "s0h", "s1h", "b0h", "b1h",
+    # NER
+    "s0NT", "s1NT", "b0NT", "b1NT",
 )
 
 

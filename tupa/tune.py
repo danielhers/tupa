@@ -14,7 +14,7 @@ MODELS_DIR = "models"
 class Params(object):
     def __init__(self, params):
         self.params = params
-        self.params["model"] = "%s/ucca-%s-%d" % (MODELS_DIR, self.params["classifier"], self.params["seed"])
+        self.params["model"] = "%s/%s-%d" % (MODELS_DIR, self.params["classifier"], self.params["seed"])
         self.test_scores = None
         self.dev_scores = ()
 
@@ -68,10 +68,13 @@ def main():
         ("word_dim",                (0, 50, 100, 200, 300)),
         ("tag_dim",                 (5, 10, 20)),
         ("dep_dim",                 (5, 10, 20)),
-        ("label_dim",               (5, 10, 20)),
+        ("edge_label_dim",          (5, 10, 20)),
+        ("node_label_dim",          (10, 20, 30)),
         ("punct_dim",               (1, 2, 3)),
-        ("gap_dim",                 (1, 2, 3)),
         ("action_dim",              (3, 5, 10)),
+        ("ner_dim",                 (3, 5, 10)),
+        ("max_node_labels",         (500, 750, 1000, 1500, 2000)),
+        ("min_node_label_count",    [1] + 5 * [2] + [3]),
         ("layer_dim",               (50, 100, 200, 300, 500, 1000)),
         ("layers",                  [1] + 5 * [2]),
         ("lstm_layer_dim",          (50, 100, 200, 300, 500, 1000)),

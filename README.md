@@ -42,16 +42,16 @@ be sure to include it when parsing too.
 
 To download and extract the pre-trained models, run:
 
-    wget http://www.cs.huji.ac.il/~danielh/ucca/{sparse,mlp,bilstm}.tgz
-    tar xvzf sparse.tgz
-    tar xvzf mlp.tgz
-    tar xvzf bilstm.tgz
+    wget http://www.cs.huji.ac.il/~danielh/ucca/{sparse,mlp,bilstm}.tar.gz
+    tar xvzf sparse.tar.gz
+    tar xvzf mlp.tar.gz
+    tar xvzf bilstm.tar.gz
 
 Run the parser using any of them:
 
-    python tupa/parse.py example.txt -c sparse -m models/ucca-sparse
-    python tupa/parse.py example.txt -c mlp -m models/ucca-mlp
-    python tupa/parse.py example.txt -c bilstm -m models/ucca-bilstm
+    python tupa/parse.py example.txt -c sparse -m models/sparse
+    python tupa/parse.py example.txt -c mlp -m models/mlp
+    python tupa/parse.py example.txt -c bilstm -m models/bilstm
 
 Author
 ------

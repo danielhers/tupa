@@ -10,14 +10,14 @@ class FeatureExtractorWrapper(FeatureExtractor):
         :param feature_extractor: DenseFeatureExtractor to wrap
         :param params: list of FeatureParameters
         """
-        super().__init__(())
-        self.feature_extractor = feature_extractor
-        self.params = params if isinstance(params, dict) else self.init_params(params)
+        super().__init__(feature_extractor=feature_extractor,
+                         params=params if isinstance(params, dict) else self.init_params(feature_extractor, params))
 
-    def init_params(self, param_list):
-        params = {p.suffix: p for p in param_list}
-        param = NumericFeatureParameters(self.feature_extractor.num_features_numeric())
-        params[param.suffix] = param
+    def init_params(self, feature_extractor, param_list):
+        params = {} if param_list is None else {p.suffix: p for p in param_list}
+        if feature_extractor:
+            param = NumericFeatureParameters(feature_extractor.num_features_numeric())
+            params[param.suffix] = param
         return params
 
     def init_features(self, state):
@@ -28,7 +28,7 @@ class FeatureExtractorWrapper(FeatureExtractor):
         return self.feature_extractor.extract_features(state)
 
     def finalize(self):
-        return self.__class__(self.feature_extractor, copy_params(self.params, UnknownDict))
+        return type(self)(self.feature_extractor, copy_params(self.params, UnknownDict))
 
     def save(self, filename):
         save_dict(filename + self.filename_suffix(), copy_params(self.params))

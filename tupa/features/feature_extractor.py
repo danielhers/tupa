@@ -3,7 +3,7 @@ import re
 from ucca import layer0
 from ucca.layer1 import EdgeTags
 
-FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lruLRU]*)([wtdhepqxyAPCIR]*)")
+FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lruLRU]*)([wtdhenpqxyAPCIRNT]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile("^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 
 
@@ -49,18 +49,24 @@ class FeatureTemplateElement(object):
                            d: node dependency relation
                            h: node height
                            e: tag of first incoming edge / action tag
+                           n: node label
                            ,: unique separator punctuation between nodes
                            q: count of any separator punctuation between nodes
-                           x: gap type
+                           x: numeric value of gap type
                            y: sum of gap lengths
                            A: action type label
                            P: number of parents
                            C: number of children
                            I: number of implicit children
                            R: number of remote children
-                           If empty, the value will be 1 if there is an edge from this node to the
-                           next one in the template, or 0 otherwise. Also, if the next node comes
-                           with the "e" property, then the edge with this node will be considered.
+                           N: numeric value of named entity IOB
+                           T: named entity type
+                           If empty,
+                             If the next node comes with the "x" property, the value will be 1 if there is an edge from
+                             this node to the next one in the template, or 0 otherwise.
+                             If the next node comes with the "e" property, the edge with this node will be considered.
+                             If the next node comes with the "d" property, the value will be the dependency distance
+                             between the head terminals of the nodes.
         """
         self.source = source
         self.index = int(index)
@@ -78,7 +84,7 @@ class FeatureExtractor(object):
     """
     Object to extract features from the parser state to be used in action classification
     """
-    def __init__(self, feature_templates):
+    def __init__(self, feature_templates=(), feature_extractor=None, params=None):
         assert all(FEATURE_TEMPLATE_PATTERN.match(f) for f in feature_templates), \
             "Features do not match pattern: " + ", ".join(
                 f for f in feature_templates if not FEATURE_TEMPLATE_PATTERN.match(f))
@@ -87,6 +93,8 @@ class FeatureExtractor(object):
             feature_name, tuple(FeatureTemplateElement(*m.group(1, 2, 3, 4))
                                 for m in re.finditer(FEATURE_ELEMENT_PATTERN, feature_name)))
                                   for feature_name in feature_templates]
+        self.feature_extractor = feature_extractor
+        self.params = {} if params is None else params
 
     def extract_features(self, state, params):
         """
@@ -129,37 +137,33 @@ class FeatureExtractor(object):
             node = FeatureExtractor.get_node(element, state)
             if not element.properties:
                 if prev_elem is not None:
-                    if node is None or prev_node is None:
-                        if default is None:
-                            return None
-                        values.append(default)
-                    else:
-                        values.append(int(prev_node in node.parents))
+                    assert node is None or prev_node is None, "Property-less elements: %s%s" % (prev_elem, element)
+                    if default is None:
+                        return None
+                    values.append(default)
                 prev_elem = element
                 prev_node = node
             else:
-                prev_elem = None
-                prev_node = None
                 for p in ("i",) if indexed else element.properties:
-                    v = FeatureExtractor.get_prop(element, node, prev_node, p, state)
+                    v = FeatureExtractor.get_prop(element, node, prev_node, prev_elem, p, state)
                     if v is None:
                         if default is None:
                             return None
                         values.append(default)
                     else:
                         values.append(v)
+                prev_elem = None
+                prev_node = None
         return values
 
     @staticmethod
-    def get_prop(element, node, prev_node, p, state):
+    def get_prop(element, node, prev_node, prev_elem, p, state):
         try:
             if element is not None and element.source == "a":
                 return FeatureExtractor.get_action_prop(node, p)
             elif p in "pq":
-                return FeatureExtractor.get_separator_prop(
-                    state.stack[-1:-3:-1], state.terminals, p)
-            else:
-                return FeatureExtractor.get_node_prop(node, p, prev_node)
+                return FeatureExtractor.get_separator_prop(state.stack[-1:-3:-1], state.terminals, p)
+            return FeatureExtractor.get_node_prop(node, p, prev_node, prev_elem)
         except (AttributeError, StopIteration):
             return None
 
@@ -194,24 +198,27 @@ class FeatureExtractor(object):
         return node
 
     NODE_PROP_GETTERS = {
-        "w": lambda node, _: FeatureExtractor.get_head_terminal(node).text,
-        "t": lambda node, _: FeatureExtractor.get_head_terminal(node).pos_tag,
-        "d": lambda node, _: FeatureExtractor.get_head_terminal(node).dep_rel,
-        "h": lambda node, _: FeatureExtractor.get_height(node),
-        "i": lambda node, _: FeatureExtractor.get_head_terminal(node).index,
-        "e": lambda node, prev_node: next(e.tag for e in node.incoming
-                                          if prev_node is None or e.parent == prev_node),
-        "x": lambda node, _: FeatureExtractor.gap_type(node),
-        "y": lambda node, _: FeatureExtractor.gap_length_sum(node),
-        "P": lambda node, _: len(node.incoming),
-        "C": lambda node, _: len(node.outgoing),
-        "I": lambda node, _: len([n for n in node.children if n.implicit]),
-        "R": lambda node, _: len([e for e in node.outgoing if e.remote]),
+        "w": lambda node, *_: FeatureExtractor.get_head_terminal(node).text,
+        "t": lambda node, *_: FeatureExtractor.get_head_terminal(node).pos_tag,
+        "d": lambda node, prev_node, binary: (FeatureExtractor.get_dependency_distance(prev_node, node) if binary else
+                                              FeatureExtractor.get_head_terminal(node).dep_rel),
+        "h": lambda node, *_: FeatureExtractor.get_height(node),
+        "i": lambda node, *_: FeatureExtractor.get_head_terminal(node).index - 1,
+        "e": lambda node, prev_node, binary: next(e.tag for e in node.incoming if not binary or e.parent == prev_node),
+        "n": lambda node, *_: node.label,
+        "x": lambda node, prev_node, binary: (prev_node in node.parents) if binary else FeatureExtractor.gap_type(node),
+        "y": lambda node, *_: FeatureExtractor.gap_length_sum(node),
+        "P": lambda node, *_: len(node.incoming),
+        "C": lambda node, *_: len(node.outgoing),
+        "I": lambda node, *_: len([n for n in node.children if n.implicit]),
+        "R": lambda node, *_: len([e for e in node.outgoing if e.remote]),
+        "N": lambda node, *_: int(FeatureExtractor.get_head_terminal(node).ner_iob),
+        "T": lambda node, *_: FeatureExtractor.get_head_terminal(node).ner_type,
     }
 
     @staticmethod
-    def get_node_prop(node, p, prev_node=None):
-        return FeatureExtractor.NODE_PROP_GETTERS[p](node, prev_node)
+    def get_node_prop(node, p, prev_node, prev_elem):
+        return FeatureExtractor.NODE_PROP_GETTERS[p](node, prev_node, prev_elem is not None)
 
     ACTION_PROPS = {
         "A": "type",
@@ -226,10 +233,8 @@ class FeatureExtractor(object):
     def get_separator_prop(nodes, terminals, p):
         if len(nodes) < 2:
             return None
-        t0, t1 = sorted([FeatureExtractor.get_head_terminal(node) for node in nodes],
-                        key=lambda t: t.index)
-        punctuation = [terminal for terminal in terminals[t0.index + 1:t1.index]
-                       if terminal.tag == layer0.NodeTags.Punct]
+        t0, t1 = sorted([FeatureExtractor.get_head_terminal(node) for node in nodes], key=lambda t: t.index)
+        punctuation = [t for t in terminals[t0.index:t1.index - 1] if t.tag == layer0.NodeTags.Punct]
         if p == "p" and len(punctuation) == 1:
             return punctuation[0].text
         if p == "q":
@@ -268,12 +273,10 @@ class FeatureExtractor(object):
     def get_head_terminal_height(node, return_height=False):
         height = 0
         while node.text is None:  # Not a terminal
-            edges = [edge for edge in node.outgoing
-                     if not edge.remote and not edge.child.implicit]
+            edges = [edge for edge in node.outgoing if not edge.remote and not edge.child.implicit]
             if not edges or height > 30:
                 return None
-            node = min(edges, key=lambda edge: FeatureExtractor.EDGE_PRIORITY.get(
-                edge.tag, 0)).child
+            node = min(edges, key=lambda edge: FeatureExtractor.EDGE_PRIORITY.get(edge.tag, 0)).child
             height += 1
         return height if return_height else node
 
@@ -293,11 +296,18 @@ class FeatureExtractor(object):
 
     @staticmethod
     def gap_type(node):
-        if node.text is not None:
-            return "n"  # None
-        if FeatureExtractor.has_gaps(node):
-            return "p"  # Pass
-        if any(child.text is None and FeatureExtractor.has_gaps(child)
-               for child in node.children):
-            return "s"  # Source
-        return "n"  # None
+        if node.text is None:  # Not a terminal
+            if FeatureExtractor.has_gaps(node):
+                return 1  # Pass
+            if any(child.text is None and FeatureExtractor.has_gaps(child) for child in node.children):
+                return 2  # Source
+        return 0  # None
+
+    @staticmethod
+    def get_dependency_distance(node1, node2):
+        t1, t2 = FeatureExtractor.get_head_terminal(node1), FeatureExtractor.get_head_terminal(node2)
+        if t1.dep_head == t2.index:
+            return 1
+        elif t2.dep_head == t1.index:
+            return -1
+        return None
