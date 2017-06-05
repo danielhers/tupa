@@ -93,39 +93,40 @@ def resolve_label(node, label=None, reverse=False):
         children = [c.children[0] if c.tag == "PNCT" else c for c in node.children]
         terminals = sorted([c for c in children if getattr(c, "text", None)],
                            key=lambda c: getattr(c, "index", getattr(c, "position", None)))
-        joined = " ".join(t.text for t in terminals)
-        if not reverse and label.startswith(NUM + "("):  # try replacing spelled-out numbers with digits
-            number = None
-            # noinspection PyBroadException
-            try:
-                number = w2n.word_to_num(joined)
-            except:
-                pass
-            if number is not None:
-                label = "%s(%s)" % (NUM, number)
-        if len(terminals) > 1:
-            label = _replace("<t>", "".join(t.text for t in terminals))
-        for i, terminal in enumerate(terminals):
-            label = _replace("<t%d>" % i, terminal.text)
-            label = _replace("<T%d>" % i, terminal.text.title())
-            try:
-                lemma = terminal.lemma
-            except AttributeError:
-                lemma = terminal.extra.get(textutil.LEMMA_KEY)
-            if lemma == "-PRON-":
-                lemma = terminal.text.lower()
-            label = _replace("<l%d>" % i, lemma)
-            label = _replace("<L%d>" % i, lemma.title())
-        if not _replace.found and label.startswith('"'):  # try replacing with words from Wikipedia title
-            try:
-                title = wiki.page(joined).title
-            except wiki.exceptions.DisambiguationError as e:
-                title = e.options[0]
-            except wiki.exceptions.WikipediaException:
-                title = None
-            if title:
-                for i, token in enumerate(title.split()):
-                    label = _replace("<w%d>" % i, token)
+        if terminals:
+            joined = " ".join(t.text for t in terminals)
+            if not reverse and label.startswith(NUM + "("):  # try replacing spelled-out numbers with digits
+                number = None
+                # noinspection PyBroadException
+                try:
+                    number = w2n.word_to_num(joined)
+                except:
+                    pass
+                if number is not None:
+                    label = "%s(%s)" % (NUM, number)
+            if len(terminals) > 1:
+                label = _replace("<t>", "".join(t.text for t in terminals))
+            for i, terminal in enumerate(terminals):
+                label = _replace("<t%d>" % i, terminal.text)
+                label = _replace("<T%d>" % i, terminal.text.title())
+                try:
+                    lemma = terminal.lemma
+                except AttributeError:
+                    lemma = terminal.extra.get(textutil.LEMMA_KEY)
+                if lemma == "-PRON-":
+                    lemma = terminal.text.lower()
+                label = _replace("<l%d>" % i, lemma)
+                label = _replace("<L%d>" % i, lemma.title())
+            if not _replace.found and label.startswith('"'):  # try replacing with words from Wikipedia title
+                try:
+                    title = wiki.page(joined).title
+                except wiki.exceptions.DisambiguationError as e:
+                    title = e.options[0]
+                except wiki.exceptions.WikipediaException:
+                    title = None
+                if title:
+                    for i, token in enumerate(title.split()):
+                        label = _replace("<w%d>" % i, token)
     return label
 
 
