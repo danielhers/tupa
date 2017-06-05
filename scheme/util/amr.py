@@ -2,7 +2,6 @@ import importlib.util  # needed for amr.peg
 import os
 import re
 
-import wikipedia as wiki
 from nltk.corpus import propbank as pb
 from word2number import w2n
 
@@ -79,12 +78,8 @@ def resolve_label(node, label=None, reverse=False):
         if reverse:
             old, new = new, old
         replaceable = old and (len(old) > 2 or len(label) < 5)
-        pattern = re.compile(re.escape(old) + "(?![^<]*>|[^(]*\(|\d+$)")
-        if pattern.search(label):
-            _replace.found = True
-        return pattern.sub(new, label) if replaceable else label
+        return re.sub(re.escape(old) + "(?![^<]*>|[^(]*\(|\d+$)", new, label) if replaceable else label
 
-    _replace.found = False
     if label is None:
         try:
             label = node.label
@@ -95,12 +90,11 @@ def resolve_label(node, label=None, reverse=False):
         terminals = sorted([c for c in children if getattr(c, "text", None)],
                            key=lambda c: getattr(c, "index", getattr(c, "position", None)))
         if terminals:
-            joined = " ".join(t.text for t in terminals)
             if not reverse and label.startswith(NUM + "("):  # try replacing spelled-out numbers with digits
                 number = None
                 # noinspection PyBroadException
                 try:
-                    number = w2n.word_to_num(joined)
+                    number = w2n.word_to_num(" ".join(t.text for t in terminals))
                 except:
                     pass
                 if number is not None:
@@ -118,18 +112,6 @@ def resolve_label(node, label=None, reverse=False):
                     lemma = terminal.text.lower()
                 label = _replace("<l%d>" % i, lemma)
                 label = _replace("<L%d>" % i, lemma.title())
-            if not _replace.found and label.startswith('"'):  # try replacing with words from Wikipedia title
-                try:
-                    title = wiki.page(joined).title
-                except wiki.exceptions.DisambiguationError as e:
-                    title = e.options[0]
-                except wiki.exceptions.WikipediaException:
-                    title = None
-                if title:
-                    for i, token in enumerate(title.split()):
-                        label = _replace("<w%d>" % i, token)
-        if reverse:
-            KNOWN_LABELS.add(label)
     return label
 
 
