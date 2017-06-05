@@ -29,6 +29,7 @@ TOP_DEP = ":top"
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
 PLACEHOLDER = re.compile("<[^>]*>")
+SKIP_TOKEN = re.compile("[<>@]+")
 LABEL_ATTRIB = "label"
 INSTANCE = "instance"
 CONCEPT = "Concept"

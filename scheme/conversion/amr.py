@@ -146,16 +146,25 @@ class AmrConverter(convert.FormatConverter):
                 while 0 <= i < len(tokens):
                     if AmrConverter._contains_substring(stripped, tokens, indices + [i]):
                         indices.append(i)
-                    elif not re.match("[<>@]+", tokens[i]):  # skip meaningless tokens
+                    elif not SKIP_TOKEN.match(tokens[i]):  # skip meaningless tokens
                         break
                     i += offset
             full_range = range(min(indices), max(indices) + 1)  # make this a contiguous range if valid
             if AmrConverter._contains_substring(stripped, tokens, full_range):
                 indices = list(full_range)
         else:  # no given alignment
-            for i, token in enumerate(tokens):  # use any equal token if it occurs only once
-                if token == stripped and tokens.count(token) == 1:
-                    return [i]
+            for i, token in enumerate(tokens):  # use any equal span, or any equal token if it occurs only once
+                if stripped.startswith(token):
+                    l = [i]
+                    j = i
+                    while j < len(tokens) - 1:
+                        j += 1
+                        if not SKIP_TOKEN.match(tokens[j]):
+                            if not AmrConverter._contains_substring(stripped, tokens, l + [j]):
+                                break
+                            l.append(j)
+                    if len(l) > 1 and stripped.endswith(tokens[l[-1]]) or tokens.count(token) == 1:
+                        return l
         return indices
 
     @staticmethod
