@@ -31,6 +31,9 @@ tune-ucca)
     done
     column -t -s, params.csv
     ;;
+sparse-amr)
+    python tupa/parse.py -v -c sparse -We -f amr alignment-release-dev-bio.txt -t alignment-release-training-bio/*10.txt
+    ;;
 noop-amr)
     python tupa/parse.py -v -c noop -We -f amr alignment-release-dev-bio.txt -t alignment-release-training-bio
     ;;
