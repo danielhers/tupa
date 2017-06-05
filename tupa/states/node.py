@@ -19,6 +19,7 @@ class Node(object):
         self.paragraph = paragraph  # int for terminals, None for non-terminals
         self.tag = tag  # Node tag of the original node (Word/Punctuation)
         self.label = label  # Node label (if node label prediction is enabled)
+        self.labeled = False  # Whether a label has been set yet (necessary because None is a valid label too)
         self.node_index = int(self.node_id.split(core.Node.ID_SEPARATOR)[1]) if orig_node else None
         self.outgoing = []  # Edge list
         self.incoming = []  # Edge list

@@ -285,6 +285,7 @@ class State(object):
 
     def label_node(self, label):
         self.node.label = label
+        self.node.labeled = True
         self.log.append("label: %s" % label)
         self.type_validity_cache = {}
 
