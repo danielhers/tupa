@@ -42,6 +42,7 @@ ROLES = {  # cache + fix for roles missing in PropBank
     CONCEPT + "(play-11)": ("0", "1", "2", "3"),
     CONCEPT + "(raise-02)": ("0", "1", "2", "3"),
 }
+KNOWN_LABELS = set()  # used to avoid escaping when unnecessary
 
 
 def parse(*args, **kwargs):
@@ -89,7 +90,7 @@ def resolve_label(node, label=None, reverse=False):
             label = node.label
         except AttributeError:
             label = node.attrib.get(LABEL_ATTRIB)
-    if label is not None:
+    if label is not None and not (reverse and label in KNOWN_LABELS):
         children = [c.children[0] if c.tag == "PNCT" else c for c in node.children]
         terminals = sorted([c for c in children if getattr(c, "text", None)],
                            key=lambda c: getattr(c, "index", getattr(c, "position", None)))
@@ -127,6 +128,8 @@ def resolve_label(node, label=None, reverse=False):
                 if title:
                     for i, token in enumerate(title.split()):
                         label = _replace("<w%d>" % i, token)
+        if reverse:
+            KNOWN_LABELS.add(label)
     return label
 
 
