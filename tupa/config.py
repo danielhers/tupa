@@ -176,6 +176,7 @@ class Config(object, metaclass=Singleton):
             self.constraints = Constraints(self.args)
         else:
             self.node_labels = False
+            self.args.node_label_dim = self.args.max_node_labels = 0
         if self.args.output_format:
             _, self.output_converter = CONVERTERS[self.args.output_format]
         else:
