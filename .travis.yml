@@ -5,7 +5,7 @@ language: python
 cache:
   pip: true
   directories:
-  - $HOME/miniconda
+  - $HOME/virtualenv
   - dynet
 python:
   - "3.6"
@@ -23,8 +23,7 @@ addons:
     - libboost-test-dev
     - libboost-regex-dev
 before_install:
-  - ci/install-miniconda.sh
-  - export PATH="$HOME/miniconda/bin:$PATH" CXX="g++-6 -w" CC="gcc-6 -w"
+  - export CXX="g++-6 -w" CC="gcc-6 -w"
   - ci/install-prerequisites.sh
 install:
   - python setup.py install
