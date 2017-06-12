@@ -73,6 +73,7 @@ class SparsePerceptron(Perceptron):
         self.model = model
         self.input_dim = len(self.model)
         self.min_update = Config().args.min_update  # Minimum number of updates for a feature to be used in scoring
+        self.dropped = set()  # Features that did not get min_updates after a full epoch
 
     def create_weights(self):
         return tuple(map(FeatureWeights, self.num_labels))
@@ -107,7 +108,7 @@ class SparsePerceptron(Perceptron):
         """
         super(SparsePerceptron, self).update(features, axis, pred, true, importance)
         for feature, value in features.items():
-            if not value:
+            if not value or feature in self.dropped:
                 continue
             w = self.model[feature][axis]
             w.update(true, importance * self.learning_rate * value, self.updates)
@@ -120,11 +121,18 @@ class SparsePerceptron(Perceptron):
                 if axis is None or i == axis:
                     w.resize(l)
 
-    def _finalize_model(self, average):
-        model = {f: tuple(w.finalize(self.updates, average=average) for w in weights)
-                 for f, weights in self.model.items() if weights[0].update_count >= self.min_update}
-        print("%d features occurred at least %d times" % (len(model), self.min_update))
-        return SparsePerceptron(self.filename, tuple(map(list, self.labels)), model=model, epoch=self.epoch)
+    def _finalize_model(self, finished_epoch, average):
+        # If finished an epoch, remove rare features from our model directly. Otherwise, copy it.
+        model, dropped = (self.model, self.dropped) if finished_epoch else (dict(self.model), set())
+        for f, weights in list(model.items()):
+            if weights[0].update_count < self.min_update:
+                del model[f]
+                dropped.add(f)
+        print("%d features occurred at least %d times, dropped %d rare features" % (
+            len(model), self.min_update, len(dropped)))
+        finalized = {f: tuple(w.finalize(self.updates, average=average) for w in weights)
+                     for f, weights in model.items()}
+        return SparsePerceptron(self.filename, tuple(map(list, self.labels)), model=finalized, epoch=self.epoch)
 
     def save_extra(self):
         return {

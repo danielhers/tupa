@@ -39,7 +39,7 @@ class Perceptron(Classifier):
         """
         Average all weights over all updates, as a form of regularization
         :param average: whether to really average the weights or just return them as they are now
-        :param finished_epoch: whether to decay the learning rate
+        :param finished_epoch: whether to decay the learning rate and drop rare features
         :return new Perceptron object with the weights averaged
         """
         super(Perceptron, self).finalize()
@@ -48,14 +48,14 @@ class Perceptron(Classifier):
             self.epoch += 1
         if average:
             print("Averaging weights... ", end="", flush=True)
-        finalized = self._finalize_model(average)
+        finalized = self._finalize_model(finished_epoch, average)
         if average:
             print("Done (%.3fs)." % (time.time() - started))
         print("Labels: " + self.num_labels_str())
         print("Features: %d" % self.input_dim)
         return finalized
 
-    def _finalize_model(self, average):
+    def _finalize_model(self, finished_epoch, average):
         raise NotImplementedError()
 
     def update_learning_rate(self):
