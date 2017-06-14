@@ -24,7 +24,7 @@ addons:
     - libboost-regex-dev
 before_install:
   - export CXX="g++-6 -w" CC="gcc-6 -w"
-  - ci/install-prerequisites.sh
+  - ./install_dependencies.sh
 install:
   - python setup.py install
 before_script:

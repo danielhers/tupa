@@ -13,7 +13,7 @@ Install the required modules:
     virtualenv --python=/usr/bin/python3 .
     . bin/activate              # on bash
     source bin/activate.csh     # on csh
-    ci/install-prerequisites.sh
+    ./install_dependencies.sh
     python setup.py install
 
 ### Train the parser
