@@ -4,15 +4,15 @@ TUPA is a transition-based parser for [Universal Conceptual Cognitive Annotation
 
 ### Requirements
 * Python 3.x
-* [DyNet](https://github.com/clab/dynet)
+* All [dependencies for DyNet](http://dynet.readthedocs.io/en/latest/python.html)
 
 ### Build
 
 Install the required modules:
     
-    virtualenv --python=/usr/bin/python3 .
-    . bin/activate              # on bash
-    source bin/activate.csh     # on csh
+    virtualenv --python=/usr/bin/python3 venv
+    . venv/bin/activate              # on bash
+    source venv/bin/activate.csh     # on csh
     ./install_dependencies.sh
     python setup.py install
 
@@ -22,21 +22,17 @@ Having a directory with UCCA passage files
 (for example, [the Wiki corpus](https://github.com/huji-nlp/ucca-corpus/tree/master/wiki/pickle)),
 run:
 
-    python tupa/parse.py -t <train_dir> -d <dev_dir> -m <model_filename>
+    python tupa/parse.py -t <train_dir> -d <dev_dir> -c <model_type> -m <model_filename>
 
-To specify a model type (`sparse`, `mlp` or `bilstm`),
-add `-c <model_type>`.
+The possible model types are `sparse`, `mlp` and `bilstm`.
 
 ### Parse a text file
 
 Run the parser on a text file (here named `example.txt`) using a trained model:
 
-    python tupa/parse.py example.txt -m <model_filename>
+    python tupa/parse.py example.txt -c <model_type> -m <model_filename>
 
-A file named `example.xml` will be created.
-
-If you specified a model type using `-c` when training the model,
-be sure to include it when parsing too.
+An `xml` file will be created per passage (separate by blank lines in the text file).
 
 ### Pre-trained models
 
