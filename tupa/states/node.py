@@ -79,8 +79,8 @@ class Node(object):
         else:  # The usual case
             if Config().args.verify:
                 assert self.node is None, "Trying to create the same node twice: %s, parent: %s" % (self.node, parent)
-            if parent is not None and parent.node is None:  # If parent is an orphan, attach it to the root with F label
-                parent.add_to_l1(l1, None, EdgeTags.Function, terminals, labeled)
+            if parent is not None and parent.label and parent.node is None:  # If parent is an orphan and has a a label,
+                parent.add_to_l1(l1, None, Config().args.orphan_label, terminals, labeled)  # attach it to the root
             self.node = l1.add_fnode(None if parent is None else parent.node, tag, implicit=self.implicit)
         if labeled:  # In training
             self.set_node_id()

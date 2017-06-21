@@ -35,6 +35,7 @@ INSTANCE = "instance"
 CONCEPT = "Concept"
 NUM = "Num"
 UNKNOWN_LABEL = CONCEPT + "(amr-unknown)"
+ORPHAN_LABEL = "orphan"
 ROLESET_PATTERN = re.compile(CONCEPT + "\((.*)-(\d+)\)")
 ROLES = {  # cache + fix for roles missing in PropBank
     CONCEPT + "(ablate-01)": ("0", "1", "2", "3"),

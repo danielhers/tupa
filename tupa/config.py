@@ -54,7 +54,8 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("-v", "--verbose", nargs="?", action=VAction, default=0, help="detailed parse output")
         group = argparser.add_argument_group(title="Node labels")
         group.add_argument("--node-label-attrib", help="predict node labels and store them in this node attribute")
-        group.add_argument("--unknown-label", help="label to use as unknown value")
+        group.add_argument("--unknown-label", help="node label to use as unknown value")
+        group.add_argument("--orphan-label", help="edge label to use for nodes without parents")
         group.add_argument("--max-node-labels", type=int, default=0, help="max number of node labels to allow")
         group.add_argument("--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
         group.add_argument("--use-gold-node-labels", action="store_true", help="do not learn node labels; use gold")
@@ -169,11 +170,12 @@ class Config(object, metaclass=Singleton):
                 self.args.max_node_labels = 1000
             self.args.max_action_labels = max(self.args.max_action_labels, 600)
             self.args.max_edge_labels = max(self.args.max_edge_labels, 500)
-            from evaluation.amr import evaluate, Scores, LABEL_ATTRIB, UNKNOWN_LABEL
+            from evaluation.amr import evaluate, Scores, LABEL_ATTRIB, UNKNOWN_LABEL, ORPHAN_LABEL
             from constraint.amr import Constraints
             self.evaluate, self.Scores = evaluate, Scores
             self.args.node_label_attrib = LABEL_ATTRIB
             self.args.unknown_label = UNKNOWN_LABEL
+            self.args.orphan_label = ORPHAN_LABEL
             self.constraints = Constraints(self.args)
         else:
             self.node_labels = False
