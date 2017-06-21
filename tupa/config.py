@@ -80,6 +80,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--implicit", action="store_true", help="include implicit nodes and edges")
         group.add_argument("--no-remote", action="store_false", dest="remote", help="ignore remote edges")
         group.add_argument("--no-constraints", action="store_false", dest="constraints", help="ignore UCCA rules")
+        group.add_argument("--require-connected", action="store_true", help="force output graph to be connected")
         group.add_argument("--max-action-ratio", type=float, default=100, help="max action/terminal ratio")
         group.add_argument("--max-node-ratio", type=float, default=6, help="max node/terminal ratio")
         group.add_argument("--max-height", type=int, default=20, help="max graph height")

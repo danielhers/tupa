@@ -132,7 +132,7 @@ class State(object):
             if self.args.swap:  # Without swap, the oracle may be incapable even of single action
                 self.check(self.root.outgoing or all(n is self.root or n.is_linkage or n.text for n in self.nodes),
                            message and "Root has no child at parse end", is_type=True)
-                if self.args.constraints and self.constraints.require_connected:
+                if self.args.require_connected:
                     for n in self.nodes:
                         self.check(n is self.root or n.is_linkage or n.text or n.incoming,
                                    message and "Non-terminal %s has no parent at parse end" % n, is_type=True)
@@ -152,10 +152,9 @@ class State(object):
                     _check_possible_node()
                 elif action.is_type(Actions.Reduce):
                     self.check(s0 is not self.root or s0.outgoing, message and "Reducing childless root", is_type=True)
-                    if self.args.constraints:
-                        if self.constraints.require_connected:
-                            self.check(s0 is self.root or s0.is_linkage or s0.text or s0.incoming,
-                                       message and "Reducing parentless non-terminal %s" % s0, is_type=True)
+                    if self.args.require_connected:
+                        self.check(s0 is self.root or s0.is_linkage or s0.text or s0.incoming,
+                                   message and "Reducing parentless non-terminal %s" % s0, is_type=True)
                 else:  # Binary actions
                     self.check(len(self.stack) > 1, message and "%s with len(stack) < 2" % action, is_type=True)
                     if action.is_type(Actions.LeftEdge, Actions.RightEdge, Actions.LeftRemote, Actions.RightRemote):
