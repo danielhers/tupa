@@ -29,7 +29,7 @@ install:
 before_script:
   - mkdir pickle
   - curl -L http://www.cs.huji.ac.il/~danielh/ucca/ucca_corpus_pickle.tgz | tar xz -C pickle
-  - python ucca/scripts/split_corpus.py -q pickle -t 4282 -d 454 -l
+  - python -m scripts.split_corpus -q pickle -t 4282 -d 454 -l
   - wget http://amr.isi.edu/download/2016-03-14/alignment-release-{training,dev,test}-bio.txt
   - python scheme/split.py -q alignment-release-training-bio.txt alignment-release-training-bio
 env:

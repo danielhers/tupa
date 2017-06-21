@@ -6,8 +6,8 @@ unit)
     python -m unittest discover -v || exit 1
     # basic parser tests
     for m in "" s a; do
-      python tupa/parse.py -I 10 -t ucca/doc/toy.xml -d ucca/doc/toy.xml -"$m"m model_toy$m -v || exit 1
-      python tupa/parse.py ucca/doc/toy.xml -e"$m"m model_toy$m -v || exit 1
+      python tupa/parse.py -I 10 -t test_files/toy.xml -d test_files/toy.xml -"$m"m model_toy$m -v || exit 1
+      python tupa/parse.py test_files/toy.xml -e"$m"m model_toy$m -v || exit 1
     done
     python tupa/parse.py -f amr -I 10 -t test_files/LDC2014T12.txt -d test_files/LDC2014T12.txt -m model_LDC2014T12 -v || exit 1
     python tupa/parse.py -f amr test_files/LDC2014T12.txt -em model_LDC2014T12 -v || exit 1
@@ -27,7 +27,7 @@ noop-ucca)
 tune-ucca)
     export PARAMS_NUM=5
     while :; do
-      python tupa/tune.py ucca/doc/toy.xml -t ucca/doc/toy.xml --max-words-external=5000 --dynet-mem=1500 && break
+      python tupa/tune.py test_files/toy.xml -t test_files/toy.xml --max-words-external=5000 --dynet-mem=1500 && break
     done
     column -t -s, params.csv
     ;;

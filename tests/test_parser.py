@@ -23,7 +23,7 @@ class ParserTests(unittest.TestCase):
     def load_passages():
         passages = []
         for _ in range(NUM_PASSAGES):
-            passages += ioutil.read_files_and_dirs(("ucca/test_files/standard3.xml",))
+            passages += ioutil.read_files_and_dirs(("test_files/standard3.xml",))
         return passages
 
     def test_oracle(self):
