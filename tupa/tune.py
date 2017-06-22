@@ -97,6 +97,8 @@ def main():
         ("dropout",                 (0, .1, .2, .3, .4, .5)),
         ("require_connected",       [True, False]),
         ("compound_swap",           [True, False]),
+        ("max_words",               (2000, 5000, 7500, 10000, 20000)),
+        ("max_words_external",      (None, 5000, 10000, 30000)),
     )
     params = [Params(OrderedDict(p))
               for p in zip(*[[(n, v.item() if hasattr(v, "item") else v)
