@@ -1,12 +1,13 @@
 import importlib.util  # needed for amr.peg
 import os
 import re
+import string
 
 from nltk.corpus import propbank as pb
+from ucca import textutil
 from word2number import w2n
 
 from tupa import constraints
-from ucca import textutil
 
 prev_dir = os.getcwd()
 os.chdir(os.path.dirname(importlib.util.find_spec("src.amr").origin))  # to find amr.peg
@@ -43,6 +44,7 @@ ROLES = {  # cache + fix for roles missing in PropBank
     CONCEPT + "(raise-02)": ("0", "1", "2", "3"),
 }
 KNOWN_LABELS = set()  # used to avoid escaping when unnecessary
+PUNCTUATION_REMOVER = str.maketrans("", "", string.punctuation)
 
 
 def parse(*args, **kwargs):
@@ -111,6 +113,7 @@ def resolve_label(node, label=None, reverse=False):
                     lemma = terminal.extra.get(textutil.LEMMA_KEY)
                 if lemma == "-PRON-":
                     lemma = terminal.text.lower()
+                lemma = lemma.translate(PUNCTUATION_REMOVER)
                 label = _replace("<l%d>" % i, lemma)
                 label = _replace("<L%d>" % i, lemma.title())
     return label
