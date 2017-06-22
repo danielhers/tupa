@@ -40,6 +40,7 @@ CLASSIFIERS = (SPARSE, MLP_NN, BILSTM_NN, NOOP)
 ACTIVATIONS = ("sigmoid", "tanh", "relu", "cube")
 INITIALIZATIONS = ("glorot_uniform", "normal", "uniform", "const")
 OPTIMIZERS = ("adam", "sgd", "cyclic", "momentum", "adagrad", "adadelta", "rmsprop")
+FORMATS = ["xml", "pickle"] + list(CONVERTERS)
 
 
 class Config(object, metaclass=Singleton):
@@ -93,8 +94,8 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--verify", action="store_true", help="verify oracle reproduces original passage")
         group = group.add_mutually_exclusive_group()
         group.add_argument("-b", "--binary", action="store_true", help="read and write passages in Pickle")
-        group.add_argument("-f", "--format", choices=CONVERTERS, help="input and output format (default: UCCA)")
-        argparser.add_argument("--output-format", choices=CONVERTERS, help="output format for parsed files")
+        group.add_argument("-f", "--format", choices=FORMATS, help="input and output format (default: UCCA)")
+        argparser.add_argument("--output-format", choices=FORMATS, help="output format, if different from input format")
         group = argparser.add_argument_group(title="General classifier training parameters")
         group.add_argument("--learning-rate", type=float, help="rate for model weight updates (default: by trainer/1)")
         group.add_argument("--learning-rate-decay", type=float, default=0.0, help="learning rate decay per iteration")
@@ -181,7 +182,7 @@ class Config(object, metaclass=Singleton):
             self.node_labels = False
             self.args.node_label_dim = self.args.max_node_labels = 0
         if self.args.output_format:
-            _, self.output_converter = CONVERTERS[self.args.output_format]
+            _, self.output_converter = CONVERTERS.get(self.args.output_format, (None, None))
         else:
             self.args.output_format = self.args.format
         self._log_file = None
