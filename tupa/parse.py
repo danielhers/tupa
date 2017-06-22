@@ -41,7 +41,6 @@ class Parser(object):
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
         self.ignore_node = None if self.args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
         self.best_score = self.dev = self.iteration = self.eval_index = None
-        self.dev_scores = []
         self.trained = False
 
     def train(self, passages=None, dev=None, iterations=1):
@@ -50,7 +49,6 @@ class Parser(object):
         :param passages: iterable of passages to train on
         :param dev: iterable of passages to tune on
         :param iterations: number of iterations to perform
-        :return: trained model
         """
         self.trained = True
         if passages:
@@ -68,22 +66,22 @@ class Parser(object):
                 self.eval_index = 0
                 print("Training iteration %d of %d: " % (self.iteration, iterations))
                 list(self.parse(passages, mode=ParseMode.train))
-                self.eval_and_save(self.iteration == iterations, finished_epoch=True)
+                yield self.eval_and_save(self.iteration == iterations, finished_epoch=True)
                 Config().random.shuffle(passages)
             print("Trained %d iterations" % iterations)
         if dev or not passages:
             self.model.load()
 
     def eval_and_save(self, last=False, finished_epoch=False):
+        scores = None
         model = self.model
         self.model = self.model.finalize(finished_epoch=finished_epoch)
         if self.dev:
             if not self.best_score:
                 self.model.save()
             print("Evaluating on dev passages")
-            scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev, evaluate=True)]
-            scores = Config().Scores.aggregate(scores)
-            self.dev_scores.append(scores)
+            passage_scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev, evaluate=True)]
+            scores = Config().Scores.aggregate(passage_scores)
             score = scores.average_f1()
             print("Average labeled F1 score on dev: %.3f" % score)
             if self.args.devscores:
@@ -104,6 +102,7 @@ class Parser(object):
         if not last:
             self.model = model  # Restore non-finalized model
             self.model.load_labels()
+        return scores
 
     def parse(self, passages, mode=ParseMode.test, evaluate=False):
         """
@@ -336,13 +335,12 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
     :param test_passages: passages to test on after training
     :param args: extra argument
     :param model_suffix: string to append to model filename before file extension
-    :return: pair of (test scores, list of dev scores per iteration) where each one is a Scores object
+    :return: generator of Scores objects: dev scores for each training iteration (if given dev), and finally test scores
     """
-    test_scores = None
     model_base, model_ext = os.path.splitext(args.model or "%s_%s" % (args.format or "ucca", args.classifier))
     p = Parser(model_file=model_base + model_suffix + model_ext, model_type=args.classifier, beam=args.beam)
     print("%s %s" % (os.path.basename(__file__), Config()))
-    p.train(train_passages, dev=dev_passages, iterations=args.iterations)
+    yield from filter(None, p.train(train_passages, dev=dev_passages, iterations=args.iterations))
     if test_passages:
         if args.train or args.folds:
             print("Evaluating on test passages")
@@ -359,15 +357,16 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 ioutil.write_passage(guessed_passage, output_format=args.output_format, binary=args.binary,
                                      outdir=args.outdir, prefix=args.prefix,
                                      converter=TO_FORMAT.get(args.output_format, Config().output_converter or to_text))
-        if passage_scores and (args.verbose <= 1 or len(passage_scores) > 1):
+        if passage_scores:
             test_scores = Config().Scores.aggregate(passage_scores)
-            print("\nAverage labeled F1 score on test: %.3f" % test_scores.average_f1())
-            print("Aggregated scores:")
-            test_scores.print()
+            if args.verbose <= 1 or len(passage_scores) > 1:
+                print("\nAverage labeled F1 score on test: %.3f" % test_scores.average_f1())
+                print("Aggregated scores:")
+                test_scores.print()
             if args.testscores:
                 with open(args.testscores, "a") as f:
                     print(",".join(test_scores.fields()), file=f)
-    return test_scores, p.dev_scores
+            yield test_scores
 
 
 def evaluate_passage(guessed, ref):
@@ -392,8 +391,6 @@ def main():
     assert args.model or args.train or args.folds, "Either --model or --train or --folds is required"
     assert not (args.train or args.dev) or args.folds is None, "--train and --dev are incompatible with --folds"
     assert args.train or not args.dev, "--dev is only possible together with --train"
-    test_scores = None
-    dev_scores = None
     if args.testscores:
         with open(args.testscores, "w") as f:
             print(",".join(Config().Scores.field_titles(args.constructions)), file=f)
@@ -408,25 +405,24 @@ def main():
             print("Fold %d of %d:" % (i + 1, args.folds))
             dev_passages = folds[i]
             test_passages = folds[(i + 1) % args.folds]
-            train_passages = [passage for fold in folds
-                              if fold is not dev_passages and fold is not test_passages
+            train_passages = [passage for fold in folds if fold is not dev_passages and fold is not test_passages
                               for passage in fold]
-            s, _ = train_test(train_passages, dev_passages, test_passages, args, "_%d" % i)
-            if s is not None:
-                fold_scores.append(s)
+            s = list(train_test(train_passages, dev_passages, test_passages, args, "_%d" % i))
+            if s and s[-1] is not None:
+                fold_scores.append(s[-1])
         if fold_scores:
             test_scores = Config().Scores.aggregate(fold_scores)
             print("Average labeled test F1 score for each fold: " + ", ".join(
                 "%.3f" % s.average_f1() for s in fold_scores))
             print("Aggregated scores across folds:\n")
             test_scores.print()
+        yield test_scores
     else:  # Simple train/dev/test by given arguments
         train_passages, dev_passages, test_passages = [read_passages(args, arg) for arg in
                                                        (args.train, args.dev, args.passages)]
-        test_scores, dev_scores = train_test(train_passages, dev_passages, test_passages, args)
-    return test_scores, dev_scores
+        yield from train_test(train_passages, dev_passages, test_passages, args)
 
 
 if __name__ == "__main__":
-    main()
+    list(main())
     Config().close()
