@@ -96,6 +96,7 @@ def main():
         ("dynet_weight_decay",      (1e-7, 1e-6, 1e-5, 1e-4)),
         ("dropout",                 (0, .1, .2, .3, .4, .5)),
         ("require_connected",       [True, False]),
+        ("compound_swap",           [True, False]),
     )
     params = [Params(OrderedDict(p))
               for p in zip(*[[(n, v.item() if hasattr(v, "item") else v)
