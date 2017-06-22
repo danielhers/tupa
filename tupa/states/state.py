@@ -43,7 +43,7 @@ class State(object):
         self.nodes = []
         self.heads = set()
         self.node = None
-        self.root = self.add_node(orig_node=l1.heads[0])  # Root is not in the buffer
+        self.root = self.add_node(orig_node=l1.heads[0], is_root=True)  # Root is not in the buffer
         self.stack.append(self.root)
         self.buffer += self.terminals
         self.nodes += self.terminals

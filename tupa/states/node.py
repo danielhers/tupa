@@ -11,7 +11,8 @@ class Node(object):
     Temporary representation for core.Node with only relevant information for parsing
     """
     def __init__(self, index, swap_index=None, orig_node=None, text=None, paragraph=None, tag=None, label=None,
-                 implicit=False, pos_tag=None, dep_rel=None, dep_head=None, ner_type=None, ner_iob=None, lemma=None):
+                 implicit=False, pos_tag=None, dep_rel=None, dep_head=None, ner_type=None, ner_iob=None, lemma=None,
+                 is_root=False):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated core.Node from the original Passage, during training
         self.node_id = orig_node.ID if orig_node else None  # ID of the original node
@@ -38,6 +39,7 @@ class Node(object):
         self.swap_index = self.index if swap_index is None else swap_index  # To avoid swapping nodes more than once
         self.height = 0
         self._terminals = None
+        self.is_root = is_root
 
     def add_incoming(self, edge):
         self.incoming.append(edge)

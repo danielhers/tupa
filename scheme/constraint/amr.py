@@ -27,7 +27,7 @@ class Constraints(constraints.Constraints):
         return is_valid_arg(node, node.label, tag, is_parent=False)
 
     def allow_label(self, node, label):
-        return (is_concept(label) or node.outgoing_tags <= TERMINAL_TAGS) and \
+        return (is_concept(label) or node.outgoing_tags <= TERMINAL_TAGS and not node.is_root) and \
                (not node.parents or
                 is_valid_arg(node, label, *node.outgoing_tags) and
                 is_valid_arg(node, label, *node.incoming_tags, is_parent=False))
