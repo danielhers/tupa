@@ -74,7 +74,8 @@ class NeuralNetwork(Classifier):
     def resize(self, axis=None):
         for i, (l, m) in enumerate(zip(self.num_labels, self.max_num_labels)):
             if axis is None or i == axis:
-                assert l <= m, "Exceeded maximum number of labels at dimension %d: %d > %d" % (i, l, m)
+                assert l <= m, "Exceeded maximum number of labels at dimension %d: %d > %d:\n%s" % (
+                    i, l, m, "\n".join(map(str, self.labels[axis])))
 
     def init_model(self):
         self.model = dy.Model()
