@@ -34,6 +34,7 @@ SPARSE = "sparse"
 MLP_NN = "mlp"
 BILSTM_NN = "bilstm"
 NOOP = "noop"
+NN_CLASSIFIERS = (MLP_NN, BILSTM_NN)
 CLASSIFIERS = (SPARSE, MLP_NN, BILSTM_NN, NOOP)
 
 # Multiple choice options: the first one is always the default
@@ -101,6 +102,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--save-every", type=int, help="every this many passages, evaluate on dev and save model")
         group = argparser.add_argument_group(title="Perceptron parameters")
         group.add_argument("--min-update", type=int, default=5, help="minimum #updates for using a feature")
+        self.sparse_arg_names = self.get_group_arg_names(group)
         group = argparser.add_argument_group(title="Neural network parameters")
         group.add_argument("--word-dim-external", type=int, default=300, help="dimension for external word embeddings")
         group.add_argument("--word-vectors", help="file to load external word embeddings from (default: GloVe)")
@@ -137,6 +139,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--word-dropout-external", type=float, default=0.25, help="word dropout for word vectors")
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter between layers")
         group.add_argument("--max-length", type=int, default=120, help="maximum length of input sentence")
+        self.nn_arg_names = self.get_group_arg_names(group)
         group = argparser.add_argument_group(title="DyNet parameters")
         group.add_argument("--dynet-mem", help="memory for dynet")
         group.add_argument("--dynet-weight-decay", type=float, default=1e-6, help="weight decay for parameters")
@@ -145,6 +148,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--dynet-gpu-ids", help="the GPUs that you want to use by device ID")
         self.add_boolean_option(group, "dynet-viz", "visualization of neural network structure")
         self.add_boolean_option(group, "dynet-autobatch", "auto-batching of training examples")
+        self.dynet_arg_names = self.get_group_arg_names(group)
         self.args = argparser.parse_args(args if args else None)
         
         if self.args.model:
@@ -184,6 +188,10 @@ class Config(object, metaclass=Singleton):
         self._log_file = None
         self.set_external()
         self.random = np.random
+
+    @staticmethod
+    def get_group_arg_names(group):
+        return [a.dest for a in group._group_actions]
 
     @staticmethod
     def add_boolean_option(argparser, name, description, default=False, short=None, short_no=None):
@@ -246,4 +254,6 @@ class Config(object, metaclass=Singleton):
                         and (self.node_labels or "node_label" not in k)
                         and (self.args.swap or "swap_" not in k)
                         and (not self.args.require_connected or k != "orphan_label")
+                        and (self.args.classifier == SPARSE or k not in self.sparse_arg_names)
+                        and (self.args.classifier in NN_CLASSIFIERS or k not in self.nn_arg_names+self.dynet_arg_names)
                         and k != "passages")
