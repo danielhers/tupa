@@ -1,3 +1,4 @@
+import csv
 import importlib.util  # needed for amr.peg
 import os
 import re
@@ -9,10 +10,16 @@ from word2number import w2n
 
 from tupa import constraints
 
+NEGATIONS = {}
+
 prev_dir = os.getcwd()
-os.chdir(os.path.dirname(importlib.util.find_spec("src.amr").origin))  # to find amr.peg
 try:
+    os.chdir(os.path.dirname(importlib.util.find_spec("src.amr").origin))  # to find amr.peg
     from src import amr as amr_lib
+
+    os.chdir(os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "resources"))
+    with open("negations.txt") as f:
+        NEGATIONS.update(csv.reader(f, delimiter=" "))
 finally:
     os.chdir(prev_dir)
 
@@ -124,6 +131,9 @@ def resolve_label(node, label=None, reverse=False):
                     lemma = lemma.translate(PUNCTUATION_REMOVER)
                     label = _replace("<l%d>" % i, lemma)
                     label = _replace("<L%d>" % i, lemma.title())
+                    negation = NEGATIONS.get(terminal.text)
+                    if negation is not None:
+                        label = _replace("<n%d>" % i, negation)
     return label
 
 
