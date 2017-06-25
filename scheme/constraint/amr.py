@@ -14,8 +14,8 @@ class Constraints(constraints.Constraints):
     def allow_action(self, action, history):
         return True
 
-    def _allow_edge(self, edge):
-        return edge not in edge.parent.outgoing  # Prevent multiple identical edges between the same pair of nodes
+    def _allow_edge(self, edge):  # Prevent multiple identical edges between the same pair of nodes
+        return edge.tag in PREFIXED_RELATION_ENUM or edge not in edge.parent.outgoing
 
     def allow_parent(self, node, tag):
         return (not node.implicit or tag not in TERMINAL_TAGS) and \
