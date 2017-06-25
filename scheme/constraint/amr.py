@@ -9,8 +9,7 @@ class Constraints(constraints.Constraints):
                                           mutually_exclusive_outgoing=(), top_level=None)
         self.tag_rules.append(
             constraints.TagRule(trigger={constraints.Direction.incoming: "name"},
-                                allowed={constraints.Direction.outgoing: re.compile(
-                                    "^(%s|op\d+)$" % "|".join(TERMINAL_TAGS))}))
+                                allowed={constraints.Direction.outgoing: list(TERMINAL_TAGS) + ["op"]}))
 
     def allow_action(self, action, history):
         return True
