@@ -27,7 +27,7 @@ noop-ucca)
 tune-ucca)
     export PARAMS_NUM=5
     while :; do
-      python tupa/tune.py test_files/toy.xml -t test_files/toy.xml --max-words-external=5000 --dynet-mem=1500 && break
+      python tupa/tune.py -t test_files/toy.xml -d test_files/toy.xml --max-words-external=5000 --dynet-mem=1500 && break
     done
     column -t -s, params.csv
     ;;
