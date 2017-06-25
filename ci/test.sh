@@ -5,9 +5,9 @@ unit)
     # unit tests
     python -m unittest discover -v || exit 1
     # basic parser tests
-    for m in "" s a; do
-      python tupa/parse.py -I 10 -t test_files/toy.xml -d test_files/toy.xml -"$m"m model_toy$m -v || exit 1
-      python tupa/parse.py test_files/toy.xml -e"$m"m model_toy$m -v || exit 1
+    for m in "" --sentences --paragraphs; do
+      python tupa/parse.py -I 10 -t test_files/toy.xml -d test_files/toy.xml "$m" -m model_toy$m -v || exit 1
+      python tupa/parse.py test_files/toy.xml "$m" -em model_toy$m -v || exit 1
     done
     python tupa/parse.py -f amr -I 10 -t test_files/LDC2014T12.txt -d test_files/LDC2014T12.txt -m model_LDC2014T12 -v || exit 1
     python tupa/parse.py -f amr test_files/LDC2014T12.txt -em model_LDC2014T12 -v || exit 1

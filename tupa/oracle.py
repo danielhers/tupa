@@ -128,7 +128,7 @@ class Oracle(object):
                                 if not self.args.swap:  # We have no chance to reach it, so stop trying
                                     self.remove(edge)
                                     continue
-                                if distance is None and self.args.compound_swap:  # Save the first one
+                                if distance is None and self.args.swap == "compound":  # Save the first one
                                     distance = i + 1
                                 if not related:  # All related nodes are in the stack
                                     yield Actions.Swap(distance)

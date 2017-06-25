@@ -76,7 +76,7 @@ class Actions(object):
     def init(self):
         # edge and node action will be created as they are returned by the oracle
         self.all = [Actions.Reduce, Actions.Shift, Actions.Finish] + \
-                   (list(map(Actions.Swap, range(1, Action.MAX_SWAP))) if Config().args.compound_swap
+                   (list(map(Actions.Swap, range(1, Action.MAX_SWAP))) if Config().args.swap == "compound"
                     else [Actions.Swap] if Config().args.swap else [])
 
     @property

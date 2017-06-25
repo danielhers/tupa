@@ -353,9 +353,9 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
             else:
                 guessed_passage = result
                 print()
-            if guessed_passage is not None and not args.no_write:
-                ioutil.write_passage(guessed_passage, output_format=args.output_format, binary=args.binary,
-                                     outdir=args.outdir, prefix=args.prefix,
+            if guessed_passage is not None and args.write:
+                ioutil.write_passage(guessed_passage, output_format=args.output_format,
+                                     binary=args.output_format == "pickle", outdir=args.outdir, prefix=args.prefix,
                                      converter=TO_FORMAT.get(args.output_format, Config().output_converter or to_text))
         if passage_scores:
             test_scores = Config().Scores.aggregate(passage_scores)
@@ -389,12 +389,12 @@ def main():
     args = Config().args
     assert args.passages or args.train, "Either passages or --train is required (use -h for help)"
     assert args.model or args.train or args.folds, "Either --model or --train or --folds is required"
-    assert not (args.train or args.dev) or args.folds is None, "--train and --dev are incompatible with --folds"
+    assert not (args.train or args.dev) or not args.folds, "--train and --dev are incompatible with --folds"
     assert args.train or not args.dev, "--dev is only possible together with --train"
     if args.testscores:
         with open(args.testscores, "w") as f:
             print(",".join(Config().Scores.field_titles(args.constructions)), file=f)
-    if args.folds is not None:
+    if args.folds:
         fold_scores = []
         all_passages = list(read_passages(args, args.passages))
         assert len(all_passages) >= args.folds, \

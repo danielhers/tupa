@@ -46,7 +46,7 @@ class Params(object):
 def main():
     if not os.path.exists(MODELS_DIR):
         os.makedirs(MODELS_DIR)
-    Config().args.no_write = True
+    Config().args.write = False
     out_file = os.environ.get("PARAMS_FILE", "params.csv")
     word_vectors_files = [os.environ[f] for f in os.environ if f.startswith("WORD_VECTORS")]
     num = int(os.environ.get("PARAMS_NUM", 30))
@@ -88,7 +88,7 @@ def main():
         ("dynet_weight_decay",      (1e-7, 1e-6, 1e-5, 1e-4)),
         ("dropout",                 (0, .1, .2, .3, .4, .5)),
         ("require_connected",       [True, False]),
-        ("compound_swap",           [True, False]),
+        ("swap",                    [True, "compound"]),
         ("max_words",               (2000, 5000, 7500, 10000, 20000)),
         ("max_words_external",      (None, 5000, 10000, 30000)),
     )
