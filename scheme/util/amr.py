@@ -81,6 +81,13 @@ def is_valid_arg(node, label, *tags, is_parent=True):
 
 
 def resolve_label(node, label=None, reverse=False):
+    """
+    Replace any placeholder in the node's label with the corresponding terminals' text
+    :param node: node whose label is to be resolved
+    :param label: the label if not taken from the node directly
+    :param reverse: if True, *introduce* placeholders into the label rather than removing them
+    :return: the resolved label, with or without placeholders (depending on the value of reverse)
+    """
     def _replace(old, new):  # replace only inside the label value/name
         new = new.strip('"()')
         if reverse:
@@ -98,35 +105,38 @@ def resolve_label(node, label=None, reverse=False):
         terminals = sorted([c for c in children if getattr(c, "text", None)],
                            key=lambda c: getattr(c, "index", getattr(c, "position", None)))
         if terminals:
-            if not reverse and label.startswith(NUM + "("):  # try replacing spelled-out numbers with digits
-                number = None
-                # noinspection PyBroadException
-                try:
-                    number = w2n.word_to_num(" ".join(t.text for t in terminals))
-                except:
-                    pass
-                if len(terminals) == 1:
-                    try:
-                        number = MONTHS.index(terminals[0].text.lower()) + 1
-                    except ValueError:
-                        pass
+            if not reverse and label.startswith(NUM + "("):  # numeric label (always 1 unless "numbers" layer is on)
+                number = terminals_to_number(terminals)  # try replacing spelled-out numbers/months with digits
                 if number is not None:
                     label = "%s(%s)" % (NUM, number)
-            if len(terminals) > 1:
-                label = _replace("<t>", "".join(t.text for t in terminals))
-            for i, terminal in enumerate(terminals):
-                label = _replace("<t%d>" % i, terminal.text)
-                label = _replace("<T%d>" % i, terminal.text.title())
-                try:
-                    lemma = terminal.lemma
-                except AttributeError:
-                    lemma = terminal.extra.get(textutil.LEMMA_KEY)
-                if lemma == "-PRON-":
-                    lemma = terminal.text.lower()
-                lemma = lemma.translate(PUNCTUATION_REMOVER)
-                label = _replace("<l%d>" % i, lemma)
-                label = _replace("<L%d>" % i, lemma.title())
+            else:
+                if len(terminals) > 1:
+                    label = _replace("<t>", "".join(t.text for t in terminals))
+                for i, terminal in enumerate(terminals):
+                    label = _replace("<t%d>" % i, terminal.text)
+                    label = _replace("<T%d>" % i, terminal.text.title())
+                    try:
+                        lemma = terminal.lemma
+                    except AttributeError:
+                        lemma = terminal.extra.get(textutil.LEMMA_KEY)
+                    if lemma == "-PRON-":
+                        lemma = terminal.text.lower()
+                    lemma = lemma.translate(PUNCTUATION_REMOVER)
+                    label = _replace("<l%d>" % i, lemma)
+                    label = _replace("<L%d>" % i, lemma.title())
     return label
 
+
+def terminals_to_number(terminals):
+    # noinspection PyBroadException
+    try:
+        return w2n.word_to_num(" ".join(t.text for t in terminals))
+    except:
+        pass
+    if len(terminals) == 1:
+        try:
+            return MONTHS.index(terminals[0].text.lower()) + 1
+        except ValueError:
+            pass
 
 # REPLACEMENTS = {"~": "about"}
