@@ -42,9 +42,7 @@ class FeatureExtractorWrapper(FeatureExtractor):
     @staticmethod
     def get_word_vectors(param):
         vectors, param.dim = get_word_vectors(param.dim, param.size, param.filename)
-        if param.size is None:
-            param.size = len(vectors)
-        else:
-            assert len(vectors) == param.size, "Number of loaded vectors differs from requested: %d != %d" % (
-                len(vectors), param.size)
+        if param.size is not None:
+            assert len(vectors) <= param.size, "Loaded more vectors than requested: %d>%d" % (len(vectors), param.size)
+        param.size = len(vectors)
         return vectors
