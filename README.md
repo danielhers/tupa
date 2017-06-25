@@ -38,7 +38,7 @@ An `xml` file will be created per passage (separate by blank lines in the text f
 
 To download and extract the pre-trained models, run:
 
-    wget http://www.cs.huji.ac.il/~danielh/ucca/{sparse,mlp,bilstm}.tar.gz
+    curl --remote-name-all http://www.cs.huji.ac.il/~danielh/ucca/{sparse,mlp,bilstm}.tar.gz
     tar xvzf sparse.tar.gz
     tar xvzf mlp.tar.gz
     tar xvzf bilstm.tar.gz
