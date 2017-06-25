@@ -12,5 +12,5 @@ git clone https://github.com/propbank/propbank-frames ~/nltk_data/corpora/propba
 pip install git+https://github.com/clab/dynet#egg=dynet
 
 # Download AMR resources
-cd "$(dirname "$0")"/scheme/resources
+cd "$(dirname "$0")"/scheme/util/resources
 curl --remote-name-all https://amr.isi.edu/download/lists/{{have-{org,rel}-role-91-roles,verbalization-list}-v1.06,morph-verbalization-v1.01}.txt

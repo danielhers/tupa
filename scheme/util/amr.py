@@ -16,8 +16,11 @@ prev_dir = os.getcwd()
 try:
     os.chdir(os.path.dirname(importlib.util.find_spec("src.amr").origin))  # to find amr.peg
     from src import amr as amr_lib
+finally:
+    os.chdir(prev_dir)
 
-    os.chdir(os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "resources"))
+try:
+    os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "resources"))
     with open("negations.txt") as f:
         NEGATIONS.update(csv.reader(f, delimiter=" "))
 finally:

@@ -26,5 +26,5 @@ setup(name="TUPA",
           "features": os.path.join("tupa", "features"),
           "states": os.path.join("tupa", "states"),
       },
-      package_data={"src": ["amr.peg"]},
+      package_data={"src": ["amr.peg"], "util": ["resources/*.txt"]},
       )
