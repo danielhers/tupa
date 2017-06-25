@@ -177,7 +177,7 @@ class NeuralNetwork(Classifier):
             if train and self.dropout:
                 x = dy.dropout(x, self.dropout)
             x = self.activation(W * x + b)
-        return dy.log_softmax(x, restrict=list(range(self.num_labels[axis])))
+        return dy.log_softmax(x, restrict=None if "--dynet-gpu" in sys.argv else list(range(self.num_labels[axis])))
 
     def evaluate(self, features, axis, train=False):
         if self.model is None:
