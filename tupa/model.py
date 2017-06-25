@@ -138,6 +138,10 @@ class Model(object):
         if p is not None:
             Config().args.action_dim = p.dim
             Config().args.max_action_types = p.size
+        p = self.feature_extractor.params.get("T")
+        if p is not None:
+            Config().args.ner_dim = p.dim
+            Config().args.max_ner_types = p.size
         if hasattr(self.model, "max_num_labels"):
             Config().args.max_action_labels = self.model.max_num_labels[ACTION_AXIS]
             if len(self.model.labels) > 1:
