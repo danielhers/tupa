@@ -1,8 +1,8 @@
-from collections import defaultdict, namedtuple
+from collections import defaultdict, namedtuple, OrderedDict
 
 import penman
-
 from ucca import layer0, layer1, convert
+
 from util.amr import *
 
 DELETE_PATTERN = re.compile("\\\\|(?<=(?<!<)<)[^<>]+(?=>(?!>))")  # Delete text inside single angle brackets
@@ -88,7 +88,8 @@ class AmrConverter(convert.FormatConverter):
                 continue  # skip edges whose relation belongs to excluded layers
             if dep in self.excluded:
                 excluded.add(head)  # skip outgoing edges from variables with excluded concepts
-            rel = rel.lstrip(DEP_PREFIX)
+            rel = rel.lstrip(DEP_PREFIX)  # remove : prefix
+            rel = PREFIXED_RELATION_PATTERN.sub(PREFIXED_RELATION_SUBSTITUTION, rel)  # remove numeric/prep suffix
             parent = variables.get(head)
             assert parent is not None, "Outgoing edge from a non-variable: " + str(triple)
             node = variables.get(dep)
@@ -216,6 +217,7 @@ class AmrConverter(convert.FormatConverter):
             pending = [namedtuple("Edge", ["parent", "child", "tag"])(root, None, None)]
         visited = set()  # to avoid cycles
         labels = defaultdict(_IdGenerator())
+        prefixed_relation_counter = defaultdict(int)
         while pending:
             edge = pending.pop(0)
             if edge not in visited:  # skip cycles
@@ -236,11 +238,18 @@ class AmrConverter(convert.FormatConverter):
                         label = AmrConverter.strip(label)
                     head_dep.append(label)
                 if len(head_dep) > 1:
-                    yield head_dep[0], edge.tag, head_dep[1]
+                    rel = edge.tag
+                    if rel in PREFIXED_RELATION_ENUM:
+                        key = (rel, edge.parent.ID)
+                        prefixed_relation_counter[key] += 1
+                        rel += str(prefixed_relation_counter[key])
+                    elif rel == PREFIXED_RELATION_PREP:
+                        rel = "-".join([rel] + list(OrderedDict.fromkeys(t.text for t in edge.child.get_terminals())))
+                    yield head_dep[0], rel, head_dep[1]
 
     @staticmethod
     def strip(label, strip_sense=False, strip_quotes=False):  # remove type name
-        label = re.sub("\w+\((.*)\)", "\\1", label)
+        label = re.sub("\w+\((.*)\)", r"\1", label)
         if strip_sense:
             label = re.sub("-\d\d$", "", label)
         if strip_quotes:

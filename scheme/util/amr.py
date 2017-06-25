@@ -44,6 +44,10 @@ ROLES = {  # cache + fix for roles missing in PropBank
 }
 KNOWN_LABELS = set()  # used to avoid escaping when unnecessary
 PUNCTUATION_REMOVER = str.maketrans("", "", string.punctuation)
+PREFIXED_RELATION_ENUM = ("op", "snt")
+PREFIXED_RELATION_PREP = "prep"
+PREFIXED_RELATION_PATTERN = re.compile("(?:(op|snt)\d+|(prep)-\w+)(-of)?")
+PREFIXED_RELATION_SUBSTITUTION = r"\1\2\3"
 
 
 def parse(*args, **kwargs):
