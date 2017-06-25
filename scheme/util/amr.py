@@ -42,6 +42,8 @@ ROLES = {  # cache + fix for roles missing in PropBank
     CONCEPT + "(play-11)": ("0", "1", "2", "3"),
     CONCEPT + "(raise-02)": ("0", "1", "2", "3"),
 }
+MONTHS = ("january", "february", "march", "april", "may", "june", "july",
+          "august", "september", "october", "november", "december")
 KNOWN_LABELS = set()  # used to avoid escaping when unnecessary
 PUNCTUATION_REMOVER = str.maketrans("", "", string.punctuation)
 PREFIXED_RELATION_ENUM = ("op", "snt")
@@ -103,6 +105,11 @@ def resolve_label(node, label=None, reverse=False):
                     number = w2n.word_to_num(" ".join(t.text for t in terminals))
                 except:
                     pass
+                if len(terminals) == 1:
+                    try:
+                        number = MONTHS.index(terminals[0].text.lower()) + 1
+                    except ValueError:
+                        pass
                 if number is not None:
                     label = "%s(%s)" % (NUM, number)
             if len(terminals) > 1:
