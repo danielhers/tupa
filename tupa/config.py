@@ -67,7 +67,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("-t", "--train", nargs="+", default=(), help="passage files/directories to train on")
         group.add_argument("-d", "--dev", nargs="+", default=(), help="passage files/directories to tune on")
         group.add_argument("-I", "--iterations", type=int, default=1, help="number of training iterations")
-        group.add_argument("--folds", type=int, choices=(0, 3, 5, 10), default=0, help="#folds for cross validation")
+        group.add_argument("--folds", type=int, choices=(3, 5, 10), help="#folds for cross validation")
         group.add_argument("--seed", type=int, default=1, help="random number generator seed")
         group = argparser.add_argument_group(title="Output files")
         group.add_argument("-o", "--outdir", default=".", help="output directory for parsed files")
