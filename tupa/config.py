@@ -30,6 +30,7 @@ class VAction(argparse.Action):
             values = values.count("v") + 1
         setattr(args, self.dest, values)
 
+# Classifiers
 SPARSE = "sparse"
 MLP_NN = "mlp"
 BILSTM_NN = "bilstm"
@@ -37,10 +38,16 @@ NOOP = "noop"
 NN_CLASSIFIERS = (MLP_NN, BILSTM_NN)
 CLASSIFIERS = (SPARSE, MLP_NN, BILSTM_NN, NOOP)
 
-# Multiple choice options: the first one is always the default
+# Swap types
+REGULAR = "regular"
+COMPOUND = "compound"
+
+# Neural network options: the first one is always the default
 ACTIVATIONS = ("sigmoid", "tanh", "relu", "cube")
 INITIALIZATIONS = ("glorot_uniform", "normal", "uniform", "const")
 OPTIMIZERS = ("adam", "sgd", "cyclic", "momentum", "adagrad", "adadelta", "rmsprop")
+
+# Input/output formats
 FORMATS = ["xml", "pickle"] + list(CONVERTERS)
 
 
@@ -89,8 +96,9 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--max-node-ratio", type=float, default=6, help="max node/terminal ratio")
         group.add_argument("--max-height", type=int, default=20, help="max graph height")
         group = argparser.add_mutually_exclusive_group()
-        group.add_argument("--swap", choices=("regular", "compound"), default="regular", help="swap transitions")
+        group.add_argument("--swap", choices=(REGULAR, COMPOUND), default=REGULAR, help="swap transitions")
         group.add_argument("--no-swap", action="store_false", dest="swap", help="exclude swap transitions")
+        argparser.add_argument("--max-swap", type=int, default=15, help="if compound swap enabled, maximum swap size")
         group = argparser.add_argument_group(title="Sanity checks")
         self.add_boolean_option(group, "check-loops", "check for parser state loop")
         self.add_boolean_option(group, "verify", "check for oracle reproducing original passage")
@@ -253,6 +261,7 @@ class Config(object, metaclass=Singleton):
                         for (k, v) in sorted(vars(self.args).items()) if v not in (None, (), "")
                         and (self.node_labels or "node_label" not in k)
                         and (self.args.swap or "swap_" not in k)
+                        and (self.args.swap == COMPOUND or k != "max_swap")
                         and (not self.args.require_connected or k != "orphan_label")
                         and (self.args.classifier == SPARSE or k not in self.sparse_arg_names)
                         and (self.args.classifier in NN_CLASSIFIERS or k not in self.nn_arg_names+self.dynet_arg_names)

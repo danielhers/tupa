@@ -88,7 +88,8 @@ def main():
         ("dynet_weight_decay",      (1e-7, 1e-6, 1e-5, 1e-4)),
         ("dropout",                 (0, .1, .2, .3, .4, .5)),
         ("require_connected",       [True, False]),
-        ("swap",                    [True, "compound"]),
+        ("swap",                    [config.REGULAR, config.COMPOUND]),
+        ("max_swap",                range(2, 21)),
         ("max_words",               (2000, 5000, 7500, 10000, 20000)),
         ("max_words_external",      (None, 5000, 10000, 30000)),
     )

@@ -1,9 +1,8 @@
-from tupa.config import Config
+from tupa.config import Config, COMPOUND
 
 
 class Action(object):
     type_to_id = {}
-    MAX_SWAP = 15  # default maximum size for compound swap
 
     def __init__(self, action_type, tag=None, has_label=False, orig_edge=None, orig_node=None, oracle=None, id_=None):
         self.type = action_type  # String
@@ -76,7 +75,7 @@ class Actions(object):
     def init(self):
         # edge and node action will be created as they are returned by the oracle
         self.all = [Actions.Reduce, Actions.Shift, Actions.Finish] + \
-                   (list(map(Actions.Swap, range(1, Action.MAX_SWAP))) if Config().args.swap == "compound"
+                   (list(map(Actions.Swap, range(1, Config().args.max_swap))) if Config().args.swap == COMPOUND
                     else [Actions.Swap] if Config().args.swap else [])
 
     @property
