@@ -61,7 +61,7 @@ class ParserTests(unittest.TestCase):
         for mode in "train", "load":
             print("-- %sing %s" % (mode, model_type))
             p = Parser(model_file="test_files/models/%s" % model_type, model_type=model_type)
-            p.train(self.load_passages() if mode == "train" else None, iterations=200)
+            list(p.train(self.load_passages() if mode == "train" else None, iterations=200))
             score = evaluation.Scores.aggregate([s for _, s in p.parse(self.load_passages(), evaluate=True)])
             scores.append(score.average_f1())
             print()

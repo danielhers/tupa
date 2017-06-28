@@ -119,7 +119,7 @@ class Parser(object):
         assert mode in ParseMode, "Invalid parse mode: %s" % mode
         train = (mode is ParseMode.train)
         if not train and not self.trained:
-            self.train()
+            list(self.train())
         passage_word = "sentence" if self.args.sentences else \
                        "paragraph" if self.args.paragraphs else \
                        "passage"
