@@ -78,7 +78,7 @@ class NeuralNetwork(Classifier):
                     i, l, m, "\n".join(map(str, self.labels[axis])))
 
     def init_model(self):
-        self.model = dy.Model()
+        self.model = dy.ParameterCollection()
         trainer_kwargs = {"edecay": self.learning_rate_decay}
         if self.learning_rate_param_name and self.learning_rate:
             trainer_kwargs[self.learning_rate_param_name] = self.learning_rate
@@ -276,16 +276,15 @@ class NeuralNetwork(Classifier):
             "init": self.init_str,
         }
         d.update(self.save_extra())
-        model_filename = self.filename + ".model"
         started = time.time()
         try:
-            os.remove(model_filename)
-            print("Removed existing '%s'." % model_filename)
+            os.remove(self.filename)
+            print("Removed existing '%s'." % self.filename)
         except OSError:
             pass
-        print("Saving model to '%s'... " % model_filename, end="", flush=True)
+        print("Saving model to '%s'... " % self.filename, end="", flush=True)
         try:
-            self.model.save(model_filename, self.params.values())
+            dy.save(self.filename, self.params.values())
             print("Done (%.3fs)." % (time.time() - started))
         except ValueError as e:
             print("Failed saving model: %s" % e)
@@ -303,11 +302,10 @@ class NeuralNetwork(Classifier):
         Config().args.init = self.init_str = d["init"]
         self.init = INITIALIZERS[self.init_str]
         self.load_extra(d)
-        model_filename = self.filename + ".model"
-        print("Loading model from '%s'... " % model_filename, end="", flush=True)
+        print("Loading model from '%s'... " % self.filename, end="", flush=True)
         started = time.time()
         try:
-            param_values = self.model.load(model_filename)
+            param_values = dy.load(self.filename, self.model)
             print("Done (%.3fs)." % (time.time() - started))
             self.params = OrderedDict(zip(param_keys, param_values))
         except KeyError as e:

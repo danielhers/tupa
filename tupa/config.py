@@ -56,7 +56,7 @@ class Config(object, metaclass=Singleton):
         argparser = argparse.ArgumentParser(description="""Transition-based parser for UCCA.""",
                                             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
         argparser.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
-        argparser.add_argument("-m", "--model", help="model file to load/save (default: <format>_<model_type>")
+        argparser.add_argument("-m", "--model", help="model file basename to load/save (default: <format>_<model_type>")
         argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=SPARSE, help="model type")
         argparser.add_argument("-B", "--beam", type=int, choices=(1,), default=1, help="beam size for beam search")
         self.add_boolean_option(argparser, "evaluate", "evaluation of parsed passages", short="e")

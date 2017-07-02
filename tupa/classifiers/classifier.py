@@ -94,7 +94,7 @@ class Classifier(object):
             "epoch": self.epoch,
         }
         d.update(self.save_model())
-        save_dict(self.filename, d)
+        save_dict(self.filename + ".dict", d)
 
     def save_labels(self):
         return self.labels
@@ -109,7 +109,7 @@ class Classifier(object):
         """
         Load all parameters from file
         """
-        d = load_dict(self.filename)
+        d = load_dict(self.filename + ".dict")
         model_type = d.get("type")
         assert model_type is None or model_type == self.model_type, "Model type does not match: %s" % model_type
         self.labels = tuple(map(list, d["labels"]))

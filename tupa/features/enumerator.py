@@ -68,4 +68,4 @@ class FeatureEnumerator(FeatureExtractorWrapper):
                                                   for s in suffixes if self.params[s].dim})
 
     def filename_suffix(self):
-        return "_enum"
+        return ".enum"
