@@ -194,9 +194,10 @@ class Parser(object):
                     accuracy_str += ", %d%% correct labels (%d/%d)" % (100*self.total_correct_labels/self.total_labels,
                                                                        self.total_correct_labels, self.total_labels)
                 print("Overall %s on %s" % (accuracy_str, mode.name))
-            print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
-                total_duration, passage_word, total_duration / (passage_index+1),
-                total_tokens / total_duration), flush=True)
+            if total_duration:
+                print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
+                    total_duration, passage_word, total_duration / (passage_index+1),
+                    total_tokens / total_duration), flush=True)
 
     def parse_passage(self, train):
         """
