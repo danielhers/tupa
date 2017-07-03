@@ -1,7 +1,7 @@
-Flask>=0.12
+Flask>=0.12.2
 Flask-Assets>=0.12
 Flask-Compress>=1.4.0
-Jinja2>=2.8
-matplotlib>=2.0.0
+Jinja2>=2.9.6
+matplotlib>=2.0.2
 networkx>=1.11
 webassets>=0.12.1
