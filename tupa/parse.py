@@ -425,4 +425,3 @@ def main():
 
 if __name__ == "__main__":
     list(main())
-    Config().close()

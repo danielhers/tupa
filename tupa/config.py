@@ -1,10 +1,11 @@
 import argparse
+import logging
 import sys
 
 import numpy as np
+from conversion.amr import CONVERTERS
 from ucca import evaluation, constructions
 
-from conversion.amr import CONVERTERS
 from tupa import constraints
 
 
@@ -193,7 +194,7 @@ class Config(object, metaclass=Singleton):
             _, self.output_converter = CONVERTERS.get(self.args.output_format, (None, None))
         else:
             self.args.output_format = self.args.format
-        self._log_file = None
+        self._logger = None
         self.set_external()
         self.random = np.random
 
@@ -242,17 +243,19 @@ class Config(object, metaclass=Singleton):
 
     def log(self, message):
         try:
-            if self._log_file is None:
-                self._log_file = open(self.args.log, "w")
-            print(message, file=self._log_file, flush=True)
-            if self.args.verbose:
-                print(message)
+            if self._logger is None:
+                formatter = logging.Formatter("%(asctime)s %(message)s")
+                self._logger = logging.getLogger()
+                fh = logging.FileHandler(self.args.log)
+                fh.setFormatter(formatter)
+                self._logger.addHandler(fh)
+                if self.args.verbose:
+                    s = logging.StreamHandler()
+                    s.setFormatter(formatter)
+                    self._logger.addHandler(s)
+            logging.warning(message)
         except OSError:
             pass
-
-    def close(self):
-        if self._log_file is not None:
-            self._log_file.close()
 
     def __str__(self):
         return " ".join(list(self.args.passages) + [""]) + \
