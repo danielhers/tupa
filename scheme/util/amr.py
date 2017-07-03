@@ -26,11 +26,6 @@ try:
 finally:
     os.chdir(prev_dir)
 
-LAYERS = {  # things to exclude from the graph because they are a separate task
-    "wiki": (":wiki",),
-    "numbers": (),
-    "urls": (amr_lib.Concept("url-entity"),),
-}
 TERMINAL_TAGS = {constraints.EdgeTags.Terminal, constraints.EdgeTags.Punctuation}
 COMMENT_PREFIX = "#"
 ID_PATTERN = "#\s*::id\s+(\S+)"
@@ -42,24 +37,57 @@ ALIGNMENT_SEP = ","
 PLACEHOLDER = re.compile("<[^>]*>")
 SKIP_TOKEN = re.compile("[<>@]+")
 LABEL_ATTRIB = "label"
-INSTANCE = "instance"
-CONCEPT = "Concept"
-NUM = "Num"
-UNKNOWN_LABEL = CONCEPT + "(amr-unknown)"
-ROLESET_PATTERN = re.compile(CONCEPT + "\((.*)-(\d+)\)")
-ROLES = {  # cache + fix for roles missing in PropBank
-    CONCEPT + "(ablate-01)": ("0", "1", "2", "3"),
-    CONCEPT + "(play-11)": ("0", "1", "2", "3"),
-    CONCEPT + "(raise-02)": ("0", "1", "2", "3"),
-}
-MONTHS = ("january", "february", "march", "april", "may", "june", "july",
-          "august", "september", "october", "november", "december")
 KNOWN_LABELS = set()  # used to avoid escaping when unnecessary
 PUNCTUATION_REMOVER = str.maketrans("", "", string.punctuation)
 PREFIXED_RELATION_ENUM = ("op", "snt")
 PREFIXED_RELATION_PREP = "prep"
 PREFIXED_RELATION_PATTERN = re.compile("(?:(op|snt)\d+|(prep)-\w+)(-of)?")
 PREFIXED_RELATION_SUBSTITUTION = r"\1\2\3"
+
+# Specific edge labels (relations)
+INSTANCE = "instance"
+POLARITY = "polarity"
+MODE = "mode"
+ARG2 = "ARG2"
+VALUE = "value"
+WIKI = "wiki"
+DAY = "day"
+MONTH = "month"
+YEAR = "year"
+YEAR2 = "year2"
+DECADE = "decade"
+WEEKDAY = "weekday"
+QUARTER = "quarter"
+CENTURY = "century"
+SEASON = "season"
+TIMEZONE = "timezone"
+
+# Specific node labels
+CONST = "Const"
+CONST_MINUS = CONST + "(-)"
+CONST_MODES = (CONST + "(expressive)", CONST + "(imperative)", CONST + "(interrogative)")
+CONCEPT = "Concept"
+UNKNOWN_LABEL = CONCEPT + "(amr-unknown)"
+DATE_ENTITY = CONCEPT + "(date-entity)"
+ROLESET_PATTERN = re.compile(CONCEPT + "\((.*)-(\d+)\)")
+ROLES = {  # cache + fix for roles missing in PropBank
+    CONCEPT + "(ablate-01)": ("0", "1", "2", "3"),
+    CONCEPT + "(play-11)": ("0", "1", "2", "3"),
+    CONCEPT + "(raise-02)": ("0", "1", "2", "3"),
+}
+NUM = "Num"
+MONTHS = ("january", "february", "march", "april", "may", "june", "july",
+          "august", "september", "october", "november", "december")
+WEEKDAYS = (CONCEPT + "(monday)", CONCEPT + "(tuesday)", CONCEPT + "(wednesday)",
+            CONCEPT + "(thursday)", CONCEPT + "(friday)", CONCEPT + "(saturday)", CONCEPT + "(sunday)")
+SEASONS = (CONCEPT + "(winter)", CONCEPT + "(fall)", CONCEPT + "(spring)", CONCEPT + "(summer)")
+
+# things to exclude from the graph because they are a separate task
+LAYERS = {
+    WIKI: (":" + WIKI,),
+    "numbers": (),
+    "urls": (amr_lib.Concept("url-entity"),),
+}
 
 
 def parse(*args, **kwargs):
@@ -70,15 +98,51 @@ def is_concept(label):
     return label is not None and label.startswith(CONCEPT + "(")
 
 
+def is_int_in_range(label, s=None, e=None):
+    m = re.match(NUM + "\(-?(\d+)\)", label)
+    if not m:
+        return False
+    num = int(m.group(1))
+    return (s is None or num >= s) and (e is None or num <= e)
+
+
 def is_valid_arg(node, label, *tags, is_parent=True):
     if label is None:
         return True
-    if not is_parent and node.label == "Const(-)":
-        return {"polarity", "ARG2", "value"}.issuperset(tags)
+    label = resolve_label(node, label)
+    if PLACEHOLDER.search(label):
+        return True
+    if is_parent:  # node is a parent of the edge
+        if {DAY, MONTH, YEAR, YEAR2, DECADE, WEEKDAY, QUARTER, CENTURY, SEASON, TIMEZONE}.intersection(tags):
+            return label == DATE_ENTITY
+    elif label == CONST_MINUS:  # :polarity excl,b_isconst,b_const=-
+        return {POLARITY, ARG2, VALUE}.issuperset(tags)
+    elif POLARITY in tags:
+        return label == CONST_MINUS
+    elif MODE in tags:  # :mode excl,b_isconst,b_const=[interrogative|expressive|imperative]
+        return label in CONST_MODES
+    elif label in CONST_MODES:
+        return MODE in tags
+    elif WIKI in tags:  # :wiki b_isconst (:value and :timezone are not really always const)
+        return label.startswith(CONST + "(")
+    elif DAY in tags:  # :day  a=date-entity,b_isconst,b_const=[...]
+        return is_int_in_range(label, 1, 31)
+    elif MONTH in tags:  # :month  a=date-entity,b_isconst,b_const=[1|2|3|4|5|6|7|8|9|10|11|12]
+        return is_int_in_range(label, 1, 12)
+    elif QUARTER in tags:  # :quarter  a=date-entity,b_isconst,b_const=[1|2|3|4]
+        return is_int_in_range(label, 1, 4)
+    elif {YEAR, YEAR2, DECADE, CENTURY}.intersection(tags):  # :year a=date-entity,b_isconst,b_const=[0-9]+
+        return is_int_in_range(label)
+    elif WEEKDAY in tags:  # :weekday  excl,a=date-entity,b=[monday|tuesday|wednesday|thursday|friday|saturday|sunday]
+        return label in WEEKDAYS
+    elif label in WEEKDAYS:
+        return WEEKDAY in tags
+    elif SEASON in tags:  # :season excl,a=date-entity,b=[winter|fall|spring|summer]+
+        return label in SEASONS
+
     args = [t for t in tags if t.startswith("ARG") and (t.endswith("-of") != is_parent)]
     if not args:
         return True
-    label = resolve_label(node, label)
     valid_args = ROLES.get(label)
     if valid_args is None:
         try:
@@ -142,8 +206,15 @@ def resolve_label(node, label=None, reverse=False):
 
 def terminals_to_number(terminals):
     # noinspection PyBroadException
+    text = " ".join(t.text for t in terminals)
+    try:  # first make sure it's not a number already
+        float(text)
+        return None
+    except ValueError:
+        pass
+    # noinspection PyBroadException
     try:
-        return w2n.word_to_num(" ".join(t.text for t in terminals))
+        return w2n.word_to_num(text)
     except:
         pass
     if len(terminals) == 1:
