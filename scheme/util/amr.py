@@ -201,6 +201,8 @@ def resolve_label(node, label=None, reverse=False):
                     negation = NEGATIONS.get(terminal.text)
                     if negation is not None:
                         label = _replace("<n%d>" % i, negation)
+    if reverse:
+        KNOWN_LABELS.add(label)
     return label
 
 
