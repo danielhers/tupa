@@ -4,7 +4,6 @@ TUPA is a transition-based parser for [Universal Conceptual Cognitive Annotation
 
 ### Requirements
 * Python 3.x
-* [DyNet](https://github.com/clab/dynet)
 
 ### Build
 
@@ -15,8 +14,7 @@ Install the required modules:
     . bin/activate  # on bash
     source bin/activate.csh  # on csh
     pip install -r requirements.txt
-    python -m spacy.en.download all
-    ci/install-dynet.sh
+    python -m spacy download en
     python ucca/setup.py install
     python setup.py install
 

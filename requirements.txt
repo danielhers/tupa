@@ -1,2 +1,3 @@
-spacy>=1.7.3
+spacy>=1.8.2
 cython>=0.25.2
+dynet<2.0.0
