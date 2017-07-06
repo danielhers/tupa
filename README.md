@@ -65,6 +65,7 @@ If you make use of this software, please cite [the following paper](http://www.c
 	  year={2017}
 	}
 
+The version of the parser used in the paper is [v1.0](https://github.com/huji-nlp/tupa/releases/tag/v1.0).
 
 License
 -------
