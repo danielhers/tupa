@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export CXX="g++-4.8" CC="gcc-4.8"
-git clone https://github.com/clab/dynet
+git clone https://github.com/clab/dynet --branch v1.1
 cd dynet
 hg clone https://bitbucket.org/eigen/eigen
 mkdir build
