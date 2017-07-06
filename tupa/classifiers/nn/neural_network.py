@@ -175,7 +175,7 @@ class NeuralNetwork(Classifier):
             if train and self._dropout:
                 x = dy.dropout(x, self._dropout)
             x = self._activation(W * x + b)
-        return dy.log_softmax(x, restrict=list(range(self.num_labels)))
+        return dy.log_softmax(x)#, restrict=list(range(self.num_labels)))
 
     def evaluate(self, *args, **kwargs):
         if self.model is None:
