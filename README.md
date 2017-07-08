@@ -66,6 +66,23 @@ If you make use of this software, please cite [the following paper](http://www.c
 	}
 
 The version of the parser used in the paper is [v1.0](https://github.com/huji-nlp/tupa/releases/tag/v1.0).
+To reproduce the experiments from the paper, run in an empty directory:
+
+    virtualenv --python=/usr/bin/python3 venv
+    . venv/bin/activate              # on bash
+    source venv/bin/activate.csh     # on csh
+    pip install tupa
+    mkdir pickle models
+    curl -L http://www.cs.huji.ac.il/~danielh/ucca/ucca_corpus_pickle.tgz | tar xz -C pickle
+    curl --remote-name-all http://www.cs.huji.ac.il/~danielh/ucca/{sparse,mlp,bilstm}.tgz
+    tar xvzf sparse.tgz
+    tar xvzf mlp.tgz
+    tar xvzf bilstm.tgz
+    python -m spacy download en
+    python -m scripts.split_corpus pickle -t 4282 -d 454 -l
+    python -m tupa.parse -c sparse -m models/ucca-sparse -Web pickle/test
+    python -m tupa.parse -c mlp -m models/ucca-mlp -Web pickle/test
+    python -m tupa.parse -c bilstm -m models/ucca-bilstm -Web pickle/test
 
 License
 -------
