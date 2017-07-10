@@ -17,8 +17,8 @@
 (h / have-org-role-91
       :ARG0 (p / person :name (m / name :op1 "Mr." :op2 "Vinken"))
       :ARG1 (g / group :name (e / name :op1 "Elsevier" :op2 "N.V.")
-            :mod (c / country :name (n / name :op1 "Netherlands"))
-            :ARG0-of (p2 / publish-01))
+            :mod (c / country :name (n / name :op1 "Netherlands"~e.9))
+            :ARG0-of (p2 / publish-01~e.10))
       :ARG2 (c2 / chairman))
 
 # ::id nw.wsj_0002.1 ::date 2012-04-25T18:26:26 ::annotator ISI-AMR-01 ::preferred
