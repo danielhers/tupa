@@ -10,8 +10,6 @@ from word2number import w2n
 
 from tupa import constraints
 
-NEGATIONS = {}
-
 prev_dir = os.getcwd()
 try:
     os.chdir(os.path.dirname(importlib.util.find_spec("src.amr").origin))  # to find amr.peg
@@ -19,10 +17,17 @@ try:
 finally:
     os.chdir(prev_dir)
 
+NEGATIONS = {}
+MORPH_VERBALIZATION = {}
+
 try:
     os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "resources"))
     with open("negations.txt") as f:
         NEGATIONS.update(csv.reader(f, delimiter=" "))
+    with open("morph-verbalization-v1.01.txt") as f:
+        # noinspection PyTypeChecker
+        lines = (re.findall(r'::DERIV\S*-(\S)\S+ "(\S+)"', l) for l in f if l and l[0] != "#")
+        MORPH_VERBALIZATION.update({w: l for l in lines for (_, w) in l})
 finally:
     os.chdir(prev_dir)
 
@@ -201,6 +206,10 @@ def resolve_label(node, label=None, reverse=False):
                     negation = NEGATIONS.get(terminal.text)
                     if negation is not None:
                         label = _replace("<n%d>" % i, negation)
+                    morph = MORPH_VERBALIZATION.get(terminal.text)
+                    if morph is not None:
+                        for prefix, value in morph:  # V: verb, N: noun, A: noun actor
+                            label = _replace("<%s%d>" % (prefix, i), value)
     if reverse:
         KNOWN_LABELS.add(label)
     return label
