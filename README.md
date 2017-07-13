@@ -6,16 +6,22 @@ TUPA is a transition-based parser for [Universal Conceptual Cognitive Annotation
 * Python 3.x
 * All [dependencies for DyNet](http://dynet.readthedocs.io/en/latest/python.html)
 
-### Build
+### Install
 
-Create a virtual environment:
+Create a Python virtual environment:
     
     virtualenv --python=/usr/bin/python3 venv
     . venv/bin/activate              # on bash
     source venv/bin/activate.csh     # on csh
 
-Install:
+Install the latest release:
 
+    pip install tupa
+
+Alternatively, install the latest code from GitHub (may be unstable):
+
+    git clone https://github.com/danielhers/tupa
+    cd tupa
     python setup.py install
 
 ### Train the parser
@@ -24,7 +30,7 @@ Having a directory with UCCA passage files
 (for example, [the Wiki corpus](https://github.com/huji-nlp/ucca-corpus/tree/master/wiki/pickle)),
 run:
 
-    python tupa/parse.py -t <train_dir> -d <dev_dir> -c <model_type> -m <model_filename>
+    python -m tupa.parse -t <train_dir> -d <dev_dir> -c <model_type> -m <model_filename>
 
 The possible model types are `sparse`, `mlp` and `bilstm`.
 
@@ -32,7 +38,7 @@ The possible model types are `sparse`, `mlp` and `bilstm`.
 
 Run the parser on a text file (here named `example.txt`) using a trained model:
 
-    python tupa/parse.py example.txt -c <model_type> -m <model_filename>
+    python -m tupa.parse example.txt -c <model_type> -m <model_filename>
 
 An `xml` file will be created per passage (separate by blank lines in the text file).
 
@@ -47,9 +53,9 @@ To download and extract the pre-trained models, run:
 
 Run the parser using any of them:
 
-    python tupa/parse.py example.txt -c sparse -m models/sparse
-    python tupa/parse.py example.txt -c mlp -m models/mlp
-    python tupa/parse.py example.txt -c bilstm -m models/bilstm
+    python -m tupa.parse example.txt -c sparse -m models/sparse
+    python -m tupa.parse example.txt -c mlp -m models/mlp
+    python -m tupa.parse example.txt -c bilstm -m models/bilstm
 
 Author
 ------
