@@ -1,13 +1,13 @@
-import os
 import pickle
 import pprint as pp
 import sys
 import time
-from collections import OrderedDict, Counter
 
 import numpy as np
+import os
+from collections import OrderedDict, Counter
 
-from features.feature_params import UNKNOWN_VALUE
+from .features.feature_params import UNKNOWN_VALUE
 
 
 class DefaultOrderedDict(OrderedDict):

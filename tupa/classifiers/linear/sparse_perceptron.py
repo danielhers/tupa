@@ -1,9 +1,8 @@
+import numpy as np
 from collections import defaultdict
 
-import numpy as np
-
-from linear.perceptron import Perceptron
 from tupa.config import Config, SPARSE
+from .perceptron import Perceptron
 
 
 class FeatureWeights(object):

@@ -1,9 +1,9 @@
-from features.enumerator import FeatureEnumerator
-from features.feature_params import FeatureParameters
-from features.indexer import FeatureIndexer
-from tupa.action import Actions
-from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP
-from tupa.model_util import UnknownDict
+from .action import Actions
+from .config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP
+from .features.enumerator import FeatureEnumerator
+from .features.feature_params import FeatureParameters
+from .features.indexer import FeatureIndexer
+from .model_util import UnknownDict
 
 ACTION_AXIS = 0
 LABEL_AXIS = 1
@@ -48,23 +48,23 @@ class Model(object):
             max_values.append(Config().args.max_node_labels)
 
         if model_type == SPARSE:
-            from features.sparse_features import SparseFeatureExtractor
-            from linear.sparse_perceptron import SparsePerceptron
+            from .features.sparse_features import SparseFeatureExtractor
+            from .classifiers.linear.sparse_perceptron import SparsePerceptron
             self.feature_extractor = SparseFeatureExtractor()
             self.model = SparsePerceptron(filename, values)
         elif model_type == MLP_NN:
-            from nn.feedforward import MLP
-            from features.dense_features import DenseFeatureExtractor
+            from .classifiers.nn.feedforward import MLP
+            from .features.dense_features import DenseFeatureExtractor
             self.feature_extractor = FeatureEnumerator(DenseFeatureExtractor(), self.feature_params)
             self.model = MLP(filename, values, self.feature_extractor.params, max_num_labels=max_values)
         elif model_type == BILSTM_NN:
-            from nn.bilstm import BiLSTM
-            from features.dense_features import DenseFeatureExtractor
+            from .classifiers.nn.bilstm import BiLSTM
+            from .features.dense_features import DenseFeatureExtractor
             self.feature_extractor = FeatureIndexer(FeatureEnumerator(DenseFeatureExtractor(), self.feature_params))
             self.model = BiLSTM(filename, values, self.feature_extractor.params, max_num_labels=max_values)
         elif model_type == NOOP:
-            from features.empty_features import EmptyFeatureExtractor
-            from classifiers.noop import NoOp
+            from .features.empty_features import EmptyFeatureExtractor
+            from .classifiers.noop import NoOp
             self.feature_extractor = EmptyFeatureExtractor()
             self.model = NoOp(filename, values)
         else:

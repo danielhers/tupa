@@ -1,15 +1,15 @@
-import os
 import sys
 import time
-from collections import OrderedDict
 
 import dynet as dy
 import numpy as np
+import os
+from collections import OrderedDict
 
-from classifiers.classifier import Classifier
-from classifiers.classifier import ClassifierProperty
-from features.feature_params import MISSING_VALUE
+from tupa.classifiers.classifier import Classifier
+from tupa.classifiers.classifier import ClassifierProperty
 from tupa.config import Config
+from tupa.features.feature_params import MISSING_VALUE
 
 TRAINERS = {
     "sgd": (dy.SimpleSGDTrainer, "e0"),

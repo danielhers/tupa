@@ -3,10 +3,10 @@ import logging
 import sys
 
 import numpy as np
-from conversion.amr import CONVERTERS
 from ucca import evaluation, constructions
 
-from tupa import constraints
+from scheme.conversion.amr import CONVERTERS
+from . import constraints
 
 
 class Singleton(type):
@@ -181,8 +181,8 @@ class Config(object, metaclass=Singleton):
                 self.args.max_node_labels = 1000
             self.args.max_action_labels = max(self.args.max_action_labels, 600)
             self.args.max_edge_labels = max(self.args.max_edge_labels, 500)
-            from evaluation.amr import evaluate, Scores, LABEL_ATTRIB, UNKNOWN_LABEL
-            from constraint.amr import Constraints
+            from scheme.evaluation.amr import evaluate, Scores, LABEL_ATTRIB, UNKNOWN_LABEL
+            from scheme.constraint.amr import Constraints
             self.evaluate, self.Scores = evaluate, Scores
             self.args.node_label_attrib = LABEL_ATTRIB
             self.args.unknown_label = UNKNOWN_LABEL

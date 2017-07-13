@@ -1,7 +1,8 @@
-from states.state import InvalidActionError
-from tupa.action import Actions
-from tupa.config import Config, COMPOUND
 from ucca import layer1
+
+from .action import Actions
+from .config import Config, COMPOUND
+from .states.state import InvalidActionError
 
 # Constants for readability, used by Oracle.action
 RIGHT = PARENT = NODE = 0

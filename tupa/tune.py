@@ -1,12 +1,12 @@
 import csv
-import os
-from collections import OrderedDict
 
 import numpy as np
+import os
+from collections import OrderedDict
+from ucca.evaluation import Scores
 
 from tupa import parse, config
 from tupa.config import Config
-from ucca.evaluation import Scores
 
 MODELS_DIR = "models"
 

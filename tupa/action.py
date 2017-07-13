@@ -1,4 +1,4 @@
-from tupa.config import Config, COMPOUND
+from .config import Config, COMPOUND
 
 
 class Action(object):

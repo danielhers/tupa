@@ -1,4 +1,4 @@
-from features.feature_extractor_wrapper import FeatureExtractorWrapper
+from .feature_extractor_wrapper import FeatureExtractorWrapper
 
 INDEXED_FEATURES = "W", "w", "t", "d", "T"  # external word embeddings, learned word embeddings, POS tags, dep rels, entity type
 

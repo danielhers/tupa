@@ -2,9 +2,10 @@
 
 import unittest
 
-from conversion.amr import from_amr, to_amr
-from evaluation.amr import evaluate
 from ucca.convert import split2sentences
+
+from scheme.conversion.amr import from_amr, to_amr
+from scheme.evaluation.amr import evaluate
 
 
 class ConversionTests(unittest.TestCase):

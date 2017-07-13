@@ -1,9 +1,9 @@
 import dynet as dy
 
-from classifiers.classifier import ClassifierProperty
-from features.feature_params import MISSING_VALUE
-from nn.neural_network import NeuralNetwork
+from tupa.classifiers.classifier import ClassifierProperty
 from tupa.config import Config, BILSTM_NN
+from tupa.features.feature_params import MISSING_VALUE
+from .neural_network import NeuralNetwork
 
 
 class BiLSTM(NeuralNetwork):

@@ -87,6 +87,6 @@ setup(name="TUPA",
           "src": os.path.join("scheme", "amr", "src"),
           "smatch": os.path.join("scheme", "smatch"),
       },
-      package_data={"src": ["amr.peg"], "util": ["resources/*.txt"]},
+      package_data={"src": ["amr.peg"], "scheme.util": ["resources/*.txt"]},
       cmdclass={"install": install},
       )

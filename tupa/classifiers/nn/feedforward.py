@@ -1,5 +1,5 @@
-from nn.neural_network import NeuralNetwork
 from tupa.config import MLP_NN
+from .neural_network import NeuralNetwork
 
 
 class MLP(NeuralNetwork):

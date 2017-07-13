@@ -1,6 +1,6 @@
 import time
 
-from classifiers.classifier import Classifier, ClassifierProperty
+from tupa.classifiers.classifier import Classifier, ClassifierProperty
 
 
 class Perceptron(Classifier):

@@ -2,13 +2,14 @@
 
 import argparse
 import glob
-import os
-import re
 import sys
 
-from conversion.amr import CONVERTERS
+import os
+import re
 from ucca.convert import split2sentences
 from ucca.ioutil import passage2file, file2passage
+
+from scheme.conversion.amr import CONVERTERS
 
 desc = """Parses files in the specified format, and writes as the specified format.
 Each passage is written to the file: <outdir>/<prefix><passage_id>.<extension> """

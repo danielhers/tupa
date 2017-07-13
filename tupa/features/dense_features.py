@@ -1,5 +1,5 @@
-from features.feature_extractor import FeatureExtractor
-from features.feature_params import MISSING_VALUE
+from .feature_extractor import FeatureExtractor
+from .feature_params import MISSING_VALUE
 
 NON_NUMERIC_FEATURE_SUFFIXES = "wtdenpAT"
 FEATURE_TEMPLATES = (

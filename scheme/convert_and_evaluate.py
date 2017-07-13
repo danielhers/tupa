@@ -2,13 +2,14 @@
 
 import argparse
 import glob
-import os
 import sys
 
-from conversion.amr import from_amr, to_amr
-from evaluation.amr import evaluate, Scores
-from tupa.config import VAction
+import os
 from ucca.ioutil import passage2file
+
+from scheme.conversion.amr import from_amr, to_amr
+from scheme.evaluation.amr import evaluate, Scores
+from tupa.config import VAction
 
 desc = """Parses files in AMR format, converts to UCCA standard format,
 converts back to the original format and evaluates using smatch.

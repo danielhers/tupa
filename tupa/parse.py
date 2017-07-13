@@ -1,15 +1,16 @@
-import os
 import time
-from collections import defaultdict
 from enum import Enum
 
-from classifiers.classifier import ClassifierProperty
-from states.state import State
+import os
+from collections import defaultdict
+from ucca import diffutil, ioutil, textutil, layer1
+from ucca.convert import FROM_FORMAT, TO_FORMAT, from_text, to_text
+
+from tupa.classifiers.classifier import ClassifierProperty
 from tupa.config import Config
 from tupa.model import Model, ACTION_AXIS, LABEL_AXIS
 from tupa.oracle import Oracle
-from ucca import diffutil, ioutil, textutil, layer1
-from ucca.convert import FROM_FORMAT, TO_FORMAT, from_text, to_text
+from tupa.states.state import State
 
 
 class ParserException(Exception):

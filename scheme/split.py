@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import argparse
+import glob
 import sys
 
-import glob
-
-from util.amr import *
+from scheme.util.amr import *
 
 desc = """Split AMRs to separate files (important for shuffling before training the parser)"""
 

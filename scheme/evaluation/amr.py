@@ -1,6 +1,6 @@
 import sys
 
-from util.amr import *
+from scheme.util.amr import *
 
 sys.path.insert(0, os.path.dirname(importlib.util.find_spec("smatch.smatch").origin))  # to find amr.py from smatch
 from smatch import smatch

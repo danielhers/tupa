@@ -1,7 +1,7 @@
 import numpy as np
 
-from classifiers.classifier import Classifier
 from tupa.config import NOOP
+from .classifier import Classifier
 
 
 class NoOp(Classifier):

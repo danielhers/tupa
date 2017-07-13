@@ -1,9 +1,9 @@
 from collections import deque
 from operator import attrgetter
-
-from tupa.config import Config
 from ucca import core, layer0
 from ucca.layer1 import EdgeTags
+
+from tupa.config import Config
 
 
 class Node(object):

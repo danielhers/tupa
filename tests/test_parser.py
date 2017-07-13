@@ -2,12 +2,13 @@
 
 import unittest
 
-from states.state import State
+from ucca import convert, evaluation, ioutil
+
 from tupa.action import Actions
 from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP
 from tupa.oracle import Oracle
 from tupa.parse import Parser
-from ucca import convert, evaluation, ioutil
+from tupa.states.state import State
 
 NUM_PASSAGES = 2
 

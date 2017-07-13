@@ -1,4 +1,4 @@
-from util.amr import *
+from scheme.util.amr import *
 
 
 class Constraints(constraints.Constraints):
