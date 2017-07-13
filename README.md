@@ -8,12 +8,14 @@ TUPA is a transition-based parser for [Universal Conceptual Cognitive Annotation
 
 ### Build
 
-Install the required modules:
+Create a virtual environment:
     
     virtualenv --python=/usr/bin/python3 venv
     . venv/bin/activate              # on bash
     source venv/bin/activate.csh     # on csh
-    ./install_dependencies.sh
+
+Install:
+
     python setup.py install
 
 ### Train the parser
@@ -66,12 +68,9 @@ If you make use of this software, please cite [the following paper](http://www.c
 	}
 
 The version of the parser used in the paper is [v1.0](https://github.com/huji-nlp/tupa/releases/tag/v1.0).
-To reproduce the experiments from the paper, run in an empty directory:
+To reproduce the experiments from the paper, run in an empty directory (with a new virtualenv):
 
-    virtualenv --python=/usr/bin/python3 venv
-    . venv/bin/activate              # on bash
-    source venv/bin/activate.csh     # on csh
-    pip install tupa
+    pip install "tupa>=1.0,<1.1"
     mkdir pickle models
     curl -L http://www.cs.huji.ac.il/~danielh/ucca/ucca_corpus_pickle.tgz | tar xz -C pickle
     curl --remote-name-all http://www.cs.huji.ac.il/~danielh/ucca/{sparse,mlp,bilstm}.tgz

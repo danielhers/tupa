@@ -21,10 +21,8 @@ addons:
     - libboost-serialization-dev
     - libboost-test-dev
     - libboost-regex-dev
-before_install:
-  - export CXX=g++-6 CC=gcc-6 MAKE_FLAGS="-j 2"
-  - ./install_dependencies.sh
 install:
+  - export CXX=g++-6 CC=gcc-6 MAKE_FLAGS="-j 2"
   - python setup.py install
 before_script:
   - mkdir pickle
