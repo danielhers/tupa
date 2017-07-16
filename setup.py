@@ -5,7 +5,7 @@ import os
 import pip
 from setuptools import setup, find_packages
 from setuptools.command.install import install as _install
-
+from shutil import rmtree, move
 
 install_requires = []
 with open("requirements.txt") as f:
@@ -32,23 +32,28 @@ class install(_install):
             pip.main(["install", package])
         self.announce("Dependencies installed.")
 
+        import spacy
         # Install spaCy model
         try:
             __import__("en_core_web_sm")
         except ImportError:
             self.announce("Getting spaCy model...")
-            import spacy
             spacy.cli.download("en")
 
+        import nltk
         # Install NLTK PropBank
         try:
-            from nltk.corpus import propbank
-            propbank.instances()
-        except LookupError:
+            nltk.corpus.propbank.instances()
+        except (LookupError, OSError):
             self.announce("Getting PropBank...")
-            import nltk
-            os.system("git clone https://github.com/propbank/propbank-frames " +
-                      os.path.join(nltk.data.path[0], "corpora", "propbank"))
+            corpora_dir = os.path.join(nltk.data.path[0], "corpora")
+            target_frames_dir = os.path.join(corpora_dir, "propbank", "frames")
+            propbank_git_dir = os.path.join(corpora_dir, "propbank-frames")
+            nltk.downloader.Downloader().download("propbank")
+            rmtree(propbank_git_dir, ignore_errors=True)
+            os.system("git clone https://github.com/propbank/propbank-frames " + propbank_git_dir)
+            rmtree(target_frames_dir, ignore_errors=True)
+            move(os.path.join(propbank_git_dir, "frames"), target_frames_dir)
 
         # Install AMR resource
         for filename in ("have-org-role-91-roles-v1.06.txt", "have-rel-role-91-roles-v1.06.txt",

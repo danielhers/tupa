@@ -6,6 +6,7 @@ cache:
   pip: true
   directories:
   - $HOME/virtualenv
+  - $HOME/nltk_data
 python:
   - "3.6"
 addons:
@@ -21,6 +22,7 @@ addons:
     - libboost-serialization-dev
     - libboost-test-dev
     - libboost-regex-dev
+    - pandoc
 install:
   - export CXX=g++-6 CC=gcc-6 MAKE_FLAGS="-j 2"
   - python setup.py install
