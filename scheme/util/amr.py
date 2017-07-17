@@ -1,10 +1,9 @@
 import csv
+import string
+
 import importlib.util  # needed for amr.peg
 import os
 import re
-import string
-
-from nltk.corpus import propbank as pb
 from ucca import textutil
 from word2number import w2n
 
@@ -19,15 +18,19 @@ finally:
 
 NEGATIONS = {}
 MORPH_VERBALIZATION = {}
+ROLESETS = {}
 
 try:
     os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "resources"))
-    with open("negations.txt") as f:
+    with open("negations.txt", encoding="utf-8") as f:
         NEGATIONS.update(csv.reader(f, delimiter=" "))
-    with open("morph-verbalization-v1.01.txt") as f:
+    with open("morph-verbalization-v1.01.txt", encoding="utf-8") as f:
         # noinspection PyTypeChecker
         lines = (re.findall(r'::DERIV\S*-(\S)\S+ "(\S+)"', l) for l in f if l and l[0] != "#")
         MORPH_VERBALIZATION.update({w: l for l in lines for (_, w) in l})
+    os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "resources"))
+    with open("rolesets.txt", encoding="utf-8") as f:
+        ROLESETS.update({l[0]: tuple(l[1:]) for l in csv.reader(f)})
 finally:
     os.chdir(prev_dir)
 
@@ -74,12 +77,6 @@ CONST_MODES = (CONST + "(expressive)", CONST + "(imperative)", CONST + "(interro
 CONCEPT = "Concept"
 UNKNOWN_LABEL = CONCEPT + "(amr-unknown)"
 DATE_ENTITY = CONCEPT + "(date-entity)"
-ROLESET_PATTERN = re.compile(CONCEPT + "\((.*)-(\d+)\)")
-ROLES = {  # cache + fix for roles missing in PropBank
-    CONCEPT + "(ablate-01)": ("0", "1", "2", "3"),
-    CONCEPT + "(play-11)": ("0", "1", "2", "3"),
-    CONCEPT + "(raise-02)": ("0", "1", "2", "3"),
-}
 NUM = "Num"
 MONTHS = ("january", "february", "march", "april", "may", "june", "july",
           "august", "september", "october", "november", "december")
@@ -148,14 +145,7 @@ def is_valid_arg(node, label, *tags, is_parent=True):
     args = [t for t in tags if t.startswith("ARG") and (t.endswith("-of") != is_parent)]
     if not args:
         return True
-    valid_args = ROLES.get(label)
-    if valid_args is None:
-        try:
-            roleset = pb.roleset(".".join(ROLESET_PATTERN.match(label).groups()))
-            valid_args = tuple(r.attrib["n"] for r in roleset.findall("roles/role"))
-        except (AttributeError, ValueError):
-            valid_args = ()
-        ROLES[label] = valid_args
+    valid_args = ROLESETS.get(label[len(CONCEPT)+1:-1], ())
     return not valid_args or all(t.replace("-of", "").endswith(valid_args) for t in args)
 
 
