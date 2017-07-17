@@ -6,7 +6,6 @@ cache:
   pip: true
   directories:
   - $HOME/virtualenv
-  - $HOME/nltk_data
 python:
   - "3.6"
 addons:
