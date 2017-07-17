@@ -17,7 +17,7 @@ finally:
     os.chdir(prev_dir)
 
 NEGATIONS = {}
-MORPH_VERBALIZATION = {}
+VERBALIZATION = {}
 ROLESETS = {}
 
 try:
@@ -25,10 +25,11 @@ try:
     with open("negations.txt", encoding="utf-8") as f:
         NEGATIONS.update(csv.reader(f, delimiter=" "))
     with open("morph-verbalization-v1.01.txt", encoding="utf-8") as f:
-        # noinspection PyTypeChecker
         lines = (re.findall(r'::DERIV\S*-(\S)\S+ "(\S+)"', l) for l in f if l and l[0] != "#")
-        MORPH_VERBALIZATION.update({w: l for l in lines for (_, w) in l})
-    os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "resources"))
+        VERBALIZATION.update({w: l for l in lines for (_, w) in l})
+    with open("verbalization-list-v1.06.txt", encoding="utf-8") as f:
+        lines = (re.findall(r"VERBALIZE (\S)+ TO.* (\S+-\d+)", l)[0] for l in f if l and l[0] not in "#D")
+        VERBALIZATION.update({w: [("V", v)] for w, v in lines})
     with open("rolesets.txt", encoding="utf-8") as f:
         ROLESETS.update({l[0]: tuple(l[1:]) for l in csv.reader(f)})
 finally:
@@ -197,7 +198,7 @@ def resolve_label(node, label=None, reverse=False):
                     negation = NEGATIONS.get(terminal.text)
                     if negation is not None:
                         label = _replace("<n%d>" % i, negation)
-                    morph = MORPH_VERBALIZATION.get(terminal.text)
+                    morph = VERBALIZATION.get(terminal.text)
                     if morph is not None:
                         for prefix, value in morph:  # V: verb, N: noun, A: noun actor
                             label = _replace("<%s%d>" % (prefix, i), value)
