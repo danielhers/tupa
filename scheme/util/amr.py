@@ -72,17 +72,16 @@ TIMEZONE = "timezone"
 
 # Specific node labels
 CONST = "Const"
-CONST_MINUS = CONST + "(-)"
-CONST_MODES = (CONST + "(expressive)", CONST + "(imperative)", CONST + "(interrogative)")
 CONCEPT = "Concept"
-UNKNOWN_LABEL = CONCEPT + "(amr-unknown)"
-DATE_ENTITY = CONCEPT + "(date-entity)"
 NUM = "Num"
-MONTHS = ("january", "february", "march", "april", "may", "june", "july",
-          "august", "september", "october", "november", "december")
-WEEKDAYS = (CONCEPT + "(monday)", CONCEPT + "(tuesday)", CONCEPT + "(wednesday)",
-            CONCEPT + "(thursday)", CONCEPT + "(friday)", CONCEPT + "(saturday)", CONCEPT + "(sunday)")
-SEASONS = (CONCEPT + "(winter)", CONCEPT + "(fall)", CONCEPT + "(spring)", CONCEPT + "(summer)")
+MINUS = "-"
+UNKNOWN_LABEL = CONCEPT + "(amr-unknown)"
+MODES = ("expressive", "imperative", "interrogative")
+DATE_ENTITY = "date-entity"
+MONTHS = ("january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november",
+          "december")
+WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+SEASONS = ("winter", "fall", "spring", "summer")
 
 # things to exclude from the graph because they are a separate task
 LAYERS = {
@@ -112,18 +111,20 @@ def is_valid_arg(node, label, *tags, is_parent=True):
     if label is None:
         return True
     label = resolve_label(node, label)
+    concept = label[len(CONCEPT) + 1:-1]
+    const = label[len(CONST) + 1:-1]
     if PLACEHOLDER.search(label):
         return True
     if is_parent:  # node is a parent of the edge
         if {DAY, MONTH, YEAR, YEAR2, DECADE, WEEKDAY, QUARTER, CENTURY, SEASON, TIMEZONE}.intersection(tags):
-            return label == DATE_ENTITY
-    elif label == CONST_MINUS:  # :polarity excl,b_isconst,b_const=-
+            return concept == DATE_ENTITY
+    elif const == MINUS:  # :polarity excl,b_isconst,b_const=-
         return {POLARITY, ARG2, VALUE}.issuperset(tags)
     elif POLARITY in tags:
-        return label == CONST_MINUS
+        return const == MINUS
     elif MODE in tags:  # :mode excl,b_isconst,b_const=[interrogative|expressive|imperative]
-        return label in CONST_MODES
-    elif label in CONST_MODES:
+        return const in MODES
+    elif const in MODES:
         return MODE in tags
     elif WIKI in tags:  # :wiki b_isconst (:value and :timezone are not really always const)
         return label.startswith(CONST + "(")
@@ -136,16 +137,16 @@ def is_valid_arg(node, label, *tags, is_parent=True):
     elif {YEAR, YEAR2, DECADE, CENTURY}.intersection(tags):  # :year a=date-entity,b_isconst,b_const=[0-9]+
         return is_int_in_range(label)
     elif WEEKDAY in tags:  # :weekday  excl,a=date-entity,b=[monday|tuesday|wednesday|thursday|friday|saturday|sunday]
-        return label in WEEKDAYS
-    elif label in WEEKDAYS:
+        return concept in WEEKDAYS
+    elif concept in WEEKDAYS:
         return WEEKDAY in tags
     elif SEASON in tags:  # :season excl,a=date-entity,b=[winter|fall|spring|summer]+
-        return label in SEASONS
+        return concept in SEASONS
 
     args = [t for t in tags if t.startswith("ARG") and (t.endswith("-of") != is_parent)]
     if not args:
         return True
-    valid_args = ROLESETS.get(label[len(CONCEPT)+1:-1], ())
+    valid_args = ROLESETS.get(concept, ())
     return not valid_args or all(t.replace("-of", "").endswith(valid_args) for t in args)
 
 
