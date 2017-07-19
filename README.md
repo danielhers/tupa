@@ -1,4 +1,4 @@
-Transition-based UCCA Parser [![Build Status](https://travis-ci.org/danielhers/tupa.svg?branch=master)](https://travis-ci.org/danielhers/tupa) [![PyPI version](https://badge.fury.io/py/TUPA.svg)](https://badge.fury.io/py/TUPA)
+Transition-based UCCA Parser
 ============================
 TUPA is a transition-based parser for [Universal Conceptual Cognitive Annotation (UCCA)][1].
 
@@ -94,3 +94,7 @@ License
 This package is licensed under the GPLv3 or later license (see [`LICENSE.txt`](LICENSE.txt)).
 
 [1]: http://github.com/huji-nlp/ucca
+
+
+[![Build Status](https://travis-ci.org/danielhers/tupa.svg?branch=master)](https://travis-ci.org/danielhers/tupa)
+[![PyPI version](https://badge.fury.io/py/TUPA.svg)](https://badge.fury.io/py/TUPA)
