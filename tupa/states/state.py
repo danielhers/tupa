@@ -103,8 +103,9 @@ class State(object):
                     violation = rule.violation(node, action.tag, Direction.incoming)
                     self.check(violation is None, violation)
                 self.check(self.constraints.allow_child(node, action.tag),
-                           message and "%s may not be a '%s' child (currently %s)" % (
-                               node, action.tag, ", ".join(map(str, node.incoming)) or "parentless"))
+                           message and "%s may not be a '%s' child (currently %s, %s)" % (
+                               node, action.tag, ", ".join(map(str, node.incoming)) or "parentless",
+                               ", ".join(map(str, node.outgoing)) or "childless"))
                 self.check(self.constraints.possible_multiple_incoming is None or
                            action.remote or action.tag in self.constraints.possible_multiple_incoming or
                            all(e.remote or e.tag in self.constraints.possible_multiple_incoming for e in node.incoming),
