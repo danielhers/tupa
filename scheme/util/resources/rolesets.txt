@@ -5957,7 +5957,7 @@ objectionable-02,0,1
 objectify-01,0,1
 objective-01,0,1
 obligate-01,0,1,2
-oblige-02,0,1
+oblige-02,0,1,2
 obliterate-01,0,1,2
 oblivious-01,0,1
 obscure-01,0,1,2
