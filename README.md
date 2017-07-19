@@ -1,4 +1,4 @@
-Transition-based UCCA Parser [![Build Status](https://travis-ci.org/danielhers/tupa.svg?branch=master)](https://travis-ci.org/danielhers/tupa)
+Transition-based UCCA Parser [![Build Status](https://travis-ci.org/danielhers/tupa.svg?branch=master)](https://travis-ci.org/danielhers/tupa) [![PyPI version](https://badge.fury.io/py/TUPA.svg)](https://badge.fury.io/py/TUPA)
 ============================
 TUPA is a transition-based parser for [Universal Conceptual Cognitive Annotation (UCCA)][1].
 
