@@ -112,8 +112,8 @@ def is_valid_arg(node, label, *tags, is_parent=True):
     if label is None:
         return True
     label = resolve_label(node, label)
-    concept = label[len(CONCEPT) + 1:-1]
-    const = label[len(CONST) + 1:-1]
+    concept = label[len(CONCEPT) + 1:-1] if label.startswith(CONCEPT) else None
+    const = label[len(CONST) + 1:-1] if label.startswith(CONST) else None
     if PLACEHOLDER.search(label):
         return True
     if is_parent:  # node is a parent of the edge
