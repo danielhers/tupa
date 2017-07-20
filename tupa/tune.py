@@ -65,6 +65,7 @@ def main():
         ("edge_label_dim",          (5, 10, 20)),
         ("node_label_dim",          (10, 20, 30)),
         ("node_category_dim",       (3, 5, 10)),
+        ("max_node_categories",     (10, 25)),
         ("punct_dim",               (1, 2, 3)),
         ("action_dim",              (3, 5, 10)),
         ("ner_dim",                 (3, 5, 10)),

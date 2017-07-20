@@ -197,7 +197,8 @@ class Config(object, metaclass=Singleton):
             self.constraints = Constraints(self.args)
         else:
             self.node_labels = False
-            self.args.node_label_dim = self.args.max_node_labels = 0
+            self.args.node_label_dim = self.args.max_node_labels = \
+                self.args.node_category_dim = self.args.max_node_categories = 0
         if self.args.output_format:
             _, self.output_converter = CONVERTERS.get(self.args.output_format, (None, None))
         else:
@@ -270,7 +271,7 @@ class Config(object, metaclass=Singleton):
                " ".join("--" + ("no-" if v is False else "") + k.replace("_", "-") + ("" if v is False or v is True else
                         (" " + str(" ".join(v) if hasattr(v, "__iter__") and not isinstance(v, str) else v)))
                         for (k, v) in sorted(vars(self.args).items()) if v not in (None, (), "")
-                        and (self.node_labels or "node_label" not in k)
+                        and (self.node_labels or ("node_label" not in k and "node_categor" not in k))
                         and (self.args.swap or "swap_" not in k)
                         and (self.args.swap == COMPOUND or k != "max_swap")
                         and (not self.args.require_connected or k != "orphan_label")
