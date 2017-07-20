@@ -66,6 +66,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--node-label-attrib", help="predict node labels and store them in this node attribute")
         group.add_argument("--unknown-label", help="node label to use as unknown value")
         group.add_argument("--max-node-labels", type=int, default=0, help="max number of node labels to allow")
+        group.add_argument("--max-node-categories", type=int, default=0, help="max number of node categories to allow")
         group.add_argument("--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
         self.add_boolean_option(group, "use-gold-node-labels", "gold node labels when parsing")
         constructions.add_argument(argparser)
@@ -121,6 +122,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--dep-dim", type=int, default=10, help="dimension for dependency relation embeddings")
         group.add_argument("--edge-label-dim", type=int, default=20, help="dimension for edge label embeddings")
         group.add_argument("--node-label-dim", type=int, default=0, help="dimension for node label embeddings")
+        group.add_argument("--node-category-dim", type=int, default=0, help="dimension for node category embeddings")
         group.add_argument("--punct-dim", type=int, default=2, help="dimension for separator punctuation embeddings")
         group.add_argument("--action-dim", type=int, default=5, help="dimension for input action type embeddings")
         group.add_argument("--ner-dim", type=int, default=5, help="dimension for input entity type embeddings")
@@ -179,14 +181,19 @@ class Config(object, metaclass=Singleton):
                 self.args.node_label_dim = 20
             if not self.args.max_node_labels:
                 self.args.max_node_labels = 1000
+            if not self.args.node_category_dim:
+                self.args.node_category_dim = 5
+            if not self.args.max_node_categories:
+                self.args.max_node_categories = 25
             self.args.max_action_labels = max(self.args.max_action_labels, 600)
-            self.args.max_edge_labels = max(self.args.max_edge_labels, 500)
+            self.args.max_edge_labels = max(self.args.max_edge_labels, 110)
             from scheme.evaluation.amr import evaluate, Scores
             from scheme.constraint.amr import Constraints
-            from scheme.util.amr import LABEL_ATTRIB, UNKNOWN_LABEL
+            from scheme.util.amr import LABEL_ATTRIB, UNKNOWN_LABEL, LABEL_SEPARATOR
             self.evaluate, self.Scores = evaluate, Scores
             self.args.node_label_attrib = LABEL_ATTRIB
             self.args.unknown_label = UNKNOWN_LABEL
+            self.node_label_sep = LABEL_SEPARATOR
             self.constraints = Constraints(self.args)
         else:
             self.node_labels = False

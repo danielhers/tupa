@@ -3,7 +3,7 @@ import re
 from ucca import layer0
 from ucca.layer1 import EdgeTags
 
-FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lruLRU]*)([wtdhenpqxyAPCIRNT]*)")
+FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lruLRU]*)([wtdhencpqxyAPCIRNT]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile("^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 
 
@@ -50,6 +50,7 @@ class FeatureTemplateElement(object):
                            h: node height
                            e: tag of first incoming edge / action tag
                            n: node label
+                           c: node label category suffix
                            ,: unique separator punctuation between nodes
                            q: count of any separator punctuation between nodes
                            x: numeric value of gap type
@@ -206,6 +207,7 @@ class FeatureExtractor(object):
         "i": lambda node, *_: FeatureExtractor.get_head_terminal(node).index - 1,
         "e": lambda node, prev_node, binary: next(e.tag for e in node.incoming if not binary or e.parent == prev_node),
         "n": lambda node, *_: node.label,
+        "c": lambda node, *_: node.category,
         "x": lambda node, prev_node, binary: (prev_node in node.parents) if binary else FeatureExtractor.gap_type(node),
         "y": lambda node, *_: FeatureExtractor.gap_length_sum(node),
         "P": lambda node, *_: len(node.incoming),

@@ -30,6 +30,7 @@ class Model(object):
                                         min_count=Config().args.min_node_label_count)
         self.feature_params = [
             node_labels,
+            FeatureParameters("c", Config().args.node_category_dim, Config().args.max_node_categories),
             FeatureParameters("W", Config().args.word_dim_external, Config().args.max_words_external,
                               Config().args.word_dropout_external, Config().args.update_word_vectors, copy_from="w",
                               filename=Config().args.word_vectors),
@@ -106,6 +107,10 @@ class Model(object):
             Config().args.node_label_dim = p.dim
             Config().args.max_node_labels = p.size
             Config().args.min_node_label_count = p.min_count
+        p = self.feature_extractor.params.get("c")
+        if p is not None:
+            Config().args.node_category_dim = p.dim
+            Config().args.max_node_categories = p.size
         p = self.feature_extractor.params.get("W")
         if p is not None:
             Config().args.word_dim_external = p.dim

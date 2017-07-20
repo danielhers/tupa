@@ -45,8 +45,8 @@ FEATURE_TEMPLATES = (
     "s0I", "s0R", "s0wI", "s0wR",
     "b0I", "b0R", "b0wI", "b0wR",
     # node labels
-    "s0n", "s0wn",
-    "b0n", "b0wn",
+    "s0n", "s0wn", "s0c",
+    "b0n", "b0wn", "b0c",
     "s0Ln", "s0Rn", "s0Un",
     "s1Ln", "s1Rn", "s1Un",
     "b0Ln", "b0Rn", "b0Un",

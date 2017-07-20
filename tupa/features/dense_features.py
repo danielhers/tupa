@@ -1,7 +1,7 @@
 from .feature_extractor import FeatureExtractor
 from .feature_params import MISSING_VALUE
 
-NON_NUMERIC_FEATURE_SUFFIXES = "wtdenpAT"
+NON_NUMERIC_FEATURE_SUFFIXES = "wtdencpAT"
 FEATURE_TEMPLATES = (
     # words
     "s0ws1ws2ws3w"  # stack
@@ -33,6 +33,10 @@ FEATURE_TEMPLATES = (
     "s0llns0lrns0luns0rlns0rrns0runs0ulns0urn"
     "s0uuns1llns1lrns1luns1rlns1rrns1run"  # grandchildren
     "s0Lns0Rns0Uns1Lns1Rns1Unb0Lnb0Rnb0Un",  # parents
+    # node label category suffix
+    "s0cs1cs2cs3c"  # stack
+    "b0cb1cb2cb3c"  # buffer
+    "s0lcs0rcs0ucs1lcs1rcs1uc",  # children
     # separators
     "s0ps1p",
     # NER

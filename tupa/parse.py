@@ -255,8 +255,10 @@ class Parser(object):
         if self.oracle:
             if node is not None:
                 true_label = node.attrib.get(self.args.node_label_attrib)
-            if true_label is not None and not self.state.is_valid_label(true_label):
-                raise ParserException("True label is invalid: %s for %s" % (true_label, self.state.node))
+            if true_label is not None:
+                true_label, _, _ = true_label.partition(Config().node_label_sep)
+                if not self.state.is_valid_label(true_label):
+                    raise ParserException("True label is invalid: %s for %s" % (true_label, self.state.node))
             true_id = self.model.labels[true_label]
         if Config().args.use_gold_node_labels:
             label = true_label
