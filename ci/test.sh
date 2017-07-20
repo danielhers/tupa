@@ -13,13 +13,13 @@ unit)
     python tupa/parse.py -f amr test_files/LDC2014T12.txt -em model_LDC2014T12 -v || exit 1
     ;;
 sparse-ucca)
-    python tupa/parse.py -v -c sparse --max-words-external=5000 -We pickle/dev/*0.pickle -t pickle/train/*0.pickle
+    python tupa/parse.py -v -c sparse -We pickle/dev/*0.pickle -t pickle/train/*0.pickle
     ;;
 mlp-ucca)
-    python tupa/parse.py -v -c mlp --max-words-external=5000 --layer-dim=100 -We pickle/dev/*0.pickle -t pickle/train/*0.pickle --dynet-mem=1500
+    python tupa/parse.py -v -c mlp --max-words-external=5000 --layer-dim=100 -We pickle/dev/*0.pickle -t pickle/train/*0.pickle
     ;;
 bilstm-ucca)
-    python tupa/parse.py -v -c bilstm --max-words-external=5000 --layer-dim=100 -We pickle/dev/*0.pickle -t pickle/train/*0.pickle --dynet-mem=1500
+    python tupa/parse.py -v -c bilstm --max-words-external=5000 --layer-dim=100 -We pickle/dev/*0.pickle -t pickle/train/*0.pickle
     ;;
 noop-ucca)
     python tupa/parse.py -v -c noop -We pickle/dev/*0.pickle -t pickle/train/*0.pickle
@@ -27,12 +27,12 @@ noop-ucca)
 tune-ucca)
     export PARAMS_NUM=5
     while :; do
-      python tupa/tune.py -t test_files/toy.xml -d test_files/toy.xml --max-words-external=5000 --dynet-mem=1500 && break
+      python tupa/tune.py -t test_files/toy.xml -d test_files/toy.xml --max-words-external=1000 --max-node-labels=250 && break
     done
     column -t -s, params.csv
     ;;
 sparse-amr)
-    python tupa/parse.py -v -c sparse -We -f amr alignment-release-dev-bio.txt -t alignment-release-training-bio/*10.txt
+    python tupa/parse.py -v -c sparse --max-node-labels=250 -We -f amr alignment-release-dev-bio.txt -t alignment-release-training-bio/*10.txt
     ;;
 noop-amr)
     python tupa/parse.py -v -c noop -We -f amr alignment-release-dev-bio.txt -t alignment-release-training-bio
