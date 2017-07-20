@@ -16,25 +16,6 @@ try:
 finally:
     os.chdir(prev_dir)
 
-NEGATIONS = {}
-VERBALIZATION = {}
-ROLESETS = {}
-
-try:
-    os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "resources"))
-    with open("negations.txt", encoding="utf-8") as f:
-        NEGATIONS.update(csv.reader(f, delimiter=" "))
-    with open("morph-verbalization-v1.01.txt", encoding="utf-8") as f:
-        lines = (re.findall(r'::DERIV\S*-(\S)\S+ "(\S+)"', l) for l in f if l and l[0] != "#")
-        VERBALIZATION.update({w: l for l in lines for (_, w) in l})
-    with open("verbalization-list-v1.06.txt", encoding="utf-8") as f:
-        lines = (re.findall(r"VERBALIZE (\S)+ TO.* (\S+-\d+)", l)[0] for l in f if l and l[0] not in "#D")
-        VERBALIZATION.update({w: [("V", v)] for w, v in lines})
-    with open("rolesets.txt", encoding="utf-8") as f:
-        ROLESETS.update({l[0]: tuple(l[1:]) for l in csv.reader(f)})
-finally:
-    os.chdir(prev_dir)
-
 TERMINAL_TAGS = {constraints.EdgeTags.Terminal, constraints.EdgeTags.Punctuation}
 COMMENT_PREFIX = "#"
 ID_PATTERN = "#\s*::id\s+(\S+)"
@@ -90,6 +71,27 @@ LAYERS = {
     "numbers": (),
     "urls": (amr_lib.Concept("url-entity"),),
 }
+
+NEGATIONS = {}
+VERBALIZATION = {}
+ROLESETS = {}
+
+
+def read_resources():
+    try:
+        os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "resources"))
+        with open("negations.txt", encoding="utf-8") as f:
+            NEGATIONS.update(csv.reader(f, delimiter=" "))
+        with open("morph-verbalization-v1.01.txt", encoding="utf-8") as f:
+            lines = (re.findall(r'::DERIV\S*-(\S)\S+ "(\S+)"', l) for l in f if l and l[0] != "#")
+            VERBALIZATION.update({w: l for l in lines for (_, w) in l})
+        with open("verbalization-list-v1.06.txt", encoding="utf-8") as f:
+            lines = (re.findall(r"VERBALIZE (\S)+ TO.* (\S+-\d+)", l)[0] for l in f if l and l[0] not in "#D")
+            VERBALIZATION.update({w: [("V", v)] for w, v in lines})
+        with open("rolesets.txt", encoding="utf-8") as f:
+            ROLESETS.update({l[0]: tuple(l[1:]) for l in csv.reader(f)})
+    finally:
+        os.chdir(prev_dir)
 
 
 def parse(*args, **kwargs):
@@ -226,4 +228,4 @@ def terminals_to_number(terminals):
         except ValueError:
             pass
 
-# REPLACEMENTS = {"~": "about"}
+read_resources()
