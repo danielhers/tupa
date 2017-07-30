@@ -66,12 +66,14 @@ Citation
 --------
 If you make use of this software, please cite [the following paper](http://www.cs.huji.ac.il/~danielh/acl2017.pdf):
 
-	@inproceedings{hershcovich2017a,
-	  title={A Transition-Based Directed Acyclic Graph Parser for {UCCA}},
-	  author={Hershcovich, Daniel and Abend, Omri and Rappoport, Ari},
-	  booktitle={Proc. of ACL},
-	  year={2017}
-	}
+    @InProceedings{hershcovich2017a,
+      author    = {Hershcovich, Daniel  and  Abend, Omri  and  Rappoport, Ari},
+      title     = {A Transition-Based Directed Acyclic Graph Parser for UCCA},
+      booktitle = {Proc. of ACL},
+      year      = {2017},
+      pages     = {1127--1138},
+      url       = {http://aclweb.org/anthology/P17-1104}
+    }
 
 The version of the parser used in the paper is [v1.0](https://github.com/huji-nlp/tupa/releases/tag/v1.0).
 To reproduce the experiments from the paper, run in an empty directory (with a new virtualenv):
