@@ -1,7 +1,7 @@
 ucca>=1.0
-spacy>=1.8.2
-cython>=0.25.2
+spacy>=1.9.0
+cython>=0.26
 penman>=0.6.1
 nltk>=3.2.4
-parsimonious>=0.7.0
+parsimonious>=0.8.0
 word2number>=1.1
