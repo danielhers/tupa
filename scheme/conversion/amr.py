@@ -194,11 +194,12 @@ class AmrConverter(convert.FormatConverter):
                 label = NUM + "(1)"  # replace all unresolved numbers with "1"
             node.attrib[LABEL_ATTRIB] = label
 
-    def to_format(self, passage, metadata=True):
+    def to_format(self, passage, metadata=True, wikification=True):
         textutil.annotate(passage)
         lines = ["# ::id " + passage.ID,
                  "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all)] if metadata else []
-        wikify(passage)
+        if wikification:
+            wikify(passage)
         return "\n".join(lines + [penman.encode(penman.Graph(list(self._to_triples(passage)))) or
                                   "(v / amr-unknown)"]),
 
@@ -271,16 +272,17 @@ def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):
     return AmrConverter().from_format(lines, passage_id, return_amr)
 
 
-def to_amr(passage, metadata=True, *args, **kwargs):
+def to_amr(passage, metadata=True, wikification=True, *args, **kwargs):
     """ Convert from a Passage object to a string in AMR PENMAN format (export)
 
     :param passage: the Passage object to convert
     :param metadata: whether to print ::id and ::tok lines
+    :param wikification: whether to wikify named concepts, adding a :wiki triple
 
     :return list of lines representing an AMR in PENMAN format, constructed from the passage
     """
     del args, kwargs
-    return AmrConverter().to_format(passage, metadata)
+    return AmrConverter().to_format(passage, metadata, wikification)
 
 
 CONVERTERS = dict(convert.CONVERTERS)

@@ -3,6 +3,7 @@ import logging
 import sys
 
 import numpy as np
+from functools import partial
 from ucca import evaluation, constructions
 
 from scheme.conversion.amr import CONVERTERS
@@ -69,6 +70,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--max-node-categories", type=int, default=0, help="max number of node categories to allow")
         group.add_argument("--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
         self.add_boolean_option(group, "use-gold-node-labels", "gold node labels when parsing")
+        self.add_boolean_option(group, "wikification", "use Spotlight to wikify any named node")
         constructions.add_argument(argparser)
         self.add_boolean_option(argparser, "sentences", "split to sentences")
         self.add_boolean_option(argparser, "paragraphs", "split to paragraphs")
@@ -203,6 +205,8 @@ class Config(object, metaclass=Singleton):
             _, self.output_converter = CONVERTERS.get(self.args.output_format, (None, None))
         else:
             self.args.output_format = self.args.format
+        if self.output_converter is not None:
+            self.output_converter = partial(self.output_converter, wikification=self.args.wikification)
         self._logger = None
         self.set_external()
         self.random = np.random
