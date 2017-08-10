@@ -38,6 +38,7 @@ PREFIXED_RELATION_SUBSTITUTION = r"\1\2\3"
 # Specific edge labels (relations)
 INSTANCE = "instance"
 POLARITY = "polarity"
+NAME = "name"
 MODE = "mode"
 ARG2 = "ARG2"
 VALUE = "value"
@@ -123,15 +124,15 @@ def is_valid_arg(node, label, *tags, is_parent=True):
     if label is None:
         return True
     label = resolve_label(node, label)
-    concept = label[len(CONCEPT) + 1:-1] if label.startswith(CONCEPT) else None
-    const = label[len(CONST) + 1:-1] if label.startswith(CONST) else None
+    concept = label[len(CONCEPT) + 1:-1] if label.startswith(CONCEPT + "(") else None
+    const = label[len(CONST) + 1:-1] if label.startswith(CONST + "(") else None
     if PLACEHOLDER.search(label):
         return True
     if is_parent:  # node is a parent of the edge
         if {DAY, MONTH, YEAR, YEAR2, DECADE, WEEKDAY, QUARTER, CENTURY, SEASON, TIMEZONE}.intersection(tags):
             return concept == DATE_ENTITY
     elif const == MINUS:  # :polarity excl,b_isconst,b_const=-
-        return {POLARITY, ARG2, VALUE}.issuperset(tags)
+        return {POLARITY, ARG2, VALUE, WIKI}.issuperset(tags)
     elif POLARITY in tags:
         return const == MINUS
     elif MODE in tags:  # :mode excl,b_isconst,b_const=[interrogative|expressive|imperative]
@@ -139,7 +140,7 @@ def is_valid_arg(node, label, *tags, is_parent=True):
     elif const in MODES:
         return MODE in tags
     elif WIKI in tags:  # :wiki b_isconst (:value and :timezone are not really always const)
-        return label.startswith(CONST + "(")
+        return const is not None
     elif DAY in tags:  # :day  a=date-entity,b_isconst,b_const=[...]
         return is_int_in_range(label, 1, 31)
     elif MONTH in tags:  # :month  a=date-entity,b_isconst,b_const=[1|2|3|4|5|6|7|8|9|10|11|12]
@@ -246,5 +247,6 @@ def terminals_to_number(terminals):
             return MONTHS.index(terminals[0].text.lower()) + 1
         except ValueError:
             pass
+
 
 read_resources()

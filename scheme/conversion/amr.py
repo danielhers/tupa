@@ -3,6 +3,7 @@ from collections import defaultdict, namedtuple, OrderedDict
 from ucca import layer0, layer1, convert
 
 from scheme.util.amr import *
+from scheme.util.wiki import wikify
 
 DELETE_PATTERN = re.compile("\\\\|(?<=(?<!<)<)[^<>]+(?=>(?!>))")  # Delete text inside single angle brackets
 
@@ -75,7 +76,7 @@ class AmrConverter(convert.FormatConverter):
         pending = amr.triples(head=root)
         self.nodes = {}  # map triples to UCCA nodes: dep gets a new node each time unless it's a variable
         variables = {root: l1.top_node}  # map AMR variables to UCCA nodes
-        excluded = set()
+        excluded = set()  # nodes whose outgoing edges (except for instance-of edges) will be ignored
         visited = set()  # to avoid cycles
         while pending:  # breadth-first search creating layer 1 nodes
             triple = pending.pop(0)
@@ -197,6 +198,7 @@ class AmrConverter(convert.FormatConverter):
         textutil.annotate(passage)
         lines = ["# ::id " + passage.ID,
                  "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all)] if metadata else []
+        wikify(passage)
         return "\n".join(lines + [penman.encode(penman.Graph(list(self._to_triples(passage)))) or
                                   "(v / amr-unknown)"]),
 
