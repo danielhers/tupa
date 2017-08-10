@@ -142,8 +142,10 @@ class NeuralNetwork(Classifier):
     def generate_inputs(self, features):
         indices = []  # list, not set, in order to maintain consistent order
         for suffix, values in sorted(features.items()):
-            param = self.input_params[suffix]
-            if param.numeric:
+            param = self.input_params.get(suffix)
+            if param is None:
+                pass  # feature missing from model, so just ignore it
+            elif param.numeric:
                 yield dy.inputVector(values)
             elif param.dim:
                 if param.indexed:  # collect indices to be looked up

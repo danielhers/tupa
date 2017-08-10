@@ -35,7 +35,7 @@ class FeatureExtractorWrapper(FeatureExtractor):
         save_dict(filename + self.filename_suffix(), copy_params(self.params))
 
     def load(self, filename):
-        self.params.update(copy_params(load_dict(filename + self.filename_suffix()), UnknownDict))
+        self.params = copy_params(load_dict(filename + self.filename_suffix()), UnknownDict)
 
     def filename_suffix(self):
         return self.feature_extractor.filename_suffix()
