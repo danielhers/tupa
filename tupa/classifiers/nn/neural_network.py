@@ -5,6 +5,7 @@ import dynet as dy
 import numpy as np
 import os
 from collections import OrderedDict
+from functools import partial
 
 from tupa.classifiers.classifier import Classifier
 from tupa.classifiers.classifier import ClassifierProperty
@@ -18,7 +19,7 @@ TRAINERS = {
     "adagrad": (dy.AdagradTrainer, "e0"),
     "adadelta": (dy.AdadeltaTrainer, None),
     "rmsprop": (dy.RMSPropTrainer, "e0"),
-    "adam": (dy.AdamTrainer, "alpha"),
+    "adam": (partial(dy.AdamTrainer, beta_2=0.9), "alpha"),
 }
 
 INITIALIZERS = {
