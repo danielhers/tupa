@@ -229,7 +229,11 @@ def resolve_label(node, label=None, reverse=False):
                         if morph is not None:
                             for prefix, value in morph:  # V: verb, N: noun, A: noun actor
                                 label = _replace("<%s%d>" % (prefix, i), value)
-                        label = _replace("<w%d>" % i, wikify_text(terminal.text))
+                        try:
+                            label = _replace("<w%d>" % i, wikify_text(terminal.text))
+
+                        except (ValueError, IndexError, SpotlightException):
+                            pass
         if reverse:
             KNOWN_LABELS.add(label)
             if category is not None:
