@@ -1,9 +1,8 @@
 import penman
 from collections import defaultdict, namedtuple, OrderedDict
-from ucca import layer0, layer1, convert
+from ucca import layer0, convert
 
 from scheme.util.amr import *
-from scheme.util.wiki import wikify
 
 DELETE_PATTERN = re.compile("\\\\|(?<=(?<!<)<)[^<>]+(?=>(?!>))")  # Delete text inside single angle brackets
 
@@ -202,7 +201,7 @@ class AmrConverter(convert.FormatConverter):
         lines = ["# ::id " + passage.ID,
                  "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all)] if metadata else []
         if wikification:
-            wikify(passage)
+            wikify_passage(passage)
         return "\n".join(lines + [penman.encode(penman.Graph(list(self._to_triples(passage)))) or "(y / yes)"]),
 
     @staticmethod
