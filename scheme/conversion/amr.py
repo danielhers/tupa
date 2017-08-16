@@ -190,8 +190,11 @@ class AmrConverter(convert.FormatConverter):
     def _update_labels(self, l1):
         for node in l1.all:
             label = resolve_label(node, reverse=True)
-            if label and "numbers" not in self.layers and label.startswith(NUM + "("):
-                label = NUM + "(1)"  # replace all unresolved numbers with "1"
+            if label:
+                if "numbers" not in self.layers and label.startswith(NUM + "("):
+                    label = NUM + "(1)"  # replace all unresolved numbers with "1"
+                elif WIKI not in self.layers and any(e.tag == WIKI for e in node.incoming):
+                    label = CONST + "(" + MINUS + ")"
             node.attrib[LABEL_ATTRIB] = label
 
     def to_format(self, passage, metadata=True, wikification=True):

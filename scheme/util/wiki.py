@@ -24,7 +24,13 @@ def wikify_node(node, name):
 def wikify(passage):
     l1 = passage.layer(layer1.LAYER_ID)
     for node in l1.all:
-        edges = {edge.tag: edge for edge in node}
-        name = edges.get(NAME)
-        if name is not None and WIKI not in edges:
-            l1.add_fnode(node, WIKI).attrib[LABEL_ATTRIB] = wikify_node(node, name.child)
+        name = wiki = None
+        for edge in node:
+            if edge.tag == NAME:
+                name = edge
+            elif edge.tag == WIKI:
+                wiki = edge
+        if wiki is not None:
+            node.remove(wiki)
+            if name is not None:
+                l1.add_fnode(node, WIKI).attrib[LABEL_ATTRIB] = wikify_node(node, name.child)

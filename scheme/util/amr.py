@@ -69,7 +69,7 @@ SEASONS = ("winter", "fall", "spring", "summer")
 
 # things to exclude from the graph because they are a separate task
 LAYERS = {
-    WIKI: (":" + WIKI,),
+    WIKI: (),
     "numbers": (),
     "urls": (amr_lib.Concept("url-entity"),),
 }
@@ -140,7 +140,7 @@ def is_valid_arg(node, label, *tags, is_parent=True):
     elif const in MODES:
         return MODE in tags
     elif WIKI in tags:  # :wiki b_isconst (:value and :timezone are not really always const)
-        return const is not None
+        return const == MINUS
     elif DAY in tags:  # :day  a=date-entity,b_isconst,b_const=[...]
         return is_int_in_range(label, 1, 31)
     elif MONTH in tags:  # :month  a=date-entity,b_isconst,b_const=[1|2|3|4|5|6|7|8|9|10|11|12]

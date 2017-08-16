@@ -24,7 +24,7 @@ class ConversionTests(unittest.TestCase):
             sentences = split2sentences(passage)
             self.assertEqual(len(sentences), 1, "Should be one sentence: %s" % passage)
             sentence = sentences[0]
-            converted = to_amr(sentence, metadata=False, wikification=False)[0]
+            converted = to_amr(sentence, metadata=False)[0]
             scores = evaluate(converted, ref, amr_id)
             self.assertAlmostEqual(scores.f1, 1, msg=converted)
 
