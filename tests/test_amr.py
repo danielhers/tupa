@@ -14,7 +14,7 @@ class ConversionTests(unittest.TestCase):
     def test_convert(self):
         """Test that converting an AMR to UCCA and back retains perfect Smatch F1"""
         for passage, ref, amr_id in read_test_amr():
-            converted = to_amr(passage, metadata=False, wikification=False)[0]
+            converted = to_amr(passage, metadata=False)[0]
             scores = evaluate(converted, ref, amr_id)
             self.assertAlmostEqual(scores.f1, 1, msg=converted)
 
