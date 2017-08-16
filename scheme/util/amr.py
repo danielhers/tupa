@@ -100,6 +100,9 @@ def read_resources():
             CATEGORIES.update(re.findall(r"(\S+) (\S+(?: [^:#]\S)*)", l)[0][::-1] for l in f if l and l[0] not in "#")
         with open("rolesets.txt", encoding="utf-8") as f:
             ROLESETS.update({l[0]: tuple(l[1:]) for l in csv.reader(f)})
+        with open("wordnet.txt", encoding="utf-8") as f:
+            lines = (re.findall(r'(\S):(\S+)', l) for l in f if l)
+            VERBALIZATION.update({w: l for l in lines for (_, w) in l})
     finally:
         os.chdir(prev_dir)
 

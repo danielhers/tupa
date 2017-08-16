@@ -48,6 +48,6 @@ def get_rolesets():
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("out_file", default="util/resources/rolesets.txt", help="file name to write to")
+    argparser.add_argument("out_file", nargs="?", default="util/resources/rolesets.txt", help="file name to write to")
     main(argparser.parse_args())
     sys.exit(0)
