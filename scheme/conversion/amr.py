@@ -203,8 +203,7 @@ class AmrConverter(convert.FormatConverter):
                  "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all)] if metadata else []
         if wikification:
             wikify(passage)
-        return "\n".join(lines + [penman.encode(penman.Graph(list(self._to_triples(passage)))) or
-                                  "(v / amr-unknown)"]),
+        return "\n".join(lines + [penman.encode(penman.Graph(list(self._to_triples(passage)))) or "(y / yes)"]),
 
     @staticmethod
     def _to_triples(passage):
