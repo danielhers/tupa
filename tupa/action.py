@@ -29,7 +29,7 @@ class Action(object):
             self.oracle.remove(self.orig_edge, self.orig_node)
 
     def __repr__(self):
-        return Action.__name__ + "(" + ", ".join(filter(None, (self.type, self.tag))) + ")"
+        return Action.__name__ + "(" + ", ".join(map(str, filter(None, (self.type, self.tag)))) + ")"
 
     def __str__(self):
         s = self.type
