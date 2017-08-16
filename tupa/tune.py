@@ -43,6 +43,10 @@ class Params(object):
         return [p for p in self.params.keys()] + ["average_labeled_f1"] + Scores.field_titles()
 
 
+def get_values_based_on_format(*values):
+    return values if Config().args.format == "amr" else (0,)
+
+
 def main():
     if not os.path.exists(MODELS_DIR):
         os.makedirs(MODELS_DIR)
@@ -63,13 +67,13 @@ def main():
         ("tag_dim",                 (5, 10, 20)),
         ("dep_dim",                 (5, 10, 20)),
         ("edge_label_dim",          (5, 10, 20)),
-        ("node_label_dim",          (10, 20, 30)),
-        ("node_category_dim",       (3, 5, 10)),
-        ("max_node_categories",     (10, 25)),
+        ("node_label_dim",          get_values_based_on_format(10, 20, 30)),
+        ("node_category_dim",       get_values_based_on_format(3, 5, 10)),
+        ("max_node_categories",     get_values_based_on_format(10, 25)),
         ("punct_dim",               (1, 2, 3)),
         ("action_dim",              (3, 5, 10)),
         ("ner_dim",                 (3, 5, 10)),
-        ("max_node_labels",         (500, 750, 1000, 1500, 2000)),
+        ("max_node_labels",         get_values_based_on_format(500, 750, 1000, 1500, 2000)),
         ("min_node_label_count",    [1] + 5 * [2] + [3]),
         ("layer_dim",               (50, 100, 200, 300, 500, 1000)),
         ("layers",                  [1] + 5 * [2]),
