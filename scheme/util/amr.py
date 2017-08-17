@@ -138,7 +138,7 @@ def is_int_in_range(label, s=None, e=None):
 def is_valid_arg(node, label, *tags, is_parent=True):
     if label is None:
         return True
-    label = resolve_label(node, label)
+    label = resolve_label(node, label, conservative=True)
     concept = label[len(CONCEPT) + 1:-1] if label.startswith(CONCEPT) else None
     const = label[len(CONST) + 1:-1] if label.startswith(CONST) else None
     if PLACEHOLDER_PATTERN.search(label):
@@ -171,6 +171,8 @@ def is_valid_arg(node, label, *tags, is_parent=True):
     elif SEASON in tags:  # :season excl,a=date-entity,b=[winter|fall|spring|summer]+
         return concept in SEASONS
 
+    if not concept or "-" not in concept:
+        return True  # What follows is a check for predicate arguments, only relevant for predicates
     args = [t for t in tags if t.startswith("ARG") and (t.endswith("-of") != is_parent)]
     if not args:
         return True
@@ -178,12 +180,13 @@ def is_valid_arg(node, label, *tags, is_parent=True):
     return not valid_args or all(t.replace("-of", "").endswith(valid_args) for t in args)
 
 
-def resolve_label(node, label=None, reverse=False):
+def resolve_label(node, label=None, reverse=False, conservative=False):
     """
     Replace any placeholder in the node's label with the corresponding terminals' text, and remove label category suffix
     :param node: node whose label is to be resolved
     :param label: the label if not taken from the node directly
     :param reverse: if True, *introduce* placeholders and categories into the label rather than removing them
+    :param conservative: avoid replacement when risky due to multiple terminal children that could match
     :return: the resolved label, with or without placeholders and categories (depending on the value of reverse)
     """
     def _replace(old, new):  # replace only inside the label value/name
@@ -214,9 +217,12 @@ def resolve_label(node, label=None, reverse=False):
                     if number is not None:
                         label = NUM + "(%s)" % number
                 else:
-                    if len(terminals) > 1 and (reverse or label.count(TOKEN_PLACEHOLDER) == 1):
-                        label = _replace(TOKEN_PLACEHOLDER, "".join(t.text for t in terminals))
-                        label = _replace(TOKEN_TITLE_PLACEHOLDER, "_".join(t.text for t in terminals))
+                    if len(terminals) > 1:
+                        if reverse or label.count(TOKEN_PLACEHOLDER) == 1:
+                            label = _replace(TOKEN_PLACEHOLDER, "".join(t.text for t in terminals))
+                            label = _replace(TOKEN_TITLE_PLACEHOLDER, "_".join(t.text for t in terminals))
+                        if conservative:
+                            terminals = ()
                     for terminal in terminals:
                         lemma = lemmatize(terminal)
                         if reverse and category is None:
