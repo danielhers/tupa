@@ -228,7 +228,7 @@ def resolve_label(node, label=None, reverse=False):
                         if negation is not None:
                             label = _replace(NEGATION_PLACEHOLDER, negation)
                         if label.startswith(CONCEPT):
-                            morph = VERBALIZATION.get(terminal.text)
+                            morph = VERBALIZATION.get(lemma)
                             if morph is not None:
                                 for prefix, value in morph:  # V: verb, N: noun, A: noun actor
                                     label = _replace("<%s>" % prefix, value)
@@ -246,7 +246,6 @@ def resolve_label(node, label=None, reverse=False):
 
 
 def terminals_to_number(terminals):
-    # noinspection PyBroadException
     text = " ".join(t.text for t in terminals)
     try:  # first make sure it's not a number already
         float(text)
