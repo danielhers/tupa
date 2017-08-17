@@ -35,7 +35,6 @@ SKIP_TOKEN_PATTERN = re.compile("[<>@]+")
 TOKEN_PLACEHOLDER = "<t>"
 TOKEN_TITLE_PLACEHOLDER = "<T>"
 LEMMA_PLACEHOLDER = "<l>"
-LEMMA_TITLE_PLACEHOLDER = "<L>"
 NEGATION_PLACEHOLDER = "<n>"
 WIKIFICATION_PLACEHOLDER = "<w>"
 LABEL_ATTRIB = "label"
@@ -219,13 +218,12 @@ def resolve_label(node, label=None, reverse=False):
                         label = _replace(TOKEN_PLACEHOLDER, "".join(t.text for t in terminals))
                         label = _replace(TOKEN_TITLE_PLACEHOLDER, "_".join(t.text for t in terminals))
                     for terminal in terminals:
-                        label = _replace(TOKEN_PLACEHOLDER, terminal.text)
-                        label = _replace(TOKEN_TITLE_PLACEHOLDER, terminal.text.title())
                         lemma = lemmatize(terminal)
                         if reverse and category is None:
                             category = CATEGORIES.get(lemma)
                         label = _replace(LEMMA_PLACEHOLDER, lemma)
-                        label = _replace(LEMMA_TITLE_PLACEHOLDER, lemma.title())
+                        label = _replace(TOKEN_PLACEHOLDER, terminal.text)
+                        label = _replace(TOKEN_TITLE_PLACEHOLDER, terminal.text.title())
                         negation = NEGATIONS.get(terminal.text)
                         if negation is not None:
                             label = _replace(NEGATION_PLACEHOLDER, negation)
