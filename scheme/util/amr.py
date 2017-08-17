@@ -216,6 +216,7 @@ def resolve_label(node, label=None, reverse=False):
                 else:
                     if len(terminals) > 1 and (reverse or label.count(TOKEN_PLACEHOLDER) == 1):
                         label = _replace(TOKEN_PLACEHOLDER, "".join(t.text for t in terminals))
+                        label = _replace(TOKEN_TITLE_PLACEHOLDER, "_".join(t.text for t in terminals))
                     for terminal in terminals:
                         label = _replace(TOKEN_PLACEHOLDER, terminal.text)
                         label = _replace(TOKEN_TITLE_PLACEHOLDER, terminal.text.title())
