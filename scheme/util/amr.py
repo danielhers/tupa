@@ -80,7 +80,7 @@ WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", 
 SEASONS = ("winter", "fall", "spring", "summer")
 
 # things to exclude from the graph because they are a separate task
-LAYERS = {
+EXTENSIONS = {
     WIKI: (),
     "numbers": (),
     "urls": (amr_lib.Concept("url-entity"),),

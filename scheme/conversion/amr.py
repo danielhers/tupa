@@ -10,14 +10,14 @@ DELETE_PATTERN = re.compile("\\\\|(?<=(?<!<)<)[^<>]+(?=>(?!>))")  # Delete text 
 class AmrConverter(convert.FormatConverter):
     def __init__(self):
         self.passage_id = self.amr_id = self.lines = self.tokens = self.nodes = self.return_amr = \
-            self.remove_cycles = self.layers = self.excluded = None
+            self.remove_cycles = self.extensions = self.excluded = None
 
     def from_format(self, lines, passage_id, return_amr=False, remove_cycles=True, **kwargs):
         self.passage_id = passage_id
         self.return_amr = return_amr
         self.remove_cycles = remove_cycles
-        self.layers = [l for l in LAYERS if kwargs.get(l)]
-        self.excluded = {i for l, r in LAYERS.items() if l not in self.layers for i in r}
+        self.extensions = [l for l in EXTENSIONS if kwargs.get(l)]
+        self.excluded = {i for l, r in EXTENSIONS.items() if l not in self.extensions for i in r}
         self.lines = []
         self.amr_id = self.tokens = None
         for line in lines:
@@ -189,9 +189,9 @@ class AmrConverter(convert.FormatConverter):
         for node in l1.all:
             label = resolve_label(node, reverse=True)
             if label:
-                if "numbers" not in self.layers and label.startswith(NUM + "("):
+                if "numbers" not in self.extensions and label.startswith(NUM + "("):
                     label = NUM + "(1)"  # replace all unresolved numbers with "1"
-                elif WIKI not in self.layers and any(e.tag == WIKI for e in node.incoming):
+                elif WIKI not in self.extensions and any(e.tag == WIKI for e in node.incoming):
                     label = CONST + "(" + MINUS + ")"
             node.attrib[LABEL_ATTRIB] = label
 
