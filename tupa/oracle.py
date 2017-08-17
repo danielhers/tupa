@@ -38,7 +38,7 @@ class Oracle(object):
                                 (self.args.implicit or not edge.child.attrib.get("implicit")) and
                                 (self.args.remote or not edge.attrib.get("remote"))}
         self.passage = passage
-        self.edge_found = False
+        self.found = False
         self.log = None
 
     def get_actions(self, state, all_actions, create=True):
@@ -82,15 +82,20 @@ class Oracle(object):
                 yield Actions.Reduce
             return
 
-        self.edge_found = False
+        self.found = False
         if state.stack:
             s0 = state.stack[-1]
             incoming = self.edges_remaining.intersection(s0.orig_node.incoming)
             outgoing = self.edges_remaining.intersection(s0.orig_node.outgoing)
-            if not incoming and not outgoing:
+            if not incoming and not outgoing and not self.needs_label(s0):
                 yield Actions.Reduce
                 return
             else:
+                # Check for node label action: if all terminals have already been connected
+                if self.needs_label(s0) and not any(e for e in outgoing if e.tag == layer1.EdgeTags.Terminal):
+                    self.found = True
+                    yield Actions.Label(orig_node=s0.orig_node, oracle=self)
+
                 # Check for actions to create new nodes
                 for edge in incoming:
                     if edge.parent.ID in self.nodes_remaining and not edge.parent.attrib.get("implicit") and (
@@ -118,7 +123,7 @@ class Oracle(object):
                                 len(state.buffer[0].orig_node.incoming) == 1:
                             yield Actions.Shift  # Special case to allow getting rid of simple children quickly
 
-                    if not self.edge_found:
+                    if not self.found:
                         # Check if a swap is necessary, and how far (if compound swap is enabled)
                         related = dict([(edge.child.ID,  edge) for edge in outgoing] +
                                        [(edge.parent.ID, edge) for edge in incoming])
@@ -135,11 +140,11 @@ class Oracle(object):
                                     yield Actions.Swap(distance)
                                     return
 
-        if state.buffer and not self.edge_found:
+        if state.buffer and not self.found:
             yield Actions.Shift
 
     def action(self, edge, kind, direction):
-        self.edge_found = True
+        self.found = True
         remote = edge.attrib.get("remote", False)
         node = (edge.parent, edge.child)[direction] if kind == NODE else None
         return ACTIONS[kind][direction][remote](tag=edge.tag, orig_edge=edge, orig_node=node, oracle=self)
@@ -148,6 +153,9 @@ class Oracle(object):
         self.edges_remaining.discard(edge)
         if node is not None:
             self.nodes_remaining.discard(node.ID)
+
+    def needs_label(self, node):
+        return not node.labeled and node.orig_node.attrib.get(self.args.node_label_attrib)
 
     def str(self, sep):
         return "nodes left: [%s]%sedges left: [%s]" % (" ".join(self.nodes_remaining), sep,

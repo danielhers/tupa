@@ -16,7 +16,7 @@ class Constraints(constraints.Constraints):
 
     def allow_parent(self, node, tag):
         return (not node.implicit or tag not in TERMINAL_TAGS) and \
-               (is_concept(node.label) or tag in TERMINAL_TAGS) and \
+               (node.label is None or is_concept(node.label) or tag in TERMINAL_TAGS) and \
                is_valid_arg(node, node.label, tag)
 
     def allow_child(self, node, tag):

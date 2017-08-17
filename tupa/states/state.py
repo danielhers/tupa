@@ -44,7 +44,6 @@ class State(object):
         self.buffer = deque()
         self.nodes = []
         self.heads = set()
-        self.node = None
         self.root = self.add_node(orig_node=l1.heads[0], is_root=True)  # Root is not in the buffer
         self.stack.append(self.root)
         self.buffer += self.terminals
@@ -152,6 +151,9 @@ class State(object):
                 elif action.is_type(Actions.Implicit):
                     _check_possible_parent(s0)
                     _check_possible_node()
+                elif action.is_type(Actions.Label):
+                    self.check(Config().node_labels, message and "Node labels disabled for format", is_type=True)
+                    self.check(not s0.labeled, message and "Labeling already-labeled node: %s" % s0, is_type=True)
                 elif action.is_type(Actions.Reduce):
                     self.check(s0 is not self.root or s0.outgoing, message and "Reducing childless root", is_type=True)
                     if self.args.require_connected:
@@ -191,8 +193,8 @@ class State(object):
 
     def check_valid_label(self, label, message=False):
         if self.args.constraints and label is not None:
-            self.check(self.constraints.allow_label(self.node, label),
-                       message and "May not label %s as %s" % (self.node, label))
+            self.check(self.constraints.allow_label(self.stack[-1], label),
+                       message and "May not label %s as %s" % (self.stack[-1], label))
 
     @staticmethod
     def check(condition, *args, **kwargs):
@@ -217,6 +219,8 @@ class State(object):
             action.node = self.add_node(orig_node=action.orig_node, implicit=True)
             self.add_edge(Edge(self.stack[-1], action.node, action.tag))
             self.buffer.appendleft(action.node)
+        elif action.is_type(Actions.Label):
+            pass  # The parser is responsible to choose a label and set it
         elif action.is_type(Actions.Reduce):  # Pop stack (no more edges to create with this node)
             self.stack.pop()
         elif action.is_type(Actions.LeftEdge, Actions.LeftRemote, Actions.RightEdge, Actions.RightRemote):
@@ -244,13 +248,13 @@ class State(object):
         Called during parsing to add a new Node (not core.Node) to the temporary representation
         :param kwargs: keyword arguments for Node()
         """
-        self.node = Node(len(self.nodes), swap_index=self.calculate_swap_index(), root=self.passage, **kwargs)
+        node = Node(len(self.nodes), swap_index=self.calculate_swap_index(), root=self.passage, **kwargs)
         if self.args.verify:
-            assert self.node not in self.nodes, "Node already exists"
-        self.nodes.append(self.node)
-        self.heads.add(self.node)
-        self.log.append("node: %s (swap_index: %g)" % (self.node, self.node.swap_index))
-        return self.node
+            assert node not in self.nodes, "Node already exists"
+        self.nodes.append(node)
+        self.heads.add(node)
+        self.log.append("node: %s (swap_index: %g)" % (node, node.swap_index))
+        return node
 
     def calculate_swap_index(self):
         """
@@ -285,9 +289,9 @@ class State(object):
             return None, None
 
     def label_node(self, label):
-        self.node.label = label
-        self.node.labeled = True
-        self.log.append("label: %s" % label)
+        self.stack[-1].label = label
+        self.stack[-1].labeled = True
+        self.log.append("label: %s" % self.stack[-1])
         self.type_validity_cache = {}
 
     def create_passage(self, verify=True):

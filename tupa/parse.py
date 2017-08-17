@@ -210,9 +210,6 @@ class Parser(object):
             if self.args.check_loops:
                 self.check_loop()
             features = self.model.feature_extractor.extract_features(self.state)
-            if self.model.labels and not self.state.root.labeled:  # Root node requires label before first action
-                self.label_node(features, self.state.root.orig_node, train)
-                continue
             true_actions = self.get_oracle_actions(train)
             scores = self.model.model.score(features, axis=ACTION_AXIS)  # Returns NumPy array
             if self.args.verbose > 2:
@@ -242,7 +239,7 @@ class Parser(object):
                         predicted_action, "|".join(map(str, true_actions.values())), action, self.state))
                 else:
                     print("  action: %-15s %s" % (action, self.state))
-            if self.model.labels and action.has_label:  # Node-creating action that requires a label
+            if self.model.labels and action.has_label:  # Label action that requires a choice of label
                 self.label_node(features, action.orig_node, train)
             self.model.model.finished_step(train)
             if self.args.verbose > 1:
@@ -259,7 +256,7 @@ class Parser(object):
             if true_label is not None:
                 true_label, _, _ = true_label.partition(Config().node_label_sep)
                 if not self.state.is_valid_label(true_label):
-                    raise ParserException("True label is invalid: %s for %s" % (true_label, self.state.node))
+                    raise ParserException("True label is invalid: %s for %s" % (true_label, self.state.stack[-1]))
             true_id = self.model.labels[true_label]
         if Config().args.use_gold_node_labels:
             label = true_label

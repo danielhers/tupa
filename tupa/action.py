@@ -57,9 +57,10 @@ class Action(object):
 
 class Actions(object):
     Shift = Action("SHIFT")
-    Node = Action("NODE", has_label=True)
-    RemoteNode = Action("REMOTE-NODE", has_label=True)
-    Implicit = Action("IMPLICIT", has_label=True)
+    Node = Action("NODE")
+    RemoteNode = Action("REMOTE-NODE")
+    Implicit = Action("IMPLICIT")
+    Label = Action("LABEL", has_label=True)
     Reduce = Action("REDUCE")
     LeftEdge = Action("LEFT-EDGE")
     RightEdge = Action("RIGHT-EDGE")
@@ -76,7 +77,8 @@ class Actions(object):
         # edge and node action will be created as they are returned by the oracle
         self.all = [Actions.Reduce, Actions.Shift, Actions.Finish] + \
                    (list(map(Actions.Swap, range(1, Config().args.max_swap))) if Config().args.swap == COMPOUND
-                    else [Actions.Swap] if Config().args.swap else [])
+                    else [Actions.Swap] if Config().args.swap else []) + \
+                   ([Actions.Label] if Config().node_labels else [])
 
     @property
     def all(self):
