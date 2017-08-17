@@ -119,15 +119,14 @@ class AmrConverter(convert.FormatConverter):
 
     def align_nodes(self, amr):
         preterminals = {}
-        alignments = (amr.alignments(), amr.role_alignments())
+        alignments = amr.alignments()
         tokens = amr.tokens()
         lower = list(map(str.lower, tokens))
         for triple, node in self.nodes.items():
             indices = []
-            for alignment in alignments:
-                align = alignment.get(triple)
-                if align is not None:
-                    indices += list(map(int, align.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP)))  # split numeric
+            align = alignments.get(triple)
+            if align is not None:
+                indices += list(map(int, align.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP)))  # split numeric
             dep = triple[2]
             if not isinstance(dep, amr_lib.Var):
                 indices = self._expand_alignments(str(dep), indices, lower)
