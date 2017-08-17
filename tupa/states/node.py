@@ -12,7 +12,7 @@ class Node(object):
     """
     def __init__(self, index, swap_index=None, orig_node=None, text=None, paragraph=None, tag=None, label=None,
                  implicit=False, pos_tag=None, dep_rel=None, dep_head=None, ner_type=None, ner_iob=None, lemma=None,
-                 is_root=False):
+                 is_root=False, root=None):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated core.Node from the original Passage, during training
         self.node_id = orig_node.ID if orig_node else None  # ID of the original node
@@ -45,6 +45,7 @@ class Node(object):
         self.height = 0
         self._terminals = None
         self.is_root = is_root
+        self.root = root  # Original Passage object this belongs to
 
     def add_incoming(self, edge):
         self.incoming.append(edge)

@@ -27,11 +27,12 @@ class State(object):
         self.constraints = Config().constraints
         self.log = []
         self.finished = False
+        self.passage = passage
         l0 = passage.layer(layer0.LAYER_ID)
         l1 = passage.layer(layer1.LAYER_ID)
         assert l0.all, "Empty passage '%s'" % passage.ID
         self.labeled = len(l1.all) > 1
-        self.terminals = [Node(i + 1, orig_node=t, text=t.text, paragraph=t.paragraph, tag=t.tag,
+        self.terminals = [Node(i + 1, orig_node=t, root=passage, text=t.text, paragraph=t.paragraph, tag=t.tag,
                                pos_tag=t.extra.get(textutil.TAG_KEY),
                                dep_rel=t.extra.get(textutil.DEP_KEY),
                                dep_head=t.extra.get(textutil.HEAD_KEY),
@@ -48,7 +49,6 @@ class State(object):
         self.stack.append(self.root)
         self.buffer += self.terminals
         self.nodes += self.terminals
-        self.passage_id = passage.ID
         self.actions = []  # History of applied actions
         self.type_validity_cache = {}
 
@@ -244,7 +244,7 @@ class State(object):
         Called during parsing to add a new Node (not core.Node) to the temporary representation
         :param kwargs: keyword arguments for Node()
         """
-        self.node = Node(len(self.nodes), swap_index=self.calculate_swap_index(), **kwargs)
+        self.node = Node(len(self.nodes), swap_index=self.calculate_swap_index(), root=self.passage, **kwargs)
         if self.args.verify:
             assert self.node not in self.nodes, "Node already exists"
         self.nodes.append(self.node)
@@ -296,7 +296,7 @@ class State(object):
         :param verify: fail if this results in an improper passage
         :return: core.Passage created from self.nodes
         """
-        passage = core.Passage(self.passage_id)
+        passage = core.Passage(self.passage.ID)
         l0 = layer0.Layer0(passage)
         terminals = [l0.add_terminal(text=terminal.text, punct=terminal.tag == layer0.NodeTags.Punct,
                                      paragraph=terminal.paragraph) for terminal in self.terminals]
