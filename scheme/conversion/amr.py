@@ -146,7 +146,7 @@ class AmrConverter(convert.FormatConverter):
                 while 0 <= i < len(tokens):
                     if AmrConverter._contains_substring(stripped, tokens, indices + [i]):
                         indices.append(i)
-                    elif not SKIP_TOKEN.match(tokens[i]):  # skip meaningless tokens
+                    elif not SKIP_TOKEN_PATTERN.match(tokens[i]):  # skip meaningless tokens
                         break
                     i += offset
             full_range = range(min(indices), max(indices) + 1)  # make this a contiguous range if valid
@@ -159,7 +159,7 @@ class AmrConverter(convert.FormatConverter):
                     j = i
                     while j < len(tokens) - 1:
                         j += 1
-                        if not SKIP_TOKEN.match(tokens[j]):
+                        if not SKIP_TOKEN_PATTERN.match(tokens[j]):
                             if not AmrConverter._contains_substring(stripped, tokens, l + [j]):
                                 break
                             l.append(j)

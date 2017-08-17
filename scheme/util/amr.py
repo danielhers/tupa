@@ -6,6 +6,7 @@ import os
 import re
 import spotlight
 from collections import defaultdict
+from requests.exceptions import ConnectionError
 from spotlight import SpotlightException
 from ucca import layer1
 from ucca import textutil
@@ -29,8 +30,14 @@ DEP_PREFIX = ":"
 TOP_DEP = ":top"
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
-PLACEHOLDER = re.compile("<[^>]*>")
-SKIP_TOKEN = re.compile("[<>@]+")
+PLACEHOLDER_PATTERN = re.compile("<[^>]*>")
+SKIP_TOKEN_PATTERN = re.compile("[<>@]+")
+TOKEN_PLACEHOLDER = "<t>"
+TOKEN_TITLE_PLACEHOLDER = "<T>"
+LEMMA_PLACEHOLDER = "<l>"
+LEMMA_TITLE_PLACEHOLDER = "<L>"
+NEGATION_PLACEHOLDER = "<n>"
+WIKIFICATION_PLACEHOLDER = "<w>"
 LABEL_ATTRIB = "label"
 LABEL_SEPARATOR = "|"  # after the separator there is the label category
 KNOWN_LABELS = set()  # used to avoid escaping when unnecessary
@@ -117,7 +124,7 @@ def parse(*args, **kwargs):
 
 
 def is_concept(label):
-    return label is not None and label.startswith(CONCEPT + "(")
+    return label is not None and label.startswith(CONCEPT)
 
 
 def is_int_in_range(label, s=None, e=None):
@@ -132,9 +139,9 @@ def is_valid_arg(node, label, *tags, is_parent=True):
     if label is None:
         return True
     label = resolve_label(node, label)
-    concept = label[len(CONCEPT) + 1:-1] if label.startswith(CONCEPT + "(") else None
-    const = label[len(CONST) + 1:-1] if label.startswith(CONST + "(") else None
-    if PLACEHOLDER.search(label):
+    concept = label[len(CONCEPT) + 1:-1] if label.startswith(CONCEPT) else None
+    const = label[len(CONST) + 1:-1] if label.startswith(CONST) else None
+    if PLACEHOLDER_PATTERN.search(label):
         return True
     if is_parent:  # node is a parent of the edge
         if {DAY, MONTH, YEAR, YEAR2, DECADE, WEEKDAY, QUARTER, CENTURY, SEASON, TIMEZONE}.intersection(tags):
@@ -184,7 +191,7 @@ def resolve_label(node, label=None, reverse=False):
         if reverse:
             old, new = new, old
         replaceable = old and (len(old) > 2 or len(label) < 5)
-        return re.sub(re.escape(old) + "(?![^<]*>|[^(]*\(|\d+$)", new, label) if replaceable else label
+        return re.sub(re.escape(old) + "(?![^<]*>|[^(]*\(|\d+$)", new, label, 1) if replaceable else label
 
     if label is None:
         try:
@@ -202,38 +209,35 @@ def resolve_label(node, label=None, reverse=False):
             terminals = sorted([c for c in children if getattr(c, "text", None)],
                                key=lambda c: getattr(c, "index", getattr(c, "position", None)))
             if terminals:
-                if not reverse and label.startswith(NUM + "("):  # numeric label (always 1 unless "numbers" layer is on)
+                if not reverse and label.startswith(NUM):  # numeric label (always 1 unless "numbers" layer is on)
                     number = terminals_to_number(terminals)  # try replacing spelled-out numbers/months with digits
                     if number is not None:
-                        label = "%s(%s)" % (NUM, number)
+                        label = NUM + "(%s)" % number
                 else:
-                    if len(terminals) > 1:
-                        label = _replace("<t>", "".join(t.text for t in terminals))
-                    for i, terminal in enumerate(terminals):
-                        label = _replace("<t%d>" % i, terminal.text)
-                        label = _replace("<T%d>" % i, terminal.text.title())
-                        try:
-                            lemma = terminal.lemma
-                        except AttributeError:
-                            lemma = terminal.extra.get(textutil.LEMMA_KEY)
-                        if lemma == "-PRON-":
-                            lemma = terminal.text.lower()
-                        lemma = lemma.translate(PUNCTUATION_REMOVER)
+                    if len(terminals) > 1 and (reverse or label.count(TOKEN_PLACEHOLDER) == 1):
+                        label = _replace(TOKEN_PLACEHOLDER, "".join(t.text for t in terminals))
+                    for terminal in terminals:
+                        label = _replace(TOKEN_PLACEHOLDER, terminal.text)
+                        label = _replace(TOKEN_TITLE_PLACEHOLDER, terminal.text.title())
+                        lemma = lemmatize(terminal)
                         if reverse and category is None:
                             category = CATEGORIES.get(lemma)
-                        label = _replace("<l%d>" % i, lemma)
-                        label = _replace("<L%d>" % i, lemma.title())
+                        label = _replace(LEMMA_PLACEHOLDER, lemma)
+                        label = _replace(LEMMA_TITLE_PLACEHOLDER, lemma.title())
                         negation = NEGATIONS.get(terminal.text)
                         if negation is not None:
-                            label = _replace("<n%d>" % i, negation)
-                        morph = VERBALIZATION.get(terminal.text)
-                        if morph is not None:
-                            for prefix, value in morph:  # V: verb, N: noun, A: noun actor
-                                label = _replace("<%s%d>" % (prefix, i), value)
-                        try:
-                            label = _replace("<w%d>" % i, WIKIFIER.wikify_terminal(terminal))
-                        except ValueError:
-                            pass
+                            label = _replace(NEGATION_PLACEHOLDER, negation)
+                        if label.startswith(CONCEPT):
+                            morph = VERBALIZATION.get(terminal.text)
+                            if morph is not None:
+                                for prefix, value in morph:  # V: verb, N: noun, A: noun actor
+                                    label = _replace("<%s>" % prefix, value)
+                        elif label.startswith('"') and (reverse and not PLACEHOLDER_PATTERN.search(label) or
+                                                        not reverse and WIKIFICATION_PLACEHOLDER in label):
+                            try:
+                                label = _replace(WIKIFICATION_PLACEHOLDER, WIKIFIER.wikify_terminal(terminal))
+                            except ValueError:
+                                pass
         if reverse:
             KNOWN_LABELS.add(label)
             if category is not None:
@@ -259,6 +263,16 @@ def terminals_to_number(terminals):
             return MONTHS.index(terminals[0].text.lower()) + 1
         except ValueError:
             pass
+
+
+def lemmatize(terminal):
+    try:
+        lemma = terminal.lemma
+    except AttributeError:
+        lemma = terminal.extra.get(textutil.LEMMA_KEY)
+    if lemma == "-PRON-":
+        lemma = terminal.text.lower()
+    return lemma.translate(PUNCTUATION_REMOVER)
 
 
 class keydefaultdict(defaultdict):
@@ -287,7 +301,7 @@ class Wikifier:
             self.text = text
             try:
                 self.spots = spotlight.annotate(self.address, text, confidence=self.confidence) if text.strip() else ()
-            except (ValueError, SpotlightException) as e:
+            except (ValueError, SpotlightException, ConnectionError) as e:
                 raise error from e
         for spot in self.spots:
             if spot["offset"] == offset:
