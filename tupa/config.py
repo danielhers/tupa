@@ -97,7 +97,7 @@ class Config(object, metaclass=Singleton):
         self.add_boolean_option(group, "require-connected", "constraint that output graph must be connected")
         group.add_argument("--orphan-label", default="orphan", help="edge label to use for nodes without parents")
         group.add_argument("--max-action-ratio", type=float, default=100, help="max action/terminal ratio")
-        group.add_argument("--max-node-ratio", type=float, default=6, help="max node/terminal ratio")
+        group.add_argument("--max-node-ratio", type=float, default=10, help="max node/terminal ratio")
         group.add_argument("--max-height", type=int, default=20, help="max graph height")
         group = argparser.add_mutually_exclusive_group()
         group.add_argument("--swap", choices=(REGULAR, COMPOUND), default=REGULAR, help="swap transitions")
