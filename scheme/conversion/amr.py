@@ -51,6 +51,7 @@ class AmrConverter(convert.FormatConverter):
         self._build_layer1(amr, l1)
         self._build_layer0(self.align_nodes(amr), l1, l0)
         self._update_implicit(l1)
+        self._collapse_names(l1)
         self._update_labels(l1)
         # return (passage, penman.encode(amr), self.amr_id) if self.return_amr else passage
         return (passage, amr(alignments=False), self.amr_id) if self.return_amr else passage
@@ -185,6 +186,36 @@ class AmrConverter(convert.FormatConverter):
                 node.attrib["implicit"] = True
                 pending += node.parents
 
+    @staticmethod
+    def _collapse_names(l1):
+        for node in list(l1.all):
+            for edge in node:
+                if edge.tag == NAME:
+                    name = edge.child
+                    if name.outgoing and name.attrib.get(LABEL_ATTRIB) == NAME:
+                        labels = []
+                        outgoing = []
+                        for child in name.children:
+                            label = child.attrib.get(LABEL_ATTRIB)
+                            if label:
+                                labels.append(AmrConverter.strip_quotes(label))
+                            outgoing += child.outgoing
+                            child.destroy()
+                        name.attrib[LABEL_ATTRIB] = '"%s"' % "_".join(labels)
+                        for e in outgoing:
+                            name.add(e.tag, e.child, edge_attrib=e.attrib)
+
+    @staticmethod
+    def _expand_names(l1):
+        for node in list(l1.all):
+            for edge in node:
+                if edge.tag == NAME:
+                    name = edge.child
+                    label = name.attrib.get(LABEL_ATTRIB)
+                    if name.outgoing and label and label != NAME:
+                        for label in AmrConverter.strip_quotes(label).split("_"):
+                            l1.add_fnode(name, OP).attrib[LABEL_ATTRIB] = '"%s"' % label
+
     def _update_labels(self, l1):
         for node in l1.all:
             label = resolve_label(node, reverse=True)
@@ -201,6 +232,7 @@ class AmrConverter(convert.FormatConverter):
                  "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all)] if metadata else []
         if wikification:
             WIKIFIER.wikify_passage(passage)
+        self._expand_names(passage.layer(layer1.LAYER_ID))
         return "\n".join(lines + [penman.encode(penman.Graph(list(self._to_triples(passage)))) or "(y / yes)"]),
 
     @staticmethod
@@ -255,8 +287,12 @@ class AmrConverter(convert.FormatConverter):
         if strip_sense:
             label = re.sub("-\d\d$", "", label)
         if strip_quotes:
-            label = label.strip('"')
+            label = AmrConverter.strip_quotes(label)
         return label
+
+    @staticmethod
+    def strip_quotes(label):
+        return label[1:-1] if len(label) > 1 and label.startswith('"') and label.endswith('"') else label
 
 
 def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):
