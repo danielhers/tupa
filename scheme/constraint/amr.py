@@ -7,9 +7,6 @@ class Constraints(constraints.Constraints):
                                           possible_multiple_incoming=TERMINAL_TAGS, unique_outgoing=(),
                                           childless_incoming_trigger=(), unique_incoming=(),
                                           mutually_exclusive_outgoing=(), top_level=None)
-        self.tag_rules.append(
-            constraints.TagRule(trigger={constraints.Direction.incoming: NAME},
-                                allowed={constraints.Direction.outgoing: list(TERMINAL_TAGS) + ["op"]}))
 
     def allow_action(self, action, history):
         return True
