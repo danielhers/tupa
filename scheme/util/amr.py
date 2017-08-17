@@ -5,10 +5,11 @@ import importlib.util  # needed for amr.peg
 import os
 import re
 import spotlight
-from functools import partial
+from collections import defaultdict
 from spotlight import SpotlightException
 from ucca import layer1
 from ucca import textutil
+from ucca.convert import to_text
 from word2number import w2n
 
 from tupa import constraints
@@ -230,9 +231,8 @@ def resolve_label(node, label=None, reverse=False):
                             for prefix, value in morph:  # V: verb, N: noun, A: noun actor
                                 label = _replace("<%s%d>" % (prefix, i), value)
                         try:
-                            label = _replace("<w%d>" % i, wikify_text(terminal.text))
-
-                        except (ValueError, IndexError, SpotlightException):
+                            label = _replace("<w%d>" % i, WIKIFIER.wikify_terminal(terminal))
+                        except ValueError:
                             pass
         if reverse:
             KNOWN_LABELS.add(label)
@@ -260,37 +260,63 @@ def terminals_to_number(terminals):
         except ValueError:
             pass
 
-spot = partial(spotlight.annotate,
-               os.environ.get("SPOTLIGHT_ADDRESS", "http://model.dbpedia-spotlight.org/en/annotate"),
-               confidence=float(os.environ.get("SPOTLIGHT_CONFIDENCE", 0.3)))
+
+class keydefaultdict(defaultdict):
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+        ret = self[key] = self.default_factory(key)
+        return ret
 
 
-def wikify_text(text):
-    spots = spot(text) if text else ()
-    return '"%s"' % spots[0]["URI"].replace("http://dbpedia.org/resource/", "")
+class Wikifier:
+    def __init__(self):
+        self.address = os.environ.get("SPOTLIGHT_ADDRESS", "http://model.dbpedia-spotlight.org/en/annotate")
+        self.confidence = float(os.environ.get("SPOTLIGHT_CONFIDENCE", 0.3))
+        self.text = None
+        self.spots = ()
+        self.passage_texts = keydefaultdict(lambda passage: to_text(passage, sentences=False)[0])
 
+    def wikify_terminal(self, terminal):
+        text = self.passage_texts[terminal.root]
+        return self.wikify_text(text, text.find(terminal.text))
 
-def wikify_node(node, name):
-    try:
-        return wikify_text(" ".join(t.text for t in node.get_terminals()) or
-                           " ".join(filter(None, (n.attrib.get(LABEL_ATTRIB) for n in name.children))).replace('"', ""))
-    except (ValueError, IndexError, SpotlightException):
-        return "-"
+    def wikify_text(self, text, offset):
+        error = ValueError("Failed to wikify '%s' offset %d" % (text, offset))
+        if self.text != text:
+            self.text = text
+            try:
+                self.spots = spotlight.annotate(self.address, text, confidence=self.confidence) if text.strip() else ()
+            except (ValueError, SpotlightException) as e:
+                raise error from e
+        for spot in self.spots:
+            if spot["offset"] == offset:
+                return '"%s"' % spot["URI"].replace("http://dbpedia.org/resource/", "")
+        raise error
 
+    def wikify_node(self, text, node, name):
+        try:
+            node_text = " ".join(t.text for t in node.get_terminals()) or \
+                        " ".join(filter(None, (n.attrib.get(LABEL_ATTRIB) for n in name.children))).replace('"', "")
+            return self.wikify_text(text, text.find(node_text))
+        except ValueError:
+            return "-"
 
-def wikify_passage(passage):
-    l1 = passage.layer(layer1.LAYER_ID)
-    for node in l1.all:
-        name = wiki = None
-        for edge in node:
-            if edge.tag == NAME:
-                name = edge
-            elif edge.tag == WIKI:
-                wiki = edge
-        if wiki is not None:
-            node.remove(wiki)
-            if name is not None:
-                l1.add_fnode(node, WIKI).attrib[LABEL_ATTRIB] = wikify_node(node, name.child)
+    def wikify_passage(self, passage):
+        l1 = passage.layer(layer1.LAYER_ID)
+        for node in l1.all:
+            name = wiki = None
+            for edge in node:
+                if edge.tag == NAME:
+                    name = edge
+                elif edge.tag == WIKI:
+                    wiki = edge
+            if wiki is not None:
+                node.remove(wiki)
+                if name is not None:
+                    l1.add_fnode(node, WIKI).attrib[LABEL_ATTRIB] = self.wikify_node(
+                        self.passage_texts[passage], node, name.child)
 
 
 read_resources()
+WIKIFIER = Wikifier()

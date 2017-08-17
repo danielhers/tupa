@@ -201,7 +201,7 @@ class AmrConverter(convert.FormatConverter):
         lines = ["# ::id " + passage.ID,
                  "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all)] if metadata else []
         if wikification:
-            wikify_passage(passage)
+            WIKIFIER.wikify_passage(passage)
         return "\n".join(lines + [penman.encode(penman.Graph(list(self._to_triples(passage)))) or "(y / yes)"]),
 
     @staticmethod
