@@ -1,5 +1,5 @@
 import penman
-from collections import defaultdict, namedtuple, OrderedDict
+from collections import namedtuple, OrderedDict
 from ucca import layer0, convert
 
 from scheme.util.amr import *
@@ -51,7 +51,6 @@ class AmrConverter(convert.FormatConverter):
         self._build_layer1(amr, l1)
         self._build_layer0(self.align_nodes(amr), l1, l0)
         self._update_implicit(l1)
-        self._collapse_names(l1)
         self._update_labels(l1)
         # return (passage, penman.encode(amr), self.amr_id) if self.return_amr else passage
         return (passage, amr(alignments=False), self.amr_id) if self.return_amr else passage
@@ -76,6 +75,7 @@ class AmrConverter(convert.FormatConverter):
         pending = amr.triples(head=root)
         self.nodes = {}  # map triples to UCCA nodes: dep gets a new node each time unless it's a variable
         variables = {root: l1.top_node}  # map AMR variables to UCCA nodes
+        names = set()  # to collapse :name (... / name) :op "..." into one string node
         excluded = set()  # nodes whose outgoing edges (except for instance-of edges) will be ignored
         visited = set()  # to avoid cycles
         while pending:  # breadth-first search creating layer 1 nodes
@@ -90,16 +90,26 @@ class AmrConverter(convert.FormatConverter):
                 excluded.add(head)  # skip outgoing edges from variables with excluded concepts
             rel = rel.lstrip(DEP_PREFIX)  # remove : prefix
             rel = PREFIXED_RELATION_PATTERN.sub(PREFIXED_RELATION_SUBSTITUTION, rel)  # remove numeric/prep suffix
+            if rel == NAME:
+                names.add(dep)
             parent = variables.get(head)
             assert parent is not None, "Outgoing edge from a non-variable: " + str(triple)
             node = variables.get(dep)
             if node is None:  # first occurrence of dep, or dep is not a variable
                 pending += amr.triples(head=dep)  # to continue breadth-first search
-                node = parent if isinstance(dep, amr_lib.Concept) else l1.add_fnode(parent, rel)
+                dep_is_concept = isinstance(dep, amr_lib.Concept)
+                head_is_name = head in names
+                node = parent if dep_is_concept or head_is_name else l1.add_fnode(parent, rel)
+                dep_str = repr(dep)
                 if isinstance(dep, amr_lib.Var):
                     variables[dep] = node
+                elif head_is_name and (dep_is_concept or rel == OP):  # collapse name ops to one string node
+                    if not dep_is_concept:  # the instance-of relation is dropped
+                        label = node.attrib.get(LABEL_ATTRIB)
+                        node.attrib[LABEL_ATTRIB] = '"%s"' % "_".join(
+                            AmrConverter.strip(l, strip_quotes=True) for l in (label, dep_str) if l)
                 else:  # concept or constant: save value in node attributes
-                    node.attrib[LABEL_ATTRIB] = repr(dep)  # concepts are saved as variable labels, not as actual nodes
+                    node.attrib[LABEL_ATTRIB] = dep_str  # concepts are saved as variable labels, not as actual nodes
             elif not self.remove_cycles or not _reachable(dep, head):  # reentrancy; do not add if results in a cycle
                 l1.add_remote(parent, rel, node)
             self.nodes[triple] = node
@@ -187,34 +197,16 @@ class AmrConverter(convert.FormatConverter):
                 pending += node.parents
 
     @staticmethod
-    def _collapse_names(l1):
-        for node in list(l1.all):
-            for edge in node:
-                if edge.tag == NAME:
-                    name = edge.child
-                    if name.outgoing and name.attrib.get(LABEL_ATTRIB) == NAME:
-                        labels = []
-                        outgoing = []
-                        for child in name.children:
-                            label = child.attrib.get(LABEL_ATTRIB)
-                            if label:
-                                labels.append(AmrConverter.strip_quotes(label))
-                            outgoing += child.outgoing
-                            child.destroy()
-                        name.attrib[LABEL_ATTRIB] = '"%s"' % "_".join(labels)
-                        for e in outgoing:
-                            name.add(e.tag, e.child, edge_attrib=e.attrib)
-
-    @staticmethod
     def _expand_names(l1):
         for node in list(l1.all):
             for edge in node:
                 if edge.tag == NAME:
                     name = edge.child
-                    label = name.attrib.get(LABEL_ATTRIB)
-                    if name.outgoing and label and label != NAME:
-                        for label in AmrConverter.strip_quotes(label).split("_"):
-                            l1.add_fnode(name, OP).attrib[LABEL_ATTRIB] = '"%s"' % label
+                    label = resolve_label(name)
+                    if label and label != CONCEPT + "(" + NAME + ")":
+                        name.attrib[LABEL_ATTRIB] = CONCEPT + "(" + NAME + ")"
+                        for l in AmrConverter.strip_quotes(label).split("_"):
+                            l1.add_fnode(name, OP).attrib[LABEL_ATTRIB] = l if NUM_PATTERN.match(l) else '"%s"' % l
 
     def _update_labels(self, l1):
         for node in l1.all:

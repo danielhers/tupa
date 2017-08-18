@@ -30,8 +30,9 @@ DEP_PREFIX = ":"
 TOP_DEP = ":top"
 ALIGNMENT_PREFIX = "e."
 ALIGNMENT_SEP = ","
-PLACEHOLDER_PATTERN = re.compile("<[^>]*>")
-SKIP_TOKEN_PATTERN = re.compile("[<>@]+")
+PLACEHOLDER_PATTERN = re.compile(r"<[^>]*>")
+SKIP_TOKEN_PATTERN = re.compile(r"[<>@]+")
+NUM_PATTERN = re.compile(r"[+-]?\d+(\.\d+)?")
 TOKEN_PLACEHOLDER = "<t>"
 TOKEN_TITLE_PLACEHOLDER = "<T>"
 LEMMA_PLACEHOLDER = "<l>"
@@ -220,6 +221,7 @@ def resolve_label(node, label=None, reverse=False, conservative=False):
                     if len(terminals) > 1:
                         if reverse or label.count(TOKEN_PLACEHOLDER) == 1:
                             label = _replace(TOKEN_PLACEHOLDER, "".join(t.text for t in terminals))
+                        if reverse or label.count(TOKEN_TITLE_PLACEHOLDER) == 1:
                             label = _replace(TOKEN_TITLE_PLACEHOLDER, "_".join(t.text for t in terminals))
                         if conservative:
                             terminals = ()
