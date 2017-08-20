@@ -210,77 +210,35 @@ class Parser(object):
             if self.args.check_loops:
                 self.check_loop()
             features = self.model.feature_extractor.extract_features(self.state)
-            true_actions = self.get_oracle_actions(train)
-            scores = self.model.model.score(features, axis=ACTION_AXIS)  # Returns NumPy array
-            if self.args.verbose > 2:
-                print("  action scores: " + ",".join(("%s: %g" % x for x in zip(self.model.actions.all, scores))))
-            try:
-                predicted_action = self.predict(scores, self.model.actions.all, self.state.is_valid_action)
-            except StopIteration as e:
-                raise ParserException("No valid action available\n%s" % (self.oracle.log if self.oracle else "")) from e
-            action = true_actions.get(predicted_action.id)
-            is_correct = (action is not None)
-            if is_correct:
-                self.correct_action_count += 1
-            else:
-                action = Config().random.choice(list(true_actions.values())) if train else predicted_action
-            if train and not (is_correct and self.update_only_on_error):
-                best_action = self.predict(scores[list(true_actions.keys())], list(true_actions.values()))
-                self.model.model.update(features, axis=ACTION_AXIS, pred=predicted_action.id, true=best_action.id,
-                                        importance=self.args.swap_importance if best_action.is_swap else 1)
-            self.action_count += 1
+            true_actions = self.get_true_actions(train)
+            action, predicted_action = self.choose_action(features, train, true_actions)
             try:
                 self.state.transition(action)
             except AssertionError as e:
-                raise ParserException("Invalid transition (%s): %s" % (action, e)) from e
+                raise ParserException("Invalid transition: %s %s" % (action, self.state)) from e
             if self.args.verbose > 1:
                 if self.oracle:
                     print("  predicted: %-15s true: %-15s taken: %-15s %s" % (
                         predicted_action, "|".join(map(str, true_actions.values())), action, self.state))
                 else:
                     print("  action: %-15s %s" % (action, self.state))
-            if self.model.labels and action.has_label:  # Label action that requires a choice of label
-                self.label_node(features, action.orig_node, train)
+            if self.state.need_label:  # Label action that requires a choice of label
+                true_label = self.get_true_label(action.orig_node)
+                label, predicted_label = self.choose_label(features, train, true_label)
+                self.state.label_node(label)
+                if self.args.verbose > 1:
+                    if self.oracle and not Config().args.use_gold_node_labels:
+                        print("  predicted label: %-15s true label: %-15s" % (predicted_label, true_label))
+                    else:
+                        print("  label: %-15s" % label)
             self.model.model.finished_step(train)
             if self.args.verbose > 1:
                 for line in self.state.log:
                     print("    " + line)
-            if self.state.finished or train and not is_correct and self.args.early_update:
-                return  # action is Finish
+            if self.state.finished:
+                return  # action is Finish (or early update is triggered)
 
-    def label_node(self, features, node, train):
-        true_label = None
-        if self.oracle:
-            if node is not None:
-                true_label = node.attrib.get(self.args.node_label_attrib)
-            if true_label is not None:
-                true_label, _, _ = true_label.partition(Config().node_label_sep)
-                if not self.state.is_valid_label(true_label):
-                    raise ParserException("True label is invalid: %s for %s" % (true_label, self.state.stack[-1]))
-            true_id = self.model.labels[true_label]
-        if Config().args.use_gold_node_labels:
-            label = true_label
-        else:
-            scores = self.model.model.score(features, axis=LABEL_AXIS)
-            if self.args.verbose > 2:
-                print("  label scores: " + ",".join(("%s: %g" % x for x in zip(self.model.labels.all, scores))))
-            label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label)
-            if self.oracle:
-                is_correct = (label == true_label)
-                if is_correct:
-                    self.correct_label_count += 1
-                if train and not (is_correct and self.update_only_on_error):
-                    self.model.model.update(features, axis=LABEL_AXIS, pred=self.model.labels[label], true=true_id)
-                    label = true_label
-            self.label_count += 1
-        self.state.label_node(label)
-        if self.args.verbose > 1:
-            if self.oracle and not Config().args.use_gold_node_labels:
-                print("  predicted label: %-15s true label: %-15s" % (predicted_label, true_label))
-            else:
-                print("  label: %-15s" % label)
-
-    def get_oracle_actions(self, train):
+    def get_true_actions(self, train):
         true_actions = {}
         if self.oracle:
             try:
@@ -289,6 +247,58 @@ class Parser(object):
                 if train:
                     raise ParserException("Error in oracle during training") from e
         return true_actions
+
+    def choose_action(self, features, train, true_actions):
+        scores = self.model.model.score(features, axis=ACTION_AXIS)  # Returns NumPy array
+        if self.args.verbose > 2:
+            print("  action scores: " + ",".join(("%s: %g" % x for x in zip(self.model.actions.all, scores))))
+        try:
+            predicted_action = self.predict(scores, self.model.actions.all, self.state.is_valid_action)
+        except StopIteration as e:
+            raise ParserException("No valid action available\n%s" % (self.oracle.log if self.oracle else "")) from e
+        action = true_actions.get(predicted_action.id)
+        is_correct = (action is not None)
+        if is_correct:
+            self.correct_action_count += 1
+        else:
+            action = Config().random.choice(list(true_actions.values())) if train else predicted_action
+        if train and not (is_correct and self.update_only_on_error):
+            best_action = self.predict(scores[list(true_actions.keys())], list(true_actions.values()))
+            self.model.model.update(features, axis=ACTION_AXIS, pred=predicted_action.id, true=best_action.id,
+                                    importance=self.args.swap_importance if best_action.is_swap else 1)
+        if train and not is_correct and self.args.early_update:
+            self.state.finished = True
+        self.action_count += 1
+        return action, predicted_action
+
+    def get_true_label(self, node):
+        true_label = None
+        if self.oracle:
+            if node is not None:
+                true_label = node.attrib.get(self.args.node_label_attrib)
+            if true_label is not None:
+                true_label, _, _ = true_label.partition(Config().node_label_sep)
+                if not self.state.is_valid_label(true_label):
+                    raise ParserException("True label is invalid: %s %s" % (true_label, self.state))
+        return true_label
+
+    def choose_label(self, features, train, true_label):
+        true_id = self.model.labels[true_label] if self.oracle else None  # Needs to happen before score()
+        if Config().args.use_gold_node_labels:
+            return true_label, true_label
+        scores = self.model.model.score(features, axis=LABEL_AXIS)
+        if self.args.verbose > 2:
+            print("  label scores: " + ",".join(("%s: %g" % x for x in zip(self.model.labels.all, scores))))
+        label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label)
+        if self.oracle:
+            is_correct = (label == true_label)
+            if is_correct:
+                self.correct_label_count += 1
+            if train and not (is_correct and self.update_only_on_error):
+                self.model.model.update(features, axis=LABEL_AXIS, pred=self.model.labels[label], true=true_id)
+                label = true_label
+        self.label_count += 1
+        return label, predicted_label
 
     def predict(self, scores, values, is_valid=None):
         """

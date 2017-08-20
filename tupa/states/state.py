@@ -50,6 +50,7 @@ class State(object):
         self.nodes += self.terminals
         self.actions = []  # History of applied actions
         self.type_validity_cache = {}
+        self.need_label = False  # Whether we are waiting for label_node() to be called
 
     def is_valid_action(self, action):
         """
@@ -220,7 +221,7 @@ class State(object):
             self.add_edge(Edge(self.stack[-1], action.node, action.tag))
             self.buffer.appendleft(action.node)
         elif action.is_type(Actions.Label):
-            pass  # The parser is responsible to choose a label and set it
+            self.need_label = True  # The parser is responsible to choose a label and set it
         elif action.is_type(Actions.Reduce):  # Pop stack (no more edges to create with this node)
             self.stack.pop()
         elif action.is_type(Actions.LeftEdge, Actions.LeftRemote, Actions.RightEdge, Actions.RightRemote):
@@ -289,9 +290,11 @@ class State(object):
             return None, None
 
     def label_node(self, label):
-        self.stack[-1].label = label
-        self.stack[-1].labeled = True
-        self.log.append("label: %s" % self.stack[-1])
+        self.need_label = False
+        node = self.stack[-1]
+        node.label = label
+        node.labeled = True
+        self.log.append("label: %s" % node)
         self.type_validity_cache = {}
 
     def create_passage(self, verify=True):

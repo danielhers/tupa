@@ -4,10 +4,9 @@ from .config import Config, COMPOUND
 class Action(object):
     type_to_id = {}
 
-    def __init__(self, action_type, tag=None, has_label=False, orig_edge=None, orig_node=None, oracle=None, id_=None):
+    def __init__(self, action_type, tag=None, orig_edge=None, orig_node=None, oracle=None, id_=None):
         self.type = action_type  # String
         self.tag = tag  # Usually the tag of the created edge; but if COMPOUND_SWAP, the distance
-        self.has_label = has_label  # Whether this action type requires a label or not
         self.orig_node = orig_node  # Node created by this action, if any (during training)
         self.orig_edge = orig_edge  # Edge created by this action, if any (during training)
         self.node = None  # Will be set by State when the node created by this action is known
@@ -44,7 +43,7 @@ class Action(object):
         return hash(self.id)
 
     def __call__(self, *args, **kwargs):
-        return Action(self.type, *args, **kwargs, has_label=self.has_label)
+        return Action(self.type, *args, **kwargs)
 
     @property
     def remote(self):
@@ -60,7 +59,7 @@ class Actions(object):
     Node = Action("NODE")
     RemoteNode = Action("REMOTE-NODE")
     Implicit = Action("IMPLICIT")
-    Label = Action("LABEL", has_label=True)
+    Label = Action("LABEL")
     Reduce = Action("REDUCE")
     LeftEdge = Action("LEFT-EDGE")
     RightEdge = Action("RIGHT-EDGE")
