@@ -74,7 +74,7 @@ def main():
         ("action_dim",              (3, 5, 10)),
         ("ner_dim",                 (3, 5, 10)),
         ("max_node_labels",         get_values_based_on_format(500, 750, 1000, 1500, 2000)),
-        ("min_node_label_count",    [1] + 5 * [2] + [3]),
+        ("min_node_label_count",    range(1, 201)),
         ("layer_dim",               (50, 100, 200, 300, 500, 1000)),
         ("layers",                  [1] + 5 * [2]),
         ("lstm_layer_dim",          (50, 100, 200, 300, 500, 1000)),
