@@ -5,11 +5,11 @@ import glob
 import sys
 
 import os
-from ucca.ioutil import passage2file
+from ucca import ioutil
 
+from scheme.cfgutil import add_verbose_argument
 from scheme.conversion.amr import from_amr, to_amr
 from scheme.evaluation.amr import evaluate, Scores
-from tupa.config import VAction
 
 desc = """Parses files in AMR format, converts to UCCA standard format,
 converts back to the original format and evaluates using smatch.
@@ -19,7 +19,7 @@ converts back to the original format and evaluates using smatch.
 def main():
     argparser = argparse.ArgumentParser(description=desc)
     argparser.add_argument("filenames", nargs="+", help="file names to convert and evaluate")
-    argparser.add_argument("-v", "--verbose", nargs="?", action=VAction, default=0, help="detailed evaluation output")
+    add_verbose_argument(argparser, help="detailed evaluation output")
     argparser.add_argument("-o", "--outdir", help="output directory (if unspecified, files are not written)")
     args = argparser.parse_args()
 
@@ -39,7 +39,7 @@ def main():
                     if args.outdir:
                         outfile = "%s/%s.xml" % (args.outdir, passage.ID)
                         print("Writing '%s'..." % outfile, file=sys.stderr, flush=True)
-                        passage2file(passage, outfile)
+                        ioutil.passage2file(passage, outfile)
                     try:
                         guessed = to_amr(passage, amr_id)[0]
                     except Exception as e:

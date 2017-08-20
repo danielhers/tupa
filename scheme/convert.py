@@ -6,14 +6,16 @@ import sys
 
 import os
 import re
-from ucca.convert import split2sentences
-from ucca.ioutil import passage2file, file2passage
+from ucca import convert, ioutil
 
-from scheme.conversion.amr import CONVERTERS
+from scheme.conversion.amr import from_amr, to_amr
 
 desc = """Parses files in the specified format, and writes as the specified format.
 Each passage is written to the file: <outdir>/<prefix><passage_id>.<extension> """
 
+
+CONVERTERS = dict(convert.CONVERTERS)
+CONVERTERS["amr"] = (from_amr, to_amr)
 
 UCCA_EXT = (".xml", ".pickle")
 
@@ -26,7 +28,7 @@ def main(args):
         for filename in filenames:
             no_ext, ext = os.path.splitext(filename)
             if ext in UCCA_EXT:  # UCCA input
-                write_passage(file2passage(filename), args)
+                write_passage(ioutil.file2passage(filename), args)
             else:
                 basename = os.path.basename(no_ext)
                 try:
@@ -47,11 +49,11 @@ def write_passage(passage, args):
     outfile = args.outdir + os.path.sep + args.prefix + passage.ID + ext
     sys.stderr.write("Writing '%s'...\n" % outfile)
     if args.output_format is None:  # UCCA output
-        passage2file(passage, outfile, args.binary)
+        ioutil.passage2file(passage, outfile, args.binary)
     else:
         converter = CONVERTERS[args.output_format][1]
         output = converter(passage)[0] if args.output_format == "amr" else \
-            "\n".join(line for p in (split2sentences(passage) if args.split else [passage]) for line in
+            "\n".join(line for p in (convert.split2sentences(passage) if args.split else [passage]) for line in
                       converter(p, test=args.test, tree=args.tree, mark_aux=args.mark_aux))
         with open(outfile, "w", encoding="utf-8") as f:
             print(output, file=f)

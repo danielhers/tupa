@@ -1,5 +1,6 @@
 from ucca import layer1
 
+from scheme.util.amr import LABEL_ATTRIB
 from .action import Actions
 from .config import Config, COMPOUND
 from .states.state import InvalidActionError
@@ -154,8 +155,9 @@ class Oracle(object):
         if node is not None:
             self.nodes_remaining.discard(node.ID)
 
-    def needs_label(self, node):
-        return not node.labeled and node.orig_node.attrib.get(self.args.node_label_attrib)
+    @staticmethod
+    def needs_label(node):
+        return not node.labeled and node.orig_node.attrib.get(LABEL_ATTRIB)
 
     def str(self, sep):
         return "nodes left: [%s]%sedges left: [%s]" % (" ".join(self.nodes_remaining), sep,

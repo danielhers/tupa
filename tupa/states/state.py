@@ -4,9 +4,9 @@ from collections import deque, defaultdict
 from ucca import core, layer0, layer1, textutil
 from ucca.layer1 import EdgeTags
 
+from scheme.constraints import Direction
 from tupa.action import Actions
 from tupa.config import Config
-from tupa.constraints import Direction
 from .edge import Edge
 from .node import Node
 

@@ -6,31 +6,11 @@ import numpy as np
 from functools import partial
 from ucca import evaluation, constructions
 
-from scheme.conversion.amr import CONVERTERS
-from . import constraints
-
-
-class Singleton(type):
-    instance = None
-
-    def __call__(cls, *args, **kwargs):
-        if not cls.instance:
-            cls.instance = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls.instance
-
-    def reload(cls):
-        cls.instance = None
-
-
-class VAction(argparse.Action):
-    def __call__(self, parser, args, values, option_string=None):
-        if values is None:
-            values = "1"
-        try:
-            values = int(values)
-        except ValueError:
-            values = values.count("v") + 1
-        setattr(args, self.dest, values)
+from scheme.cfgutil import Singleton, add_verbose_argument, add_boolean_option, get_group_arg_names
+from scheme.constrain import CONSTRAINTS
+from scheme.constraints import Constraints
+from scheme.convert import UCCA_EXT, CONVERTERS
+from scheme.evaluate import EVALUATORS
 
 # Classifiers
 SPARSE = "sparse"
@@ -50,7 +30,7 @@ INITIALIZATIONS = ("glorot_uniform", "normal", "uniform", "const")
 OPTIMIZERS = ("adam", "sgd", "cyclic", "momentum", "adagrad", "adadelta", "rmsprop")
 
 # Input/output formats
-FORMATS = ["xml", "pickle"] + list(CONVERTERS)
+FORMATS = [e.lstrip(".") for e in UCCA_EXT] + list(CONVERTERS)
 
 
 class Config(object, metaclass=Singleton):
@@ -61,19 +41,17 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("-m", "--model", help="model file basename to load/save (default: <format>_<model_type>")
         argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=SPARSE, help="model type")
         argparser.add_argument("-B", "--beam", type=int, choices=(1,), default=1, help="beam size for beam search")
-        self.add_boolean_option(argparser, "evaluate", "evaluation of parsed passages", short="e")
-        argparser.add_argument("-v", "--verbose", nargs="?", action=VAction, default=0, help="detailed parse output")
+        add_boolean_option(argparser, "evaluate", "evaluation of parsed passages", short="e")
+        add_verbose_argument(argparser, help="detailed parse output")
         group = argparser.add_argument_group(title="Node labels")
-        group.add_argument("--node-label-attrib", help="predict node labels and store them in this node attribute")
-        group.add_argument("--unknown-label", help="node label to use as unknown value")
         group.add_argument("--max-node-labels", type=int, default=0, help="max number of node labels to allow")
         group.add_argument("--max-node-categories", type=int, default=0, help="max number of node categories to allow")
         group.add_argument("--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
-        self.add_boolean_option(group, "use-gold-node-labels", "gold node labels when parsing")
-        self.add_boolean_option(group, "wikification", "use Spotlight to wikify any named node")
+        add_boolean_option(group, "use-gold-node-labels", "gold node labels when parsing")
+        add_boolean_option(group, "wikification", "use Spotlight to wikify any named node")
         constructions.add_argument(argparser)
-        self.add_boolean_option(argparser, "sentences", "split to sentences")
-        self.add_boolean_option(argparser, "paragraphs", "split to paragraphs")
+        add_boolean_option(argparser, "sentences", "split to sentences")
+        add_boolean_option(argparser, "paragraphs", "split to paragraphs")
         group = argparser.add_argument_group(title="Training parameters")
         group.add_argument("-t", "--train", nargs="+", default=(), help="passage files/directories to train on")
         group.add_argument("-d", "--dev", nargs="+", default=(), help="passage files/directories to tune on")
@@ -83,18 +61,18 @@ class Config(object, metaclass=Singleton):
         group = argparser.add_argument_group(title="Output files")
         group.add_argument("-o", "--outdir", default=".", help="output directory for parsed files")
         group.add_argument("-p", "--prefix", default="", help="output filename prefix")
-        self.add_boolean_option(group, "write", "writing parsed output to files", default=True, short_no="W")
+        add_boolean_option(group, "write", "writing parsed output to files", default=True, short_no="W")
         group.add_argument("-l", "--log", help="output log file (default: model filename + .log)")
         group.add_argument("--devscores", help="output CSV file for dev scores (default: model filename + .dev.csv)")
         group.add_argument("--testscores", help="output CSV file for test scores (default: model filename + .test.csv)")
         argparser.add_argument("-f", "--format", choices=FORMATS, help="input and output format")
         argparser.add_argument("--output-format", choices=FORMATS, help="output format, if different from input format")
         group = argparser.add_argument_group(title="Structural constraints")
-        self.add_boolean_option(group, "linkage", "linkage nodes and edges")
-        self.add_boolean_option(group, "implicit", "implicit nodes and edges")
-        self.add_boolean_option(group, "remote", "remote edges", default=True)
-        self.add_boolean_option(group, "constraints", "scheme-specific rules", default=True)
-        self.add_boolean_option(group, "require-connected", "constraint that output graph must be connected")
+        add_boolean_option(group, "linkage", "linkage nodes and edges")
+        add_boolean_option(group, "implicit", "implicit nodes and edges")
+        add_boolean_option(group, "remote", "remote edges", default=True)
+        add_boolean_option(group, "constraints", "scheme-specific rules", default=True)
+        add_boolean_option(group, "require-connected", "constraint that output graph must be connected")
         group.add_argument("--orphan-label", default="orphan", help="edge label to use for nodes without parents")
         group.add_argument("--max-action-ratio", type=float, default=100, help="max action/terminal ratio")
         group.add_argument("--max-node-ratio", type=float, default=10, help="max node/terminal ratio")
@@ -104,21 +82,21 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--no-swap", action="store_false", dest="swap", help="exclude swap transitions")
         argparser.add_argument("--max-swap", type=int, default=15, help="if compound swap enabled, maximum swap size")
         group = argparser.add_argument_group(title="Sanity checks")
-        self.add_boolean_option(group, "check-loops", "check for parser state loop")
-        self.add_boolean_option(group, "verify", "check for oracle reproducing original passage")
+        add_boolean_option(group, "check-loops", "check for parser state loop")
+        add_boolean_option(group, "verify", "check for oracle reproducing original passage")
         group = argparser.add_argument_group(title="General classifier training parameters")
         group.add_argument("--learning-rate", type=float, help="rate for model weight updates (default: by trainer/1)")
         group.add_argument("--learning-rate-decay", type=float, default=0.0, help="learning rate decay per iteration")
         group.add_argument("--swap-importance", type=int, default=1, help="learning rate factor for Swap")
-        self.add_boolean_option(group, "early-update", "early update procedure (finish example on first error)")
+        add_boolean_option(group, "early-update", "early update procedure (finish example on first error)")
         group.add_argument("--save-every", type=int, help="every this many passages, evaluate on dev and save model")
         group = argparser.add_argument_group(title="Perceptron parameters")
         group.add_argument("--min-update", type=int, default=5, help="minimum #updates for using a feature")
-        self.sparse_arg_names = self.get_group_arg_names(group)
+        self.sparse_arg_names = get_group_arg_names(group)
         group = argparser.add_argument_group(title="Neural network parameters")
         group.add_argument("--word-dim-external", type=int, default=300, help="dimension for external word embeddings")
         group.add_argument("--word-vectors", help="file to load external word embeddings from (default: GloVe)")
-        self.add_boolean_option(group, "update-word-vectors", "external word vectors in training parameters")
+        add_boolean_option(group, "update-word-vectors", "external word vectors in training parameters")
         group.add_argument("--word-dim", type=int, default=100, help="dimension for learned word embeddings")
         group.add_argument("--tag-dim", type=int, default=10, help="dimension for POS tag embeddings")
         group.add_argument("--dep-dim", type=int, default=10, help="dimension for dependency relation embeddings")
@@ -152,16 +130,16 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--word-dropout-external", type=float, default=0.25, help="word dropout for word vectors")
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter between layers")
         group.add_argument("--max-length", type=int, default=120, help="maximum length of input sentence")
-        self.nn_arg_names = self.get_group_arg_names(group)
+        self.nn_arg_names = get_group_arg_names(group)
         group = argparser.add_argument_group(title="DyNet parameters")
         group.add_argument("--dynet-mem", help="memory for dynet")
         group.add_argument("--dynet-weight-decay", type=float, default=1e-6, help="weight decay for parameters")
-        self.add_boolean_option(group, "dynet-gpu", "GPU for training")
+        add_boolean_option(group, "dynet-gpu", "GPU for training")
         group.add_argument("--dynet-gpus", type=int, default=1, help="how many GPUs you want to use")
         group.add_argument("--dynet-gpu-ids", help="the GPUs that you want to use by device ID")
-        self.add_boolean_option(group, "dynet-viz", "visualization of neural network structure")
-        self.add_boolean_option(group, "dynet-autobatch", "auto-batching of training examples")
-        self.dynet_arg_names = self.get_group_arg_names(group)
+        add_boolean_option(group, "dynet-viz", "visualization of neural network structure")
+        add_boolean_option(group, "dynet-autobatch", "auto-batching of training examples")
+        self.dynet_arg_names = get_group_arg_names(group)
         self.args = argparser.parse_args(args if args else None)
         
         if self.args.model:
@@ -173,9 +151,6 @@ class Config(object, metaclass=Singleton):
                 self.args.testscores = self.args.model + ".test.csv"
         elif not self.args.log:
             self.args.log = "parse.log"
-        self.constraints = constraints.Constraints(self.args)
-        self.input_converter, self.output_converter = CONVERTERS.get(self.args.format, (None, None))
-        self.evaluate, self.Scores = evaluation.evaluate, evaluation.Scores
         if self.args.format == "amr":
             self.node_labels = True
             self.args.implicit = True
@@ -189,18 +164,14 @@ class Config(object, metaclass=Singleton):
                 self.args.max_node_categories = 25
             self.args.max_action_labels = max(self.args.max_action_labels, 600)
             self.args.max_edge_labels = max(self.args.max_edge_labels, 110)
-            from scheme.evaluation.amr import evaluate, Scores
-            from scheme.constraint.amr import Constraints
-            from scheme.util.amr import LABEL_ATTRIB, UNKNOWN_LABEL, LABEL_SEPARATOR
-            self.evaluate, self.Scores = evaluate, Scores
-            self.args.node_label_attrib = LABEL_ATTRIB
-            self.args.unknown_label = UNKNOWN_LABEL
-            self.node_label_sep = LABEL_SEPARATOR
-            self.constraints = Constraints(self.args)
         else:
             self.node_labels = False
             self.args.node_label_dim = self.args.max_node_labels = \
                 self.args.node_category_dim = self.args.max_node_categories = 0
+        self.constraints = CONSTRAINTS.get(self.args.format, Constraints)(self.args)
+        evaluator = EVALUATORS.get(self.args.format, evaluation)
+        self.evaluate, self.Scores = evaluator.evaluate, evaluator.Scores
+        self.input_converter, self.output_converter = CONVERTERS.get(self.args.format, (None, None))
         if self.args.output_format:
             _, self.output_converter = CONVERTERS.get(self.args.output_format, (None, None))
         else:
@@ -210,22 +181,6 @@ class Config(object, metaclass=Singleton):
         self._logger = None
         self.set_external()
         self.random = np.random
-
-    @staticmethod
-    def get_group_arg_names(group):
-        return [a.dest for a in group._group_actions]
-
-    @staticmethod
-    def add_boolean_option(argparser, name, description, default=False, short=None, short_no=None):
-        group = argparser.add_mutually_exclusive_group()
-        options = [] if short is None else ["-" + short]
-        options.append("--" + name)
-        group.add_argument(*options, action="store_true", default=default, help="include " + description)
-        no_options = [] if short_no is None else ["-" + short_no]
-        no_options.append("--no-" + name)
-        group.add_argument(*no_options, action="store_false", dest=name.replace("-", "_"), default=default,
-                           help="exclude " + description)
-        return group
 
     def set_external(self):
         np.random.seed(self.args.seed)

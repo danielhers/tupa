@@ -13,8 +13,6 @@ from ucca import textutil
 from ucca.convert import to_text
 from word2number import w2n
 
-from tupa import constraints
-
 prev_dir = os.getcwd()
 try:
     os.chdir(os.path.dirname(importlib.util.find_spec("src.amr").origin))  # to find amr.peg
@@ -22,7 +20,7 @@ try:
 finally:
     os.chdir(prev_dir)
 
-TERMINAL_TAGS = {constraints.EdgeTags.Terminal, constraints.EdgeTags.Punctuation}
+TERMINAL_TAGS = {layer1.EdgeTags.Terminal, layer1.EdgeTags.Punctuation}
 COMMENT_PREFIX = "#"
 ID_PATTERN = "#\s*::id\s+(\S+)"
 TOK_PATTERN = "#\s*::(?:tok|snt)\s+(.*)"

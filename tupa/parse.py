@@ -6,6 +6,7 @@ from collections import defaultdict
 from ucca import diffutil, ioutil, textutil, layer1
 from ucca.convert import FROM_FORMAT, TO_FORMAT, from_text, to_text
 
+from scheme.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
 from tupa.classifiers.classifier import ClassifierProperty
 from tupa.config import Config
 from tupa.model import Model, ACTION_AXIS, LABEL_AXIS
@@ -132,7 +133,7 @@ class Parser(object):
         if not hasattr(passages, "__iter__"):  # Single passage given
             passages = (passages,)
         for passage_index, passage in enumerate(passages):
-            labeled = any(n.outgoing or n.attrib.get(self.args.node_label_attrib)
+            labeled = any(n.outgoing or n.attrib.get(LABEL_ATTRIB)
                           for n in passage.layer(layer1.LAYER_ID).all)
             assert not train or labeled, "Cannot train on unannotated passage: %s" % passage.ID
             assert not evaluate or labeled, "Cannot evaluate on unannotated passage: %s" % passage.ID
@@ -275,9 +276,9 @@ class Parser(object):
         true_label = None
         if self.oracle:
             if node is not None:
-                true_label = node.attrib.get(self.args.node_label_attrib)
+                true_label = node.attrib.get(LABEL_ATTRIB)
             if true_label is not None:
-                true_label, _, _ = true_label.partition(Config().node_label_sep)
+                true_label, _, _ = true_label.partition(LABEL_SEPARATOR)
                 if not self.state.is_valid_label(true_label):
                     raise ParserException("True label is invalid: %s %s" % (true_label, self.state))
         return true_label

@@ -3,6 +3,7 @@ from operator import attrgetter
 from ucca import core, layer0
 from ucca.layer1 import EdgeTags
 
+from scheme.util.amr import LABEL_ATTRIB, UNKNOWN_LABEL, LABEL_SEPARATOR
 from tupa.config import Config
 
 
@@ -22,7 +23,7 @@ class Node(object):
         if label is None:
             self.label = self.category = None
         else:  # Node label prediction is enabled
-            self.label, _, self.category = label.partition(Config().node_label_sep)
+            self.label, _, self.category = label.partition(LABEL_SEPARATOR)
             if not self.category:
                 self.category = None
         self.labeled = False  # Whether a label has been set yet (necessary because None is a valid label too)
@@ -99,9 +100,9 @@ class Node(object):
             self.node.extra["remarks"] = self.node_id  # Keep original node ID for reference
 
     def set_node_label(self):
-        label = self.label or Config().args.unknown_label
+        label = self.label or UNKNOWN_LABEL
         if self.node is not None and label is not None:
-            self.node.attrib[Config().args.node_label_attrib] = label
+            self.node.attrib[LABEL_ATTRIB] = label
 
     @property
     def is_linkage(self):

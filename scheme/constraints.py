@@ -16,6 +16,7 @@ def tags(node, direction):
     return node.incoming_tags if direction == Direction.incoming else node.outgoing_tags
 
 
+# Generic class to define rules on allowed incoming/outgoing edge tags based on triggers
 class TagRule:
     def __init__(self, trigger, allowed=None, disallowed=None):
         self.trigger = trigger
@@ -54,18 +55,12 @@ def set_prod(set1, set2=None):
             yield x, y
 
 
+# Generic class to define constraints on parser actions
 class Constraints(object):
     def __init__(self, args, require_implicit_childless=True, allow_root_terminal_children=False,
-                 top_level={EdgeTags.ParallelScene, EdgeTags.Linker, EdgeTags.Function, EdgeTags.Ground,
-                            EdgeTags.Punctuation},
-                 possible_multiple_incoming={EdgeTags.LinkArgument, EdgeTags.LinkRelation},
-                 childless_incoming_trigger=EdgeTags.Function,
-                 childless_outgoing_allowed={EdgeTags.Terminal, EdgeTags.Punctuation},
-                 unique_incoming={EdgeTags.Function, EdgeTags.Ground, EdgeTags.ParallelScene, EdgeTags.Linker,
-                                  EdgeTags.LinkRelation, EdgeTags.Connector, EdgeTags.Punctuation, EdgeTags.Terminal},
-                 unique_outgoing={EdgeTags.LinkRelation, EdgeTags.Process, EdgeTags.State},
-                 mutually_exclusive_incoming=(),
-                 mutually_exclusive_outgoing={EdgeTags.Process, EdgeTags.State}):
+                 top_level=(), possible_multiple_incoming=(), childless_incoming_trigger=(),
+                 childless_outgoing_allowed=(), unique_incoming=(), unique_outgoing=(), mutually_exclusive_incoming=(),
+                 mutually_exclusive_outgoing=()):
         self.args = args
         self.require_implicit_childless = require_implicit_childless
         self.allow_root_terminal_children = allow_root_terminal_children
@@ -80,8 +75,6 @@ class Constraints(object):
              for t1, t2 in set_prod(mutually_exclusive_incoming)] + \
             [TagRule(trigger={Direction.outgoing: t1}, disallowed={Direction.outgoing: t2})
              for t1, t2 in set_prod(mutually_exclusive_outgoing)]
-    # LinkerIncoming = {EdgeTags.Linker, EdgeTags.LinkRelation}
-    # TagRule(trigger=(LinkerIncoming, None), allowed=(LinkerIncoming, None)),  # disabled due to passage 106 unit 1.300
 
     def allow_action(self, action, history):
         return self.args.implicit or history or action.tag is None  # First action must not create nodes/edges
@@ -101,3 +94,21 @@ class Constraints(object):
 
     def allow_label(self, node, label):
         return True
+
+
+class UCCAConstraints(Constraints):
+    def __init__(self, args):
+        super(UCCAConstraints, self).__init__(args, require_implicit_childless=True, allow_root_terminal_children=False,
+                                              top_level={EdgeTags.ParallelScene, EdgeTags.Linker, EdgeTags.Function,
+                                                         EdgeTags.Ground, EdgeTags.Punctuation},
+                                              possible_multiple_incoming={EdgeTags.LinkArgument, EdgeTags.LinkRelation},
+                                              childless_incoming_trigger=EdgeTags.Function,
+                                              childless_outgoing_allowed={EdgeTags.Terminal, EdgeTags.Punctuation},
+                                              unique_incoming={EdgeTags.Function, EdgeTags.Ground,
+                                                               EdgeTags.ParallelScene, EdgeTags.Linker,
+                                                               EdgeTags.LinkRelation, EdgeTags.Connector,
+                                                               EdgeTags.Punctuation, EdgeTags.Terminal},
+                                              unique_outgoing={EdgeTags.LinkRelation, EdgeTags.Process, EdgeTags.State},
+                                              mutually_exclusive_outgoing={EdgeTags.Process, EdgeTags.State})
+    # LinkerIncoming = {EdgeTags.Linker, EdgeTags.LinkRelation}
+    # TagRule(trigger=(LinkerIncoming, None), allowed=(LinkerIncoming, None)),  # disabled due to passage 106 unit 1.300

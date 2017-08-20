@@ -311,7 +311,3 @@ def to_amr(passage, metadata=True, wikification=True, *args, **kwargs):
     """
     del args, kwargs
     return AmrConverter().to_format(passage, metadata, wikification)
-
-
-CONVERTERS = dict(convert.CONVERTERS)
-CONVERTERS["amr"] = (from_amr, to_amr)
