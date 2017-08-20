@@ -57,11 +57,12 @@ def set_prod(set1, set2=None):
 
 # Generic class to define constraints on parser actions
 class Constraints(object):
-    def __init__(self, args, require_implicit_childless=True, allow_root_terminal_children=False,
-                 top_level=(), possible_multiple_incoming=(), childless_incoming_trigger=(),
+    def __init__(self, args, node_labels=False, require_implicit_childless=True, allow_root_terminal_children=False,
+                 top_level=None, possible_multiple_incoming=None, childless_incoming_trigger=(),
                  childless_outgoing_allowed=(), unique_incoming=(), unique_outgoing=(), mutually_exclusive_incoming=(),
                  mutually_exclusive_outgoing=()):
         self.args = args
+        self.node_labels = node_labels
         self.require_implicit_childless = require_implicit_childless
         self.allow_root_terminal_children = allow_root_terminal_children
         self.top_level = top_level

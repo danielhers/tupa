@@ -56,7 +56,8 @@ class Scores(object):
         return Scores(map(sum, zip(*[s.counts for s in scores])))
 
     def print(self, *args, **kwargs):
-        print("Precision: %.3f\nRecall: %.3f\nF1: %.3f" % (self.precision, self.recall, self.f1), *args, **kwargs)
+        print("Smatch precision: %.3f\nSmatch recall: %.3f\nSmatch F1: %.3f" % (self.precision, self.recall, self.f1),
+              *args, **kwargs)
 
     def fields(self):
         return ["%.3f" % float(f) for f in (self.precision, self.recall, self.f1)]

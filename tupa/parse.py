@@ -1,11 +1,14 @@
 import time
 from enum import Enum
+from itertools import groupby
 
 import os
 from collections import defaultdict
-from ucca import diffutil, ioutil, textutil, layer1
-from ucca.convert import FROM_FORMAT, TO_FORMAT, from_text, to_text
+from ucca import diffutil, ioutil, textutil, layer1, evaluation
+from ucca.convert import from_text, to_text
 
+from scheme.convert import FROM_FORMAT, TO_FORMAT
+from scheme.evaluate import EVALUATORS
 from scheme.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
 from tupa.classifiers.classifier import ClassifierProperty
 from tupa.config import Config
@@ -83,8 +86,7 @@ class Parser(object):
                 self.model.save()
             print("Evaluating on dev passages")
             passage_scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev, evaluate=True)]
-            scores = Config().Scores.aggregate(passage_scores)
-            score = scores.average_f1()
+            score, scores = aggregate_scores(passage_scores)
             print("Average labeled F1 score on dev: %.3f" % score)
             if self.args.devscores:
                 prefix = [self.iteration]
@@ -370,9 +372,9 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                                      binary=args.output_format == "pickle", outdir=args.outdir, prefix=args.prefix,
                                      converter=TO_FORMAT.get(args.output_format, Config().output_converter or to_text))
         if passage_scores:
-            test_scores = Config().Scores.aggregate(passage_scores)
+            test_score, test_scores = aggregate_scores(passage_scores)
             if args.verbose <= 1 or len(passage_scores) > 1:
-                print("\nAverage labeled F1 score on test: %.3f" % test_scores.average_f1())
+                print("\nAverage labeled F1 score on test: %.3f" % test_score)
                 print("Aggregated scores:")
                 test_scores.print()
             if args.testscores:
@@ -381,8 +383,15 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
             yield test_scores
 
 
+def aggregate_scores(passage_scores):
+    scores_by_format = [(t, t.aggregate(s)) for t, s in groupby(passage_scores, type)]
+    score = sum(s.average_f1() for t, s in scores_by_format) / len(scores_by_format)
+    scores = dict(scores_by_format).get(Config().args.format, scores_by_format[0][1])
+    return score, scores
+
+
 def evaluate_passage(guessed, ref):
-    score = Config().evaluate(
+    score = EVALUATORS.get(ref.extra.get("format"), evaluation).evaluate(
         guessed, ref,
         converter=None if Config().output_converter is None else lambda p: Config().output_converter(p)[0],
         verbose=Config().args.verbose > 2 and guessed is not None,
@@ -423,7 +432,7 @@ def main():
             if s and s[-1] is not None:
                 fold_scores.append(s[-1])
         if fold_scores:
-            test_scores = Config().Scores.aggregate(fold_scores)
+            _, test_scores = aggregate_scores(fold_scores)
             print("Average labeled test F1 score for each fold: " + ", ".join(
                 "%.3f" % s.average_f1() for s in fold_scores))
             print("Aggregated scores across folds:\n")

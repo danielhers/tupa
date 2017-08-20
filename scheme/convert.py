@@ -16,6 +16,8 @@ Each passage is written to the file: <outdir>/<prefix><passage_id>.<extension> "
 
 CONVERTERS = dict(convert.CONVERTERS)
 CONVERTERS["amr"] = (from_amr, to_amr)
+FROM_FORMAT = {f: c[0] for f, c in CONVERTERS.items() if c[0] is not None}
+TO_FORMAT = {f: c[1] for f, c in CONVERTERS.items() if c[1] is not None}
 
 UCCA_EXT = (".xml", ".pickle")
 

@@ -4,6 +4,8 @@ from collections import deque, defaultdict
 from ucca import core, layer0, layer1, textutil
 from ucca.layer1 import EdgeTags
 
+from scheme.constrain import CONSTRAINTS
+from scheme.constraints import Constraints
 from scheme.constraints import Direction
 from tupa.action import Actions
 from tupa.config import Config
@@ -24,7 +26,7 @@ class State(object):
     """
     def __init__(self, passage):
         self.args = Config().args
-        self.constraints = Config().constraints
+        self.constraints = CONSTRAINTS.get(passage.extra.get("format"), Constraints)(self.args)
         self.log = []
         self.finished = False
         self.passage = passage
@@ -153,7 +155,7 @@ class State(object):
                     _check_possible_parent(s0)
                     _check_possible_node()
                 elif action.is_type(Actions.Label):
-                    self.check(Config().node_labels, message and "Node labels disabled for format", is_type=True)
+                    self.check(self.constraints.node_labels, message and "Node labels disabled", is_type=True)
                     self.check(not s0.labeled, message and "Labeling already-labeled node: %s" % s0, is_type=True)
                 elif action.is_type(Actions.Reduce):
                     self.check(s0 is not self.root or s0.outgoing, message and "Reducing childless root", is_type=True)
