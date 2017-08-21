@@ -33,7 +33,7 @@ def main(args):
                     lines.append(line)
                     if m:
                         passage_id = m.group(1)
-                if not clean and lines:
+                if not clean and any(map(str.strip, lines)):
                     write_file(args.outdir, passage_id, ext, lines, quiet=args.quiet)
             if lines:
                 write_file(args.outdir, passage_id, ext, lines, quiet=args.quiet)
@@ -41,8 +41,10 @@ def main(args):
         print()
 
 
-def write_file(outdir, amr_id, ext, lines, quiet=False):
-    filename = outdir + os.sep + amr_id + ext
+def write_file(outdir, passage_id, ext, lines, quiet=False):
+    if passage_id is None:
+        raise ValueError("Could not determine passage ID")
+    filename = outdir + os.sep + passage_id + ext
     with open(filename, "w", encoding="utf-8") as f:
         f.writelines(lines)
     lines.clear()
