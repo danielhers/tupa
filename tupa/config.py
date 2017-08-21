@@ -4,11 +4,10 @@ import sys
 
 import numpy as np
 from functools import partial
-from ucca import evaluation, constructions
+from ucca import constructions
 
 from scheme.cfgutil import Singleton, add_verbose_argument, add_boolean_option, get_group_arg_names
 from scheme.convert import UCCA_EXT, CONVERTERS
-from scheme.evaluate import EVALUATORS
 
 # Classifiers
 SPARSE = "sparse"
@@ -166,7 +165,6 @@ class Config(object, metaclass=Singleton):
             self.node_labels = False
             self.args.node_label_dim = self.args.max_node_labels = \
                 self.args.node_category_dim = self.args.max_node_categories = 0
-        self.Scores = EVALUATORS.get(self.args.format, evaluation).Scores
         self.input_converter, self.output_converter = CONVERTERS.get(self.args.format, (None, None))
         if self.args.output_format:
             _, self.output_converter = CONVERTERS.get(self.args.output_format, (None, None))

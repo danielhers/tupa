@@ -3,7 +3,6 @@ import csv
 import numpy as np
 import os
 from collections import OrderedDict
-from ucca.evaluation import Scores
 
 from tupa import parse, config
 from tupa.config import Config
@@ -23,7 +22,11 @@ class Params(object):
         print("Running with %s" % self)
         Config().update(self.params)
         for i, self.scores in enumerate(parse.main()):
+            print_title = not os.path.exists(out_file)
             with open(out_file, "a") as f:
+                if print_title:
+                    csv.writer(f).writerow([p for p in self.params.keys()] +
+                                           ["average_labeled_f1"] + self.scores.titles())
                 csv.writer(f).writerow([str((i + 1) if n == "iterations" else p) for n, p in self.params.items()] +
                                        [str(self.scores.average_f1())] + self.scores.fields())
 
@@ -35,12 +38,6 @@ class Params(object):
         if self.scores is not None:
             ret += ", average labeled f1: %.3f" % self.score()
         return ret
-
-    def get_fields(self):
-        return [str(p) for p in self.params.values()] + [str(self.score())] + self.scores.fields()
-
-    def get_field_titles(self):
-        return [p for p in self.params.keys()] + ["average_labeled_f1"] + Scores.field_titles()
 
 
 def get_values_based_on_format(*values):
@@ -106,8 +103,6 @@ def main():
     print("All parameter combinations to try:")
     print("\n".join(map(str, params)))
     print("Saving results to '%s'" % out_file)
-    with open(out_file, "w") as f:
-        csv.writer(f).writerow(params[0].get_field_titles())
     for param in params:
         param.run(out_file)
         best = max(params, key=Params.score)

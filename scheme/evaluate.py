@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+from itertools import groupby
 
 from ucca import evaluation
 
@@ -14,6 +15,30 @@ EVALUATORS = {
     None: evaluation,
     "amr": amr,
 }
+
+
+class Scores(object):
+    """
+    Keeps score objects from multiple formats
+    """
+    def __init__(self, scores):
+        self.scores_by_format = [(t, t.aggregate(s)) for t, s in groupby(scores, type)]
+
+    def average_f1(self, *args, **kwargs):
+        return sum(s.average_f1(*args, **kwargs) for t, s in self.scores_by_format) / len(self.scores_by_format)
+
+    def print(self, *args, **kwargs):
+        for _, s in self.scores_by_format:
+            s.print(*args, **kwargs)
+
+    def fields(self):
+        return [f for _, s in self.scores_by_format for f in s.fields()]
+
+    def titles(self):
+        return [t for _, s in self.scores_by_format for t in s.titles()]
+
+    def __str__(self):
+        print(",".join(self.fields()))
 
 
 def read_amr(f):

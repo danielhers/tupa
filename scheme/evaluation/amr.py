@@ -34,10 +34,10 @@ def evaluate(guessed, ref, converter=None, verbose=False, amr_id=None, **kwargs)
             counts = (0, 0, counts[-1])  # best_match_num, test_triple_num
         except (AttributeError, IndexError):  # error in ref AMR
             counts = (0, 0, 1)  # best_match_num, test_triple_num, gold_triple_num
-    return Scores(counts)
+    return SmatchScores(counts)
 
 
-class Scores(object):
+class SmatchScores(object):
     def __init__(self, counts):
         self.counts = counts
         self.precision, self.recall, self.f1 = smatch.compute_f(*counts)
@@ -53,7 +53,7 @@ class Scores(object):
         :param scores: iterable of Scores
         :return: new Scores with aggregated scores
         """
-        return Scores(map(sum, zip(*[s.counts for s in scores])))
+        return SmatchScores(map(sum, zip(*[s.counts for s in scores])))
 
     def print(self, *args, **kwargs):
         print("Smatch precision: %.3f\nSmatch recall: %.3f\nSmatch F1: %.3f" % (self.precision, self.recall, self.f1),
@@ -71,4 +71,4 @@ class Scores(object):
         return ["precision", "recall", "f1"]
 
     def __str__(self):
-        print(",".join(self.fields()))
+        return ",".join(self.fields())

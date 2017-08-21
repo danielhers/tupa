@@ -9,7 +9,7 @@ from ucca import ioutil
 
 from scheme.cfgutil import add_verbose_argument
 from scheme.conversion.amr import from_amr, to_amr
-from scheme.evaluation.amr import evaluate, Scores
+from scheme.evaluation.amr import evaluate, SmatchScores
 
 desc = """Parses files in AMR format, converts to UCCA standard format,
 converts back to the original format and evaluates using smatch.
@@ -59,7 +59,7 @@ def main():
     print()
     if args.verbose and len(scores) > 1:
         print("Aggregated scores:")
-    Scores.aggregate(scores).print()
+    SmatchScores.aggregate(scores).print()
 
     sys.exit(0)
 

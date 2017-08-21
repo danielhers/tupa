@@ -1,6 +1,5 @@
 import time
 from enum import Enum
-from itertools import groupby
 
 import os
 from collections import defaultdict
@@ -8,7 +7,7 @@ from ucca import diffutil, ioutil, textutil, layer1, evaluation
 from ucca.convert import from_text, to_text
 
 from scheme.convert import FROM_FORMAT, TO_FORMAT, CONVERTERS
-from scheme.evaluate import EVALUATORS
+from scheme.evaluate import EVALUATORS, Scores
 from scheme.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
 from tupa.classifiers.classifier import ClassifierProperty
 from tupa.config import Config
@@ -64,9 +63,6 @@ class Parser(object):
                     print("not found, starting from untrained model.")
             self.best_score = 0
             self.dev = dev
-            if self.args.devscores:
-                with open(self.args.devscores, "w") as f:
-                    print(",".join(["iteration"] + Config().Scores.field_titles(self.args.constructions)), file=f)
             for self.iteration in range(1, iterations + 1):
                 self.eval_index = 0
                 print("Training iteration %d of %d: " % (self.iteration, iterations))
@@ -86,19 +82,16 @@ class Parser(object):
                 self.model.save()
             print("Evaluating on dev passages")
             passage_scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev, evaluate=True)]
-            score, scores = aggregate_scores(passage_scores)
-            print("Average labeled F1 score on dev: %.3f" % score)
-            if self.args.devscores:
-                prefix = [self.iteration]
-                if self.args.save_every:
-                    prefix.append(self.eval_index)
-                with open(self.args.devscores, "a") as f:
-                    print(",".join([".".join(map(str, prefix))] + scores.fields()), file=f)
-            if score >= self.best_score:
+            scores = Scores(passage_scores)
+            average_score = scores.average_f1()
+            print("Average labeled F1 score on dev: %.3f" % average_score)
+            print_scores(scores, self.args.devscores, prefix_title="iteration",
+                         prefix=[self.iteration] + ([self.eval_index] if self.args.save_every else []))
+            if average_score >= self.best_score:
                 print("Better than previous best score (%.3f)" % self.best_score)
                 if self.best_score:
                     self.model.save()
-                self.best_score = score
+                self.best_score = average_score
             else:
                 print("Not better than previous best score (%.3f)" % self.best_score)
         elif last or self.args.save_every is not None:
@@ -375,22 +368,28 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                                      binary=args.output_format == "pickle", outdir=args.outdir, prefix=args.prefix,
                                      converter=TO_FORMAT.get(args.output_format, Config().output_converter or to_text))
         if passage_scores:
-            test_score, test_scores = aggregate_scores(passage_scores)
+            scores = Scores(passage_scores)
             if args.verbose <= 1 or len(passage_scores) > 1:
-                print("\nAverage labeled F1 score on test: %.3f" % test_score)
+                print("\nAverage labeled F1 score on test: %.3f" % scores.average_f1())
                 print("Aggregated scores:")
-                test_scores.print()
-            if args.testscores:
-                with open(args.testscores, "a") as f:
-                    print(",".join(test_scores.fields()), file=f)
-            yield test_scores
+                scores.print()
+            print_scores(scores, args.testscores)
+            yield scores
 
 
-def aggregate_scores(passage_scores):
-    scores_by_format = [(t, t.aggregate(s)) for t, s in groupby(passage_scores, type)]
-    score = sum(s.average_f1() for t, s in scores_by_format) / len(scores_by_format)
-    scores = dict(scores_by_format).get(Config().args.format, scores_by_format[0][1])
-    return score, scores
+def print_scores(scores, filename, prefix=None, prefix_title=None):
+    if filename:
+        print_title = not os.path.exists(filename)
+        with open(filename, "a") as f:
+            if print_title:
+                titles = scores.titles()
+                if prefix_title is not None:
+                    titles = [prefix_title] + titles
+                print(",".join(titles), file=f)
+            fields = scores.fields()
+            if prefix is not None:
+                fields = [".".join(map(str, prefix))] + fields
+            print(",".join(fields), file=f)
 
 
 def read_passages(args, files):
@@ -405,9 +404,6 @@ def main():
     assert args.model or args.train or args.folds, "Either --model or --train or --folds is required"
     assert not (args.train or args.dev) or not args.folds, "--train and --dev are incompatible with --folds"
     assert args.train or not args.dev, "--dev is only possible together with --train"
-    if args.testscores:
-        with open(args.testscores, "w") as f:
-            print(",".join(Config().Scores.field_titles(args.constructions)), file=f)
     if args.folds:
         fold_scores = []
         all_passages = list(read_passages(args, args.passages))
@@ -425,12 +421,12 @@ def main():
             if s and s[-1] is not None:
                 fold_scores.append(s[-1])
         if fold_scores:
-            _, test_scores = aggregate_scores(fold_scores)
+            scores = Scores(fold_scores)
             print("Average labeled test F1 score for each fold: " + ", ".join(
                 "%.3f" % s.average_f1() for s in fold_scores))
             print("Aggregated scores across folds:\n")
-            test_scores.print()
-        yield test_scores
+            scores.print()
+            yield scores
     else:  # Simple train/dev/test by given arguments
         train_passages, dev_passages, test_passages = [read_passages(args, arg) for arg in
                                                        (args.train, args.dev, args.passages)]
