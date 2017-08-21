@@ -17,8 +17,8 @@ Each passage is written to the file: <outdir>/<prefix><passage_id>.<extension> "
 
 CONVERTERS = dict(convert.CONVERTERS)
 CONVERTERS.update({
-    "amr": (from_amr, to_amr),
     "sdp": (from_sdp, to_sdp),
+    "amr": (from_amr, to_amr),
 })
 FROM_FORMAT = {f: c[0] for f, c in CONVERTERS.items() if c[0] is not None}
 TO_FORMAT = {f: c[1] for f, c in CONVERTERS.items() if c[1] is not None}
@@ -58,7 +58,7 @@ def write_passage(passage, args):
         ioutil.passage2file(passage, outfile, args.binary)
     else:
         converter = CONVERTERS[args.output_format][1]
-        output = converter(passage)[0] if args.output_format == "amr" else \
+        output = "\n".join(converter(passage)) if args.output_format == "amr" else \
             "\n".join(line for p in (convert.split2sentences(passage) if args.split else [passage]) for line in
                       converter(p, test=args.test, tree=args.tree, mark_aux=args.mark_aux))
         with open(outfile, "w", encoding="utf-8") as f:

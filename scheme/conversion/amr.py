@@ -226,7 +226,7 @@ class AmrConverter(convert.FormatConverter):
         if wikification:
             WIKIFIER.wikify_passage(passage)
         self._expand_names(passage.layer(layer1.LAYER_ID))
-        return "\n".join(lines + [penman.encode(penman.Graph(list(self._to_triples(passage)))) or "(y / yes)"]),
+        return lines + [penman.encode(penman.Graph(list(self._to_triples(passage)))) or "(y / yes)"]
 
     @staticmethod
     def _to_triples(passage):

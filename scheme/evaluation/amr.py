@@ -18,7 +18,7 @@ def evaluate(guessed, ref, converter=None, verbose=False, amr_id=None, **kwargs)
     :return: Scores object
     """
     def _read_amr(amr):
-        return "".join(l for l in str(amr).splitlines() if not l.startswith("#"))
+        return "".join(l for l in (amr if isinstance(amr, list) else str(amr).splitlines()) if not l.startswith("#"))
     del kwargs
     if converter is not None:
         guessed = converter(guessed)

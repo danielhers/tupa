@@ -6,13 +6,14 @@ from itertools import groupby
 from ucca import evaluation
 
 from scheme.cfgutil import add_verbose_argument
-from scheme.evaluation import amr
+from scheme.evaluation import amr, sdp
 
 desc = """Parses files in AMR format, and evaluates using smatch."""
 
 
 EVALUATORS = {
     None: evaluation,
+    "sdp": sdp,
     "amr": amr,
 }
 

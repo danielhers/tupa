@@ -320,7 +320,7 @@ class Parser(object):
     def evaluate_passage(self, guessed, ref):
         converters = CONVERTERS.get(ref.extra.get("format"))  # returns (input converter, output converter) tuple
         score = EVALUATORS.get(ref.extra.get("format"), evaluation).evaluate(
-            guessed, ref, converter=converters and (lambda p: converters[1](p)[0]),  # converter output is list
+            guessed, ref, converter=converters and converters[1],  # converter output is list of lines
             verbose=guessed and self.args.verbose > 2, constructions=self.args.constructions)
         print("F1=%.3f" % score.average_f1(), flush=True)
         return score

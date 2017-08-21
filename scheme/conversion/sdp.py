@@ -5,10 +5,8 @@ class SdpConverter(convert.SdpConverter):
     def __init__(self, *args, **kwargs):
         super(SdpConverter, self).__init__(*args, **kwargs)
 
-    def _build_passage(self):
-        p = super(SdpConverter, self)._build_passage()
-        p.extra["format"] = "sdp"
-        return p
+    def modify_passage(self, passage):
+        passage.extra["format"] = "sdp"
 
 
 def from_sdp(lines, passage_id, split=True, mark_aux=False, *args, **kwargs):
