@@ -7,7 +7,7 @@ from collections import defaultdict
 from ucca import diffutil, ioutil, textutil, layer1, evaluation
 from ucca.convert import from_text, to_text
 
-from scheme.convert import FROM_FORMAT, TO_FORMAT
+from scheme.convert import FROM_FORMAT, TO_FORMAT, CONVERTERS
 from scheme.evaluate import EVALUATORS
 from scheme.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
 from tupa.classifiers.classifier import ClassifierProperty
@@ -135,8 +135,7 @@ class Parser(object):
         if not hasattr(passages, "__iter__"):  # Single passage given
             passages = (passages,)
         for passage_index, passage in enumerate(passages):
-            labeled = any(n.outgoing or n.attrib.get(LABEL_ATTRIB)
-                          for n in passage.layer(layer1.LAYER_ID).all)
+            labeled = any(n.outgoing or n.attrib.get(LABEL_ATTRIB) for n in passage.layer(layer1.LAYER_ID).all)
             assert not train or labeled, "Cannot train on unannotated passage: %s" % passage.ID
             assert not evaluate or labeled, "Cannot evaluate on unannotated passage: %s" % passage.ID
             print("%s %-7s" % (passage_word, passage.ID), end=Config().line_end, flush=True)
@@ -157,15 +156,14 @@ class Parser(object):
                     raise
                 Config().log("%s %s: %s" % (passage_word, passage.ID, e))
                 failed = True
-            predicted_passage = self.state.create_passage(verify=self.args.verify) \
-                if not train or self.args.verify else passage
+            guessed = self.state.create_passage(verify=self.args.verify) if not train or self.args.verify else passage
             duration = time.time() - started
             total_duration += duration
             num_tokens = len(set(self.state.terminals).difference(self.state.buffer))
             total_tokens += num_tokens
             if self.oracle:  # We have an oracle to verify by
                 if not failed and self.args.verify:
-                    self.verify_passage(passage, predicted_passage, train)
+                    self.verify_passage(guessed, passage, train)
                 if self.action_count:
                     accuracy_str = "%d%% (%d/%d)" % (100*self.correct_action_count/self.action_count,
                                                      self.correct_action_count, self.action_count)
@@ -186,7 +184,7 @@ class Parser(object):
             if train and self.args.save_every and (passage_index+1) % self.args.save_every == 0:
                 self.eval_and_save()
                 self.eval_index += 1
-            yield (predicted_passage, evaluate_passage(predicted_passage, passage)) if evaluate else predicted_passage
+            yield (guessed, self.evaluate_passage(guessed, passage)) if evaluate else guessed
 
         if passages:
             print("Parsed %d %ss" % (passage_index+1, passage_word))
@@ -326,19 +324,24 @@ class Parser(object):
             "\n".join(["Transition loop", self.state.str("\n")] + [self.oracle.str("\n")] if self.oracle else ())
         self.state_hash_history.add(h)
 
-    def verify_passage(self, passage, predicted_passage, show_diff):
+    def evaluate_passage(self, guessed, ref):
+        converters = CONVERTERS.get(ref.extra.get("format"))  # returns (input converter, output converter) tuple
+        score = EVALUATORS.get(ref.extra.get("format"), evaluation).evaluate(
+            guessed, ref, converter=converters and (lambda p: converters[1](p)[0]),  # converter output is list
+            verbose=guessed and self.args.verbose > 2, constructions=self.args.constructions)
+        print("F1=%.3f" % score.average_f1(), flush=True)
+        return score
+
+    def verify_passage(self, guessed, ref, show_diff):
         """
-        Compare predicted passage to true passage and die if they differ
-        :param passage: true passage
-        :param predicted_passage: predicted passage to compare
+        Compare predicted passage to true passage and raise an exception if they differ
+        :param ref: true passage
+        :param guessed: predicted passage to compare
         :param show_diff: if passages differ, show the difference between them?
-                          Depends on predicted_passage having the original node IDs annotated
-                          in the "remarks" field for each node.
+                          Depends on guessed having the original node IDs annotated in the "remarks" field for each node
         """
-        assert passage.equals(predicted_passage, ignore_node=self.ignore_node),\
-            "Failed to produce true passage" + \
-            (diffutil.diff_passages(
-                    passage, predicted_passage) if show_diff else "")
+        assert ref.equals(guessed, ignore_node=self.ignore_node), \
+            "Failed to produce true passage" + (diffutil.diff_passages(ref, guessed) if show_diff else "")
 
 
 def train_test(train_passages, dev_passages, test_passages, args, model_suffix=""):
@@ -388,16 +391,6 @@ def aggregate_scores(passage_scores):
     score = sum(s.average_f1() for t, s in scores_by_format) / len(scores_by_format)
     scores = dict(scores_by_format).get(Config().args.format, scores_by_format[0][1])
     return score, scores
-
-
-def evaluate_passage(guessed, ref):
-    score = EVALUATORS.get(ref.extra.get("format"), evaluation).evaluate(
-        guessed, ref,
-        converter=None if Config().output_converter is None else lambda p: Config().output_converter(p)[0],
-        verbose=Config().args.verbose > 2 and guessed is not None,
-        constructions=Config().args.constructions)
-    print("F1=%.3f" % score.average_f1(), flush=True)
-    return score
 
 
 def read_passages(args, files):
