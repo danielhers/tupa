@@ -240,25 +240,27 @@ class AmrConverter(convert.FormatConverter):
 
         root = passage.layer(layer1.LAYER_ID).top_node
         pending = list(root)
-        if not pending:  # there is nothing but the root node
+        if not pending:  # there is nothing but the root node: add a dummy edge to stop the loop immediately
             pending = [namedtuple("Edge", ["parent", "child", "tag"])(root, None, None)]
         visited = set()  # to avoid cycles
-        labels = defaultdict(_IdGenerator())
-        prefixed_relation_counter = defaultdict(int)
-        while pending:
+        labels = defaultdict(_IdGenerator())  # to generate a different label for each variable
+        prefixed_relation_counter = defaultdict(int)  # to add the index back to :op and :snt relations
+        while pending:  # breadth-first search
             edge = pending.pop(0)
             if edge not in visited:  # skip cycles
                 visited.add(edge)
-                nodes = [edge.parent]
+                nodes = [edge.parent]  # nodes taking part in the relation being created
                 if edge.child is not None and edge.tag not in TERMINAL_TAGS:  # skip terminals
                     nodes.append(edge.child)
                     pending += edge.child
                 head_dep = []  # will be pair of (parent label, child label)
                 for node in nodes:
                     label = resolve_label(node)
-                    if is_concept(label):
+                    if label is None:
+                        raise ValueError("Missing node label for node %s in passage %s" % (node.ID, passage.ID))
+                    elif is_concept(label):  # collapsed variable + concept: create both AMR nodes and the instance-of
                         concept = None if node.ID in labels else AmrConverter.strip(label)
-                        label = labels[node.ID]
+                        label = labels[node.ID]  # generate variable label
                         if concept is not None:  # first time we encounter the variable
                             yield label, INSTANCE, concept  # add instance-of edge
                     else:  # constant
