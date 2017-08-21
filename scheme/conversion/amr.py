@@ -26,11 +26,11 @@ class AmrConverter(convert.FormatConverter):
                 if line[0] != COMMENT_PREFIX:
                     self.lines.append(line)
                     continue
-                m = re.match(ID_PATTERN, line)
+                m = ID_PATTERN.match(line)
                 if m:
                     self.amr_id = m.group(1)
                 else:
-                    m = re.match(TOK_PATTERN, line)
+                    m = TOK_PATTERN.match(line)
                     if m:
                         self.tokens = [t.strip("@") or "@" for t in DELETE_PATTERN.sub("", m.group(1)).split()]
             if self.lines:

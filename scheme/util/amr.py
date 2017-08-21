@@ -22,8 +22,8 @@ finally:
 
 TERMINAL_TAGS = {layer1.EdgeTags.Terminal, layer1.EdgeTags.Punctuation}
 COMMENT_PREFIX = "#"
-ID_PATTERN = "#\s*::id\s+(\S+)"
-TOK_PATTERN = "#\s*::(?:tok|snt)\s+(.*)"
+ID_PATTERN = re.compile("#\s*::id\s+(\S+)")
+TOK_PATTERN = re.compile("#\s*::(?:tok|snt)\s+(.*)")
 DEP_PREFIX = ":"
 TOP_DEP = ":top"
 ALIGNMENT_PREFIX = "e."

@@ -3,9 +3,12 @@ import argparse
 import glob
 import sys
 
-from scheme.util.amr import *
+import os
+import re
 
-desc = """Split AMRs to separate files (important for shuffling before training the parser)"""
+from scheme.util import amr
+
+desc = """Split sentences/passages to separate files (important for shuffling before training the parser)"""
 
 
 def main(args):
@@ -15,28 +18,31 @@ def main(args):
     except FileExistsError:
         pass
     lines = []
-    amr_id = None
+    passage_id = None
     filenames = glob.glob(args.filename)
     if not filenames:
         raise IOError("Not found: " + args.filename)
     for filename in filenames:
+        _, ext = os.path.splitext(filename)
         with open(filename, encoding="utf-8") as f:
             for line in f:
                 clean = line.lstrip()
-                if clean:
-                    if clean[0] != COMMENT_PREFIX or re.match("#\s*::", clean):
-                        lines.append(line)
-                        m = re.match(ID_PATTERN, clean)
-                        if m:
-                            amr_id = m.group(1)
-                elif lines:
-                    write_file(args.outdir, amr_id, lines, quiet=args.quiet)
+                m = amr.ID_PATTERN.match(clean) or \
+                    re.match("#\s*(\d+).*", line) or re.match("#\s*sent_id\s*=\s*(\S+)", line)
+                if m or not clean or clean[0] != amr.COMMENT_PREFIX or re.match("#\s*::", clean):
+                    lines.append(line)
+                    if m:
+                        passage_id = m.group(1)
+                if not clean and lines:
+                    write_file(args.outdir, passage_id, ext, lines, quiet=args.quiet)
             if lines:
-                write_file(args.outdir, amr_id, lines, quiet=args.quiet)
+                write_file(args.outdir, passage_id, ext, lines, quiet=args.quiet)
+    if not args.quiet:
+        print()
 
 
-def write_file(outdir, amr_id, lines, quiet=False):
-    filename = outdir + os.sep + amr_id + ".txt"
+def write_file(outdir, amr_id, ext, lines, quiet=False):
+    filename = outdir + os.sep + amr_id + ext
     with open(filename, "w", encoding="utf-8") as f:
         f.writelines(lines)
     lines.clear()
