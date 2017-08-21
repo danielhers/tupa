@@ -70,9 +70,9 @@ class Parser(object):
             for self.iteration in range(1, iterations + 1):
                 self.eval_index = 0
                 print("Training iteration %d of %d: " % (self.iteration, iterations))
+                Config().random.shuffle(passages)
                 list(self.parse(passages, mode=ParseMode.train))
                 yield self.eval_and_save(self.iteration == iterations, finished_epoch=True)
-                Config().random.shuffle(passages)
             print("Trained %d iterations" % iterations)
         if dev or not passages:
             self.model.load()
