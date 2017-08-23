@@ -314,7 +314,8 @@ class State(object):
                                      paragraph=terminal.paragraph) for terminal in self.terminals]
         l1 = layer1.Layer1(passage)
         self.root.node = l1.heads[0]
-        self.root.set_node_label()
+        if self.constraints.node_labels:
+            self.root.set_node_label()
         if self.labeled:  # We have a reference passage
             self.root.set_node_id()
             self.fix_terminal_tags(terminals)
