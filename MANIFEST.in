@@ -1,0 +1,6 @@
+graft test_files
+prune test_files/models
+graft server
+include README.md
+include LICENSE.txt
+include requirements.txt
