@@ -19,6 +19,7 @@ except (IOError, ImportError):
 
 
 class install(_install):
+    # noinspection PyBroadException
     def run(self):
         # Get submodules
         self.announce("Getting git submodules...")
@@ -37,7 +38,10 @@ class install(_install):
             __import__("en_core_web_sm")
         except ImportError:
             self.announce("Getting spaCy model...")
-            spacy.cli.download("en")
+            try:
+                spacy.cli.download("en")
+            except:
+                self.warn("Failed to get spaCy model. Download it manually using `python -m spacy download en`.")
 
         # Install AMR resource
         for filename in ("have-org-role-91-roles-v1.06.txt", "have-rel-role-91-roles-v1.06.txt",
@@ -45,7 +49,10 @@ class install(_install):
             out_file = os.path.join("scheme", "util", "resources", filename)
             if not os.path.exists(out_file):
                 self.announce("Getting '%s'..." % filename)
-                urllib.request.urlretrieve("https://amr.isi.edu/download/lists/" + filename, out_file)
+                try:
+                    urllib.request.urlretrieve("https://amr.isi.edu/download/lists/" + filename, out_file)
+                except:
+                    self.warn("Failed downloading https://amr.isi.edu/download/lists/" + filename + " to " + out_file)
 
         # Install actual package
         _install.run(self)
