@@ -1,4 +1,4 @@
-ucca>=1.0.2
+ucca>=1.0.3
 spacy>=1.9.0
 cython>=0.26
 penman>=0.6.1

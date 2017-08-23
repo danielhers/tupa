@@ -32,17 +32,6 @@ class install(_install):
             pip.main(["install", package])
         self.announce("Dependencies installed.")
 
-        import spacy
-        # Install spaCy model
-        try:
-            __import__("en_core_web_sm")
-        except ImportError:
-            self.announce("Getting spaCy model...")
-            try:
-                spacy.cli.download("en")
-            except:
-                self.warn("Failed to get spaCy model. Download it manually using `python -m spacy download en`.")
-
         # Install AMR resource
         for filename in ("have-org-role-91-roles-v1.06.txt", "have-rel-role-91-roles-v1.06.txt",
                          "verbalization-list-v1.06.txt", "morph-verbalization-v1.01.txt"):
