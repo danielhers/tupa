@@ -60,7 +60,7 @@ class Node(object):
         self.height = max(self.height, edge.child.height + 1)
         self._terminals = None  # Invalidate terminals because we might have added some
 
-    def add_to_l1(self, l1, parent, tag, terminals, labeled):
+    def add_to_l1(self, l1, parent, tag, terminals, labeled, node_labels):
         """
         Called when creating final Passage to add a new core.Node
         :param l1: Layer1 of the passage
@@ -68,6 +68,7 @@ class Node(object):
         :param tag: edge tag to link to parent
         :param terminals: all terminals strings in the passage
         :param labeled: there is a reference passage, so keep original node IDs in the "remarks" field
+        :param node_labels: whether to add a node label
         """
         edge = self.outgoing[0] if len(self.outgoing) == 1 else None
         if self.text:  # For Word terminals (Punctuation already created by add_punct for parent)
@@ -89,11 +90,12 @@ class Node(object):
             if Config().args.verify:
                 assert self.node is None, "Trying to create the same node twice: %s, parent: %s" % (self.node, parent)
             if parent is not None and parent.label and parent.node is None:  # If parent is an orphan and has a a label,
-                parent.add_to_l1(l1, None, Config().args.orphan_label, terminals, labeled)  # attach it to the root
+                parent.add_to_l1(l1, None, Config().args.orphan_label, terminals, labeled, node_labels)  # link to root
             self.node = l1.add_fnode(None if parent is None else parent.node, tag, implicit=self.implicit)
         if labeled:  # In training
             self.set_node_id()
-        self.set_node_label()
+        if node_labels:
+            self.set_node_label()
 
     def set_node_id(self):
         if self.node is not None and self.node_id is not None:
