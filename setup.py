@@ -14,7 +14,7 @@ install_requires.append("dynet>=2.0")
 try:
     import pypandoc
     long_description = pypandoc.convert("README.md", "rst")
-except (IOError, ImportError):
+except (IOError, ImportError, RuntimeError):
     long_description = ""
 
 
