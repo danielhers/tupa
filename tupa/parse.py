@@ -364,7 +364,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 guessed_passage = result
                 print()
             if guessed_passage is not None and args.write:
-                out_format = guessed_passage.extra.get("format") or args.output_format
+                out_format = args.output_format or guessed_passage.extra.get("format")
                 ioutil.write_passage(guessed_passage, output_format=out_format, binary=args.output_format == "pickle",
                                      outdir=args.outdir, prefix=args.prefix,
                                      converter=TO_FORMAT.get(out_format, Config().output_converter or to_text))
