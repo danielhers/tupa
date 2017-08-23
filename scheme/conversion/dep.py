@@ -30,3 +30,8 @@ class DependencyConverter(convert.DependencyConverter):
         if not unit.outgoing and unit.incoming:  # go to pre-terminal
             unit = unit.parents[0]
         return unit.incoming
+
+    def break_cycles(self, dep_nodes):
+        for dep_node in dep_nodes:
+            for edge in dep_node.incoming:
+                edge.remote = False
