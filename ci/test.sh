@@ -40,4 +40,7 @@ noop-amr)
 convert-amr)
     python scheme/convert_and_evaluate.py alignment-release-dev-bio.txt -v
     ;;
+convert-sdp)
+    python scheme/convert_and_evaluate.py data/sdp/trial/*.sdp -v
+    ;;
 esac
