@@ -10,6 +10,9 @@ class SdpConverter(DependencyConverter, convert.SdpConverter):
     def modify_passage(self, passage):
         passage.extra["format"] = "sdp"
 
+    def edges_for_orphan(self, top):
+        return [self.Edge(0, self.TOP, False)] if top else []
+
     def read_line(self, line, previous_node):
         self.lines_read.append(line)
         return super(SdpConverter, self).read_line(line, previous_node)
