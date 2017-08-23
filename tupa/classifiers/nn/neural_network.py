@@ -101,7 +101,7 @@ class NeuralNetwork(Classifier):
                 if not param.numeric:  # lookup feature
                     p = self.model.add_lookup_parameters((param.size, param.dim))
                     p.set_updated(param.updated)
-                    if param.init:
+                    if param.init is not None and param.init.size:
                         p.init_from_array(param.init)
                     self.params[suffix] = p
                 if param.indexed:
