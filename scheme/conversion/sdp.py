@@ -1,7 +1,9 @@
 from ucca import convert
 
+from .dep import DependencyConverter
 
-class SdpConverter(convert.SdpConverter):
+
+class SdpConverter(DependencyConverter, convert.SdpConverter):
     def __init__(self, *args, **kwargs):
         super(SdpConverter, self).__init__(*args, **kwargs)
 
@@ -23,15 +25,16 @@ def from_sdp(lines, passage_id, split=True, mark_aux=False, *args, **kwargs):
     return SdpConverter(mark_aux=mark_aux).from_format(lines, passage_id, split)
 
 
-def to_sdp(passage, test=False, tree=False, mark_aux=False, *args, **kwargs):
+def to_sdp(passage, test=False, tree=False, mark_aux=False, constituency=False, *args, **kwargs):
     """ Convert from a Passage object to a string in SemEval 2015 SDP format (sdp)
 
     :param passage: the Passage object to convert
     :param test: whether to omit the top, head, frame, etc. columns. Defaults to False
     :param tree: whether to omit columns for non-primary parents. Defaults to False
     :param mark_aux: omit edges with labels with a preceding #
+    :param constituency: use UCCA conversion that introduces intermediate non-terminals
 
     :return list of lines representing the semantic dependencies in the passage
     """
     del args, kwargs
-    return SdpConverter(mark_aux=mark_aux).to_format(passage, test, tree)
+    return SdpConverter(mark_aux=mark_aux, constituency=constituency).to_format(passage, test, tree)
