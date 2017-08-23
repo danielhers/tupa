@@ -41,4 +41,4 @@ class UtilTests(unittest.TestCase):
 
 def read_test_amr():
     with open("test_files/LDC2014T12.txt") as f:
-        return list(from_amr(f, return_amr=True))
+        return list(from_amr(f, return_original=True))

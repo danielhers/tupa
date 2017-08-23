@@ -32,3 +32,8 @@ def evaluate(guessed, ref, converter=None, verbose=False, **kwargs):
 class SdpScores(evaluation.Scores):
     def __init__(self, *args, **kwargs):
         super(SdpScores, self).__init__(*args, **kwargs)
+
+    def print(self):
+        for eval_type in EVAL_TYPES:
+            print("Evaluation type: (" + eval_type + ")")
+            self.evaluators[eval_type].print()

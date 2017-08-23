@@ -9,6 +9,7 @@ class DependencyConverter(convert.DependencyConverter):
     def __init__(self, *args, constituency=False, **kwargs):
         super(DependencyConverter, self).__init__(*args, **kwargs)
         self.constituency = constituency
+        self.lines_read = []
 
     def create_non_terminals(self, dep_nodes, l1):
         if self.constituency:
@@ -20,6 +21,11 @@ class DependencyConverter(convert.DependencyConverter):
                 dep_node.node = dep_node.preterminal = l1.add_fnode(edge.head.node, edge.rel)
                 for edge in dep_node.incoming[1:]:
                     l1.add_remote(edge.head.node, edge.rel, dep_node.node)
+
+    def from_format(self, lines, passage_id, split=False, return_original=False):
+        for passage in super(DependencyConverter, self).from_format(lines, passage_id, split=split):
+            yield (passage, self.lines_read, passage.ID) if return_original else passage
+            self.lines_read = []
 
     def find_head_terminal(self, unit):
         while unit.outgoing:  # still non-terminal

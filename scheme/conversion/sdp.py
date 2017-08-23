@@ -10,19 +10,24 @@ class SdpConverter(DependencyConverter, convert.SdpConverter):
     def modify_passage(self, passage):
         passage.extra["format"] = "sdp"
 
+    def read_line(self, line, previous_node):
+        self.lines_read.append(line)
+        return super(SdpConverter, self).read_line(line, previous_node)
 
-def from_sdp(lines, passage_id, split=True, mark_aux=False, *args, **kwargs):
+
+def from_sdp(lines, passage_id, split=True, mark_aux=False, return_original=False, *args, **kwargs):
     """Converts from parsed text in SemEval 2015 SDP format to a Passage object.
 
     :param lines: iterable of lines in SDP format, describing a single passage.
     :param passage_id: ID to set for passage
     :param split: split each sentence to its own passage?
     :param mark_aux: add a preceding # for labels of auxiliary edges added
+    :param return_original: return triple of (UCCA passage, SDP string, sentence ID)
 
     :return generator of Passage objects
     """
     del args, kwargs
-    return SdpConverter(mark_aux=mark_aux).from_format(lines, passage_id, split)
+    return SdpConverter(mark_aux=mark_aux).from_format(lines, passage_id, split, return_original=return_original)
 
 
 def to_sdp(passage, test=False, tree=False, mark_aux=False, constituency=False, *args, **kwargs):

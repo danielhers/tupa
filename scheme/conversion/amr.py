@@ -9,12 +9,12 @@ DELETE_PATTERN = re.compile("\\\\|(?<=(?<!<)<)[^<>]+(?=>(?!>))")  # Delete text 
 
 class AmrConverter(convert.FormatConverter):
     def __init__(self):
-        self.passage_id = self.amr_id = self.lines = self.tokens = self.nodes = self.return_amr = \
+        self.passage_id = self.amr_id = self.lines = self.tokens = self.nodes = self.return_original = \
             self.remove_cycles = self.extensions = self.excluded = None
 
-    def from_format(self, lines, passage_id, return_amr=False, remove_cycles=True, **kwargs):
+    def from_format(self, lines, passage_id, return_original=False, remove_cycles=True, **kwargs):
         self.passage_id = passage_id
-        self.return_amr = return_amr
+        self.return_original = return_original
         self.remove_cycles = remove_cycles
         self.extensions = [l for l in EXTENSIONS if kwargs.get(l)]
         self.excluded = {i for l, r in EXTENSIONS.items() if l not in self.extensions for i in r}
@@ -54,7 +54,7 @@ class AmrConverter(convert.FormatConverter):
         self._update_implicit(l1)
         self._update_labels(l1)
         # return (passage, penman.encode(amr), self.amr_id) if self.return_amr else passage
-        return (passage, amr(alignments=False), self.amr_id) if self.return_amr else passage
+        return (passage, amr(alignments=False), self.amr_id) if self.return_original else passage
 
     def _build_layer1(self, amr, l1):
         def _reachable(x, y):  # is there a path from x to y? used to detect cycles
@@ -290,17 +290,17 @@ class AmrConverter(convert.FormatConverter):
         return label[1:-1] if len(label) > 1 and label.startswith('"') and label.endswith('"') else label
 
 
-def from_amr(lines, passage_id=None, return_amr=False, *args, **kwargs):
+def from_amr(lines, passage_id=None, return_original=False, *args, **kwargs):
     """Converts from parsed text in AMR PENMAN format to a Passage object.
 
     :param lines: iterable of lines in AMR PENMAN format, describing a single passage.
     :param passage_id: ID to set for passage, overriding the ID from the file
-    :param return_amr: return triple of (UCCA passage, AMR string, AMR ID)
+    :param return_original: return triple of (UCCA passage, AMR string, AMR ID)
 
     :return generator of Passage objects
     """
     del args, kwargs
-    return AmrConverter().from_format(lines, passage_id, return_amr)
+    return AmrConverter().from_format(lines, passage_id, return_original=return_original)
 
 
 def to_amr(passage, metadata=True, wikification=True, *args, **kwargs):
