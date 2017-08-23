@@ -45,5 +45,7 @@ class FeatureExtractorWrapper(FeatureExtractor):
         vectors, param.dim = get_word_vectors(param.dim, param.size, param.filename)
         if param.size is not None:
             assert len(vectors) <= param.size, "Loaded more vectors than requested: %d>%d" % (len(vectors), param.size)
+        assert vectors, "Cannot load word vectors. Install them using `python -m spacy download en` or choose a file " \
+                        "using the --word-vectors option."
         param.size = len(vectors)
         return vectors
