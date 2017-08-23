@@ -306,6 +306,9 @@ class State(object):
         :return: core.Passage created from self.nodes
         """
         passage = core.Passage(self.passage.ID)
+        passage_format = self.passage.extra.get("format")
+        if passage_format:
+            passage.extra["format"] = passage_format
         l0 = layer0.Layer0(passage)
         terminals = [l0.add_terminal(text=terminal.text, punct=terminal.tag == layer0.NodeTags.Punct,
                                      paragraph=terminal.paragraph) for terminal in self.terminals]

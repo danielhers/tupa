@@ -364,9 +364,10 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 guessed_passage = result
                 print()
             if guessed_passage is not None and args.write:
-                ioutil.write_passage(guessed_passage, output_format=args.output_format,
-                                     binary=args.output_format == "pickle", outdir=args.outdir, prefix=args.prefix,
-                                     converter=TO_FORMAT.get(args.output_format, Config().output_converter or to_text))
+                out_format = guessed_passage.extra.get("format") or args.output_format
+                ioutil.write_passage(guessed_passage, output_format=out_format, binary=args.output_format == "pickle",
+                                     outdir=args.outdir, prefix=args.prefix,
+                                     converter=TO_FORMAT.get(out_format, Config().output_converter or to_text))
         if passage_scores:
             scores = Scores(passage_scores)
             if args.verbose <= 1 or len(passage_scores) > 1:
