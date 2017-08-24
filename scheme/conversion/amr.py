@@ -40,9 +40,9 @@ class AmrConverter(convert.FormatConverter):
 
     def _build_passage(self):
         assert self.tokens is not None, "Cannot convert AMR without input tokens"
-        # amr = penman.decode(re.sub("~e\.[\d,]+", "", " ".join(self.lines)))
         amr = parse(" ".join(self.lines), tokens=self.tokens)
-        passage = next(convert.from_text(self.tokens, self.amr_id or self.passage_id, tokenized=True))
+        amr_id = self.amr_id or self.passage_id
+        passage = next(convert.from_text(self.tokens, amr_id, tokenized=True))
         passage.extra["format"] = "amr"
         self.lines = []
         self.amr_id = self.tokens = None
@@ -53,8 +53,7 @@ class AmrConverter(convert.FormatConverter):
         self._build_layer0(self.align_nodes(amr), l1, l0)
         self._update_implicit(l1)
         self._update_labels(l1)
-        # return (passage, penman.encode(amr), self.amr_id) if self.return_amr else passage
-        return (passage, amr(alignments=False), self.amr_id) if self.return_original else passage
+        return (passage, amr(alignments=False), amr_id) if self.return_original else passage
 
     def _build_layer1(self, amr, l1):
         def _reachable(x, y):  # is there a path from x to y? used to detect cycles
