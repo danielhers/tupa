@@ -29,6 +29,10 @@ env:
   - TEST_SUITE=sparse-amr
   - TEST_SUITE=noop-amr
   - TEST_SUITE=convert-amr
+  - TEST_SUITE=sparse-sdp
+  - TEST_SUITE=mlp-sdp
+  - TEST_SUITE=bilstm-sdp
+  - TEST_SUITE=noop-sdp
   - TEST_SUITE=convert-sdp
 script:
   - ci/test.sh

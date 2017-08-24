@@ -52,6 +52,9 @@ sparse-amr)
 noop-amr)
     python tupa/parse.py -v -c noop -We -f amr alignment-release-dev-bio.txt -t alignment-release-training-bio --no-wikification
     ;;
+sparse-sdp|mlp-sdp|bilstm-sdp|noop-sdp)
+    python tupa/parse.py -v -c "$ACTION" -We data/sdp/trial/dm/dev -t data/sdp/trial/dm/train
+    ;;
 convert-*)
     python scheme/convert_and_evaluate.py "$CONVERT_DATA" -v
     ;;
