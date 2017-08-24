@@ -162,6 +162,7 @@ class State(object):
                 elif action.is_type(Actions.Label):
                     self.check(self.constraints.node_labels, message and "Node labels disabled", is_type=True)
                     self.check(not s0.labeled, message and "Labeling already-labeled node: %s" % s0, is_type=True)
+                    self.check(s0.text is None, message and "Terminals do not have labels: %s" % s0, is_type=True)
                 elif action.is_type(Actions.Reduce):
                     self.check(s0 is not self.root or s0.outgoing, message and "Reducing childless root", is_type=True)
                     if self.args.require_connected:
