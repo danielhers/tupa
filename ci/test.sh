@@ -1,5 +1,24 @@
 #!/usr/bin/env bash
 
+# download data
+case "$TEST_SUITE" in
+*-ucca)
+    mkdir pickle
+    curl -L http://www.cs.huji.ac.il/~danielh/ucca/ucca_corpus_pickle.tgz | tar xz -C pickle || curl -L https://www.dropbox.com/s/q4ycn45zlmhuf9k/ucca_corpus_pickle.tgz | tar xz -C pickle
+    python -m scripts.split_corpus -q pickle -t 4282 -d 454 -l
+    ;;
+*-amr)
+    curl --remote-name-all https://amr.isi.edu/download/2016-03-14/alignment-release-{training,dev,test}-bio.txt
+    python scheme/split.py -q alignment-release-training-bio.txt alignment-release-training-bio
+    ;;
+*-sdp)
+    mkdir data
+    curl -L http://svn.delph-in.net/sdp/public/2015/trial/current.tgz | tar xz -C data
+    python scheme/split.py -q data/sdp/trial/dm.sdp data/sdp/trial/dm
+    python -m scripts.split_corpus -q data/sdp/trial/dm -t 120 -d 36 -l
+    ;;
+esac
+
 case "$TEST_SUITE" in
 unit)
     # unit tests
