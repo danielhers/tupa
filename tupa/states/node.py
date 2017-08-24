@@ -87,8 +87,8 @@ class Node(object):
             elif parent.node is not None and self.node not in parent.node.children:
                 parent.node.add(EdgeTags.Punctuation, self.node)
         else:  # The usual case
-            if Config().args.verify:
-                assert self.node is None, "Trying to create the same node twice: %s, parent: %s" % (self.node, parent)
+            assert self.node is None, "Trying to create the same node twice (multiple incoming primary edges): " \
+                                      "%s, parent: %s" % (self, parent)
             if parent is not None and parent.label and parent.node is None:  # If parent is an orphan and has a a label,
                 parent.add_to_l1(l1, None, Config().args.orphan_label, terminals, labeled, node_labels)  # link to root
             self.node = l1.add_fnode(None if parent is None else parent.node, tag, implicit=self.implicit)
