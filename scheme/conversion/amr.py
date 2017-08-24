@@ -122,6 +122,7 @@ class AmrConverter(convert.FormatConverter):
                 tag = PUNCTUATION_DEP
                 terminal = l1.add_punct(parents[0], terminal)
                 terminal.attrib[LABEL_ATTRIB] = PUNCTUATION_LABEL
+                del parents[1:]  # avoid multiple punctuation parents, which is mostly due to alignment errors
             else:
                 tag = TERMINAL_DEP
             for parent in parents:
