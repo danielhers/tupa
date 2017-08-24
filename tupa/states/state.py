@@ -117,12 +117,17 @@ class State(object):
             parent, child = self.get_parent_child(action)
             _check_possible_parent(parent)
             _check_possible_child(child)
-            if parent is self.root and self.args.constraints:
-                self.check(self.constraints.allow_root_terminal_children or child.text is None,
-                           message and "Terminal child '%s' for root" % child, is_type=True)
-                self.check(self.constraints.top_level is None or action.tag in self.constraints.top_level,
-                           message and "Root may not have %s edges" % action.tag)
             if self.args.constraints:
+                if parent is self.root:
+                    self.check(self.constraints.allow_root_terminal_children or child.text is None,
+                               message and "Terminal child '%s' for root" % child, is_type=True)
+                    self.check(self.constraints.top_level_allowed is None or
+                               action.tag in self.constraints.top_level_allowed,
+                               message and "Root may not have %s edges" % action.tag)
+                else:
+                    self.check(self.constraints.top_level_only is None or
+                               action.tag not in self.constraints.top_level_only,
+                               message and "Only root may have %s edges" % action.tag)
                 edge = Edge(parent, child, action.tag, remote=action.remote)
                 self.check(self.constraints.allow_edge(edge), message and "Edge not allowed: %s" % edge)
             self.check(parent not in child.descendants,
