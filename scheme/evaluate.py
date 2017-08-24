@@ -3,9 +3,11 @@
 import argparse
 from itertools import groupby
 
+import os
 from ucca import evaluation
 
 from scheme.cfgutil import add_verbose_argument
+from scheme.convert import CONVERTERS
 from scheme.evaluation import amr, sdp
 
 desc = """Parses files in AMR format, and evaluates using smatch."""
@@ -42,20 +44,6 @@ class Scores(object):
         print(",".join(self.fields()))
 
 
-def read_amr(f):
-    lines = []
-    for line in f:
-        line = line.lstrip()
-        if line:
-            if line[0] != "#":
-                lines.append(line)
-                continue
-        if lines:
-            yield " ".join(lines)
-    if lines:
-        yield " ".join(lines)
-
-
 def main():
     argparser = argparse.ArgumentParser(description=desc)
     argparser.add_argument("guessed", help="file name for the guessed annotation")
@@ -63,9 +51,15 @@ def main():
     add_verbose_argument(argparser, help="detailed evaluation output")
     args = argparser.parse_args()
 
+    basename, ext = os.path.splitext(os.path.basename(args.ref))
+    passage_format = ext.lstrip(".")
+    converter = CONVERTERS.get(passage_format, CONVERTERS["amr"])[0]
+    evaluator = EVALUATORS.get(passage_format, EVALUATORS["amr"]).evaluate
     with open(args.guessed, encoding="utf-8") as guessed, open(args.ref, encoding="utf-8") as ref:
-        for g, r in zip(read_amr(guessed), read_amr(ref)):
-            EVALUATORS["amr"].evaluate(g, r, verbose=args.verbose > 1).print()
+        for (guessed_passage, _), (ref_passage, passage_id) in zip(
+                *[(l[1:] for l in converter(f, passage_id=basename, return_original=True)) for f in (guessed, ref)]):
+            print(passage_id)
+            evaluator(guessed_passage, ref_passage, verbose=args.verbose > 1).print()
 
 
 if __name__ == '__main__':
