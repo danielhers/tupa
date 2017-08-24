@@ -9,8 +9,7 @@ from ucca import ioutil
 
 from scheme.cfgutil import add_verbose_argument
 from scheme.convert import CONVERTERS
-from scheme.evaluate import EVALUATORS
-from scheme.evaluation.amr import SmatchScores
+from scheme.evaluate import EVALUATORS, Scores
 
 desc = """Convert files to UCCA standard format, convert back to the original format and evaluate.
 """
@@ -30,7 +29,7 @@ def main():
             raise IOError("Not found: " + pattern)
         for filename in filenames:
             sys.stdout.write("\rConverting '%s'" % filename)
-            if args.outdir:
+            if args.outdir or args.verbose:
                 sys.stdout.write("\n")
             sys.stdout.flush()
             basename, ext = os.path.splitext(os.path.basename(filename))
@@ -58,11 +57,12 @@ def main():
                         raise ValueError("Error evaluating conversion of %s" % filename) from e
                     scores.append(s)
                     if args.verbose:
+                        print(passage_id)
                         s.print()
     print()
     if args.verbose and len(scores) > 1:
         print("Aggregated scores:")
-    SmatchScores.aggregate(scores).print()
+    Scores(scores).print()
 
     sys.exit(0)
 
