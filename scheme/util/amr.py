@@ -172,6 +172,10 @@ def is_valid_arg(node, label, *tags, is_parent=True):
         return WEEKDAY in tags
     elif SEASON in tags:  # :season excl,a=date-entity,b=[winter|fall|spring|summer]+
         return concept in SEASONS
+    elif PUNCTUATION_DEP in tags:
+        return label == PUNCTUATION_LABEL
+    elif label == PUNCTUATION_LABEL:
+        return tags == {PUNCTUATION_DEP}
 
     if not concept or "-" not in concept:
         return True  # What follows is a check for predicate arguments, only relevant for predicates
