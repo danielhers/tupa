@@ -29,8 +29,8 @@ class ConversionTests(unittest.TestCase):
             self.assertAlmostEqual(scores.f1, 1, msg=converted)
 
 
-class UtilTests(unittest.TestCase):
-    """Tests the amrutil module functions and classes."""
+class EvaluationTests(unittest.TestCase):
+    """Tests the evaluation module functions and classes."""
 
     def test_evaluate(self):
         """Test that comparing an AMR against itself returns perfect Smatch F1"""
