@@ -162,7 +162,7 @@ class AmrConverter(convert.FormatConverter):
             full_range = range(min(indices), max(indices) + 1)  # make this a contiguous range if valid
             if AmrConverter._contains_substring(stripped, tokens, full_range):
                 indices = list(full_range)
-        else:  # no given alignment
+        elif len(stripped) > 1:  # no given alignment, and label has more than one character (to avoid aligning "-")
             for i, token in enumerate(tokens):  # use any equal span, or any equal token if it occurs only once
                 if stripped.startswith(token):
                     l = [i]
