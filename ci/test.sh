@@ -35,8 +35,8 @@ unit)
     done
     python tupa/parse.py -f amr -I 10 -t test_files/LDC2014T12.txt -d test_files/LDC2014T12.txt -m model_LDC2014T12 -v || exit 1
     python tupa/parse.py -f amr test_files/LDC2014T12.txt -em model_LDC2014T12 -v || exit 1
-    python tupa/parse.py -f amr -I 10 -t test_files/20001001.sdp -d test_files/20001001.sdp -m model_dm -v || exit 1
-    python tupa/parse.py -f amr test_files/20001001.sdp -em model_dm -v || exit 1
+    python tupa/parse.py -I 10 -t test_files/20001001.sdp -d test_files/20001001.sdp -m model_dm -v || exit 1
+    python tupa/parse.py test_files/20001001.sdp -em model_dm -v || exit 1
     ;;
 sparse-ucca|mlp-ucca|bilstm-ucca|noop-ucca)
     python tupa/parse.py -v -c "$ACTION" --max-words-external=5000 --layer-dim=100 -We pickle/dev/*0.pickle -t pickle/train/*0.pickle
