@@ -119,11 +119,11 @@ class AmrConverter(convert.FormatConverter):
         for i, parents in preterminals.items():
             terminal = l0.all[i]
             if layer0.is_punct(terminal):
-                tag = layer1.EdgeTags.Punctuation
+                tag = PUNCTUATION_DEP
                 terminal = l1.add_punct(parents[0], terminal)
-                terminal.attrib[LABEL_ATTRIB] = layer1.NodeTags.Punctuation
+                terminal.attrib[LABEL_ATTRIB] = PUNCTUATION_LABEL
             else:
-                tag = layer1.EdgeTags.Terminal
+                tag = TERMINAL_DEP
             for parent in parents:
                 if parent not in terminal.parents:  # avoid multiple identical edges (e.g. :polarity~e.68 -~e.68)
                     parent.add(tag, terminal)

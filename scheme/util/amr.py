@@ -20,7 +20,10 @@ try:
 finally:
     os.chdir(prev_dir)
 
-TERMINAL_TAGS = {layer1.EdgeTags.Terminal, layer1.EdgeTags.Punctuation}
+TERMINAL_DEP = layer1.EdgeTags.Terminal
+PUNCTUATION_DEP = layer1.EdgeTags.Punctuation
+PUNCTUATION_LABEL = layer1.NodeTags.Punctuation
+TERMINAL_TAGS = {TERMINAL_DEP, PUNCTUATION_DEP}
 COMMENT_PREFIX = "#"
 ID_PATTERN = re.compile("#\s*::id\s+(\S+)")
 TOK_PATTERN = re.compile("#\s*::(?:tok|snt)\s+(.*)")
