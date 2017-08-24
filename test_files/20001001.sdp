@@ -1,0 +1,20 @@
+#20001001
+1	Pierre	Pierre	NNP	-	+	named:x-c	_	_	_	_	_	_	_	_	_	_	_
+2	Vinken	_generic_proper_ne_	NNP	-	-	named:x-c	compound	_	_	ARG1	ARG1	_	_	_	_	_	_
+3	,	_	,	-	-	_	_	_	_	_	_	_	_	_	_	_	_
+4	61	_generic_card_ne_	CD	-	+	card:i-i-c	_	_	_	_	_	_	_	_	_	_	_
+5	years	year	NNS	-	+	n:x	_	ARG1	_	_	_	_	_	_	_	_	_
+6	old	old	JJ	-	+	a:e-p	_	_	measure	_	_	_	_	_	_	_	_
+7	,	_	,	-	-	_	_	_	_	_	_	_	_	_	_	_	_
+8	will	will	MD	-	-	_	_	_	_	_	_	_	_	_	_	_	_
+9	join	join	VB	+	+	v:e-i-p	_	_	_	_	_	_	ARG1	_	_	_	loc
+10	the	the	DT	-	+	q:i-h-h	_	_	_	_	_	_	_	_	_	_	_
+11	board	board	NN	-	-	n_of:x-i	_	_	_	_	ARG2	BV	_	_	_	_	_
+12	as	as	IN	-	+	p:e-u-i	_	_	_	_	_	_	_	_	_	_	_
+13	a	a	DT	-	+	q:i-h-h	_	_	_	_	_	_	_	_	_	_	_
+14	nonexecutive	_generic_jj_	JJ	-	+	string:e-u	_	_	_	_	_	_	_	_	_	_	_
+15	director	director	NN	-	-	n_of:x-i	_	_	_	_	_	_	ARG2	BV	ARG1	_	_
+16	Nov.	Nov.	NNP	-	+	mofy:x-c	_	_	_	_	_	_	_	_	_	_	_
+17	29	_generic_dom_card_ne_	CD	-	+	dofm:x-c	_	_	_	_	_	_	_	_	_	of	_
+18	.	_	.	-	-	_	_	_	_	_	_	_	_	_	_	_	_
+
