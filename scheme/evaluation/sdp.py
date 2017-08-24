@@ -6,9 +6,16 @@ from scheme.conversion.sdp import SdpConverter
 EVAL_TYPES = (evaluation.LABELED, evaluation.UNLABELED)
 
 
+def create_top_edge(converter):
+    edge = converter.Edge(0, converter.TOP, False)
+    edge.head = converter.Node()
+    return edge
+
+
 def get_scores(s1, s2, eval_type, verbose):
     converter = SdpConverter()
-    edges = [[e for nodes, _ in converter.build_nodes(s) for n in nodes for e in n.outgoing] for s in (s1, s2)]
+    edges = [[e for nodes, _ in converter.build_nodes(s) for n in nodes for e in n.outgoing +
+              ([create_top_edge(converter)] if n.is_top else [])] for s in (s1, s2)]
     if eval_type == evaluation.UNLABELED:
         for es in edges:
             for e in es:

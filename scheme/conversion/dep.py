@@ -17,14 +17,14 @@ class DependencyConverter(convert.DependencyConverter):
         if self.constituency:
             super(DependencyConverter, self).create_non_terminals(dep_nodes, l1)
         for dep_node in dep_nodes:
-            if dep_node.position != 0 and not dep_node.incoming:
+            if dep_node.position != 0 and not dep_node.incoming and dep_node.outgoing:
                 dep_node.node = dep_node.preterminal = l1.add_fnode(None, self.TOP if dep_node.is_top else self.ROOT)
         for dep_node in self._topological_sort(dep_nodes):
             # create pre-terminals and edges
             incoming = list(dep_node.incoming)
             if dep_node.is_top and incoming[0].head_index != 0:
                 top_edge = self.Edge(0, self.TOP, False)
-                top_edge.head = self.Node()
+                top_edge.head = dep_nodes[0]
                 incoming[:0] = [top_edge]
             edge = incoming[0]
             dep_node.node = dep_node.preterminal = l1.add_fnode(edge.head.node, edge.rel)
