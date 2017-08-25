@@ -27,6 +27,7 @@ class ParserTests(unittest.TestCase):
         return passages
 
     def test_oracle(self):
+        self.maxDiff = None
         for passage in self.load_passages():
             oracle = Oracle(passage)
             state = State(passage)
@@ -70,3 +71,6 @@ class ParserTests(unittest.TestCase):
             self.assertAlmostEqual(*scores)
         p.parse(convert.to_text(self.load_passages()[0]))
         self.assertFalse(list(p.parse(())))  # parsing nothing returns nothing
+
+if __name__ == "__main__":
+    unittest.main()
