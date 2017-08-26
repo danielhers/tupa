@@ -16,8 +16,6 @@ NUM_PASSAGES = 2
 class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ParserTests, self).__init__(*args, **kwargs)
-        Config("", "-m", "test", "--max-words-external=100", "--word-dim-external=100", "--optimizer=sgd",
-               "--layer-dim=100", "--layers=1", "--lstm-layer-dim=100", "--lstm-layers=1")
 
     @staticmethod
     def load_passages():
@@ -27,6 +25,7 @@ class ParserTests(unittest.TestCase):
         return passages
 
     def test_oracle(self):
+        Config("", "--implicit", "--linkage")
         self.maxDiff = None
         for passage in self.load_passages():
             oracle = Oracle(passage)
@@ -57,6 +56,8 @@ class ParserTests(unittest.TestCase):
         self.train_test(NOOP)
 
     def train_test(self, model_type, compare=True):
+        Config("", "-m", "test", "--max-words-external=100", "--word-dim-external=100", "--optimizer=sgd",
+               "--layer-dim=100", "--layers=1", "--lstm-layer-dim=100", "--lstm-layers=1")
         scores = []
         p = None
         for mode in "train", "load":
