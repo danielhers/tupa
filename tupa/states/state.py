@@ -7,6 +7,7 @@ from ucca.layer1 import EdgeTags
 from scheme.constrain import CONSTRAINTS
 from scheme.constraints import Constraints
 from scheme.constraints import Direction
+from scheme.util.amr import LABEL_ATTRIB
 from tupa.action import Actions
 from tupa.config import Config
 from .edge import Edge
@@ -33,7 +34,7 @@ class State(object):
         l0 = passage.layer(layer0.LAYER_ID)
         l1 = passage.layer(layer1.LAYER_ID)
         assert l0.all, "Empty passage '%s'" % passage.ID
-        self.labeled = len(l1.all) > 1
+        self.labeled = any(n.outgoing or n.attrib.get(LABEL_ATTRIB) for n in l1.all)
         self.terminals = [Node(i + 1, orig_node=t, root=passage, text=t.text, paragraph=t.paragraph, tag=t.tag,
                                pos_tag=t.extra.get(textutil.TAG_KEY),
                                dep_rel=t.extra.get(textutil.DEP_KEY),
