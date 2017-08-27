@@ -9,7 +9,7 @@ ucca)
     mkdir pickle
     curl -L http://www.cs.huji.ac.il/~danielh/ucca/ucca_corpus_pickle.tgz | tar xz -C pickle || curl -L https://www.dropbox.com/s/q4ycn45zlmhuf9k/ucca_corpus_pickle.tgz | tar xz -C pickle
     python -m scripts.split_corpus -q pickle -t 4282 -d 454 -l
-    TOY_DATA=test_files/toy.xml
+    TOY_DATA=test_files/504.xml
     ;;
 amr)
     curl --remote-name-all https://amr.isi.edu/download/2016-03-14/alignment-release-{training,dev,test}-bio.txt
@@ -33,8 +33,8 @@ unit)
     python -m unittest discover -v || exit 1
     # basic parser tests
     for m in "" --sentences --paragraphs; do
-      python tupa/parse.py -I 10 -t test_files/toy.xml -d test_files/toy.xml $m -m "model_toy$m" -v || exit 1
-      python tupa/parse.py test_files/toy.xml $m -em "model_toy$m" -v || exit 1
+      python tupa/parse.py -I 10 -t test_files/504.xml -d test_files/504.xml $m -m "model_toy$m" -v || exit 1
+      python tupa/parse.py test_files/504.xml $m -em "model_toy$m" -v || exit 1
     done
     python tupa/parse.py -f amr -I 10 -t test_files/LDC2014T12.txt -d test_files/LDC2014T12.txt -m model_LDC2014T12 -v || exit 1
     python tupa/parse.py -f amr test_files/LDC2014T12.txt -em model_LDC2014T12 -v || exit 1

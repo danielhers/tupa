@@ -23,26 +23,29 @@ class ParserTests(unittest.TestCase):
     def load_passages():
         passages = []
         for _ in range(NUM_PASSAGES):
-            passages += ioutil.read_files_and_dirs(("test_files/standard3.xml",))
+            passages += ioutil.read_files_and_dirs(("test_files/120.xml",))
         return passages
 
     def test_oracle(self):
         self.maxDiff = None
-        for passage in self.load_passages():
-            oracle = Oracle(passage)
-            state = State(passage)
-            actions = Actions()
-            actions_taken = []
-            while True:
-                action = min(oracle.get_actions(state, actions).values(), key=str)
-                state.transition(action)
-                actions_taken.append("%s\n" % action)
-                if state.finished:
-                    break
-            #with open("test_files/standard3.oracle_actions.txt", "w") as f:
-                #f.writelines(actions_taken)
-            with open("test_files/standard3.oracle_actions.txt") as f:
-                self.assertSequenceEqual(actions_taken, f.readlines())
+        for settings in ([], ["implicit"], ["linkage"], ["implicit", "linkage"]):
+            Config().update({s: s in settings for s in ("implicit", "linkage")})
+            for passage in self.load_passages():
+                oracle = Oracle(passage)
+                state = State(passage)
+                actions = Actions()
+                actions_taken = []
+                while True:
+                    action = min(oracle.get_actions(state, actions).values(), key=str)
+                    state.transition(action)
+                    actions_taken.append("%s\n" % action)
+                    if state.finished:
+                        break
+                compare_file = "test_files/%s.oracle_actions%s.txt" % (passage.ID, "_".join([""] + settings))
+                with open(compare_file, "w") as f:
+                    f.writelines(actions_taken)
+                with open(compare_file) as f:
+                    self.assertSequenceEqual(actions_taken, f.readlines())
 
     def test_parser_sparse(self):
         self.train_test(SPARSE)
@@ -57,6 +60,7 @@ class ParserTests(unittest.TestCase):
         self.train_test(NOOP)
 
     def train_test(self, model_type, compare=True):
+        Config().update({s: False for s in ("implicit", "linkage")})
         scores = []
         p = None
         for mode in "train", "load":
