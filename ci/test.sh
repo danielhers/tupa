@@ -10,6 +10,7 @@ ucca)
     curl -L http://www.cs.huji.ac.il/~danielh/ucca/ucca_corpus_pickle.tgz | tar xz -C pickle || curl -L https://www.dropbox.com/s/q4ycn45zlmhuf9k/ucca_corpus_pickle.tgz | tar xz -C pickle
     python -m scripts.split_corpus -q pickle -t 4282 -d 454 -l
     TOY_DATA=test_files/504.xml
+    export PARAMS_NUM=5
     ;;
 amr)
     curl --remote-name-all https://amr.isi.edu/download/2016-03-14/alignment-release-{training,dev,test}-bio.txt
@@ -24,6 +25,7 @@ sdp)
     python -m scripts.split_corpus -q data/sdp/trial/dm -t 120 -d 36 -l
     TOY_DATA=test_files/20001001.sdp
     CONVERT_DATA=data/sdp/trial/*.sdp
+    export PARAMS_NUM=3
     ;;
 esac
 
@@ -45,9 +47,8 @@ sparse-ucca|mlp-ucca|bilstm-ucca|noop-ucca)
     python tupa/parse.py -v -c "$ACTION" --max-words-external=5000 --layer-dim=100 -We pickle/dev/*0.pickle -t pickle/train/*0.pickle
     ;;
 tune-*)
-    export PARAMS_NUM=5
     while :; do
-      python tupa/tune.py -t "$TOY_DATA" -d "$TOY_DATA" --max-words-external=1000 --max-node-labels=250 && break
+      python tupa/tune.py -t "$TOY_DATA" -d "$TOY_DATA" && break
     done
     column -t -s, params.csv
     ;;
