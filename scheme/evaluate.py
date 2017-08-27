@@ -8,7 +8,7 @@ from ucca import evaluation
 
 from scheme.cfgutil import add_verbose_argument
 from scheme.convert import CONVERTERS
-from scheme.evaluation import amr, sdp
+from scheme.evaluation import amr, sdp, conllu
 
 desc = """Parses files in AMR format, and evaluates using smatch."""
 
@@ -16,6 +16,7 @@ desc = """Parses files in AMR format, and evaluates using smatch."""
 EVALUATORS = {
     None: evaluation,
     "sdp": sdp,
+    "conllu": conllu,
     "amr": amr,
 }
 
