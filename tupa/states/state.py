@@ -33,7 +33,6 @@ class State(object):
         self.passage = passage
         l0 = passage.layer(layer0.LAYER_ID)
         l1 = passage.layer(layer1.LAYER_ID)
-        assert l0.all, "Empty passage '%s'" % passage.ID
         self.labeled = any(n.outgoing or n.attrib.get(LABEL_ATTRIB) for n in l1.all)
         self.terminals = [Node(i + 1, orig_node=t, root=passage, text=t.text, paragraph=t.paragraph, tag=t.tag,
                                pos_tag=t.extra.get(textutil.TAG_KEY),
@@ -147,7 +146,7 @@ class State(object):
                         self.check(n is self.root or n.is_linkage or n.text or n.incoming,
                                    message and "Non-terminal %s has no parent at parse end" % n, is_type=True)
         else:
-            self.check(len(self.actions) / len(self.terminals) < self.args.max_action_ratio,
+            self.check(self.action_ratio() < self.args.max_action_ratio,
                        message and "Actions/terminals ratio: %.3f" % self.args.max_action_ratio, is_type=True)
             if action.is_type(Actions.Shift):
                 self.check(self.buffer, message and "Shifting from empty buffer", is_type=True)
@@ -415,7 +414,10 @@ class State(object):
             node.incoming.sort(key=lambda x: x.parent.node_index or self.nodes.index(x.parent))
 
     def node_ratio(self):
-        return len(self.nodes) / len(self.terminals) - 1
+        return (len(self.nodes) / len(self.terminals) - 1) if self.terminals else 0
+
+    def action_ratio(self):
+        return (len(self.actions) / len(self.terminals)) if self.terminals else 0
 
     def str(self, sep):
         return "stack: [%-20s]%sbuffer: [%s]" % (" ".join(map(str, self.stack)), sep,
