@@ -10,7 +10,24 @@ from tupa.oracle import Oracle
 from tupa.parse import Parser
 from tupa.states.state import State
 
+SETTINGS = ([], ["implicit"], ["linkage"], ["implicit", "linkage"])
 NUM_PASSAGES = 2
+
+
+def update_settings(settings):
+    print("-- settings: " + ", ".join(settings))
+    Config().update({s: s in settings for s in ("implicit", "linkage")})
+
+
+def settings_suffix(settings):
+    return "_".join([""] + settings)
+
+
+def load_passages():
+    passages = []
+    for _ in range(NUM_PASSAGES):
+        passages += ioutil.read_files_and_dirs(("test_files/120.xml",))
+    return passages
 
 
 class ParserTests(unittest.TestCase):
@@ -19,18 +36,11 @@ class ParserTests(unittest.TestCase):
         Config("", "-m", "test", "--max-words-external=100", "--word-dim-external=100", "--optimizer=sgd",
                "--layer-dim=100", "--layers=1", "--lstm-layer-dim=100", "--lstm-layers=1")
 
-    @staticmethod
-    def load_passages():
-        passages = []
-        for _ in range(NUM_PASSAGES):
-            passages += ioutil.read_files_and_dirs(("test_files/120.xml",))
-        return passages
-
     def test_oracle(self):
         self.maxDiff = None
-        for settings in ([], ["implicit"], ["linkage"], ["implicit", "linkage"]):
-            Config().update({s: s in settings for s in ("implicit", "linkage")})
-            for passage in self.load_passages():
+        for settings in SETTINGS:
+            update_settings(settings)
+            for passage in load_passages():
                 oracle = Oracle(passage)
                 state = State(passage)
                 actions = Actions()
@@ -41,7 +51,7 @@ class ParserTests(unittest.TestCase):
                     actions_taken.append("%s\n" % action)
                     if state.finished:
                         break
-                compare_file = "test_files/%s.oracle_actions%s.txt" % (passage.ID, "_".join([""] + settings))
+                compare_file = "test_files/%s.oracle_actions%s.txt" % (passage.ID, settings_suffix(settings))
                 with open(compare_file, "w") as f:
                     f.writelines(actions_taken)
                 with open(compare_file) as f:
@@ -60,21 +70,23 @@ class ParserTests(unittest.TestCase):
         self.train_test(NOOP)
 
     def train_test(self, model_type, compare=True):
-        Config().update({s: False for s in ("implicit", "linkage")})
-        scores = []
-        p = None
-        for mode in "train", "load":
-            print("-- %sing %s" % (mode, model_type))
-            p = Parser(model_file="test_files/models/%s" % model_type, model_type=model_type)
-            list(p.train(self.load_passages() if mode == "train" else None, iterations=10))
-            score = evaluation.Scores.aggregate([s for _, s in p.parse(self.load_passages(), evaluate=True)])
-            scores.append(score.average_f1())
-            print()
-        print("-- average labeled f1: %.3f, %.3f\n" % tuple(scores))
-        if compare:
-            self.assertAlmostEqual(*scores)
-        p.parse(convert.to_text(self.load_passages()[0]))
-        self.assertFalse(list(p.parse(())))  # parsing nothing returns nothing
+        for settings in SETTINGS:
+            update_settings(settings)
+            scores = []
+            p = None
+            for mode in "train", "load":
+                print("-- %sing %s" % (mode, model_type))
+                model_filename = model_type + settings_suffix(settings)
+                p = Parser(model_file="test_files/models/%s" % model_filename, model_type=model_type)
+                list(p.train(load_passages() if mode == "train" else None, iterations=10))
+                score = evaluation.Scores.aggregate([s for _, s in p.parse(load_passages(), evaluate=True)])
+                scores.append(score.average_f1())
+                print()
+            print("-- average labeled f1: %.3f, %.3f\n" % tuple(scores))
+            if compare:
+                self.assertAlmostEqual(*scores)
+            p.parse(convert.to_text(load_passages()[0]))
+            self.assertFalse(list(p.parse(())))  # parsing nothing returns nothing
 
 if __name__ == "__main__":
     unittest.main()
