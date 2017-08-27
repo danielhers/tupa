@@ -227,7 +227,7 @@ def resolve_label(node, label=None, reverse=False, conservative=False):
                         if reverse or label.count(TOKEN_PLACEHOLDER) == 1:
                             label = _replace(TOKEN_PLACEHOLDER, "".join(t.text for t in terminals))
                         if reverse or label.count(TOKEN_TITLE_PLACEHOLDER) == 1:
-                            label = _replace(TOKEN_TITLE_PLACEHOLDER, "_".join(t.text for t in terminals))
+                            label = _replace(TOKEN_TITLE_PLACEHOLDER, "_".join(merge_punct(t.text for t in terminals)))
                         if conservative:
                             terminals = ()
                     for terminal in terminals:
@@ -285,6 +285,25 @@ def lemmatize(terminal):
     if lemma == "-PRON-":
         lemma = terminal.text.lower()
     return lemma.translate(PUNCTUATION_REMOVER)
+
+
+# If a token starts/ends with punctuation, merge it with the previous/next token
+def merge_punct(tokens):
+    ret = list(tokens)
+    while len(ret) > 1:
+        for i, token in enumerate(ret):
+            s, e = i, i + 1
+            if len(token):
+                if token.endswith(tuple(string.punctuation)):
+                    e += 1
+                if s and token.startswith(tuple(string.punctuation)):
+                    s -= 1
+            if s + 1 < e:
+                ret[s:e] = ["".join(ret[s:e])]
+                break
+        else:
+            break
+    return ret
 
 
 class keydefaultdict(defaultdict):
