@@ -117,9 +117,7 @@ class Parser(object):
         train = (mode is ParseMode.train)
         if not train and not self.trained:
             list(self.train())
-        passage_word = "sentence" if self.args.sentences else \
-                       "paragraph" if self.args.paragraphs else \
-                       "passage"
+        passage_word = "sentence" if self.args.sentences else "paragraph" if self.args.paragraphs else "passage"
         self.total_actions = 0
         self.total_correct_actions = 0
         total_duration = 0
@@ -311,7 +309,7 @@ class Parser(object):
         Check if the current state has already occurred, indicating a loop
         """
         h = hash(self.state)
-        assert h not in self.state_hash_history,\
+        assert h not in self.state_hash_history, \
             "\n".join(["Transition loop", self.state.str("\n")] + [self.oracle.str("\n")] if self.oracle else ())
         self.state_hash_history.add(h)
 
