@@ -40,5 +40,5 @@ class EvaluationTests(unittest.TestCase):
 
 
 def read_test_amr():
-    with open("test_files/LDC2014T12.txt") as f:
+    with open("test_files/LDC2014T12.amr") as f:
         return list(from_amr(f, return_original=True))
