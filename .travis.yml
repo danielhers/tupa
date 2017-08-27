@@ -39,5 +39,6 @@ env:
   - TEST_SUITE=tune-sdp
   - TEST_SUITE=convert-sdp
   - TEST_SUITE=toy-conllu
+  - TEST_SUITE=tune-conllu
 script:
   - ci/test.sh
