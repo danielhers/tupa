@@ -60,7 +60,7 @@ class Constraints(object):
     def __init__(self, args, node_labels=False, require_implicit_childless=True, allow_root_terminal_children=False,
                  top_level_allowed=None, top_level_only=None, possible_multiple_incoming=(),
                  childless_incoming_trigger=(), childless_outgoing_allowed=(), unique_incoming=(), unique_outgoing=(),
-                 mutually_exclusive_incoming=(), mutually_exclusive_outgoing=()):
+                 mutually_exclusive_incoming=(), mutually_exclusive_outgoing=(), exclusive_outgoing=()):
         self.args = args
         self.node_labels = node_labels
         self.require_implicit_childless = require_implicit_childless
@@ -70,7 +70,9 @@ class Constraints(object):
         self.possible_multiple_incoming = possible_multiple_incoming
         self.tag_rules = \
             [TagRule(trigger={Direction.incoming: childless_incoming_trigger},
-                     allowed={Direction.outgoing: childless_outgoing_allowed})] + \
+                     allowed={Direction.outgoing: childless_outgoing_allowed}),
+             TagRule(trigger={Direction.outgoing: exclusive_outgoing},
+                     allowed={Direction.outgoing: exclusive_outgoing})] + \
             [TagRule(trigger={Direction.incoming: t}, disallowed={Direction.incoming: t}) for t in unique_incoming] + \
             [TagRule(trigger={Direction.outgoing: t}, disallowed={Direction.outgoing: t}) for t in unique_outgoing] + \
             [TagRule(trigger={Direction.incoming: t1}, disallowed={Direction.incoming: t2})
@@ -98,13 +100,16 @@ class Constraints(object):
         return True
 
 
+LINKAGE_TAGS = {EdgeTags.LinkArgument, EdgeTags.LinkRelation}
+
+
 class UCCAConstraints(Constraints):
     def __init__(self, args):
         super(UCCAConstraints, self).__init__(args, require_implicit_childless=True, allow_root_terminal_children=False,
                                               top_level_allowed={EdgeTags.ParallelScene, EdgeTags.Linker,
                                                                  EdgeTags.Function, EdgeTags.Ground,
                                                                  EdgeTags.Punctuation},
-                                              possible_multiple_incoming={EdgeTags.LinkArgument, EdgeTags.LinkRelation},
+                                              possible_multiple_incoming=LINKAGE_TAGS,
                                               childless_incoming_trigger=EdgeTags.Function,
                                               childless_outgoing_allowed={EdgeTags.Terminal, EdgeTags.Punctuation},
                                               unique_incoming={EdgeTags.Function, EdgeTags.Ground,
@@ -112,6 +117,7 @@ class UCCAConstraints(Constraints):
                                                                EdgeTags.LinkRelation, EdgeTags.Connector,
                                                                EdgeTags.Punctuation, EdgeTags.Terminal},
                                               unique_outgoing={EdgeTags.LinkRelation, EdgeTags.Process, EdgeTags.State},
-                                              mutually_exclusive_outgoing={EdgeTags.Process, EdgeTags.State})
+                                              mutually_exclusive_outgoing={EdgeTags.Process, EdgeTags.State},
+                                              exclusive_outgoing=LINKAGE_TAGS)
     # LinkerIncoming = {EdgeTags.Linker, EdgeTags.LinkRelation}
     # TagRule(trigger=(LinkerIncoming, None), allowed=(LinkerIncoming, None)),  # disabled due to passage 106 unit 1.300
