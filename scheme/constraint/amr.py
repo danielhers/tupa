@@ -2,9 +2,9 @@ from scheme.constraints import Constraints
 from scheme.util.amr import *
 
 
-class AMRConstraints(Constraints):
+class AmrConstraints(Constraints):
     def __init__(self, args):
-        super(AMRConstraints, self).__init__(args, node_labels=True, require_implicit_childless=False,
+        super(AmrConstraints, self).__init__(args, node_labels=True, require_implicit_childless=False,
                                              allow_root_terminal_children=True,
                                              possible_multiple_incoming=TERMINAL_DEP)
 

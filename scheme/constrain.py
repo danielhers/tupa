@@ -1,11 +1,11 @@
-from scheme.constraint.amr import AMRConstraints
+from scheme.constraint.amr import AmrConstraints
 from scheme.constraint.conllu import ConlluConstraints
-from scheme.constraint.sdp import SDPConstraints
-from scheme.constraints import UCCAConstraints
+from scheme.constraint.sdp import SdpConstraints
+from scheme.constraints import UccaConstraints
 
 CONSTRAINTS = {
-    None:     UCCAConstraints,
-    "amr":    AMRConstraints,
-    "sdp":    SDPConstraints,
+    None:     UccaConstraints,
+    "amr":    AmrConstraints,
+    "sdp":    SdpConstraints,
     "conllu": ConlluConstraints,
 }

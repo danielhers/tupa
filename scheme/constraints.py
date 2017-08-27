@@ -103,9 +103,9 @@ class Constraints(object):
 LINKAGE_TAGS = {EdgeTags.LinkArgument, EdgeTags.LinkRelation}
 
 
-class UCCAConstraints(Constraints):
+class UccaConstraints(Constraints):
     def __init__(self, args):
-        super(UCCAConstraints, self).__init__(args, require_implicit_childless=True, allow_root_terminal_children=False,
+        super(UccaConstraints, self).__init__(args, require_implicit_childless=True, allow_root_terminal_children=False,
                                               top_level_allowed={EdgeTags.ParallelScene, EdgeTags.Linker,
                                                                  EdgeTags.Function, EdgeTags.Ground,
                                                                  EdgeTags.Punctuation},
