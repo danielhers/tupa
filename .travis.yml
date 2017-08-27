@@ -21,14 +21,17 @@ install:
   - python setup.py install
 env:
   - TEST_SUITE=unit
+  - TEST_SUITE=toy-ucca
   - TEST_SUITE=sparse-ucca
   - TEST_SUITE=mlp-ucca
   - TEST_SUITE=bilstm-ucca
   - TEST_SUITE=noop-ucca
   - TEST_SUITE=tune-ucca
+  - TEST_SUITE=toy-amr
   - TEST_SUITE=sparse-amr
   - TEST_SUITE=noop-amr
   - TEST_SUITE=convert-amr
+  - TEST_SUITE=toy-sdp
   - TEST_SUITE=sparse-sdp
   - TEST_SUITE=mlp-sdp
   - TEST_SUITE=bilstm-sdp
