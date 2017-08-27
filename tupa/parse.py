@@ -129,8 +129,6 @@ class Parser(object):
             passages = (passages,)
         for passage_index, passage in enumerate(passages):
             labeled = any(n.outgoing or n.attrib.get(LABEL_ATTRIB) for n in passage.layer(layer1.LAYER_ID).all)
-            assert not train or labeled, "Cannot train on unannotated passage: %s" % passage.ID
-            assert not evaluate or labeled, "Cannot evaluate on unannotated passage: %s" % passage.ID
             print("%s %-7s" % (passage_word, passage.ID), end=Config().line_end, flush=True)
             started = time.time()
             self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = 0
