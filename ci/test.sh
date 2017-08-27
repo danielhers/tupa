@@ -33,6 +33,9 @@ sdp)
     CONVERT_DATA=data/sdp/trial/*.sdp
     export PARAMS_NUM=3
     ;;
+conllu)
+    TOY_DATA=test_files/UD_English.conllu
+    ;;
 esac
 
 case "$TEST_SUITE" in
