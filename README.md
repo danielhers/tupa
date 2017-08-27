@@ -44,7 +44,7 @@ An `xml` file will be created per passage (separate by blank lines in the text f
 
 ### Pre-trained models
 
-To download and extract the pre-trained models, run:
+To download and extract models pre-trained on the Wiki corpus, run:
 
     curl --remote-name-all http://www.cs.huji.ac.il/~danielh/ucca/{sparse,mlp,bilstm}.tar.gz
     tar xvzf sparse.tar.gz
@@ -56,6 +56,18 @@ Run the parser using any of them:
     python -m tupa.parse example.txt -c sparse -m models/sparse
     python -m tupa.parse example.txt -c mlp -m models/mlp
     python -m tupa.parse example.txt -c bilstm -m models/bilstm
+    
+### Other languages
+
+To get a French model pre-trained on [the *20K Leages* corpus](https://github.com/huji-nlp/ucca-corpus/tree/master/vmlslm/fr), run:
+
+    curl -O http://www.cs.huji.ac.il/~danielh/ucca/sparse_fr.tar.gz
+    tar xvzf sparse_fr.tar.gz
+
+Run the parser on a French text file, using the French spaCy models too:
+
+    export SPACY_MODEL=fr_depvec_web_lg
+    python -m tupa.parse exemple.txt -c sparse -m models/sparse_fr
 
 Author
 ------
