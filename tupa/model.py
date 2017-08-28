@@ -143,6 +143,7 @@ class Model(object):
                     if len(self.classifier.labels) > 1:
                         self.args.max_node_labels = self.classifier.max_num_labels[LABEL_AXIS]
             except FileNotFoundError:
+                self.actions = self.labels = self.feature_extractor = self.classifier = None
                 raise
             except Exception as e:
                 raise IOError("Failed loading model from '%s'" % self.filename) from e
