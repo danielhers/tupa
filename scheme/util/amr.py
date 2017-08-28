@@ -294,7 +294,7 @@ def merge_punct(tokens):
         for i, token in enumerate(ret):
             s, e = i, i + 1
             if len(token):
-                if token.endswith(tuple(string.punctuation)):
+                if e < len(ret) and token.endswith(tuple(string.punctuation)):
                     e += 1
                 if s and token.startswith(tuple(string.punctuation)):
                     s -= 1
