@@ -35,6 +35,7 @@ sdp)
     ;;
 conllu)
     TOY_DATA=test_files/UD_English.conllu
+    export PARAMS_NUM=3
     ;;
 esac
 
