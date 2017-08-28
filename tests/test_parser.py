@@ -2,6 +2,7 @@
 
 import unittest
 
+import os
 from ucca import convert, evaluation, ioutil
 
 from tupa.action import Actions
@@ -26,7 +27,7 @@ def settings_suffix(settings):
 def load_passages():
     passages = []
     for _ in range(NUM_PASSAGES):
-        passages += ioutil.read_files_and_dirs(("test_files/120.xml",))
+        passages += ioutil.read_files_and_dirs((os.environ.get("TOY_DATA", "test_files/120.xml"),))
     return passages
 
 
