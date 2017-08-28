@@ -44,11 +44,12 @@ class Parser(object):
         self.best_score = self.dev = self.iteration = self.eval_index = None
         self.trained = False
 
-    def train(self, passages=None, dev=None, iterations=1):
+    def train(self, passages=None, dev=None, test=None, iterations=1):
         """
         Train parser on given passages
         :param passages: iterable of passages to train on
         :param dev: iterable of passages to tune on
+        :param test: iterable of passages that would be tested on after train finished
         :param iterations: number of iterations to perform
         """
         self.trained = True
@@ -67,8 +68,8 @@ class Parser(object):
                 list(self.parse(passages, mode=ParseMode.train))
                 yield self.eval_and_save(self.iteration == iterations, finished_epoch=True)
             print("Trained %d iterations" % iterations)
-        if dev or not passages:
-            self.model.load()
+        if dev and test or not passages:
+            self.model.load()  # Load best model (on dev) to prepare for test
 
     def eval_and_save(self, last=False, finished_epoch=False):
         scores = None
@@ -113,7 +114,7 @@ class Parser(object):
         assert mode in ParseMode, "Invalid parse mode: %s" % mode
         train = (mode is ParseMode.train)
         if not train and not self.trained:
-            list(self.train())
+            list(self.train())  # Try to load model from file
         passage_word = "sentence" if self.args.sentences else "paragraph" if self.args.paragraphs else "passage"
         self.total_actions = 0
         self.total_correct_actions = 0
@@ -347,7 +348,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
     model_base, model_ext = os.path.splitext(args.model or "%s_%s" % (args.format or "ucca", args.classifier))
     p = Parser(model_file=model_base + model_suffix + model_ext, model_type=args.classifier, beam=args.beam)
     print("%s %s" % (os.path.basename(__file__), Config()))
-    yield from filter(None, p.train(train_passages, dev=dev_passages, iterations=args.iterations))
+    yield from filter(None, p.train(train_passages, dev=dev_passages, test=test_passages, iterations=args.iterations))
     if test_passages:
         if args.train or args.folds:
             print("Evaluating on test passages")
