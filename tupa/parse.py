@@ -39,7 +39,7 @@ class Parser(object):
         self.label_count = self.correct_label_count = self.total_labels = self.total_correct_labels = 0
         self.model = Model(model_type, model_file)
         self.update_only_on_error = \
-            ClassifierProperty.update_only_on_error in self.model.model.get_classifier_properties()
+            ClassifierProperty.update_only_on_error in self.model.classifier.get_classifier_properties()
         self.beam = beam  # Currently unused
         self.state_hash_history = None  # For loop checking
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
@@ -56,7 +56,7 @@ class Parser(object):
         """
         self.trained = True
         if passages:
-            if ClassifierProperty.trainable_after_saving in self.model.model.get_classifier_properties():
+            if ClassifierProperty.trainable_after_saving in self.model.classifier.get_classifier_properties():
                 try:
                     self.model.load()
                 except FileNotFoundError:
@@ -136,7 +136,7 @@ class Parser(object):
             self.oracle = Oracle(passage) if train or (
                   self.args.verbose or Config().args.use_gold_node_labels) and labeled or self.args.verify else None
             failed = False
-            if ClassifierProperty.require_init_features in self.model.model.get_classifier_properties():
+            if ClassifierProperty.require_init_features in self.model.classifier.get_classifier_properties():
                 self.model.init_features(self.state, train)
             try:
                 self.parse_passage(train)  # This is where the actual parsing takes place
@@ -165,7 +165,7 @@ class Parser(object):
             print(Config().line_end, end="")
             if self.oracle:
                 print(Config().line_end, flush=True)
-            self.model.model.finished_item(train)
+            self.model.classifier.finished_item(train)
             self.total_correct_actions += self.correct_action_count
             self.total_actions += self.action_count
             self.total_correct_labels += self.correct_label_count
@@ -221,7 +221,7 @@ class Parser(object):
                         print("  predicted label: %-15s true label: %-15s" % (predicted_label, true_label))
                     else:
                         print("  label: %-15s" % label)
-            self.model.model.finished_step(train)
+            self.model.classifier.finished_step(train)
             if self.args.verbose > 1:
                 for line in self.state.log:
                     print("    " + line)
@@ -239,7 +239,7 @@ class Parser(object):
         return true_actions
 
     def choose_action(self, features, train, true_actions):
-        scores = self.model.model.score(features, axis=ACTION_AXIS)  # Returns NumPy array
+        scores = self.model.classifier.score(features, axis=ACTION_AXIS)  # Returns NumPy array
         if self.args.verbose > 2:
             print("  action scores: " + ",".join(("%s: %g" % x for x in zip(self.model.actions.all, scores))))
         try:
@@ -254,8 +254,8 @@ class Parser(object):
             action = Config().random.choice(list(true_actions.values())) if train else predicted_action
         if train and not (is_correct and self.update_only_on_error):
             best_action = self.predict(scores[list(true_actions.keys())], list(true_actions.values()))
-            self.model.model.update(features, axis=ACTION_AXIS, pred=predicted_action.id, true=best_action.id,
-                                    importance=self.args.swap_importance if best_action.is_swap else 1)
+            self.model.classifier.update(features, axis=ACTION_AXIS, pred=predicted_action.id, true=best_action.id,
+                                         importance=self.args.swap_importance if best_action.is_swap else 1)
         if train and not is_correct and self.args.early_update:
             self.state.finished = True
         self.action_count += 1
@@ -276,7 +276,7 @@ class Parser(object):
         true_id = self.model.labels[true_label] if self.oracle else None  # Needs to happen before score()
         if Config().args.use_gold_node_labels:
             return true_label, true_label
-        scores = self.model.model.score(features, axis=LABEL_AXIS)
+        scores = self.model.classifier.score(features, axis=LABEL_AXIS)
         if self.args.verbose > 2:
             print("  label scores: " + ",".join(("%s: %g" % x for x in zip(self.model.labels.all, scores))))
         label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label)
@@ -285,7 +285,7 @@ class Parser(object):
             if is_correct:
                 self.correct_label_count += 1
             if train and not (is_correct and self.update_only_on_error):
-                self.model.model.update(features, axis=LABEL_AXIS, pred=self.model.labels[label], true=true_id)
+                self.model.classifier.update(features, axis=LABEL_AXIS, pred=self.model.labels[label], true=true_id)
                 label = true_label
         self.label_count += 1
         return label, predicted_label
