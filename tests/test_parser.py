@@ -52,8 +52,8 @@ class ParserTests(unittest.TestCase):
                     if state.finished:
                         break
                 compare_file = "test_files/%s.oracle_actions%s.txt" % (passage.ID, settings_suffix(settings))
-                with open(compare_file, "w") as f:
-                    f.writelines(actions_taken)
+                # with open(compare_file, "w") as f:
+                #     f.writelines(actions_taken)
                 with open(compare_file) as f:
                     self.assertSequenceEqual(actions_taken, f.readlines())
 
