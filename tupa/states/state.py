@@ -160,7 +160,7 @@ class State(object):
                     _check_possible_parent(s0)
                     _check_possible_node()
                 elif action.is_type(Actions.Label):
-                    self.check(self.constraints.node_labels, message and "Node labels disabled", is_type=True)
+                    self.check(self.args.node_labels, message and "Node labels disabled", is_type=True)
                     self.check(not s0.labeled, message and "Labeling already-labeled node: %s" % s0, is_type=True)
                     self.check(s0.text is None, message and "Terminals do not have labels: %s" % s0, is_type=True)
                 elif action.is_type(Actions.Reduce):
@@ -320,7 +320,7 @@ class State(object):
                                      paragraph=terminal.paragraph) for terminal in self.terminals]
         l1 = layer1.Layer1(passage)
         self.root.node = l1.heads[0]
-        if self.constraints.node_labels:
+        if self.args.node_labels:
             self.root.set_node_label()
         if self.labeled:  # We have a reference passage
             self.root.set_node_id()
@@ -338,7 +338,7 @@ class State(object):
                     if edge.remote:
                         remotes.append((node, edge))
                     else:
-                        edge.child.add_to_l1(l1, node, edge.tag, terminals, self.labeled, self.constraints.node_labels)
+                        edge.child.add_to_l1(l1, node, edge.tag, terminals, self.labeled, self.args.node_labels)
 
         for node, edge in remotes:  # Add remote edges
             try:

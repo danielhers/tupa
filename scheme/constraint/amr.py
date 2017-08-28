@@ -4,8 +4,7 @@ from scheme.util.amr import *
 
 class AmrConstraints(Constraints):
     def __init__(self, args):
-        super(AmrConstraints, self).__init__(args, node_labels=True, require_implicit_childless=False,
-                                             allow_root_terminal_children=True,
+        super(AmrConstraints, self).__init__(args, require_implicit_childless=False, allow_root_terminal_children=True,
                                              possible_multiple_incoming=TERMINAL_DEP)
 
     def allow_action(self, action, history):

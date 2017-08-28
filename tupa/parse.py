@@ -32,8 +32,7 @@ class Parser(object):
     """
     def __init__(self, model_file=None, model_type=None, beam=1):
         self.args = Config().args
-        self.state = None  # State object created at each parse
-        self.oracle = None  # Oracle object created at each parse
+        self.state = self.oracle = None  # State and Oracle objects created at each parse
         self.action_count = self.correct_action_count = self.total_actions = self.total_correct_actions = 0
         self.label_count = self.correct_label_count = self.total_labels = self.total_correct_labels = 0
         self.model = Model(model_type, model_file)
@@ -124,12 +123,14 @@ class Parser(object):
         if not hasattr(passages, "__iter__"):  # Single passage given
             passages = (passages,)
         for passage_index, passage in enumerate(passages):
-            labeled = any(n.outgoing or n.attrib.get(LABEL_ATTRIB) for n in passage.layer(layer1.LAYER_ID).all)
+            edges, node_labels = map(any, zip(*[(n.outgoing, n.attrib.get(LABEL_ATTRIB))
+                                                for n in passage.layer(layer1.LAYER_ID).all]))
+            labeled = edges or node_labels  # Passage is considered labeled if there are any edges or node labels in it
             print("%s %-7s" % (passage_word, passage.ID), end=Config().line_end, flush=True)
             started = time.time()
             self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = 0
             textutil.annotate(passage, verbose=self.args.verbose > 1)  # tag POS and parse dependencies
-            Config().set_format(passage.extra.get("format"))
+            Config().set_format(passage.extra.get("format"), labeled)
             self.state = State(passage)
             self.state_hash_history = set()
             self.oracle = Oracle(passage) if train or (

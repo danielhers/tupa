@@ -76,10 +76,11 @@ class Actions(object):
 
     def init(self):
         # edge and node action will be created as they are returned by the oracle
+        args = Config().args
         self.all = [Actions.Reduce, Actions.Shift, Actions.Finish] + \
-                   (list(map(Actions.Swap, range(1, Config().args.max_swap))) if Config().args.swap == COMPOUND
-                    else [Actions.Swap] if Config().args.swap else []) + \
-                   ([Actions.Label] if Config().node_labels else [])
+            (list(map(Actions.Swap, range(1, args.max_swap))) if args.swap == COMPOUND else
+             [Actions.Swap] if args.swap else []) + \
+            ([Actions.Label] if args.node_labels else [])
 
     @property
     def all(self):

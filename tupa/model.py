@@ -81,7 +81,7 @@ class Model(object):
             feature_params = [p.create_from_config() for p in PARAM_DEFS]
             node_labels = feature_params[0]
             FeatureEnumerator.init_data(node_labels)
-            if Config().node_labels and node_labels.size:
+            if self.args.node_labels and node_labels.size:
                 self.labels = node_labels.data
                 values.append(self.labels.all)
                 max_values.append(self.args.max_node_labels)
