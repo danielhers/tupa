@@ -1,13 +1,5 @@
-from enum import Enum
-
 from tupa.config import Config
 from tupa.model_util import load_dict, save_dict
-
-
-class ClassifierProperty(Enum):
-    update_only_on_error = 1
-    require_init_features = 2
-    trainable_after_saving = 3
 
 
 class Classifier(object):
@@ -125,9 +117,6 @@ class Classifier(object):
 
     def load_extra(self, d):
         pass
-
-    def get_classifier_properties(self):
-        return ()
 
     def __str__(self):
         return "%s labels, %d features" % (self.num_labels_str(), self.input_dim)

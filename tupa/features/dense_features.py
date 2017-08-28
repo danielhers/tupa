@@ -115,6 +115,8 @@ class DenseFeatureExtractor(FeatureExtractor):
         return numeric_features, non_numeric_features
 
     def collapse_features(self, suffixes):
+        if not suffixes:
+            return
         longest_suffix = max(suffixes, key=lambda s: len(self.non_numeric_by_suffix[s].elements))
         longest = self.non_numeric_by_suffix[longest_suffix]
         for suffix in suffixes:

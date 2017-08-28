@@ -1,6 +1,5 @@
 import dynet as dy
 
-from tupa.classifiers.classifier import ClassifierProperty
 from tupa.config import Config, BILSTM_NN
 from tupa.features.feature_params import MISSING_VALUE
 from .neural_network import NeuralNetwork
@@ -87,7 +86,3 @@ class BiLSTM(NeuralNetwork):
         Config().args.embedding_layer_dim = self.embedding_layer_dim = d.get("embedding_layer_dim",
                                                                              Config().args.embedding_layer_dim)
         Config().args.max_length = self.max_length = d.get("max_length", Config().args.max_length)
-
-    def get_classifier_properties(self):
-        return super(BiLSTM, self).get_classifier_properties() + \
-               (ClassifierProperty.require_init_features,)

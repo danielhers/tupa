@@ -36,7 +36,7 @@ class FeatureEnumerator(FeatureExtractorWrapper):
             param.init = np.array(list(vectors.values()))
         param.data = DropoutDict(max_size=param.size, keys=keys, dropout=param.dropout, min_count=param.min_count)
 
-    def init_features(self, state, suffix):
+    def init_features(self, state, suffix=None):
         param = self.params[suffix]
         assert param.indexed, "Cannot initialize non-indexed parameter '%s'" % suffix
         values = self.feature_extractor.init_features(state, param.effective_suffix)
@@ -45,10 +45,11 @@ class FeatureEnumerator(FeatureExtractorWrapper):
         assert all(isinstance(f, int) for f in values), "Invalid feature numbers for '%s': %s" % (suffix, values)
         return values
 
-    def extract_features(self, state):
+    def extract_features(self, state, params=None):
         """
         Calculate feature values according to current state
         :param state: current state of the parser
+        :param params: ignored
         :return dict of feature name -> numeric value
         """
         numeric_features, non_numeric_features = self.feature_extractor.extract_features(state, self.params)
@@ -64,8 +65,8 @@ class FeatureEnumerator(FeatureExtractorWrapper):
         return features
 
     def collapse_features(self, suffixes):
-        self.feature_extractor.collapse_features({self.params[s].copy_from if self.params[s].external else s
-                                                  for s in suffixes if self.params[s].dim})
+        self.feature_extractor.collapse_features({p.copy_from if p.external else s for s, p in self.params.items()
+                                                  if p.dim and s in suffixes})
 
     def filename_suffix(self):
         return ".enum"

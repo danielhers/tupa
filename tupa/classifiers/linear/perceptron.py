@@ -1,6 +1,6 @@
 import time
 
-from tupa.classifiers.classifier import Classifier, ClassifierProperty
+from tupa.classifiers.classifier import Classifier
 
 
 class Perceptron(Classifier):
@@ -80,7 +80,3 @@ class Perceptron(Classifier):
 
     def load_extra(self, d):
         self.model = d["model"]
-
-    def get_classifier_properties(self):
-        return super(Perceptron, self).get_classifier_properties() + \
-               (ClassifierProperty.update_only_on_error,)

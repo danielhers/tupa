@@ -8,7 +8,6 @@ from collections import OrderedDict
 from functools import partial
 
 from tupa.classifiers.classifier import Classifier
-from tupa.classifiers.classifier import ClassifierProperty
 from tupa.config import Config
 from tupa.features.feature_params import MISSING_VALUE
 
@@ -66,11 +65,8 @@ class NeuralNetwork(Classifier):
         self.trainer_type, self.learning_rate_param_name = TRAINERS[self.trainer_str]
         self.params = OrderedDict()
         self.empty_values = OrderedDict()
-        self.indexed_num = None
-        self.indexed_dim = None
         self.losses = []
-        self.trainer = None
-        self.value = [None] * len(self.num_labels)  # For caching the result of _evaluate
+        self.indexed_num = self.indexed_dim = self.trainer = self.value = None
 
     def resize(self, axis=None):
         for i, (l, m) in enumerate(zip(self.num_labels, self.max_num_labels)):
@@ -87,6 +83,7 @@ class NeuralNetwork(Classifier):
         self.init_input_params()
         self.init_mlp_params()
         self.init_cg()
+        self.finished_step()
 
     def init_input_params(self):
         """
@@ -155,7 +152,7 @@ class NeuralNetwork(Classifier):
                     yield dy.concatenate([self.empty_values[suffix] if x == MISSING_VALUE else self.params[suffix][x]
                                           for x in values])
         if indices:
-            assert len(indices) == self.indexed_num, "Wrong number of index features: %d != %d" % (
+            assert len(indices) == self.indexed_num, "Wrong number of index features: got %d, expected %d" % (
                 len(indices), self.indexed_num)
             yield self.index_input(indices)
 
@@ -222,7 +219,7 @@ class NeuralNetwork(Classifier):
                 sys.exit(0)
 
     def finished_step(self, train=False):
-        self.value = [None] * len(self.num_labels)
+        self.value = [None] * len(self.num_labels)  # For caching the result of _evaluate
 
     def finished_item(self, train=False):
         if len(self.losses) >= self.minibatch_size:
@@ -294,7 +291,6 @@ class NeuralNetwork(Classifier):
         return d
 
     def load_model(self, d):
-        self.init_model()
         param_keys = d["param_keys"]
         self.max_num_labels = d["max_num_labels"]
         Config().args.layers = self.layers = d["layers"]
@@ -305,6 +301,7 @@ class NeuralNetwork(Classifier):
         Config().args.init = self.init_str = d["init"]
         self.init = INITIALIZERS[self.init_str]
         self.load_extra(d)
+        self.init_model()
         print("Loading model from '%s'... " % self.filename, end="", flush=True)
         started = time.time()
         try:
@@ -313,7 +310,3 @@ class NeuralNetwork(Classifier):
             self.params = OrderedDict(zip(param_keys, param_values))
         except KeyError as e:
             print("Failed loading model: %s" % e)
-
-    def get_classifier_properties(self):
-        return super(NeuralNetwork, self).get_classifier_properties() + \
-               (ClassifierProperty.trainable_after_saving,)

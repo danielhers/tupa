@@ -1,6 +1,6 @@
 from .feature_extractor_wrapper import FeatureExtractorWrapper
 
-INDEXED_FEATURES = "W", "w", "t", "d", "T"  # external word embeddings, learned word embeddings, POS tags, dep rels, entity type
+INDEXED_FEATURES = "W", "w", "t", "d", "T"  # external + learned word embeddings, POS tags, dep rels, entity type
 
 
 class FeatureIndexer(FeatureExtractorWrapper):
@@ -17,4 +17,9 @@ class FeatureIndexer(FeatureExtractorWrapper):
                     param.indexed = True
         else:
             feature_extractor.params = params
+        self.feature_extractor.collapse_features(INDEXED_FEATURES)
+
+    def load(self, filename):
+        super(FeatureIndexer, self).load(filename)
+        self.feature_extractor.params = self.params
         self.feature_extractor.collapse_features(INDEXED_FEATURES)

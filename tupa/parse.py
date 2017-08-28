@@ -9,9 +9,8 @@ from ucca.convert import from_text, to_text
 from scheme.convert import FROM_FORMAT, TO_FORMAT, CONVERTERS
 from scheme.evaluate import EVALUATORS, Scores
 from scheme.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
-from tupa.classifiers.classifier import ClassifierProperty
 from tupa.config import Config
-from tupa.model import Model, ACTION_AXIS, LABEL_AXIS
+from tupa.model import Model, ACTION_AXIS, LABEL_AXIS, ClassifierProperty
 from tupa.oracle import Oracle
 from tupa.states.state import State
 
@@ -38,8 +37,6 @@ class Parser(object):
         self.action_count = self.correct_action_count = self.total_actions = self.total_correct_actions = 0
         self.label_count = self.correct_label_count = self.total_labels = self.total_correct_labels = 0
         self.model = Model(model_type, model_file)
-        self.update_only_on_error = \
-            ClassifierProperty.update_only_on_error in self.model.classifier.get_classifier_properties()
         self.beam = beam  # Currently unused
         self.state_hash_history = None  # For loop checking
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
@@ -56,7 +53,7 @@ class Parser(object):
         """
         self.trained = True
         if passages:
-            if ClassifierProperty.trainable_after_saving in self.model.classifier.get_classifier_properties():
+            if ClassifierProperty.trainable_after_saving in self.model.get_classifier_properties():
                 try:
                     self.model.load()
                 except FileNotFoundError:
@@ -135,9 +132,10 @@ class Parser(object):
             self.state_hash_history = set()
             self.oracle = Oracle(passage) if train or (
                   self.args.verbose or Config().args.use_gold_node_labels) and labeled or self.args.verify else None
-            failed = False
-            if ClassifierProperty.require_init_features in self.model.classifier.get_classifier_properties():
+            self.model.init_model()
+            if ClassifierProperty.require_init_features in self.model.get_classifier_properties():
                 self.model.init_features(self.state, train)
+            failed = False
             try:
                 self.parse_passage(train)  # This is where the actual parsing takes place
             except ParserException as e:
@@ -252,7 +250,8 @@ class Parser(object):
             self.correct_action_count += 1
         else:
             action = Config().random.choice(list(true_actions.values())) if train else predicted_action
-        if train and not (is_correct and self.update_only_on_error):
+        if train and not (is_correct and
+                          ClassifierProperty.update_only_on_error in self.model.get_classifier_properties()):
             best_action = self.predict(scores[list(true_actions.keys())], list(true_actions.values()))
             self.model.classifier.update(features, axis=ACTION_AXIS, pred=predicted_action.id, true=best_action.id,
                                          importance=self.args.swap_importance if best_action.is_swap else 1)
@@ -284,7 +283,8 @@ class Parser(object):
             is_correct = (label == true_label)
             if is_correct:
                 self.correct_label_count += 1
-            if train and not (is_correct and self.update_only_on_error):
+            if train and not (is_correct and
+                              ClassifierProperty.update_only_on_error in self.model.get_classifier_properties()):
                 self.model.classifier.update(features, axis=LABEL_AXIS, pred=self.model.labels[label], true=true_id)
                 label = true_label
         self.label_count += 1

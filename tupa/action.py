@@ -68,9 +68,11 @@ class Actions(object):
     Swap = Action("SWAP")
     Finish = Action("FINISH")
 
-    def __init__(self):
+    def __init__(self, actions=None):
         self._all = None
         self._ids = None
+        if actions is not None:
+            self.all = actions
 
     def init(self):
         # edge and node action will be created as they are returned by the oracle

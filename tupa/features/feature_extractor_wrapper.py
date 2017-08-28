@@ -21,11 +21,11 @@ class FeatureExtractorWrapper(FeatureExtractor):
             params[param.suffix] = param
         return params
 
-    def init_features(self, state):
+    def init_features(self, state, suffix=None):
         return {s: self.feature_extractor.init_features(state, s)
                 for s, p in self.params.items() if p.indexed and p.dim}
 
-    def extract_features(self, state):
+    def extract_features(self, state, params=None):
         return self.feature_extractor.extract_features(state)
 
     def finalize(self):
