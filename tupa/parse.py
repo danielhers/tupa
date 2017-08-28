@@ -128,6 +128,7 @@ class Parser(object):
             started = time.time()
             self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = 0
             textutil.annotate(passage, verbose=self.args.verbose > 1)  # tag POS and parse dependencies
+            Config().set_format(passage.extra.get("format"))
             self.state = State(passage)
             self.state_hash_history = set()
             self.oracle = Oracle(passage) if train or (

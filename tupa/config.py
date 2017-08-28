@@ -148,6 +148,15 @@ class Config(object, metaclass=Singleton):
                 self.args.testscores = self.args.model + ".test.csv"
         elif not self.args.log:
             self.args.log = "parse.log"
+        self._logger = self.input_converter = self.output_converter = None
+        self.node_labels = False
+        self.set_format()
+        self.set_external()
+        self.random = np.random
+
+    def set_format(self, f=None, force=False):
+        if self.args.format is None or force:
+            self.args.format = f
         if self.args.format == "amr":
             self.node_labels = True
             self.args.implicit = True
@@ -172,9 +181,6 @@ class Config(object, metaclass=Singleton):
             self.args.output_format = self.args.format
         if self.output_converter is not None:
             self.output_converter = partial(self.output_converter, wikification=self.args.wikification)
-        self._logger = None
-        self.set_external()
-        self.random = np.random
 
     def set_external(self):
         np.random.seed(self.args.seed)
@@ -197,6 +203,7 @@ class Config(object, metaclass=Singleton):
     def update(self, params):
         for name, value in params.items():
             setattr(self.args, name, value)
+        self.set_format()
         self.set_external()
 
     @property
