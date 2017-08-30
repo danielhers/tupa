@@ -45,21 +45,19 @@ class NeuralNetwork(Classifier):
     Expects features from FeatureEnumerator.
     """
 
-    def __init__(self, *args, max_num_labels):
+    def __init__(self, *args):
         """
         Create a new untrained NN
-        :param labels: tuple of lists of labels that can be updated later to add new labels
         """
         super(NeuralNetwork, self).__init__(*args)
-        self.max_num_labels = tuple(max_num_labels)
-        self.layers = Config().args.layers
-        self.layer_dim = Config().args.layer_dim
-        self.output_dim = Config().args.output_dim
-        self.activation_str = Config().args.activation
-        self.init_str = Config().args.init
-        self.minibatch_size = Config().args.minibatch_size
-        self.dropout = Config().args.dropout
-        self.trainer_str = Config().args.optimizer
+        self.layers = self.args.layers
+        self.layer_dim = self.args.layer_dim
+        self.output_dim = self.args.output_dim
+        self.activation_str = self.args.activation
+        self.init_str = self.args.init
+        self.minibatch_size = self.args.minibatch_size
+        self.dropout = self.args.dropout
+        self.trainer_str = self.args.optimizer
         self.activation = ACTIVATIONS[self.activation_str]
         self.init = INITIALIZERS[self.init_str]
         self.trainer_type, self.learning_rate_param_name = TRAINERS[self.trainer_str]
@@ -67,23 +65,30 @@ class NeuralNetwork(Classifier):
         self.empty_values = OrderedDict()
         self.losses = []
         self.indexed_num = self.indexed_dim = self.trainer = self.value = None
+        self.axes = set()
 
     def resize(self, axis=None):
-        for i, (l, m) in enumerate(zip(self.num_labels, self.max_num_labels)):
-            if axis is None or i == axis:
-                assert l <= m, "Exceeded maximum number of labels at dimension %d: %d > %d:\n%s" % (
-                    i, l, m, "\n".join(map(str, self.labels[axis])))
+        for axis_, labels in self.labels.items():
+            if axis in (axis_, None):  # None means all
+                num_labels = self.num_labels[axis_]
+                assert num_labels <= labels.size, "Exceeded maximum number of labels at axis '%s': %d > %d:\n%s" % (
+                    axis_, num_labels, labels.size, "\n".join(map(str, labels.all)))
 
-    def init_model(self):
-        self.model = dy.ParameterCollection()
-        trainer_kwargs = {"edecay": self.learning_rate_decay}
-        if self.learning_rate_param_name and self.learning_rate:
-            trainer_kwargs[self.learning_rate_param_name] = self.learning_rate
-        self.trainer = self.trainer_type(self.model, **trainer_kwargs)
-        self.init_input_params()
-        self.init_mlp_params()
-        self.init_cg()
-        self.finished_step()
+    def init_model(self, axis=None):
+        init = self.model is None
+        if init:
+            self.model = dy.ParameterCollection()
+            trainer_kwargs = {"edecay": self.learning_rate_decay}
+            if self.learning_rate_param_name and self.learning_rate:
+                trainer_kwargs[self.learning_rate_param_name] = self.learning_rate
+            self.trainer = self.trainer_type(self.model, **trainer_kwargs)
+            self.init_input_params()
+        if axis and axis not in self.axes:
+            self.axes.add(axis)
+            self.init_mlp_params(axis)
+        if init:
+            self.init_cg()
+            self.finished_step()
 
     def init_input_params(self):
         """
@@ -114,13 +119,12 @@ class NeuralNetwork(Classifier):
         """
         return self.indexed_dim * self.indexed_num
 
-    def init_mlp_params(self):
-        for axis in range(len(self.num_labels)):
-            in_dim = [self.input_dim] + (self.layers - 1) * [self.layer_dim] + [self.output_dim]
-            out_dim = (self.layers - 1) * [self.layer_dim] + [self.output_dim, self.max_num_labels[axis]]
-            for i in range(self.layers + 1):
-                self.params[("W", i, axis)] = self.model.add_parameters((out_dim[i], in_dim[i]), init=self.init)
-                self.params[("b", i, axis)] = self.model.add_parameters(out_dim[i], init=self.init)
+    def init_mlp_params(self, axis):
+        in_dim = [self.input_dim] + (self.layers - 1) * [self.layer_dim] + [self.output_dim]
+        out_dim = (self.layers - 1) * [self.layer_dim] + [self.output_dim, self.labels[axis].size]
+        for i in range(self.layers + 1):
+            self.params[("W", i, axis)] = self.model.add_parameters((out_dim[i], in_dim[i]), init=self.init)
+            self.params[("b", i, axis)] = self.model.add_parameters(out_dim[i], init=self.init)
 
     def init_cg(self):
         dy.renew_cg()
@@ -181,11 +185,12 @@ class NeuralNetwork(Classifier):
         return dy.log_softmax(x, restrict=None if "--dynet-gpu" in sys.argv else list(range(self.num_labels[axis])))
 
     def evaluate(self, features, axis, train=False):
-        if self.model is None:
-            self.init_model()
-        if self.value[axis] is None:
-            self.value[axis] = self.evaluate_mlp(features=features, axis=axis, train=train)
-        return self.value[axis]
+        self.init_model(axis=axis)
+        value = self.value.get(axis)
+        if value is None:
+            value = self.evaluate_mlp(features=features, axis=axis, train=train)
+            self.value[axis] = value
+        return value
 
     def score(self, features, axis):
         """
@@ -198,7 +203,7 @@ class NeuralNetwork(Classifier):
         if self.updates > 0:
             return self.evaluate(features, axis).npvalue()[:self.num_labels[axis]]
         else:
-            if Config().args.verbose > 2:
+            if self.args.verbose > 2:
                 print("  no updates done yet, returning zero vector.")
             return np.zeros(self.num_labels[axis])
 
@@ -214,12 +219,12 @@ class NeuralNetwork(Classifier):
         super(NeuralNetwork, self).update(features, axis, pred, true, importance)
         for _ in range(int(importance)):
             self.losses.append(dy.pick(self.evaluate(features, axis, train=True), true))
-            if Config().args.dynet_viz:
+            if self.args.dynet_viz:
                 dy.print_graphviz()
                 sys.exit(0)
 
     def finished_step(self, train=False):
-        self.value = [None] * len(self.num_labels)  # For caching the result of _evaluate
+        self.value = {}  # For caching the result of _evaluate
 
     def finished_item(self, train=False):
         if len(self.losses) >= self.minibatch_size:
@@ -234,12 +239,11 @@ class NeuralNetwork(Classifier):
         :return self
         """
         super(NeuralNetwork, self).finalize()
-        if self.model is None:
-            self.init_model()
+        assert self.model, "Cannot finalize a model without initializing it first"
         if self.losses:
             loss = -dy.esum(self.losses)
             loss.forward()
-            if Config().args.verbose > 2:
+            if self.args.verbose > 2:
                 print("Total loss from %d time steps: %g" % (len(self.losses), loss.value()))
             loss.backward()
             # if np.linalg.norm(loss.gradient()) not in (np.inf, np.nan):
@@ -253,22 +257,20 @@ class NeuralNetwork(Classifier):
         if finished_epoch:
             self.trainer.update_epoch()
             self.epoch += 1
-        if Config().args.verbose > 1:
+        if self.args.verbose > 1:
             self.trainer.status()
         return self
 
     def save_labels(self):
-        if len(self.labels) > 1:
-            node_labels = self.input_params.get("n")  # Do not save node labels as they are saved as features already
-            if node_labels is not None and node_labels.size:
-                return self.labels[0], []
-        return self.labels
+        node_labels = self.input_params.get("n")  # Do not save node labels as they are saved as features already
+        omit_node_labels = node_labels is not None and node_labels.size
+        return {a: ([], 0) if a == "n" and omit_node_labels else l.save() for a, l in self.labels.items()}
 
     def save_model(self):
         self.finalize()
         d = {
             "param_keys": list(self.params.keys()),
-            "max_num_labels": self.max_num_labels,
+            "axes": list(self.axes),
             "layers": self.layers,
             "layer_dim": self.layer_dim,
             "output_dim": self.output_dim,
@@ -292,16 +294,17 @@ class NeuralNetwork(Classifier):
 
     def load_model(self, d):
         param_keys = d["param_keys"]
-        self.max_num_labels = d["max_num_labels"]
-        Config().args.layers = self.layers = d["layers"]
-        Config().args.layer_dim = self.layer_dim = d["layer_dim"]
-        Config().args.output_dim = self.output_dim = d.get("output_dim", Config().args.output_dim)
-        Config().args.activation = self.activation_str = d["activation"]
+        self.axes = set(d["axes"])
+        self.args.layers = self.layers = d["layers"]
+        self.args.layer_dim = self.layer_dim = d["layer_dim"]
+        self.args.output_dim = self.output_dim = d["output_dim"]
+        self.args.activation = self.activation_str = d["activation"]
         self.activation = ACTIVATIONS[self.activation_str]
-        Config().args.init = self.init_str = d["init"]
+        self.args.init = self.init_str = d["init"]
         self.init = INITIALIZERS[self.init_str]
         self.load_extra(d)
-        self.init_model()
+        for axis in self.axes:
+            self.init_model(axis)
         print("Loading model from '%s'... " % self.filename, end="", flush=True)
         started = time.time()
         try:

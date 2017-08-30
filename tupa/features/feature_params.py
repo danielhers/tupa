@@ -1,10 +1,12 @@
 from copy import copy
 
+from tupa.labels import Labels
+
 MISSING_VALUE = -1
 UNKNOWN_VALUE = 0
 
 
-class FeatureParameters(object):
+class FeatureParameters(Labels):
     def __init__(self, suffix, dim, size, dropout=0, updated=True, num=1, init=None, data=None, indexed=False,
                  copy_from=None, filename=None, min_count=1):
         """
@@ -15,7 +17,7 @@ class FeatureParameters(object):
         :param updated: whether the feature is learned (otherwise kept constant)
         :param num: how many such features exist per step
         :param init: array of values to use as initial value of embedding matrix
-        :param data: dictionary of raw value to running numerical representation, or embedding matrix
+        :param data: DefaultOrderedDict of raw value to running numerical representation, or embedding matrix
         :param indexed: whether the feature is to be used as index into initialized values (otherwise used directly)
         :param copy_from: suffix of other parameter to copy values from instead of extracting them directly
         :param filename: name of file to load data from
@@ -35,10 +37,17 @@ class FeatureParameters(object):
         self.min_count = min_count
 
     def __repr__(self):
-        return type(self).__name__ + "(" + ", ".join(map(str, (self.suffix,
-            self.dim, self.size, self.dropout, self.updated, self.num,
-            self.init, self.data, self.indexed, self.copy_from, self.filename,
-            self.min_count))) + ")"
+        return type(self).__name__ + "(" + ", ".join(
+            map(str, (self.suffix, self.dim, self.size, self.dropout, self.updated, self.num, self.init, self.data,
+                      self.indexed, self.copy_from, self.filename, self.min_count))) + ")"
+
+    @property
+    def all(self):
+        return self.data.all
+
+    @all.setter
+    def all(self, labels):
+        self.data.all = labels
 
     @property
     def numeric(self):

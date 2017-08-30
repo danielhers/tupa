@@ -1,4 +1,5 @@
 from .config import Config, COMPOUND
+from .labels import Labels
 
 
 class Action(object):
@@ -54,7 +55,7 @@ class Action(object):
         return self.is_type(Actions.Swap)
 
 
-class Actions(object):
+class Actions(Labels):
     Shift = Action("SHIFT")
     Node = Action("NODE")
     RemoteNode = Action("REMOTE-NODE")
@@ -68,7 +69,8 @@ class Actions(object):
     Swap = Action("SWAP")
     Finish = Action("FINISH")
 
-    def __init__(self, actions=None):
+    def __init__(self, actions=None, size=None):
+        super(Actions, self).__init__(size=size)
         self._all = None
         self._ids = None
         if actions is not None:

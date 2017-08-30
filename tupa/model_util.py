@@ -5,16 +5,18 @@ import time
 
 import numpy as np
 import os
-from collections import OrderedDict, Counter
+from collections import OrderedDict, Counter, defaultdict
 
 from .features.feature_params import UNKNOWN_VALUE
+from .labels import Labels
 
 
-class DefaultOrderedDict(OrderedDict):
+class DefaultOrderedDict(OrderedDict, Labels):
     # Source: http://stackoverflow.com/a/6190500/223267
-    def __init__(self, default_factory=None, *args, **kwargs):
+    def __init__(self, default_factory=None, *args, size=None, **kwargs):
         if default_factory is not None and not callable(default_factory):
             raise TypeError("default_factory must be callable")
+        Labels.__init__(self, size)
         self._all = []
         OrderedDict.__init__(self, *args, **kwargs)
         self._all = list(self.keys())
@@ -65,56 +67,51 @@ class DefaultOrderedDict(OrderedDict):
             self[key] = i
 
 
-class UnknownDict(DefaultOrderedDict):
+class AutoIncrementDict(DefaultOrderedDict):
     """
-    DefaultOrderedDict that has a single default value for missing keys
+    DefaultOrderedDict that returns an auto-incrementing index for new keys
     """
-    def __init__(self, d=None, unknown=UNKNOWN_VALUE):
+    def __init__(self, size=None, keys=(), d=None, unknown=UNKNOWN_VALUE):
         """
-        :param d: base dict to initialize by
-        :param unknown: value to return for missing keys
-        """
-        # noinspection PyTypeChecker
-        super(UnknownDict, self).__init__(None, {} if d is None else d)
-        self.unknown = self.setdefault(None, unknown)
-
-    def __missing__(self, key):
-        return self.unknown
-
-
-class AutoIncrementDict(UnknownDict):
-    """
-    defaultdict that returns an auto-incrementing index for new keys
-    """
-    def __init__(self, max_size=None, keys=(), d=None):
-        """
-        :param max_size: maximum index to allow, after which `unknown' will be returned
+        :param size: maximum size to allow, after which `unknown' will be returned
         :param keys: initial sequence of keys
         :param d: dictionary to initialize from
+        :param unknown: value to return for missing keys
         """
-        super(AutoIncrementDict, self).__init__(d)
-        self.max = max_size
+        super(AutoIncrementDict, self).__init__(None, d or {}, size=size)
+        self.unknown = self.setdefault(None, unknown)
         for key in keys:
             self.__missing__(key)
 
     def __missing__(self, key):
-        if self.max is not None and len(self) < self.max:
+        if self.size is not None and len(self) < self.size:
             ret = self[key] = len(self)
             return ret
         return self.unknown
+
+
+class UnknownDict(AutoIncrementDict):
+    """
+    DefaultOrderedDict that has a single default value for missing keys
+    """
+    def __init__(self, d=None):
+        """
+        :param d: base dict to initialize by
+        """
+        super(UnknownDict, self).__init__(size=None, d=d)
 
 
 class DropoutDict(AutoIncrementDict):
     """
     UnknownDict that sometimes returns the unknown value even for existing keys
     """
-    def __init__(self, d=None, dropout=0, max_size=None, keys=(), min_count=1):
+    def __init__(self, d=None, dropout=0, size=None, keys=(), min_count=1):
         """
         :param d: base dict to initialize by
         :param dropout: dropout parameter
         :param min_count: minimum number of occurrences for a key before it is actually added to the dict
         """
-        super(DropoutDict, self).__init__(max_size, keys, d=d)
+        super(DropoutDict, self).__init__(size, keys, d=d)
         assert dropout >= 0, "Dropout value must be >= 0, but given %f" % dropout
         self.dropout, self.counts, self.min_count = (d.dropout, d.counts, d.min_count) \
             if d is not None and isinstance(d, DropoutDict) else (dropout, Counter(), min_count)
@@ -126,6 +123,14 @@ class DropoutDict(AutoIncrementDict):
             if count < self.min_count or self.dropout and self.dropout/(count+self.dropout) > np.random.random_sample():
                 item = None
         return super(DropoutDict, self).__getitem__(item)
+
+
+class KeyBasedDefaultDict(defaultdict):
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+        self[key] = self.default_factory(key)
+        return self[key]
 
 
 def save_dict(filename, d):

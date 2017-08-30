@@ -10,7 +10,7 @@ from scheme.convert import FROM_FORMAT, TO_FORMAT, CONVERTERS
 from scheme.evaluate import EVALUATORS, Scores
 from scheme.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
 from tupa.config import Config
-from tupa.model import Model, ACTION_AXIS, LABEL_AXIS, ClassifierProperty
+from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
 from tupa.oracle import Oracle
 from tupa.states.state import State
 
@@ -94,8 +94,7 @@ class Parser(object):
         elif last or self.args.save_every is not None:
             self.model.save()
         if not last:
-            self.model = model  # Restore non-finalized model
-            self.model.load_labels()
+            self.model.restore(model)  # Restore non-finalized model
         return scores
 
     def parse(self, passages, mode=ParseMode.test, evaluate=False):
@@ -130,7 +129,7 @@ class Parser(object):
             started = time.time()
             self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = 0
             textutil.annotate(passage, verbose=self.args.verbose > 1)  # tag POS and parse dependencies
-            Config().set_format(passage.extra.get("format"), labeled)
+            Config().set_format(passage.extra.get("format") or "ucca", labeled)
             self.state = State(passage)
             self.state_hash_history = set()
             self.oracle = Oracle(passage) if train or (
@@ -240,7 +239,7 @@ class Parser(object):
         return true_actions
 
     def choose_action(self, features, train, true_actions):
-        scores = self.model.classifier.score(features, axis=ACTION_AXIS)  # Returns NumPy array
+        scores = self.model.classifier.score(features, axis=self.args.format)  # Returns NumPy array
         if self.args.verbose > 2:
             print("  action scores: " + ",".join(("%s: %g" % x for x in zip(self.model.actions.all, scores))))
         try:
@@ -256,7 +255,7 @@ class Parser(object):
         if train and not (is_correct and
                           ClassifierProperty.update_only_on_error in self.model.get_classifier_properties()):
             best_action = self.predict(scores[list(true_actions.keys())], list(true_actions.values()))
-            self.model.classifier.update(features, axis=ACTION_AXIS, pred=predicted_action.id, true=best_action.id,
+            self.model.classifier.update(features, axis=self.args.format, pred=predicted_action.id, true=best_action.id,
                                          importance=self.args.swap_importance if best_action.is_swap else 1)
         if train and not is_correct and self.args.early_update:
             self.state.finished = True
@@ -278,7 +277,7 @@ class Parser(object):
         true_id = self.model.labels[true_label] if self.oracle else None  # Needs to happen before score()
         if Config().args.use_gold_node_labels:
             return true_label, true_label
-        scores = self.model.classifier.score(features, axis=LABEL_AXIS)
+        scores = self.model.classifier.score(features, axis=NODE_LABEL_KEY)
         if self.args.verbose > 2:
             print("  label scores: " + ",".join(("%s: %g" % x for x in zip(self.model.labels.all, scores))))
         label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label)
@@ -288,7 +287,7 @@ class Parser(object):
                 self.correct_label_count += 1
             if train and not (is_correct and
                               ClassifierProperty.update_only_on_error in self.model.get_classifier_properties()):
-                self.model.classifier.update(features, axis=LABEL_AXIS, pred=self.model.labels[label], true=true_id)
+                self.model.classifier.update(features, axis=NODE_LABEL_KEY, pred=self.model.labels[label], true=true_id)
                 label = true_label
         self.label_count += 1
         return label, predicted_label
@@ -346,7 +345,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
     :param model_suffix: string to append to model filename before file extension
     :return: generator of Scores objects: dev scores for each training iteration (if given dev), and finally test scores
     """
-    model_base, model_ext = os.path.splitext(args.model or "%s_%s" % (args.format or "ucca", args.classifier))
+    model_base, model_ext = os.path.splitext(args.model or args.classifier)
     p = Parser(model_file=model_base + model_suffix + model_ext, model_type=args.classifier, beam=args.beam)
     print("%s %s" % (os.path.basename(__file__), Config()))
     yield from filter(None, p.train(train_passages, dev=dev_passages, test=test_passages, iterations=args.iterations))

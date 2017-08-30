@@ -34,7 +34,7 @@ class FeatureEnumerator(FeatureExtractorWrapper):
             vectors = FeatureExtractorWrapper.get_word_vectors(param)
             keys = vectors.keys()
             param.init = np.array(list(vectors.values()))
-        param.data = DropoutDict(max_size=param.size, keys=keys, dropout=param.dropout, min_count=param.min_count)
+        param.data = DropoutDict(size=param.size, keys=keys, dropout=param.dropout, min_count=param.min_count)
 
     def init_features(self, state, suffix=None):
         param = self.params[suffix]

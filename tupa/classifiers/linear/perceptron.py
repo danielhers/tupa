@@ -8,14 +8,11 @@ class Perceptron(Classifier):
     Abstract multi-class averaged perceptron.
     """
 
-    def __init__(self, *args, model=None, epoch=0):
+    def __init__(self, *args, epoch):
         """
         Create a new untrained Perceptron or copy the weights from an existing one
-        :param model: if given, copy the weights (from a trained model)
         """
-        super(Perceptron, self).__init__(*args, model=model)
-        if self.is_frozen:
-            self.model = model
+        super(Perceptron, self).__init__(*args)
         self.initial_learning_rate = self.learning_rate if self.learning_rate else 1.0
         self.epoch = epoch
         self.update_learning_rate()
@@ -51,7 +48,7 @@ class Perceptron(Classifier):
         finalized = self._finalize_model(finished_epoch, average)
         if average:
             print("Done (%.3fs)." % (time.time() - started))
-        print("Labels: " + self.num_labels_str())
+        print("Labels: %s" % self.num_labels)
         print("Features: %d" % self.input_dim)
         return finalized
 

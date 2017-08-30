@@ -1,7 +1,8 @@
 import numpy as np
 from collections import defaultdict
 
-from tupa.config import Config, SPARSE
+from tupa.config import SPARSE
+from tupa.model_util import KeyBasedDefaultDict
 from .perceptron import Perceptron
 
 
@@ -50,6 +51,15 @@ class FeatureWeights(object):
         self._last_update.resize(num_labels, refcheck=False)
 
 
+class FeatureWeightsCreator(object):
+    def __init__(self, perceptron, axis):
+        self.perceptron = perceptron
+        self.axis = axis
+
+    def create(self):
+        return FeatureWeights(self.perceptron.num_labels[self.axis])
+
+
 class SparsePerceptron(Perceptron):
     """
     Multi-class averaged perceptron with min-update for sparse features.
@@ -58,24 +68,33 @@ class SparsePerceptron(Perceptron):
     Expects features from SparseFeatureExtractor.
     """
 
-    def __init__(self, *args, model=None, epoch=0):
+    def __init__(self, *args, epoch=0):
         """
         Create a new untrained Perceptron or copy the weights from an existing one
         :param labels: tuple of lists of labels that can be updated later to add new labels
         :param min_update: minimum number of updates to a feature required for consideration
         :param model: if given, copy the weights (from a trained model)
         """
-        super(SparsePerceptron, self).__init__(SPARSE, *args, model=model, epoch=epoch)
-        model = defaultdict(self.create_weights)
+        super(SparsePerceptron, self).__init__(SPARSE, *args, epoch=epoch)
+        model = KeyBasedDefaultDict(self.create_axis_weights)
         if self.is_frozen:
-            model.update(self.model)
+            for axis, feature_weights in self.model.items():
+                model[axis].update(feature_weights)
         self.model = model
         self.input_dim = len(self.model)
-        self.min_update = Config().args.min_update  # Minimum number of updates for a feature to be used in scoring
+        self.min_update = self.args.min_update  # Minimum number of updates for a feature to be used in scoring
         self.dropped = set()  # Features that did not get min_updates after a full epoch
 
-    def create_weights(self):
-        return tuple(map(FeatureWeights, self.num_labels))
+    def create_axis_weights(self, axis):
+        return defaultdict(FeatureWeightsCreator(self, axis).create)
+
+    def copy_model(self):
+        return {a: dict(m) for a, m in self.model.items()}
+
+    def update_model(self, model):
+        for axis, feature_weights in model.items():
+            self.model[axis].update(feature_weights)
+        self.input_dim = len(self.model)
 
     def score(self, features, axis):
         """
@@ -86,14 +105,14 @@ class SparsePerceptron(Perceptron):
         """
         super(SparsePerceptron, self).score(features, axis)
         scores = np.zeros(self.num_labels[axis])
+        model = self.model[axis]
         for feature, value in features.items():
             if not value:
                 continue
-            weights = self.model.get(feature)
+            weights = model.get(feature)
             if weights is not None:
-                w = weights[axis]
-                if self.is_frozen or w.update_count >= self.min_update:
-                    scores += value * w.weights
+                if self.is_frozen or weights.update_count >= self.min_update:
+                    scores += value * weights.weights
         return scores
 
     def update(self, features, axis, pred, true, importance=1):
@@ -106,40 +125,47 @@ class SparsePerceptron(Perceptron):
         :param importance: how much to scale the feature vector for the weight update
         """
         super(SparsePerceptron, self).update(features, axis, pred, true, importance)
+        model = self.model[axis]
         for feature, value in features.items():
             if not value or feature in self.dropped:
                 continue
-            w = self.model[feature][axis]
-            w.update(true, importance * self.learning_rate * value, self.updates)
-            w.update(pred, -importance * self.learning_rate * value, self.updates)
+            weights = model[feature]
+            weights.update(true, importance * self.learning_rate * value, self.updates)
+            weights.update(pred, -importance * self.learning_rate * value, self.updates)
         self.input_dim = len(self.model)
 
     def resize(self, axis=None):
-        for weights in self.model.values():
-            for i, (l, w) in enumerate(zip(self.num_labels, weights)):
-                if axis is None or i == axis:
-                    w.resize(l)
+        for axis_, model in self.model.items():
+            if axis in (axis_, None):  # None means all
+                num_labels = self.num_labels[axis_]
+                for weights in model.values():
+                    weights.resize(num_labels)
 
     def _finalize_model(self, finished_epoch, average):
         # If finished an epoch, remove rare features from our model directly. Otherwise, copy it.
-        model, dropped = (self.model, self.dropped) if finished_epoch else (dict(self.model), set())
-        for f, weights in list(model.items()):
-            if weights[0].update_count < self.min_update:
-                del model[f]
-                dropped.add(f)
+        model, dropped = (self.model, self.dropped) if finished_epoch else (self.copy_model(), set())
+        num_features = 0
+        for axis, axis_model in self.model.items():
+            for feature, weights in list(axis_model.items()):
+                if weights.update_count < self.min_update:
+                    del axis_model[feature]
+                    dropped.add(feature)
+            num_features += len(axis_model)
         print("%d features occurred at least %d times, dropped %d rare features" % (
-            len(model), self.min_update, len(dropped)))
-        finalized = {f: tuple(w.finalize(self.updates, average=average) for w in weights)
-                     for f, weights in model.items()}
-        return SparsePerceptron(self.filename, tuple(map(list, self.labels)), model=finalized, epoch=self.epoch)
+            num_features, self.min_update, len(dropped)))
+        finalized = {a: {f: w.finalize(self.updates, average=average) for f, w in m.items()} for a, m in model.items()}
+        ret = SparsePerceptron(self.filename, self.labels, epoch=self.epoch)
+        ret.update_model(finalized)
+        ret.is_frozen = True
+        return ret
 
     def save_extra(self):
         return {
-            "model": dict(self.model),
+            "model": self.copy_model(),
             "min_update": self.min_update,
         }
 
     def load_extra(self, d):
         self.model.clear()
-        self.model.update(d["model"])
-        Config().args.min_update = self.min_update = d.get("min_update", d.get("_min_update"))
+        self.update_model(d["model"])
+        self.args.min_update = self.min_update = d["min_update"]

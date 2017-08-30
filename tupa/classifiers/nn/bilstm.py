@@ -1,6 +1,6 @@
 import dynet as dy
 
-from tupa.config import Config, BILSTM_NN
+from tupa.config import BILSTM_NN
 from tupa.features.feature_params import MISSING_VALUE
 from .neural_network import NeuralNetwork
 
@@ -9,11 +9,11 @@ class BiLSTM(NeuralNetwork):
 
     def __init__(self, *args, **kwargs):
         super(BiLSTM, self).__init__(BILSTM_NN, *args, **kwargs)
-        self.lstm_layers = Config().args.lstm_layers
-        self.lstm_layer_dim = Config().args.lstm_layer_dim
-        self.embedding_layers = Config().args.embedding_layers
-        self.embedding_layer_dim = Config().args.embedding_layer_dim
-        self.max_length = Config().args.max_length
+        self.lstm_layers = self.args.lstm_layers
+        self.lstm_layer_dim = self.args.lstm_layer_dim
+        self.embedding_layers = self.args.embedding_layers
+        self.embedding_layer_dim = self.args.embedding_layer_dim
+        self.max_length = self.args.max_length
         self.input_reps = None
         self.empty_rep = None
 
@@ -33,8 +33,7 @@ class BiLSTM(NeuralNetwork):
         return self.indexed_num * self.lstm_layer_dim
 
     def init_features(self, features, train=False):
-        if self.model is None:
-            self.init_model()
+        self.init_model()
         embeddings = [[self.params[s][k] for k in ks] for s, ks in sorted(features.items())]  # time-lists of vectors
         inputs = [self.evaluate_embeddings(e, train=train) for e in zip(*embeddings)]  # join each time step to a vector
         bilstm = self.params["bilstm"]
@@ -79,10 +78,10 @@ class BiLSTM(NeuralNetwork):
         }
 
     def load_extra(self, d):
-        Config().args.lstm_layers = self.lstm_layers = d["lstm_layers"]
-        Config().args.lstm_layer_dim = self.lstm_layer_dim = d.get("lstm_layer_dim", Config().args.lstm_layer_dim)
-        Config().args.embedding_layers = self.embedding_layers = d.get("embedding_layers",
-                                                                       Config().args.embedding_layers)
-        Config().args.embedding_layer_dim = self.embedding_layer_dim = d.get("embedding_layer_dim",
-                                                                             Config().args.embedding_layer_dim)
-        Config().args.max_length = self.max_length = d.get("max_length", Config().args.max_length)
+        self.args.lstm_layers = self.lstm_layers = d["lstm_layers"]
+        self.args.lstm_layer_dim = self.lstm_layer_dim = d.get("lstm_layer_dim", self.args.lstm_layer_dim)
+        self.args.embedding_layers = self.embedding_layers = d.get("embedding_layers",
+                                                                       self.args.embedding_layers)
+        self.args.embedding_layer_dim = self.embedding_layer_dim = d.get("embedding_layer_dim",
+                                                                             self.args.embedding_layer_dim)
+        self.args.max_length = self.max_length = d.get("max_length", self.args.max_length)
