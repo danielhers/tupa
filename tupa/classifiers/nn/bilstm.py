@@ -79,9 +79,7 @@ class BiLSTM(NeuralNetwork):
 
     def load_extra(self, d):
         self.args.lstm_layers = self.lstm_layers = d["lstm_layers"]
-        self.args.lstm_layer_dim = self.lstm_layer_dim = d.get("lstm_layer_dim", self.args.lstm_layer_dim)
-        self.args.embedding_layers = self.embedding_layers = d.get("embedding_layers",
-                                                                       self.args.embedding_layers)
-        self.args.embedding_layer_dim = self.embedding_layer_dim = d.get("embedding_layer_dim",
-                                                                             self.args.embedding_layer_dim)
-        self.args.max_length = self.max_length = d.get("max_length", self.args.max_length)
+        self.args.lstm_layer_dim = self.lstm_layer_dim = d["lstm_layer_dim"]
+        self.args.embedding_layers = self.embedding_layers = d["embedding_layers"]
+        self.args.embedding_layer_dim = self.embedding_layer_dim = d["embedding_layer_dim"]
+        self.args.max_length = self.max_length = d["max_length"]
