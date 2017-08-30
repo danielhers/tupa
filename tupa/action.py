@@ -2,7 +2,7 @@ from .config import Config, COMPOUND
 from .labels import Labels
 
 
-class Action(object):
+class Action(dict):
     type_to_id = {}
 
     def __init__(self, action_type, tag=None, orig_edge=None, orig_node=None, oracle=None, id_=None):
@@ -20,6 +20,7 @@ class Action(object):
             self.type_id = len(Action.type_to_id)
             Action.type_to_id[self.type] = self.type_id
         self.id = id_
+        super(Action, self).__init__(action_type=self.type, tag=self.tag)
 
     def is_type(self, *others):
         return self.type_id in (o.type_id for o in others)
@@ -92,8 +93,8 @@ class Actions(Labels):
 
     @all.setter
     def all(self, actions):
-        self._all = list(actions)
-        self._ids = {(action.type_id, action.tag): i for i, action in enumerate(actions)}
+        self._all = [Action(**a) if isinstance(a, dict) else a for a in actions]
+        self._ids = {(action.type_id, action.tag): i for i, action in enumerate(self._all)}
         for action in self._all:
             self.generate_id(action)
 

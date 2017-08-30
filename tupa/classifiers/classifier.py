@@ -1,5 +1,5 @@
 from tupa.config import Config
-from tupa.model_util import load_dict, save_dict
+from tupa.model_util import load_json, save_json
 
 
 class Classifier(object):
@@ -84,7 +84,7 @@ class Classifier(object):
             "epoch": self.epoch,
         }
         d.update(self.save_model())
-        save_dict(self.filename + ".dict", d)
+        save_json(self.filename + ".json", d)
 
     def save_labels(self):
         return {a: l.save() for a, l in self.labels.items()}
@@ -102,7 +102,7 @@ class Classifier(object):
         """
         Load all parameters from file
         """
-        d = load_dict(self.filename + ".dict")
+        d = load_json(self.filename + ".json")
         model_type = d.get("type")
         assert model_type is None or model_type == self.model_type, "Model type does not match: %s" % model_type
         self.labels = d["labels"]  # Just a dict of (all, size) pairs, to be corrected by Model to Actions and Labels

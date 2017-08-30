@@ -293,7 +293,7 @@ class NeuralNetwork(Classifier):
         return d
 
     def load_model(self, d):
-        param_keys = d["param_keys"]
+        param_keys = [tuple(k) if isinstance(k, list) else k for k in d["param_keys"]]
         self.axes = set(d["axes"])
         self.args.layers = self.layers = d["layers"]
         self.args.layer_dim = self.layer_dim = d["layer_dim"]

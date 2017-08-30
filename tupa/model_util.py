@@ -1,3 +1,4 @@
+import json
 import pickle
 import pprint as pp
 import sys
@@ -135,14 +136,14 @@ class KeyBasedDefaultDict(defaultdict):
 
 def save_dict(filename, d):
     """
-    Save dictionary to file
+    Save dictionary to Pickle file
     :param filename: file to write to
     :param d: dictionary to save
     """
     sys.setrecursionlimit(2000)
     print("Saving to '%s'... " % filename, end="", flush=True)
     started = time.time()
-    with open(filename, 'wb') as h:
+    with open(filename, "wb") as h:
         try:
             pickle.dump(d, h, protocol=pickle.HIGHEST_PROTOCOL)
         except RecursionError as e:
@@ -152,7 +153,7 @@ def save_dict(filename, d):
 
 def load_dict(filename):
     """
-    Load dictionary from file
+    Load dictionary from Pickle file
     :param filename: file to read from
     """
 
@@ -161,7 +162,7 @@ def load_dict(filename):
         for f in names:
             # noinspection PyBroadException
             try:
-                with open(f, 'rb') as h:
+                with open(f, "rb") as h:
                     return pickle.load(h)
             except FileNotFoundError as e:
                 exception = e
@@ -171,5 +172,31 @@ def load_dict(filename):
     print("Loading from '%s'... " % filename, end="", flush=True)
     started = time.time()
     d = try_load(filename, os.path.splitext(filename)[0])
+    print("Done (%.3fs)." % (time.time() - started))
+    return d
+
+
+def save_json(filename, d):
+    """
+    Save dictionary to JSON file
+    :param filename: file to write to
+    :param d: dictionary to save
+    """
+    print("Saving to '%s'... " % filename, end="", flush=True)
+    started = time.time()
+    with open(filename, "w") as h:
+        json.dump(d, h)
+    print("Done (%.3fs)." % (time.time() - started))
+
+
+def load_json(filename):
+    """
+    Load dictionary from JSON file
+    :param filename: file to read from
+    """
+    print("Loading from '%s'... " % filename, end="", flush=True)
+    started = time.time()
+    with open(filename, "r") as h:
+        d = json.load(h)
     print("Done (%.3fs)." % (time.time() - started))
     return d
