@@ -59,21 +59,10 @@ class Perceptron(Classifier):
         self.learning_rate = self.initial_learning_rate / (1.0 + self.epoch * self.learning_rate_decay)
 
     def save_model(self):
-        """
-        Save all parameters to file
-        """
-        d = {
-            "initial_learning_rate": self.initial_learning_rate,
-        }
-        d.update(self.save_extra())
+        d = {"initial_learning_rate": self.initial_learning_rate}
+        d.update(super(Perceptron, self).save_model())
         return d
-
-    def save_extra(self):
-        return {"model": self.model}
 
     def load_model(self, d):
         self.initial_learning_rate = d["initial_learning_rate"]
-        self.load_extra(d)
-
-    def load_extra(self, d):
-        self.model = d["model"]
+        super(Perceptron, self).load_model(d)

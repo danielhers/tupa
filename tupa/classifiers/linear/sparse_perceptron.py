@@ -2,7 +2,7 @@ import numpy as np
 from collections import defaultdict
 
 from tupa.config import SPARSE
-from tupa.model_util import KeyBasedDefaultDict
+from tupa.model_util import KeyBasedDefaultDict, save_dict, load_dict
 from .perceptron import Perceptron
 
 
@@ -160,12 +160,10 @@ class SparsePerceptron(Perceptron):
         return ret
 
     def save_extra(self):
-        return {
-            "model": self.copy_model(),
-            "min_update": self.min_update,
-        }
+        save_dict(self.filename + ".data", self.copy_model())
+        return {"min_update": self.min_update}
 
     def load_extra(self, d):
         self.model.clear()
-        self.update_model(d["model"])
+        self.update_model(load_dict(self.filename + ".data"))
         self.args.min_update = self.min_update = d["min_update"]

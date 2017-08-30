@@ -90,6 +90,9 @@ class Classifier(object):
         return {a: l.save() for a, l in self.labels.items()}
 
     def save_model(self):
+        """
+        Save all parameters to file
+        """
         return self.save_extra()
 
     def save_extra(self):
