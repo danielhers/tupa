@@ -9,7 +9,7 @@ from setuptools.command.install import install as _install
 install_requires = []
 with open("requirements.txt") as f:
     install_requires += f.read().splitlines()
-install_requires.append("dynet>=2.0")
+install_requires.append("dynet==2.0")
 
 try:
     import pypandoc
@@ -48,7 +48,7 @@ class install(_install):
 
 
 setup(name="TUPA",
-      version="1.2.0",
+      version="1.2.1",
       description="Transition-based UCCA Parser",
       long_description=long_description,
       classifiers=[
