@@ -12,12 +12,12 @@ from tupa.config import Config
 from tupa.features.feature_params import MISSING_VALUE
 
 TRAINERS = {
-    "sgd": (dy.SimpleSGDTrainer, "e0"),
-    "cyclic": (dy.CyclicalSGDTrainer, "e0_min"),
-    "momentum": (dy.MomentumSGDTrainer, "e0"),
-    "adagrad": (dy.AdagradTrainer, "e0"),
+    "sgd": (dy.SimpleSGDTrainer, "learning_rate"),
+    "cyclic": (dy.CyclicalSGDTrainer, "learning_rate_max"),
+    "momentum": (dy.MomentumSGDTrainer, "learning_rate"),
+    "adagrad": (dy.AdagradTrainer, "learning_rate"),
     "adadelta": (dy.AdadeltaTrainer, None),
-    "rmsprop": (dy.RMSPropTrainer, "e0"),
+    "rmsprop": (dy.RMSPropTrainer, "learning_rate"),
     "adam": (partial(dy.AdamTrainer, beta_2=0.9), "alpha"),
 }
 
@@ -78,7 +78,7 @@ class NeuralNetwork(Classifier):
         init = self.model is None
         if init:
             self.model = dy.ParameterCollection()
-            trainer_kwargs = {"edecay": self.learning_rate_decay}
+            trainer_kwargs = {}
             if self.learning_rate_param_name and self.learning_rate:
                 trainer_kwargs[self.learning_rate_param_name] = self.learning_rate
             self.trainer = self.trainer_type(self.model, **trainer_kwargs)
@@ -255,7 +255,7 @@ class NeuralNetwork(Classifier):
             self.losses = []
             self.updates += 1
         if finished_epoch:
-            self.trainer.update_epoch()
+            self.trainer.learning_rate /= (1 - self.learning_rate_decay)
             self.epoch += 1
         if self.args.verbose > 1:
             self.trainer.status()

@@ -9,7 +9,7 @@ from setuptools.command.install import install as _install
 install_requires = []
 with open("requirements.txt") as f:
     install_requires += f.read().splitlines()
-install_requires.append("dynet==2.0")
+install_requires.append("dynet==2.0.1")
 
 try:
     import pypandoc
