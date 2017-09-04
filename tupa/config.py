@@ -25,6 +25,7 @@ COMPOUND = "compound"
 ACTIVATIONS = ("sigmoid", "tanh", "relu", "cube")
 INITIALIZATIONS = ("glorot_uniform", "normal", "uniform", "const")
 OPTIMIZERS = ("adam", "sgd", "cyclic", "momentum", "adagrad", "adadelta", "rmsprop")
+RNNS = ("lstm", "gru", "vanilla_lstm", "compact_vanilla_lstm", "coupled_lstm", "fast_lstm", "simple")
 
 # Input/output formats
 FORMATS = [e.lstrip(".") for e in UCCA_EXT] + list(CONVERTERS)
@@ -136,6 +137,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--word-dropout-external", type=float, default=0.25, help="word dropout for word vectors")
         group.add_argument("--dropout", type=float, default=0.5, help="dropout parameter between layers")
         group.add_argument("--max-length", type=int, default=120, help="maximum length of input sentence")
+        group.add_argument("--rnn", choices=RNNS, default=RNNS[0], help="type of recurrent neural network to use")
         self.nn_arg_names = get_group_arg_names(group)
         group = argparser.add_argument_group(title="DyNet parameters")
         group.add_argument("--dynet-mem", help="memory for dynet")

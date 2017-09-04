@@ -4,6 +4,16 @@ from tupa.config import BILSTM_NN
 from tupa.features.feature_params import MISSING_VALUE
 from .neural_network import NeuralNetwork
 
+RNNS = {
+    "simple": dy.SimpleRNNBuilder,
+    "gru": dy.GRUBuilder,
+    "lstm": dy.LSTMBuilder,
+    "vanilla_lstm": dy.VanillaLSTMBuilder,
+    "compact_vanilla_lstm": dy.CompactVanillaLSTMBuilder,
+    "coupled_lstm": dy.CoupledLSTMBuilder,
+    "fast_lstm": dy.FastLSTMBuilder,
+}
+
 
 class BiLSTM(NeuralNetwork):
 
@@ -14,6 +24,8 @@ class BiLSTM(NeuralNetwork):
         self.embedding_layers = self.args.embedding_layers
         self.embedding_layer_dim = self.args.embedding_layer_dim
         self.max_length = self.args.max_length
+        self.rnn_str = self.args.rnn
+        self.rnn_builder = RNNS[self.rnn_str]
         self.input_reps = None
         self.empty_rep = None
 
@@ -29,7 +41,7 @@ class BiLSTM(NeuralNetwork):
             self.params[("be", i)] = self.model.add_parameters(out_dim, init=self.init)
         self.params["bilstm"] = dy.BiRNNBuilder(self.lstm_layers,
                                                 self.lstm_layer_dim if self.embedding_layers else self.indexed_dim,
-                                                self.lstm_layer_dim, self.model, dy.LSTMBuilder)
+                                                self.lstm_layer_dim, self.model, self.rnn_builder)
         return self.indexed_num * self.lstm_layer_dim
 
     def init_features(self, features, train=False):
@@ -75,6 +87,7 @@ class BiLSTM(NeuralNetwork):
             "embedding_layers": self.embedding_layers,
             "embedding_layer_dim": self.embedding_layer_dim,
             "max_length": self.max_length,
+            "rnn": self.rnn_str,
         }
 
     def load_extra(self, d):
@@ -83,3 +96,4 @@ class BiLSTM(NeuralNetwork):
         self.args.embedding_layers = self.embedding_layers = d["embedding_layers"]
         self.args.embedding_layer_dim = self.embedding_layer_dim = d["embedding_layer_dim"]
         self.args.max_length = self.max_length = d["max_length"]
+        self.args.rnn = self.rnn_str = d.get("rnn", self.args.rnn)
