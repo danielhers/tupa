@@ -95,6 +95,7 @@ def main():
         ("max_swap",                range(2, 21)),
         ("max_words",               (2000, 5000, 7500, 10000, 20000)),
         ("max_words_external",      (None, 5000, 10000, 30000)),
+        ("rnn",                     config.RNNS),
     )
     params = [Params(OrderedDict(p))
               for p in zip(*[[(n, v.item() if hasattr(v, "item") else v)
