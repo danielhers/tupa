@@ -78,24 +78,26 @@ class Model(object):
             self.feature_params = [p.create_from_config() for p in PARAM_DEFS]
             if self.args.node_labels:
                 labels[NODE_LABEL_KEY] = self.init_node_labels().data
-        if self.model_type in (SPARSE, NOOP):
-            if self.model_type == SPARSE:
-                from .features.sparse_features import SparseFeatureExtractor as FeatureExtractor
-                from .classifiers.linear.sparse_perceptron import SparsePerceptron as Classifier
-            else:  # NOOP
-                from .features.empty_features import EmptyFeatureExtractor as FeatureExtractor
-                from .classifiers.noop import NoOp as Classifier
-            self.feature_extractor = FeatureExtractor()
-            self.classifier = Classifier(self.filename, labels)
+        if self.model_type == SPARSE:
+            from .features.sparse_features import SparseFeatureExtractor
+            from .classifiers.linear.sparse_perceptron import SparsePerceptron
+            self.feature_extractor = SparseFeatureExtractor()
+            self.classifier = SparsePerceptron(self.filename, labels)
+        elif self.model_type == NOOP:
+            from .features.empty_features import EmptyFeatureExtractor
+            from .classifiers.noop import NoOp
+            self.feature_extractor = EmptyFeatureExtractor()
+            self.classifier = NoOp(self.filename, labels)
         elif self.model_type in (MLP_NN, BILSTM_NN):
             from .features.dense_features import DenseFeatureExtractor
             self.feature_extractor = FeatureEnumerator(DenseFeatureExtractor(), self.feature_params)
             if self.model_type == MLP_NN:
-                from .classifiers.nn.feedforward import MLP as Classifier
+                from .classifiers.nn.feedforward import MLP
+                self.classifier = MLP(self.filename, labels)
             else:  # BILSTM_NN
+                from .classifiers.nn.bilstm import BiLSTM
                 self.feature_extractor = FeatureIndexer(self.feature_extractor)
-                from .classifiers.nn.bilstm import BiLSTM as Classifier
-            self.classifier = Classifier(self.filename, labels)
+                self.classifier = BiLSTM(self.filename, labels)
         else:
             raise ValueError("Invalid model type: '%s'" % self.model_type)
         self._update_input_params()
