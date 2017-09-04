@@ -48,7 +48,7 @@ class Perceptron(Classifier):
         finalized = self._finalize_model(finished_epoch, average)
         if average:
             print("Done (%.3fs)." % (time.time() - started))
-        print("Labels: %s" % self.num_labels)
+        print("Labels: %s" % (next(iter(self.num_labels.values())) if len(self.num_labels) == 1 else self.num_labels))
         print("Features: %d" % self.input_dim)
         return finalized
 

@@ -120,4 +120,5 @@ class Classifier(object):
         pass
 
     def __str__(self):
-        return "Labels: %s, %d features" % (self.num_labels, self.input_dim)
+        return "Labels: %s, %d features" % (next(iter(self.num_labels.values())) if len(self.num_labels) == 1 else
+                                            self.num_labels, self.input_dim)
