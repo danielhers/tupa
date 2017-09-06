@@ -25,7 +25,7 @@ COMPOUND = "compound"
 ACTIVATIONS = ("sigmoid", "tanh", "relu", "cube")
 INITIALIZATIONS = ("glorot_uniform", "normal", "uniform", "const")
 OPTIMIZERS = ("adam", "sgd", "cyclic", "momentum", "adagrad", "adadelta", "rmsprop")
-RNNS = ("lstm", "gru", "vanilla_lstm", "compact_vanilla_lstm", "coupled_lstm", "fast_lstm", "simple")
+RNNS = ("lstm", "gru", "vanilla_lstm", "compact_vanilla_lstm", "coupled_lstm", "fast_lstm")
 
 # Input/output formats
 FORMATS = [e.lstrip(".") for e in UCCA_EXT] + list(CONVERTERS)
