@@ -20,12 +20,11 @@ class Params(object):
         if self.params["swap"] != config.COMPOUND:
             self.params["max_swap"] = 1
         if not self.params["word_vectors"] or not self.params["word_dim_external"]:
-            self.params["word_dim_external"] = self.params["max_words_external"] = 0
-            self.params["word_vectors"] = self.params["update_word_vectors"] = self.params["word_dropout_external"] = \
-                None
+            self.params["word_dim_external"] = self.params["max_words_external"] = \
+                self.params["word_dropout_external"] = 0
+            self.params["word_vectors"] = self.params["update_word_vectors"] = None
         if not self.params["word_dim"]:
-            self.params["max_words"] = 0
-            self.params["word_dropout"] = None
+            self.params["max_words"] = self.params["word_dropout"] = 0
         self.params["model"] = "%s/%s-%d" % (MODELS_DIR, self.params["classifier"], self.params["seed"])
         self.scores = None
 
