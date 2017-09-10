@@ -239,7 +239,7 @@ class AmrConverter(convert.FormatConverter):
                 return "v" + str(self._id)
 
         root = passage.layer(layer1.LAYER_ID).top_node
-        pending = list(root)
+        pending = list(root)  # all the root's outgoing edges (NOT a list containing just the root)
         if not pending:  # there is nothing but the root node: add a dummy edge to stop the loop immediately
             pending = [namedtuple("Edge", ["parent", "child", "tag"])(root, None, None)]
         visited = set()  # to avoid cycles
@@ -252,7 +252,7 @@ class AmrConverter(convert.FormatConverter):
                 nodes = [edge.parent]  # nodes taking part in the relation being created
                 if edge.child is not None and edge.tag not in TERMINAL_TAGS:  # skip terminals
                     nodes.append(edge.child)
-                    pending += edge.child
+                    pending += edge.child  # all the child's outgoing edges
                 head_dep = []  # will be pair of (parent label, child label)
                 for node in nodes:
                     label = resolve_label(node)
