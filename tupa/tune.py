@@ -13,6 +13,19 @@ MODELS_DIR = "models"
 class Params(object):
     def __init__(self, params):
         self.params = params
+        if self.params["classifier"] != config.BILSTM_NN:
+            self.params["rnn"] = None
+            self.params["lstm_layer_dim"] = self.params["lstm_layers"] = \
+                self.params["embedding_layer_dim"] = self.params["embedding_layers"] = 0
+        if self.params["swap"] != config.COMPOUND:
+            self.params["max_swap"] = 1
+        if not self.params["word_vectors"] or not self.params["word_dim_external"]:
+            self.params["word_dim_external"] = self.params["max_words_external"] = 0
+            self.params["word_vectors"] = self.params["update_word_vectors"] = self.params["word_dropout_external"] = \
+                None
+        if not self.params["word_dim"]:
+            self.params["max_words"] = 0
+            self.params["word_dropout"] = None
         self.params["model"] = "%s/%s-%d" % (MODELS_DIR, self.params["classifier"], self.params["seed"])
         self.scores = None
 
@@ -55,52 +68,50 @@ def main():
     domains = (
         ("seed",                    2147483647),  # max value for int
         ("classifier",              (config.MLP_NN, config.BILSTM_NN)),
-        ("learning_rate",           (0.0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5)),
-        ("learning_rate_decay",     (0.0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5)),
+        ("learning_rate",           np.logspace(-5, 0, 11)),
+        ("learning_rate_decay",     np.r_[0, np.logspace(-5, -1, 9)]),
         ("update_word_vectors",     [True, False]),
         ("word_vectors",            [None] + word_vectors_files),
         ("word_dim_external",       (0, 300)),
-        ("word_dim",                (0, 50, 100, 200, 300)),
-        ("tag_dim",                 (5, 10, 20)),
-        ("dep_dim",                 (5, 10, 20)),
-        ("edge_label_dim",          (5, 10, 20)),
-        ("node_label_dim",          get_values_based_on_format(10, 20, 30)),
-        ("node_category_dim",       get_values_based_on_format(3, 5, 10)),
-        ("max_node_categories",     get_values_based_on_format(10, 25)),
-        ("punct_dim",               (1, 2, 3)),
-        ("action_dim",              (3, 5, 10)),
-        ("ner_dim",                 (3, 5, 10)),
-        ("max_node_labels",         get_values_based_on_format(500, 750, 1000, 1500, 2000)),
+        ("word_dim",                range(0, 301)),
+        ("tag_dim",                 range(0, 21)),
+        ("dep_dim",                 range(0, 21)),
+        ("edge_label_dim",          range(0, 21)),
+        ("node_label_dim",          get_values_based_on_format(range(30))),
+        ("node_category_dim",       get_values_based_on_format(range(15))),
+        ("max_node_categories",     get_values_based_on_format(range(10, 26))),
+        ("punct_dim",               range(4)),
+        ("action_dim",              range(15)),
+        ("ner_dim",                 range(15)),
+        ("max_node_labels",         get_values_based_on_format(range(500, 2001))),
         ("min_node_label_count",    range(1, 201)),
-        ("layer_dim",               (50, 100, 200, 300, 500, 1000)),
-        ("layers",                  [1] + 5 * [2]),
-        ("lstm_layer_dim",          (50, 100, 200, 300, 500, 1000)),
-        ("lstm_layers",             [1] + 5 * [2]),
-        ("embedding_layer_dim",     (50, 100, 200, 300, 500, 1000)),
-        ("embedding_layers",        5 * [1] + [2]),
-        ("output_dim",              (20, 30, 50, 100, 200, 300, 500, 1000)),
+        ("layer_dim",               range(50, 1001)),
+        ("layers",                  range(1, 4)),
+        ("lstm_layer_dim",          range(50, 1001)),
+        ("lstm_layers",             range(1, 4)),
+        ("embedding_layer_dim",     range(50, 1001)),
+        ("embedding_layers",        range(1, 4)),
+        ("output_dim",              range(20, 1001)),
         ("activation",              config.ACTIVATIONS),
         ("init",                    5 * [config.INITIALIZATIONS[0]] + list(config.INITIALIZATIONS)),
-        ("batch_size",              (10, 30, 50, 100, 200, 500)),
-        ("minibatch_size",          (50, 100, 200, 300, 500, 1000)),
+        ("batch_size",              range(10, 501)),
+        ("minibatch_size",          range(50, 1001)),
         ("optimizer",               config.OPTIMIZERS),
         ("swap_importance",         (1, 2)),
         ("iterations",              range(1, 51)),
-        ("word_dropout",            (0, .1, .2, .25, .3)),
-        ("word_dropout_external",   (0, .1, .2, .25, .3)),
-        ("dynet_weight_decay",      (1e-7, 1e-6, 1e-5, 1e-4)),
-        ("dropout",                 (0, .1, .2, .3, .4, .5)),
+        ("word_dropout",            np.arange(.31, step=.01)),
+        ("word_dropout_external",   np.arange(.31, step=.01)),
+        ("dynet_weight_decay",      np.logspace(-7, -4, 7)),
+        ("dropout",                 np.arange(.51, step=.01)),
         ("require_connected",       [True, False]),
         ("swap",                    [config.REGULAR, config.COMPOUND]),
         ("max_swap",                range(2, 21)),
-        ("max_words",               (2000, 5000, 7500, 10000, 20000)),
-        ("max_words_external",      (None, 5000, 10000, 30000)),
+        ("max_words",               range(2000, 20001)),
+        ("max_words_external",      [None] + list(range(5000, 30001))),
         ("rnn",                     config.RNNS),
     )
-    params = [Params(OrderedDict(p))
-              for p in zip(*[[(n, v.item() if hasattr(v, "item") else v)
-                              for v in np.random.choice(vs, num)]
-                             for n, vs in domains])]
+    params = [Params(OrderedDict(p)) for p in zip(*[[(n, v.item() if hasattr(v, "item") else v)
+                                                     for v in np.random.choice(vs, num)] for n, vs in domains])]
     print("All parameter combinations to try:")
     print("\n".join(map(str, params)))
     print("Saving results to '%s'" % out_file)
