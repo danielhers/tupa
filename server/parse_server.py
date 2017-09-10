@@ -20,6 +20,7 @@ from webassets import Environment as AssetsEnvironment
 from ucca.convert import from_text, to_standard, from_standard
 from ucca.textutil import indent_xml
 from ucca.visualization import draw
+from ucca import layer1
 from tupa.parse import Parser
 
 SCRIPT_DIR = os.path.dirname(__file__)
@@ -69,7 +70,7 @@ def parse():
 def visualize():
     xml = request.get_data()
     passage = from_standard(fromstring(xml))
-    print("Visualizing passage %s: %s" % (passage.ID, passage.layer("1").top_node))
+    print("Visualizing passage %s: %s" % (passage.ID, passage.layer(layer1.LAYER_ID).heads[0]))
     canvas = FigureCanvasAgg(plt.figure())
     draw(passage)
     image = BytesIO()

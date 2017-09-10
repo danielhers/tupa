@@ -74,7 +74,7 @@ class AmrConverter(convert.FormatConverter):
         _, _, root = top[0]  # init with child of TOP
         pending = amr.triples(head=root)
         self.nodes = {}  # map triples to UCCA nodes: dep gets a new node each time unless it's a variable
-        variables = {root: l1.top_node}  # map AMR variables to UCCA nodes
+        variables = {root: l1.heads[0]}  # map AMR variables to UCCA nodes
         names = set()  # to collapse :name (... / name) :op "..." into one string node
         excluded = set()  # nodes whose outgoing edges (except for instance-of edges) will be ignored
         visited = set()  # to avoid cycles
@@ -238,7 +238,7 @@ class AmrConverter(convert.FormatConverter):
                 self._id += 1
                 return "v" + str(self._id)
 
-        root = passage.layer(layer1.LAYER_ID).top_node
+        root = passage.layer(layer1.LAYER_ID).heads[0]
         pending = list(root)  # all the root's outgoing edges (NOT a list containing just the root)
         if not pending:  # there is nothing but the root node: add a dummy edge to stop the loop immediately
             pending = [namedtuple("Edge", ["parent", "child", "tag"])(root, None, None)]
