@@ -85,7 +85,7 @@ def main():
         ("min_node_label_count",    range(1, 201)),
         ("layer_dim",               range(50, 1001)),
         ("layers",                  range(1, 4)),
-        ("lstm_layer_dim",          range(50, 1001)),
+        ("lstm_layer_dim",          range(50, 1001, 2)),
         ("lstm_layers",             range(1, 4)),
         ("embedding_layer_dim",     range(50, 1001)),
         ("embedding_layers",        range(1, 4)),
