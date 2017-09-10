@@ -19,9 +19,8 @@ class Params(object):
                 self.params["embedding_layer_dim"] = self.params["embedding_layers"] = 0
         if self.params["swap"] != config.COMPOUND:
             self.params["max_swap"] = 1
-        if not self.params["word_vectors"] or not self.params["word_dim_external"]:
-            self.params["word_dim_external"] = self.params["max_words_external"] = \
-                self.params["word_dropout_external"] = 0
+        if not self.params["word_dim_external"]:
+            self.params["max_words_external"] = self.params["word_dropout_external"] = 0
             self.params["word_vectors"] = self.params["update_word_vectors"] = None
         if not self.params["word_dim"]:
             self.params["max_words"] = self.params["word_dropout"] = 0
