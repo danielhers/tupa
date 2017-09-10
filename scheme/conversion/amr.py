@@ -1,5 +1,6 @@
-import penman
 from collections import namedtuple, OrderedDict
+
+import penman
 from ucca import layer0, convert
 
 from scheme.util.amr import *

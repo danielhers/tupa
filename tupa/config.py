@@ -1,9 +1,9 @@
 import argparse
 import logging
 import sys
+from functools import partial
 
 import numpy as np
-from functools import partial
 from ucca import constructions
 
 from scheme.cfgutil import Singleton, add_verbose_argument, add_boolean_option, get_group_arg_names

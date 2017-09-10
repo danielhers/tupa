@@ -1,11 +1,11 @@
+import os
 import sys
 import time
+from collections import OrderedDict
+from functools import partial
 
 import dynet as dy
 import numpy as np
-import os
-from collections import OrderedDict
-from functools import partial
 
 from tupa.classifiers.classifier import Classifier
 from tupa.config import Config

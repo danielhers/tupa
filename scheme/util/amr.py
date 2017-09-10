@@ -1,11 +1,11 @@
 import csv
-import string
-
 import importlib.util  # needed for amr.peg
 import os
 import re
-import spotlight
+import string
 from collections import defaultdict
+
+import spotlight
 from requests.exceptions import ConnectionError
 from spotlight import SpotlightException
 from ucca import layer1

@@ -1,8 +1,8 @@
 import csv
-
-import numpy as np
 import os
 from collections import OrderedDict
+
+import numpy as np
 
 from tupa import parse, config
 from tupa.config import Config

@@ -1,12 +1,12 @@
 import json
+import os
 import pickle
 import pprint as pp
 import sys
 import time
+from collections import OrderedDict, Counter, defaultdict
 
 import numpy as np
-import os
-from collections import OrderedDict, Counter, defaultdict
 
 from .features.feature_params import UNKNOWN_VALUE
 from .labels import Labels

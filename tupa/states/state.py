@@ -1,6 +1,6 @@
 import sys
-
 from collections import deque, defaultdict
+
 from ucca import core, layer0, layer1, textutil
 from ucca.layer1 import EdgeTags
 

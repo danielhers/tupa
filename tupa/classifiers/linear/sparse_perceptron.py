@@ -1,5 +1,6 @@
-import numpy as np
 from collections import defaultdict
+
+import numpy as np
 
 from tupa.config import SPARSE
 from tupa.model_util import KeyBasedDefaultDict, save_dict, load_dict

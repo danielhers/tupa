@@ -1,10 +1,10 @@
 import argparse
 import csv
+import os
 import sys
+from shutil import rmtree, move
 
 import nltk
-import os
-from shutil import rmtree, move
 
 EXTRA_ROLESETS = (  # fix for roles missing in PropBank
     ("ablate-01", "0", "1", "2", "3"),

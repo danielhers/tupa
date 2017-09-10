@@ -2,9 +2,9 @@
 
 import argparse
 import glob
+import os
 import sys
 
-import os
 from ucca import ioutil
 
 from scheme.cfgutil import add_verbose_argument

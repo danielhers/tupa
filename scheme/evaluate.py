@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import argparse
+import os
 from itertools import groupby
 
-import os
 from ucca import evaluation
 
 from scheme.cfgutil import add_verbose_argument

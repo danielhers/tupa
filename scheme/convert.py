@@ -2,10 +2,10 @@
 
 import argparse
 import glob
-import sys
-
 import os
 import re
+import sys
+
 from ucca import convert, ioutil
 
 from scheme.conversion.amr import from_amr, to_amr

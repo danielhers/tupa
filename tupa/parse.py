@@ -1,8 +1,8 @@
+import os
 import time
+from collections import defaultdict
 from enum import Enum
 
-import os
-from collections import defaultdict
 from ucca import diffutil, ioutil, textutil, layer1, evaluation
 from ucca.convert import from_text, to_text
 

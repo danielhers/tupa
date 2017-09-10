@@ -1,5 +1,6 @@
 from collections import deque
 from operator import attrgetter
+
 from ucca import core, layer0
 from ucca.layer1 import EdgeTags
 
