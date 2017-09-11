@@ -51,7 +51,7 @@ class Params(object):
         return ret
 
 
-def get_values_based_on_format(*values):
+def get_values_based_on_format(values):
     return values if Config().args.format == "amr" else (0,)
 
 
