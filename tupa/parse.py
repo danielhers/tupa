@@ -432,5 +432,16 @@ def main():
         yield from train_test(train_passages, dev_passages, test_passages, args)
 
 
+# def tracefunc(frame, event, arg):
+#     if event.endswith("call") and arg:
+#         if (getattr(arg, "__module__", None) or getattr(arg.__self__.__class__, "__module__")) == "_dynet":
+#             print(">", os.path.basename(frame.f_code.co_filename), frame.f_code.co_name, arg.__qualname__, "(",
+#                   ", ".join("%s=%r" % (v, frame.f_locals[v])
+#                             for v in frame.f_code.co_varnames[:frame.f_code.co_argcount] if v != "self"), ")")
+#             # print(arg.__qualname__)
+#     return tracefunc
+# import sys
+# sys.setprofile(tracefunc)
+
 if __name__ == "__main__":
     list(main())
