@@ -12,7 +12,6 @@ ucca)
         python -m scripts.split_corpus -q pickle -t 4282 -d 454 -l
     fi
     TOY_DATA=test_files/504.xml
-    export PARAMS_NUM=5
     ;;
 amr)
     if [[ "$ACTION" != toy ]]; then
@@ -31,11 +30,9 @@ sdp)
     fi
     TOY_DATA=test_files/20001001.sdp
     CONVERT_DATA=data/sdp/trial/*.sdp
-    export PARAMS_NUM=3
     ;;
 conllu)
     TOY_DATA=test_files/UD_English.conllu
-    export PARAMS_NUM=3
     ;;
 esac
 
@@ -55,6 +52,7 @@ sparse-ucca|mlp-ucca|bilstm-ucca|noop-ucca)
     python tupa/parse.py -v -c "$ACTION" --max-words-external=5000 --layer-dim=100 -We pickle/dev/*0.pickle -t pickle/train/*0.pickle
     ;;
 tune-*)
+    export PARAMS_NUM=3
     while :; do
       python tupa/tune.py -t "$TOY_DATA" -d "$TOY_DATA" && break
     done
