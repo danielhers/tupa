@@ -14,7 +14,10 @@ class ConlluConverter(DependencyConverter, convert.ConllConverter):
 
     def read_line(self, line, previous_node):
         self.lines_read.append(line)
-        return super(ConlluConverter, self).read_line(line, previous_node)
+        try:
+            return super(ConlluConverter, self).read_line(line, previous_node)
+        except ValueError as e:
+            raise ValueError("Failed reading line:\n" + line) from e
 
     def break_cycles(self, dep_nodes):
         super(ConlluConverter, self).break_cycles(dep_nodes)
