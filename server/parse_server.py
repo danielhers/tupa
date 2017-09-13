@@ -82,7 +82,7 @@ CONTENT_TYPES = {"xml": "xml/application", "json": "application/json"}
 
 
 @app.route("/download", methods=["POST"])
-def parse():
+def download():
     xml = request.values["input"]
     out_format = request.values["format"]
     print("Converting to " + out_format)
