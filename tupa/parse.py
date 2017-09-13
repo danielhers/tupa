@@ -125,11 +125,12 @@ class Parser(object):
             edges, node_labels = map(any, zip(*[(n.outgoing, n.attrib.get(LABEL_ATTRIB))
                                                 for n in passage.layer(layer1.LAYER_ID).all]))
             labeled = edges or node_labels  # Passage is considered labeled if there are any edges or node labels in it
-            print("%s %-7s" % (passage_word, passage.ID), end=Config().line_end, flush=True)
+            passage_format = passage.extra.get("format") or "ucca"
+            print("%-6s %s %-7s" % (passage_format, passage_word, passage.ID), end=Config().line_end, flush=True)
             started = time.time()
             self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = 0
             textutil.annotate(passage, verbose=self.args.verbose > 1)  # tag POS and parse dependencies
-            Config().set_format(passage.extra.get("format") or "ucca", labeled)
+            Config().set_format(passage_format, labeled)
             self.state = State(passage)
             self.state_hash_history = set()
             self.oracle = Oracle(passage) if train or (
