@@ -1,27 +1,27 @@
 import os
+from base64 import b64encode
+from io import BytesIO
+from urllib.parse import quote
+from xml.etree.ElementTree import fromstring, tostring
 
+import flask_assets
+import jinja2
 import matplotlib
+from flask import Flask, render_template, Response, request
+from flask_compress import Compress
+from ucca import layer1
+from ucca.convert import from_text, to_standard, from_standard
+from ucca.textutil import indent_xml
+from ucca.visualization import draw
+from webassets import Environment as AssetsEnvironment
+from webassets.ext.jinja2 import AssetsExtension
+
+from scheme.convert import TO_FORMAT
+from tupa.parse import Parser
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-
-from io import BytesIO
-from xml.etree.ElementTree import fromstring, tostring
-from urllib.parse import quote
-from base64 import b64encode
-import jinja2
-from flask import Flask, render_template, Response, request
-import flask_assets
-from flask_compress import Compress
-from webassets.ext.jinja2 import AssetsExtension
-from webassets import Environment as AssetsEnvironment
-
-from ucca.convert import from_text, to_standard, from_standard
-from ucca.textutil import indent_xml
-from ucca.visualization import draw
-from ucca import layer1
-from tupa.parse import Parser
 
 SCRIPT_DIR = os.path.dirname(__file__)
 
@@ -77,6 +77,17 @@ def visualize():
     canvas.print_png(image)
     data = b64encode(image.getvalue()).decode()
     return Response(quote(data.rstrip("\n")))
+
+CONTENT_TYPES = {"xml": "xml/application", "json": "application/json"}
+
+
+@app.route("/download", methods=["POST"])
+def parse():
+    xml = request.values["input"]
+    out_format = request.values["format"]
+    print("Converting to " + out_format)
+    out = xml if out_format == "xml" else "\n".join(TO_FORMAT["format"](from_standard(fromstring(xml))))
+    return Response(out, headers={"Content-Type": CONTENT_TYPES.get(out_format, "text/plain")})
 
 
 session_opts = {
