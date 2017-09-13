@@ -16,10 +16,11 @@ ucca)
 amr)
     if [[ "$ACTION" != toy ]]; then
         curl --remote-name-all https://amr.isi.edu/download/2016-03-14/alignment-release-{training,dev,test}-bio.txt
-        python scheme/split.py -q alignment-release-training-bio.txt alignment-release-training-bio
+        rename 's/.txt/.amr/' alignment-release-*-bio.txt
+        python scheme/split.py -q alignment-release-training-bio.amr alignment-release-training-bio
     fi
     TOY_DATA=test_files/LDC2014T12.amr
-    CONVERT_DATA=alignment-release-dev-bio.txt
+    CONVERT_DATA=alignment-release-dev-bio.amr
     ;;
 sdp)
     if [[ "$ACTION" != toy ]]; then
@@ -59,10 +60,10 @@ tune-*)
     column -t -s, params.csv
     ;;
 sparse-amr)
-    python tupa/parse.py -v -c sparse --max-node-labels=250 -We -f amr alignment-release-dev-bio.txt -t alignment-release-training-bio/*10.txt --no-wikification
+    python tupa/parse.py -v -c sparse --max-node-labels=250 -We -f amr alignment-release-dev-bio.amr -t alignment-release-training-bio/*10.amr --no-wikification
     ;;
 noop-amr)
-    python tupa/parse.py -v -c noop -We -f amr alignment-release-dev-bio.txt -t alignment-release-training-bio --no-wikification
+    python tupa/parse.py -v -c noop -We -f amr alignment-release-dev-bio.amr -t alignment-release-training-bio --no-wikification
     ;;
 sparse-sdp|mlp-sdp|bilstm-sdp|noop-sdp)
     python tupa/parse.py -v -c "$ACTION" -We data/sdp/trial/dm/dev -t data/sdp/trial/dm/train
