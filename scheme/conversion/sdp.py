@@ -15,7 +15,10 @@ class SdpConverter(DependencyConverter, convert.SdpConverter):
 
     def read_line(self, line, previous_node):
         self.lines_read.append(line)
-        return super(SdpConverter, self).read_line(line, previous_node)
+        try:
+            return super(SdpConverter, self).read_line(line, previous_node)
+        except ValueError as e:
+            raise ValueError("Failed reading line:\n" + line) from e
 
 
 def from_sdp(lines, passage_id, split=True, mark_aux=False, return_original=False, *args, **kwargs):
