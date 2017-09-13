@@ -86,7 +86,7 @@ def download():
     xml = request.values["input"]
     out_format = request.values["format"]
     print("Converting to " + out_format)
-    out = xml if out_format == "xml" else "\n".join(TO_FORMAT["format"](from_standard(fromstring(xml))))
+    out = xml if out_format == "xml" else "\n".join(TO_FORMAT[out_format](from_standard(fromstring(xml))))
     return Response(out, headers={"Content-Type": CONTENT_TYPES.get(out_format, "text/plain")})
 
 
