@@ -2,6 +2,7 @@ import os
 import time
 from collections import defaultdict
 from enum import Enum
+from glob import glob
 
 from ucca import diffutil, ioutil, textutil, layer1, evaluation
 from ucca.convert import from_text, to_text
@@ -393,7 +394,7 @@ def print_scores(scores, filename, prefix=None, prefix_title=None):
 
 
 def read_passages(args, files):
-    return ioutil.read_files_and_dirs(files, args.sentences, args.paragraphs,
+    return ioutil.read_files_and_dirs([f for pattern in files for f in glob(pattern)], args.sentences, args.paragraphs,
                                       defaultdict(lambda: Config().input_converter or from_text, FROM_FORMAT))
 
 
