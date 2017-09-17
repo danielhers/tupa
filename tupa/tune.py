@@ -32,13 +32,13 @@ class Params(object):
                Config().args.passages and Config().args.folds, "insufficient parameters given to parser"
         print("Running with %s" % self)
         Config().update(self.params)
-        for i, self.scores in enumerate(parse.main()):
+        for i, self.scores in enumerate(parse.main(), start=1):
             print_title = not os.path.exists(out_file)
             with open(out_file, "a") as f:
                 if print_title:
                     csv.writer(f).writerow([p for p in self.params.keys()] +
                                            ["average_labeled_f1"] + self.scores.titles())
-                csv.writer(f).writerow([str((i + 1) if n == "iterations" else p) for n, p in self.params.items()] +
+                csv.writer(f).writerow([str(i if n == "iterations" else p) for n, p in self.params.items()] +
                                        [str(self.scores.average_f1())] + self.scores.fields())
 
     def score(self):

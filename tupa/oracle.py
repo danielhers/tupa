@@ -129,14 +129,14 @@ class Oracle(object):
                         related = dict([(edge.child.ID,  edge) for edge in outgoing] +
                                        [(edge.parent.ID, edge) for edge in incoming])
                         distance = None  # Swap distance (how many nodes in the stack to swap)
-                        for i, s in enumerate(state.stack[-3::-1]):  # Skip top two: checked above, they are not related
+                        for i, s in enumerate(state.stack[-3::-1], start=1):  # Skip top two: checked above, not related
                             edge = related.pop(s.node_id, None)
                             if edge is not None:
                                 if not self.args.swap:  # We have no chance to reach it, so stop trying
                                     self.remove(edge)
                                     continue
                                 if distance is None and self.args.swap == COMPOUND:  # Save the first one
-                                    distance = min(i + 1, Config().args.max_swap)  # Do not swap more than allowed
+                                    distance = min(i, Config().args.max_swap)  # Do not swap more than allowed
                                 if not related:  # All related nodes are in the stack
                                     yield Actions.Swap(distance)
                                     return

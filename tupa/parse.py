@@ -122,7 +122,7 @@ class Parser(object):
         passage_index = 0
         if not hasattr(passages, "__iter__"):  # Single passage given
             passages = (passages,)
-        for passage_index, passage in enumerate(passages):
+        for passage_index, passage in enumerate(passages, start=1):
             edges, node_labels = map(any, zip(*[(n.outgoing, n.attrib.get(LABEL_ATTRIB))
                                                 for n in passage.layer(layer1.LAYER_ID).all]))
             labeled = edges or node_labels  # Passage is considered labeled if there are any edges or node labels in it
@@ -172,13 +172,13 @@ class Parser(object):
             self.total_actions += self.action_count
             self.total_correct_labels += self.correct_label_count
             self.total_labels += self.label_count
-            if train and self.args.save_every and (passage_index+1) % self.args.save_every == 0:
+            if train and self.args.save_every and passage_index % self.args.save_every == 0:
                 self.eval_and_save()
                 self.eval_index += 1
             yield (guessed, self.evaluate_passage(guessed, passage)) if evaluate else guessed
 
         if passages:
-            print("Parsed %d %ss" % (passage_index+1, passage_word))
+            print("Parsed %d %ss" % (passage_index, passage_word))
             if self.oracle and self.total_actions:
                 accuracy_str = "%d%% correct actions (%d/%d)" % (100*self.total_correct_actions/self.total_actions,
                                                                  self.total_correct_actions, self.total_actions)
@@ -188,7 +188,7 @@ class Parser(object):
                 print("Overall %s on %s" % (accuracy_str, mode.name))
             if total_duration:
                 print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
-                    total_duration, passage_word, total_duration / (passage_index+1),
+                    total_duration, passage_word, total_duration / passage_index,
                     total_tokens / total_duration), flush=True)
 
     def parse_passage(self, train):
