@@ -7,7 +7,7 @@ class ConlluConverter(DependencyConverter, convert.ConllConverter):
     # TODO multi-word tokens
     # http://universaldependencies.org/conll17/evaluation.html
     def __init__(self, *args, **kwargs):
-        super(ConlluConverter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def modify_passage(self, passage):
         passage.extra["format"] = "conllu"
@@ -15,12 +15,12 @@ class ConlluConverter(DependencyConverter, convert.ConllConverter):
     def read_line(self, line, previous_node):
         self.lines_read.append(line)
         try:
-            return super(ConlluConverter, self).read_line(line, previous_node)
+            return super().read_line(line, previous_node)
         except ValueError as e:
             raise ValueError("Failed reading line:\n" + line) from e
 
     def break_cycles(self, dep_nodes):
-        super(ConlluConverter, self).break_cycles(dep_nodes)
+        super().break_cycles(dep_nodes)
         for dep_node in dep_nodes:
             if not dep_node.incoming:
                 dep_node.incoming = [(self.Edge(-1, "root", False))]

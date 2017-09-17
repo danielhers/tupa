@@ -18,7 +18,7 @@ RNNS = {
 class BiLSTM(NeuralNetwork):
 
     def __init__(self, *args, **kwargs):
-        super(BiLSTM, self).__init__(BILSTM_NN, *args, **kwargs)
+        super().__init__(BILSTM_NN, *args, **kwargs)
         self.lstm_layers = self.args.lstm_layers
         self.lstm_layer_dim = self.args.lstm_layer_dim
         self.embedding_layers = self.args.embedding_layers

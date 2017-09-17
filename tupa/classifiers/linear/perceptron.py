@@ -12,7 +12,7 @@ class Perceptron(Classifier):
         """
         Create a new untrained Perceptron or copy the weights from an existing one
         """
-        super(Perceptron, self).__init__(*args)
+        super().__init__(*args)
         self.initial_learning_rate = self.learning_rate if self.learning_rate else 1.0
         self.epoch = epoch
         self.update_learning_rate()
@@ -26,7 +26,7 @@ class Perceptron(Classifier):
         :param true: true label (non-negative integer bounded by num_labels[axis])
         :param importance: how much to scale the feature vector for the weight update
         """
-        super(Perceptron, self).update(features, axis, pred, true, importance)
+        super().update(features, axis, pred, true, importance)
         self.updates += 1
 
     def resize(self, axis=None):
@@ -39,7 +39,7 @@ class Perceptron(Classifier):
         :param finished_epoch: whether to decay the learning rate and drop rare features
         :return new Perceptron object with the weights averaged
         """
-        super(Perceptron, self).finalize()
+        super().finalize()
         started = time.time()
         if finished_epoch:
             self.epoch += 1
@@ -60,9 +60,9 @@ class Perceptron(Classifier):
 
     def save_model(self):
         d = {"initial_learning_rate": self.initial_learning_rate}
-        d.update(super(Perceptron, self).save_model())
+        d.update(super().save_model())
         return d
 
     def load_model(self, d):
         self.initial_learning_rate = d["initial_learning_rate"]
-        super(Perceptron, self).load_model(d)
+        super().load_model(d)

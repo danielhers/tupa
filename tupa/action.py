@@ -20,7 +20,7 @@ class Action(dict):
             self.type_id = len(Action.type_to_id)
             Action.type_to_id[self.type] = self.type_id
         self.id = id_
-        super(Action, self).__init__(action_type=self.type, tag=self.tag)
+        super().__init__(action_type=self.type, tag=self.tag)
 
     def is_type(self, *others):
         return self.type_id in (o.type_id for o in others)
@@ -71,7 +71,7 @@ class Actions(Labels):
     Finish = Action("FINISH")
 
     def __init__(self, actions=None, size=None):
-        super(Actions, self).__init__(size=size)
+        super().__init__(size=size)
         self._all = None
         self._ids = None
         if actions is not None:

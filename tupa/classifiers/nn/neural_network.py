@@ -49,7 +49,7 @@ class NeuralNetwork(Classifier):
         """
         Create a new untrained NN
         """
-        super(NeuralNetwork, self).__init__(*args)
+        super().__init__(*args)
         self.layers = self.args.layers
         self.layer_dim = self.args.layer_dim
         self.output_dim = self.args.output_dim
@@ -199,7 +199,7 @@ class NeuralNetwork(Classifier):
         :param axis: axis of the label we are predicting
         :return: array with score for each label
         """
-        super(NeuralNetwork, self).score(features, axis)
+        super().score(features, axis)
         if self.updates > 0:
             return self.evaluate(features, axis).npvalue()[:self.num_labels[axis]]
         else:
@@ -216,7 +216,7 @@ class NeuralNetwork(Classifier):
         :param true: true label (non-negative integer bounded by num_labels[axis])
         :param importance: add this many samples with the same features
         """
-        super(NeuralNetwork, self).update(features, axis, pred, true, importance)
+        super().update(features, axis, pred, true, importance)
         for _ in range(int(importance)):
             self.losses.append(dy.pick(self.evaluate(features, axis, train=True), true))
             if self.args.dynet_viz:
@@ -238,7 +238,7 @@ class NeuralNetwork(Classifier):
         Fit this model on collected samples
         :return self
         """
-        super(NeuralNetwork, self).finalize()
+        super().finalize()
         assert self.model, "Cannot finalize a model without initializing it first"
         if self.losses:
             loss = -dy.esum(self.losses)

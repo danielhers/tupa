@@ -66,7 +66,7 @@ class NumericFeatureParameters(FeatureParameters):
     SUFFIX = "numeric"
 
     def __init__(self, num):
-        super(NumericFeatureParameters, self).__init__(NumericFeatureParameters.SUFFIX, 1, None, num=num)
+        super().__init__(NumericFeatureParameters.SUFFIX, 1, None, num=num)
 
     def __repr__(self):
         return "%s(%d)" % (

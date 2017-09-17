@@ -76,7 +76,7 @@ class SparsePerceptron(Perceptron):
         :param min_update: minimum number of updates to a feature required for consideration
         :param model: if given, copy the weights (from a trained model)
         """
-        super(SparsePerceptron, self).__init__(SPARSE, *args, epoch=epoch)
+        super().__init__(SPARSE, *args, epoch=epoch)
         model = KeyBasedDefaultDict(self.create_axis_weights)
         if self.is_frozen:
             for axis, feature_weights in self.model.items():
@@ -104,7 +104,7 @@ class SparsePerceptron(Perceptron):
         :param axis: axis of the label we are predicting
         :return: array with score for each label
         """
-        super(SparsePerceptron, self).score(features, axis)
+        super().score(features, axis)
         scores = np.zeros(self.num_labels[axis])
         model = self.model[axis]
         for feature, value in features.items():
@@ -125,7 +125,7 @@ class SparsePerceptron(Perceptron):
         :param true: true label (non-negative integer bounded by num_labels[axis])
         :param importance: how much to scale the feature vector for the weight update
         """
-        super(SparsePerceptron, self).update(features, axis, pred, true, importance)
+        super().update(features, axis, pred, true, importance)
         model = self.model[axis]
         for feature, value in features.items():
             if not value or feature in self.dropped:

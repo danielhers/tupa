@@ -5,7 +5,7 @@ from .dep import DependencyConverter
 
 class SdpConverter(DependencyConverter, convert.SdpConverter):
     def __init__(self, *args, **kwargs):
-        super(SdpConverter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def modify_passage(self, passage):
         passage.extra["format"] = "sdp"
@@ -16,7 +16,7 @@ class SdpConverter(DependencyConverter, convert.SdpConverter):
     def read_line(self, line, previous_node):
         self.lines_read.append(line)
         try:
-            return super(SdpConverter, self).read_line(line, previous_node)
+            return super().read_line(line, previous_node)
         except ValueError as e:
             raise ValueError("Failed reading line:\n" + line) from e
 

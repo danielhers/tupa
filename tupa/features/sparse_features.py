@@ -64,7 +64,7 @@ class SparseFeatureExtractor(FeatureExtractor):
     """
 
     def __init__(self):
-        super(SparseFeatureExtractor, self).__init__(FEATURE_TEMPLATES)
+        super().__init__(FEATURE_TEMPLATES)
 
     def extract_features(self, state):
         """

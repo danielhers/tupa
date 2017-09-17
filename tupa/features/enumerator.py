@@ -13,10 +13,10 @@ class FeatureEnumerator(FeatureExtractorWrapper):
     """
 
     def __init__(self, feature_extractor=None, params=None):
-        super(FeatureEnumerator, self).__init__(feature_extractor, params)
+        super().__init__(feature_extractor, params)
 
     def init_params(self, feature_extractor, param_list):
-        params = super(FeatureEnumerator, self).init_params(feature_extractor, param_list)
+        params = super().init_params(feature_extractor, param_list)
         for param in list(params.values()):
             if feature_extractor.features_exist(param.effective_suffix):
                 if not isinstance(param, NumericFeatureParameters):

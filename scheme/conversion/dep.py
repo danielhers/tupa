@@ -9,13 +9,13 @@ class DependencyConverter(convert.DependencyConverter):
     TOP = "TOP"
 
     def __init__(self, *args, constituency=False, **kwargs):
-        super(DependencyConverter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.constituency = constituency
         self.lines_read = []
 
     def create_non_terminals(self, dep_nodes, l1):
         if self.constituency:
-            super(DependencyConverter, self).create_non_terminals(dep_nodes, l1)
+            super().create_non_terminals(dep_nodes, l1)
         for dep_node in dep_nodes:
             if dep_node.position != 0 and not dep_node.incoming and dep_node.outgoing:
                 dep_node.node = dep_node.preterminal = l1.add_fnode(None, self.TOP if dep_node.is_top else self.ROOT)
@@ -32,7 +32,7 @@ class DependencyConverter(convert.DependencyConverter):
                 l1.add_remote(edge.head.node, edge.rel, dep_node.node)
 
     def from_format(self, lines, passage_id, split=False, return_original=False):
-        for passage in super(DependencyConverter, self).from_format(lines, passage_id, split=split):
+        for passage in super().from_format(lines, passage_id, split=split):
             yield (passage, self.lines_read, passage.ID) if return_original else passage
             self.lines_read = []
 

@@ -1,8 +1,8 @@
 """Testing code for the tupa package, unit-testing only."""
 
+import os
 import unittest
 
-import os
 from ucca import convert, evaluation, ioutil
 
 from tupa.action import Actions
@@ -33,7 +33,7 @@ def load_passages():
 
 class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
-        super(ParserTests, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         Config("", "-m", "test", "--max-words-external=100", "--word-dim-external=100", "--optimizer=sgd",
                "--layer-dim=100", "--layers=1", "--lstm-layer-dim=100", "--lstm-layers=1")
 

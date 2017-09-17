@@ -53,7 +53,7 @@ class DefaultOrderedDict(OrderedDict, Labels):
         return "%s(%s, %s)" % (type(self), self.default_factory, OrderedDict.__repr__(self))
 
     def __setitem__(self, key, value, **kwargs):
-        super(DefaultOrderedDict, self).__setitem__(key, value, **kwargs)
+        super().__setitem__(key, value, **kwargs)
         self._all.append(key)
 
     @property
@@ -79,7 +79,7 @@ class AutoIncrementDict(DefaultOrderedDict):
         :param d: dictionary to initialize from
         :param unknown: value to return for missing keys
         """
-        super(AutoIncrementDict, self).__init__(None, d or {}, size=size)
+        super().__init__(None, d or {}, size=size)
         self.unknown = self.setdefault(None, unknown)
         for key in keys:
             self.__missing__(key)
@@ -99,7 +99,7 @@ class UnknownDict(AutoIncrementDict):
         """
         :param d: base dict to initialize by
         """
-        super(UnknownDict, self).__init__(size=None, d=d)
+        super().__init__(size=None, d=d)
 
 
 class DropoutDict(AutoIncrementDict):
@@ -112,7 +112,7 @@ class DropoutDict(AutoIncrementDict):
         :param dropout: dropout parameter
         :param min_count: minimum number of occurrences for a key before it is actually added to the dict
         """
-        super(DropoutDict, self).__init__(size, keys, d=d)
+        super().__init__(size, keys, d=d)
         assert dropout >= 0, "Dropout value must be >= 0, but given %f" % dropout
         self.dropout, self.counts, self.min_count = (d.dropout, d.counts, d.min_count) \
             if d is not None and isinstance(d, DropoutDict) else (dropout, Counter(), min_count)
@@ -123,7 +123,7 @@ class DropoutDict(AutoIncrementDict):
             count = self.counts[item]
             if count < self.min_count or self.dropout and self.dropout/(count+self.dropout) > np.random.random_sample():
                 item = None
-        return super(DropoutDict, self).__getitem__(item)
+        return super().__getitem__(item)
 
 
 class KeyBasedDefaultDict(defaultdict):

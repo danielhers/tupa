@@ -16,7 +16,7 @@ from .node import Node
 
 class InvalidActionError(AssertionError):
     def __init__(self, *args, is_type=False):
-        super(InvalidActionError, self).__init__(*args)
+        super().__init__(*args)
         self.is_type = is_type
 
 

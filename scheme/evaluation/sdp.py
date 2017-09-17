@@ -39,4 +39,4 @@ def evaluate(guessed, ref, converter=None, verbose=False, **kwargs):
 
 class SdpScores(evaluation.Scores):
     def __init__(self, *args, **kwargs):
-        super(SdpScores, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)

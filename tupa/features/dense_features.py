@@ -59,7 +59,7 @@ class DenseFeatureExtractor(FeatureExtractor):
     To be used with a NeuralNetwork classifier.
     """
     def __init__(self, feature_templates=FEATURE_TEMPLATES):
-        super(DenseFeatureExtractor, self).__init__(feature_templates=feature_templates)
+        super().__init__(feature_templates=feature_templates)
         self.numeric_features_template = None
         self.non_numeric_feature_templates = []
         for feature_template in self.feature_templates:
