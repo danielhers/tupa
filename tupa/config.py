@@ -1,7 +1,6 @@
 import argparse
 import logging
 import sys
-from functools import partial
 
 import numpy as np
 from ucca import constructions
@@ -28,11 +27,10 @@ OPTIMIZERS = ("adam", "sgd", "cyclic", "momentum", "adagrad", "adadelta", "rmspr
 RNNS = ("lstm", "gru", "vanilla_lstm", "compact_vanilla_lstm", "coupled_lstm", "fast_lstm")
 
 # Input/output formats
-FORMATS = [e.lstrip(".") for e in UCCA_EXT] + list(CONVERTERS)
+FORMATS = [e.lstrip(".") for e in UCCA_EXT] + ["ucca"] + list(CONVERTERS)
 
 # Arguments that may be updated dynamically depending on input passage format
-FORMAT_DEPENDENT_ARGUMENTS = ("format", "output_format", "node_labels", "implicit",
-                              "node_label_dim", "node_category_dim",
+FORMAT_DEPENDENT_ARGUMENTS = ("node_labels", "implicit", "node_label_dim", "node_category_dim",
                               "max_node_labels", "max_node_categories", "max_action_labels", "max_edge_labels")
 
 # Required number of edge labels per format
@@ -71,8 +69,10 @@ class Config(object, metaclass=Singleton):
         group.add_argument("-l", "--log", help="output log file (default: model filename + .log)")
         group.add_argument("--devscores", help="output CSV file for dev scores (default: model filename + .dev.csv)")
         group.add_argument("--testscores", help="output CSV file for test scores (default: model filename + .test.csv)")
-        argparser.add_argument("-f", "--format", choices=FORMATS, help="input and output format")
-        argparser.add_argument("--output-format", choices=FORMATS, help="output format, if different from input format")
+        argparser.add_argument("-f", "--formats", nargs="*", choices=FORMATS,
+                               help="input formats for creating all parameters before training starts "
+                                    "(otherwise created dynamically based on filename suffix), "
+                                    "and output formats for written files (each will be written; default: UCCA XML)")
         add_boolean_option(group, "node-labels", "prediction of node labels, if supported by format", default=True)
         group = argparser.add_argument_group(title="Structural constraints")
         add_boolean_option(group, "linkage", "linkage nodes and edges")
@@ -159,20 +159,20 @@ class Config(object, metaclass=Singleton):
                 self.args.testscores = self.args.model + ".test.csv"
         elif not self.args.log:
             self.args.log = "parse.log"
-        self._logger = self.input_converter = self.output_converter = None
+        self._logger = self.format = None
         for attr in FORMAT_DEPENDENT_ARGUMENTS:  # Keep original given values of arguments, to restore if changed
             setattr(self.args, "_" + attr, getattr(self.args, attr))
         self.set_format()
         self.set_external()
         self.random = np.random
 
-    def set_format(self, f=None, labeled=False):
-        if self.args.format != f:
+    def set_format(self, f=None):
+        if self.format != f:
             for attr in FORMAT_DEPENDENT_ARGUMENTS:  # Restore original values of arguments
                 setattr(self.args, attr, getattr(self.args, "_" + attr))
-        if f is not None or labeled:
-            self.args.format = f
-        if self.args.format == "amr":
+        if f not in (None, "text"):
+            self.format = f
+        if self.format == "amr":
             self.args.implicit = True
             if not self.args.node_label_dim:
                 self.args.node_label_dim = 20
@@ -186,17 +186,10 @@ class Config(object, metaclass=Singleton):
             self.args.node_labels = False
             self.args.node_label_dim = self.args.max_node_labels = \
                 self.args.node_category_dim = self.args.max_node_categories = 0
-        required_edge_labels = EDGE_LABELS_NUM.get(self.args.format)
+        required_edge_labels = EDGE_LABELS_NUM.get(self.format)
         if required_edge_labels is not None:
             self.args.max_edge_labels = max(self.args.max_edge_labels, required_edge_labels)
             self.args.max_action_labels = max(self.args.max_action_labels, 6 * required_edge_labels)
-        self.input_converter, self.output_converter = CONVERTERS.get(self.args.format, (None, None))
-        if self.args.output_format:
-            _, self.output_converter = CONVERTERS.get(self.args.output_format, (None, None))
-        else:
-            self.args.output_format = self.args.format
-        if self.output_converter is not None:
-            self.output_converter = partial(self.output_converter, wikification=self.args.wikification)
 
     def set_external(self):
         np.random.seed(self.args.seed)

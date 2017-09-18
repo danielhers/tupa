@@ -25,6 +25,7 @@ class ParameterDefinition(object):
             Config().update({v: getattr(param, k) for k, v in self.param_attr_to_config_attr.items()
                              if hasattr(args, v)})
 
+
 NODE_LABEL_KEY = "n"
 
 PARAM_DEFS = (
@@ -67,14 +68,14 @@ class Model(object):
 
     def init_model(self, init_params=True):
         if self.feature_extractor or self.classifier:
-            if self.args.format not in self.classifier.labels:
-                self.classifier.labels[self.args.format] = self.init_actions()
+            if Config().format not in self.classifier.labels:
+                self.classifier.labels[Config().format] = self.init_actions()
             if self.args.node_labels and NODE_LABEL_KEY not in self.classifier.labels:
                 self.classifier.labels[NODE_LABEL_KEY] = self.init_node_labels().data
             return
         labels = {}
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
-            labels[self.args.format] = self.init_actions()  # Uses config to determine actions
+            labels[Config().format] = self.init_actions()  # Uses config to determine actions
             self.feature_params = [p.create_from_config() for p in PARAM_DEFS]
             if self.args.node_labels:
                 labels[NODE_LABEL_KEY] = self.init_node_labels().data
@@ -112,7 +113,7 @@ class Model(object):
 
     @property
     def actions(self):
-        return self.classifier.labels[self.args.format]
+        return self.classifier.labels[Config().format]
 
     @property
     def labels(self):

@@ -2,6 +2,7 @@ import os
 import time
 from collections import defaultdict
 from enum import Enum
+from functools import partial
 from glob import glob
 
 from ucca import diffutil, ioutil, textutil, layer1, evaluation
@@ -127,17 +128,18 @@ class Parser(object):
         for passage_index, passage in enumerate(passages, start=1):
             edges, node_labels = map(any, zip(*[(n.outgoing, n.attrib.get(LABEL_ATTRIB))
                                                 for n in passage.layer(layer1.LAYER_ID).all]))
-            labeled = edges or node_labels  # Passage is considered labeled if there are any edges or node labels in it
+            # Passage is considered labeled if there are any edges or node labels in it
             passage_format = passage.extra.get("format") or "ucca"
             print("%-6s %s %-7s" % (passage_format, passage_word, passage.ID), end=Config().line_end, flush=True)
+            assert not (train and passage_format == "text"), "Cannot train on unannotated plain text"
             started = time.time()
             self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = 0
             textutil.annotate(passage, verbose=self.args.verbose > 1)  # tag POS and parse dependencies
-            Config().set_format(passage_format, labeled)
+            Config().set_format(passage_format)
             self.state = State(passage)
             self.state_hash_history = set()
-            self.oracle = Oracle(passage) if train or (
-                  self.args.verbose or Config().args.use_gold_node_labels) and labeled or self.args.verify else None
+            self.oracle = Oracle(passage) if train or (self.args.verbose or Config().args.use_gold_node_labels) and (
+                edges or node_labels) or self.args.verify else None
             self.model.init_model()
             if ClassifierProperty.require_init_features in self.model.get_classifier_properties():
                 self.model.init_features(self.state, train)
@@ -158,11 +160,9 @@ class Parser(object):
                 if not failed and self.args.verify:
                     self.verify_passage(guessed, passage, train)
                 if self.action_count:
-                    accuracy_str = "%d%% (%d/%d)" % (100*self.correct_action_count/self.action_count,
-                                                     self.correct_action_count, self.action_count)
+                    accuracy_str = percents_str(self.correct_action_count, self.action_count)
                     if self.label_count:
-                        accuracy_str += " %d%% (%d/%d)" % (100*self.correct_label_count/self.label_count,
-                                                           self.correct_label_count, self.label_count)
+                        accuracy_str += " " + percents_str(self.correct_label_count, self.label_count)
                     print("%-30s" % accuracy_str, end=Config().line_end)
             print("%0.3fs" % duration, end="")
             print("%-15s" % (" (failed)" if failed else " (%d tokens/s)" % (num_tokens / duration)), end="")
@@ -182,11 +182,9 @@ class Parser(object):
         if passages:
             print("Parsed %d %ss" % (passage_index, passage_word))
             if self.oracle and self.total_actions:
-                accuracy_str = "%d%% correct actions (%d/%d)" % (100*self.total_correct_actions/self.total_actions,
-                                                                 self.total_correct_actions, self.total_actions)
+                accuracy_str = percents_str(self.total_correct_actions, self.total_actions, "correct actions ")
                 if self.total_labels:
-                    accuracy_str += ", %d%% correct labels (%d/%d)" % (100*self.total_correct_labels/self.total_labels,
-                                                                       self.total_correct_labels, self.total_labels)
+                    accuracy_str += ", " + percents_str(self.total_correct_labels, self.total_labels, "correct labels ")
                 print("Overall %s on %s" % (accuracy_str, mode.name))
             if total_duration:
                 print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
@@ -243,7 +241,7 @@ class Parser(object):
         return true_actions
 
     def choose_action(self, features, train, true_actions):
-        scores = self.model.classifier.score(features, axis=self.args.format)  # Returns NumPy array
+        scores = self.model.classifier.score(features, axis=Config().format)  # Returns NumPy array
         if self.args.verbose > 2:
             print("  action scores: " + ",".join(("%s: %g" % x for x in zip(self.model.actions.all, scores))))
         try:
@@ -259,7 +257,7 @@ class Parser(object):
         if train and not (is_correct and
                           ClassifierProperty.update_only_on_error in self.model.get_classifier_properties()):
             best_action = self.predict(scores[list(true_actions.keys())], list(true_actions.values()))
-            self.model.classifier.update(features, axis=self.args.format, pred=predicted_action.id, true=best_action.id,
+            self.model.classifier.update(features, axis=Config().format, pred=predicted_action.id, true=best_action.id,
                                          importance=self.args.swap_importance if best_action.is_swap else 1)
         if train and not is_correct and self.args.early_update:
             self.state.finished = True
@@ -366,10 +364,12 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 guessed_passage = result
                 print()
             if guessed_passage is not None and args.write:
-                out_format = guessed_passage.extra.get("format", args.output_format)
-                ioutil.write_passage(guessed_passage, output_format=out_format, binary=args.output_format == "pickle",
-                                     outdir=args.outdir, prefix=args.prefix,
-                                     converter=TO_FORMAT.get(out_format, Config().output_converter or to_text))
+                passage_format = guessed_passage.extra.get("format")
+                for out_format in args.formats or ("ucca",) if passage_format in (None, "text") else (passage_format,):
+                    ioutil.write_passage(guessed_passage, output_format=out_format, binary=out_format == "pickle",
+                                         outdir=args.outdir, prefix=args.prefix,
+                                         converter=partial(TO_FORMAT.get(out_format, to_text),
+                                                           wikification=Config().args.wikification))
         if passage_scores:
             scores = Scores(passage_scores)
             if args.verbose <= 1 or len(passage_scores) > 1:
@@ -378,6 +378,10 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 scores.print()
             print_scores(scores, args.testscores)
             yield scores
+
+
+def percents_str(part, total, infix=""):
+    return "%d%% %s(%d/%d)" % (100 * part / total, infix, part, total)
 
 
 def print_scores(scores, filename, prefix=None, prefix_title=None):
@@ -395,9 +399,16 @@ def print_scores(scores, filename, prefix=None, prefix_title=None):
             print(",".join(fields), file=f)
 
 
+class TextReader:  # Marks input passages as text so that we don't accidentally train on them
+    def __call__(self, *args, **kwargs):
+        for passage in from_text(*args, **kwargs):
+            passage.extra["format"] = "text"
+            yield passage
+
+
 def read_passages(args, files):
-    return ioutil.read_files_and_dirs([f for pattern in files for f in glob(pattern)], args.sentences, args.paragraphs,
-                                      defaultdict(lambda: Config().input_converter or from_text, FROM_FORMAT))
+    expanded = [f for pattern in files for f in glob(pattern)]
+    return ioutil.read_files_and_dirs(expanded, args.sentences, args.paragraphs, defaultdict(TextReader, FROM_FORMAT))
 
 
 # noinspection PyTypeChecker,PyStringFormat
