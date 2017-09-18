@@ -60,6 +60,9 @@ class Parser(object):
                     self.model.load()
                 except FileNotFoundError:
                     print("not found, starting from untrained model.")
+            for f in self.args.formats or ():
+                Config().set_format(f)
+                self.model.init_model()
             self.best_score = 0
             self.dev = dev
             for self.iteration in range(1, iterations + 1):
