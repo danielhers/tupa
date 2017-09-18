@@ -83,7 +83,9 @@ class Parser(object):
             scores = Scores(passage_scores)
             average_score = scores.average_f1()
             prefix = ".".join(map(str, [self.iteration] + ([self.eval_index] if self.args.save_every else [])))
-            print("Evaluation %s, average labeled F1 score on dev: %.3f" % (prefix, average_score))
+            score_details = "" if len(scores.scores_by_format) < 2 else " (" + ", ".join(
+                "%.3f" % s.average_f1() for f, s in scores.scores_by_format) + ")"
+            print("Evaluation %s, average labeled F1 score on dev: %.3f%s" % (prefix, average_score, score_details))
             print_scores(scores, self.args.devscores, prefix=prefix, prefix_title="iteration")
             if average_score >= self.best_score:
                 print("Better than previous best score (%.3f)" % self.best_score)
