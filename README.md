@@ -59,7 +59,7 @@ Run the parser using any of them:
     
 ### Other languages
 
-To get a French model pre-trained on [the *20K Leages* corpus](https://github.com/huji-nlp/ucca-corpus/tree/master/vmlslm/fr), run:
+To get a French model pre-trained on [the *20K Leagues* corpus](https://github.com/huji-nlp/ucca-corpus/tree/master/vmlslm/fr), run:
 
     curl -O http://www.cs.huji.ac.il/~danielh/ucca/sparse-1.2-fr.tar.gz
     tar xvzf sparse-1.2-fr.tar.gz
