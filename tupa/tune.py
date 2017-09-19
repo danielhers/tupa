@@ -52,7 +52,7 @@ class Params(object):
 
 
 def get_values_based_on_format(values):
-    return values if "amr" in Config().args.formats else (0,)
+    return values if "amr" in (Config().args.formats or ()) else (0,)
 
 
 def main():
