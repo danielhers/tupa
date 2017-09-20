@@ -1,0 +1,37 @@
+os: Visual Studio 2015
+
+platform: x64
+
+environment:
+  MSVC_DEFAULT_OPTIONS: ON
+  MINICONDA: "C:\\Miniconda36-x64"
+  MAKE_FLAGS: ""
+
+configuration: Release
+
+init:
+  - cmd: cmake --version
+  - cmd: msbuild /version
+
+install:
+  - cmd: git submodule update --init --recursive
+  - set PATH=%MINICONDA%;%MINICONDA%\Scripts;C:\Program Files (x86)\Pandoc;%PATH%
+  - conda config --set always_yes yes --set changeps1 no
+  - conda install -q conda setuptools pip wheel cython numpy pypandoc
+  - cinst pandoc
+  - python setup.py install
+
+build: off
+
+test_script:
+  - python -m unittest discover -v
+
+deploy:
+  - provider: Script
+    on:
+      appveyor_repo_tag: true
+
+deploy_script:
+  - pip install twine
+  - python setup.py sdist bdist_wheel
+  - twine upload --skip-existing dist/*
