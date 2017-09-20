@@ -2,9 +2,9 @@
 import urllib
 
 import os
-import pip
 from setuptools import setup, find_packages
 from setuptools.command.install import install as _install
+from subprocess import run
 
 install_requires = []
 with open("requirements.txt") as f:
@@ -26,10 +26,7 @@ class install(_install):
         os.system("git submodule update --init --recursive")
 
         # Install requirements
-        pip.main(["install", "--upgrade", "pip"])
-        for package in install_requires:
-            self.announce("Installing %s..." % package)
-            pip.main(["install", package])
+        run(["pip", "install"] + install_requires, check=True)
         self.announce("Dependencies installed.")
 
         # Install AMR resource
