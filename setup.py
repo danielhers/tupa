@@ -23,11 +23,11 @@ class install(_install):
     def run(self):
         # Get submodules
         self.announce("Getting git submodules...")
-        os.system("git submodule update --init --recursive")
+        run(["git", "submodule", "update", "--init", "--recursive"], check=True)
 
         # Install requirements
+        self.announce("Installing dependencies...")
         run(["pip", "install"] + install_requires, check=True)
-        self.announce("Dependencies installed.")
 
         # Install AMR resource
         for filename in ("have-org-role-91-roles-v1.06.txt", "have-rel-role-91-roles-v1.06.txt",
