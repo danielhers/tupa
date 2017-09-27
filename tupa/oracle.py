@@ -155,9 +155,8 @@ class Oracle(object):
         if node is not None:
             self.nodes_remaining.discard(node.ID)
 
-    @staticmethod
-    def needs_label(node):
-        return not node.labeled and node.orig_node.attrib.get(LABEL_ATTRIB)
+    def needs_label(self, node):
+        return self.args.node_labels and not node.labeled and node.orig_node.attrib.get(LABEL_ATTRIB)
 
     def str(self, sep):
         return "nodes left: [%s]%sedges left: [%s]" % (" ".join(self.nodes_remaining), sep,
