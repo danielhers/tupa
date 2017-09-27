@@ -418,7 +418,7 @@ class TextReader:  # Marks input passages as text so that we don't accidentally 
 
 
 def read_passages(args, files):
-    expanded = [f for pattern in files for f in glob(pattern)]
+    expanded = [f for pattern in files for f in glob(pattern) or (pattern,)]
     return ioutil.read_files_and_dirs(expanded, args.sentences, args.paragraphs, defaultdict(TextReader, FROM_FORMAT))
 
 
