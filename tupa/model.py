@@ -32,13 +32,14 @@ class ParameterDefinition(object):
 NODE_LABEL_KEY = "n"
 
 PARAM_DEFS = (
-    ParameterDefinition(NODE_LABEL_KEY, dim="node_label_dim", size="max_node_labels", min_count="min_node_label_count"),
+    ParameterDefinition(NODE_LABEL_KEY, dim="node_label_dim", size="max_node_labels", min_count="min_node_label_count",
+                        dropout="node_label_dropout"),
     ParameterDefinition("c", dim="node_category_dim", size="max_node_categories"),
     ParameterDefinition("W", dim="word_dim_external", size="max_words_external", dropout="word_dropout_external",
                         updated="update_word_vectors", filename="word_vectors",  copy_from="w"),
     ParameterDefinition("w", dim="word_dim",          size="max_words",          dropout="word_dropout"),
-    ParameterDefinition("t", dim="tag_dim",           size="max_tags"),
-    ParameterDefinition("d", dim="dep_dim",           size="max_deps"),
+    ParameterDefinition("t", dim="tag_dim",           size="max_tags",           dropout="tag_dropout"),
+    ParameterDefinition("d", dim="dep_dim",           size="max_deps",           dropout="dep_dropout"),
     ParameterDefinition("e", dim="edge_label_dim",    size="max_edge_labels"),
     ParameterDefinition("p", dim="punct_dim",         size="max_puncts"),
     ParameterDefinition("A", dim="action_dim",        size="max_action_types"),
