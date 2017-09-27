@@ -28,10 +28,9 @@ def main():
         if not filenames:
             raise IOError("Not found: " + pattern)
         for filename in filenames:
-            sys.stdout.write("\rConverting '%s'" % filename)
+            print("\rConverting '%s'" % filename, end="")
             if args.outdir or args.verbose:
-                sys.stdout.write("\n")
-            sys.stdout.flush()
+                print(flush=True)
             basename, ext = os.path.splitext(os.path.basename(filename))
             passage_format = ext.lstrip(".")
             converters = CONVERTERS.get(passage_format, CONVERTERS["amr"])
@@ -45,7 +44,7 @@ def main():
                     try:
                         guessed = converters[1](passage)
                     except Exception as e:
-                        raise ValueError("Error converting %s back from AMR" % filename) from e
+                        raise ValueError("Error converting %s back from %s" % (filename, passage_format)) from e
                     if args.outdir:
                         outfile = "%s/%s%s" % (args.outdir, passage.ID, ext)
                         print("Writing '%s'..." % outfile, file=sys.stderr, flush=True)
