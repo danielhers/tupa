@@ -1,8 +1,8 @@
 ucca>=1.0.10
 spacy>=1.9.0
-cython>=0.26.1
+cython>=0.27
 penman>=0.6.1
-nltk>=3.2.4
+nltk>=3.2.5
 parsimonious>=0.8.0
 word2number>=1.1
 pyspotlight>=0.7.1
