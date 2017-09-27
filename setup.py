@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-import urllib
-
 import os
+import urllib
+from subprocess import run
+
 from setuptools import setup, find_packages
 from setuptools.command.install import install as _install
-from subprocess import run
 
 install_requires = []
 with open("requirements.txt") as f:
@@ -13,6 +13,10 @@ install_requires.append("dynet>=2.0.1")
 
 try:
     import pypandoc
+    try:
+        pypandoc.convert_file("README.md", "rst", outputfile="README.rst")
+    except (IOError, ImportError, RuntimeError):
+        pass
     long_description = pypandoc.convert("README.md", "rst")
 except (IOError, ImportError, RuntimeError):
     long_description = ""
