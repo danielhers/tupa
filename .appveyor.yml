@@ -25,13 +25,3 @@ build: off
 
 test_script:
   - python -m unittest discover -v
-
-deploy:
-  - provider: Script
-    on:
-      appveyor_repo_tag: true
-
-deploy_script:
-  - pip install twine
-  - python setup.py sdist bdist_wheel
-  - twine upload --skip-existing dist/*
