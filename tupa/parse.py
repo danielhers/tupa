@@ -146,8 +146,8 @@ class Parser(object):
             Config().set_format(passage_format)
             self.state = State(passage)
             self.state_hash_history = set()
-            self.oracle = Oracle(passage) if train or (self.args.verbose > 1 or Config().args.use_gold_node_labels) and \
-                                                      (edges or node_labels) or self.args.verify else None
+            self.oracle = Oracle(passage) if train or (self.args.verbose > 1 or Config().args.use_gold_node_labels
+                                                       ) and (edges or node_labels) or self.args.verify else None
             self.model.init_model()
             if ClassifierProperty.require_init_features in self.model.get_classifier_properties():
                 self.model.init_features(self.state, train)
@@ -332,7 +332,8 @@ class Parser(object):
         score = EVALUATORS.get(ref.extra.get("format"), evaluation).evaluate(
             guessed, ref, converter=converters and converters[1],  # converter output is list of lines
             verbose=guessed and self.args.verbose > 3, constructions=self.args.constructions)
-        print("F1=%.3f" % score.average_f1(), flush=True)
+        if self.args.verbose:
+            print("F1=%.3f" % score.average_f1(), flush=True)
         return score
 
     def verify_passage(self, guessed, ref, show_diff):
