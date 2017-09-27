@@ -94,7 +94,7 @@ class Config(object, metaclass=Singleton):
         group = argparser.add_argument_group(title="General classifier training parameters")
         group.add_argument("--learning-rate", type=float, help="rate for model weight updates (default: by trainer/1)")
         group.add_argument("--learning-rate-decay", type=float, default=0.0, help="learning rate decay per iteration")
-        group.add_argument("--swap-importance", type=int, default=1, help="learning rate factor for Swap")
+        group.add_argument("--swap-importance", type=float, default=1, help="learning rate factor for Swap")
         add_boolean_option(group, "early-update", "early update procedure (finish example on first error)")
         group.add_argument("--save-every", type=int, help="every this many passages, evaluate on dev and save model")
         group = argparser.add_argument_group(title="Perceptron parameters")
