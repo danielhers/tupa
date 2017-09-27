@@ -1,8 +1,8 @@
 import argparse
-import logging
 import sys
 
 import numpy as np
+from logbook import Logger, FileHandler, StderrHandler
 from ucca import constructions
 
 from scheme.cfgutil import Singleton, add_verbose_argument, add_boolean_option, get_group_arg_names
@@ -101,6 +101,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--min-update", type=int, default=5, help="minimum #updates for using a feature")
         self.sparse_arg_names = get_group_arg_names(group)
         group = argparser.add_argument_group(title="Neural network parameters")
+        # group.add_argument("-s", "--format-specific-parameters", type=json.loads, help="any format-specific parameters")
         group.add_argument("--word-dim-external", type=int, default=300, help="dimension for external word embeddings")
         group.add_argument("--word-vectors", help="file to load external word embeddings from (default: GloVe)")
         add_boolean_option(group, "update-word-vectors", "external word vectors in training parameters")
@@ -222,16 +223,12 @@ class Config(object, metaclass=Singleton):
     def log(self, message):
         try:
             if self._logger is None:
-                formatter = logging.Formatter("%(asctime)s %(message)s")
-                self._logger = logging.getLogger()
-                fh = logging.FileHandler(self.args.log)
-                fh.setFormatter(formatter)
-                self._logger.addHandler(fh)
+                format_string = "{record.time:%Y-%m-%d %H:%M:%S} {record.message}"
+                FileHandler(self.args.log, format_string=format_string).push_application()
                 if self.args.verbose:
-                    s = logging.StreamHandler()
-                    s.setFormatter(formatter)
-                    self._logger.addHandler(s)
-            logging.warning(message)
+                    StderrHandler(format_string=format_string, bubble=True).push_application()
+                self._logger = Logger("tupa")
+            self._logger.warn(message)
         except OSError:
             pass
 
