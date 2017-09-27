@@ -84,7 +84,7 @@ class DenseFeatureExtractor(FeatureExtractor):
                     feature_template)
             self.non_numeric_by_suffix[feature_template.suffix] = feature_template
 
-    def init_features(self, state, suffix):
+    def init_features(self, state, suffix=None):
         return [self.get_prop(None, n, None, None, suffix, state) for n in state.terminals]
 
     def extract_features(self, state, params=None):
@@ -95,11 +95,16 @@ class DenseFeatureExtractor(FeatureExtractor):
         :return pair: (list of values for all numeric features,
                        list of (suffix, value) pairs for all non-numeric features)
         """
-        numeric_features = [1, state.node_ratio()] + \
-            self.calc_feature(self.numeric_features_template, state, default=0)
+        numeric_features = [1, state.node_ratio()] + self.calc_feature(self.numeric_features_template, state, default=0)
         non_numeric_features = {}
         for f in self.non_numeric_feature_templates:
-            indexed = params is not None and params[f.suffix].indexed
+            if params is None:
+                indexed = False
+            else:
+                param = params.get(f.suffix)
+                if param is None:
+                    continue
+                indexed = param.indexed
             non_numeric_features[f.suffix] = self.calc_feature(
                 f, state, default=MISSING_VALUE if indexed else "", indexed=indexed)
         # assert len(numeric_features) == self.num_features_numeric(), \

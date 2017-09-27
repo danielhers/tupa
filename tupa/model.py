@@ -13,6 +13,9 @@ class ParameterDefinition(object):
         self.name = name
         self.param_attr_to_config_attr = param_attr_to_config_attr
 
+    def empty(self):
+        return not getattr(Config().args, self.param_attr_to_config_attr["dim"])
+
     def create_from_config(self):
         args = Config().args
         return FeatureParameters(self.name, **{k: getattr(args, v) if hasattr(args, v) else v
@@ -76,7 +79,7 @@ class Model(object):
         labels = {}
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
             labels[Config().format] = self.init_actions()  # Uses config to determine actions
-            self.feature_params = [p.create_from_config() for p in PARAM_DEFS]
+            self.feature_params = [p.create_from_config() for p in PARAM_DEFS if not p.empty()]
             if self.args.node_labels:
                 labels[NODE_LABEL_KEY] = self.init_node_labels().data
         if self.model_type == SPARSE:
@@ -107,7 +110,11 @@ class Model(object):
         return Actions(size=self.args.max_action_labels)
 
     def init_node_labels(self):
-        node_labels = self.feature_params[0]
+        try:
+            node_labels = next(p for p in self.feature_params if p.suffix == NODE_LABEL_KEY)
+        except StopIteration:
+            node_labels = next(p for p in PARAM_DEFS if p.name == NODE_LABEL_KEY).create_from_config()
+            self.feature_params.append(node_labels)
         FeatureEnumerator.init_data(node_labels)
         return node_labels
 
