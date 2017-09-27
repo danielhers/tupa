@@ -1,5 +1,4 @@
 import argparse
-import json
 import sys
 
 import numpy as np
@@ -39,9 +38,20 @@ class Hyperparams(object):
         self.shared = shared
         self.specific = kwargs
 
-    @staticmethod
-    def from_json(s):
-        return Hyperparams(**json.loads(s))
+
+class HyperparamsInitializer(object):
+    def __init__(self, parent, name=None, *args):
+        self.parent = parent
+        self.name = name
+        self.args = args
+        self.parsed_args = argparse.ArgumentParser(parents=[self.parent], add_help=False).parse_args(args) \
+            if self.args else ()
+
+    def __call__(self, args):
+        return HyperparamsInitializer(self.parent, *args.split())
+
+    def __str__(self):
+        return '"%s"' % " ".join([self.name] + list(self.args)) if self.args else self.name
 
 
 class Config(object, metaclass=Singleton):
@@ -108,9 +118,6 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--min-update", type=int, default=5, help="minimum #updates for using a feature")
         self.sparse_arg_names = get_group_arg_names(group)
         group = argparser.add_argument_group(title="Neural network parameters")
-        group.add_argument("-H", "--hyperparams", type=Hyperparams.from_json, default=Hyperparams(),
-                           help="shared hyperparameters or hyperparameters for specific formats, given as JSON, "
-                                "e.g., {'shared': {'lstm_layer_dim': 100}, 'ucca': {'word_dim': 300}}")
         group.add_argument("--word-dim-external", type=int, default=300, help="dimension for external word embeddings")
         group.add_argument("--word-vectors", help="file to load external word embeddings from (default: GloVe)")
         add_boolean_option(group, "update-word-vectors", "external word vectors in training parameters")
@@ -160,9 +167,14 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--dynet-gpu-ids", help="the GPUs that you want to use by device ID")
         add_boolean_option(group, "dynet-viz", "visualization of neural network structure")
         add_boolean_option(group, "dynet-autobatch", "auto-batching of training examples")
+        initializer = HyperparamsInitializer(argparser)
+        argparser.add_argument("-H", "--hyperparams", type=initializer, nargs="*",
+                               help="shared hyperparameters or hyperparameters for specific formats, "
+                                    'e.g., "shared --lstm-layer-dim=100 --lstm-layers=1" "ucca --word-dim=300"',
+                               default=(initializer("shared"),))
         self.dynet_arg_names = get_group_arg_names(group)
         self.args = argparser.parse_args(args if args else None)
-        
+
         if self.args.model:
             if not self.args.log:
                 self.args.log = self.args.model + ".log"
@@ -177,6 +189,7 @@ class Config(object, metaclass=Singleton):
                                                                             "node_category_dim", "max_node_labels",
                                                                             "max_node_categories", "max_action_labels",
                                                                             "max_edge_labels")}
+        self.hyperparams = Hyperparams(**{h.name: h.parsed_args for h in self.args.hyperparams or ()})
         self.set_format()
         self.set_external()
         self.random = np.random
@@ -184,7 +197,7 @@ class Config(object, metaclass=Singleton):
     def set_format(self, f=None):
         if self.format != f:
             format_values = dict(self.original_values)
-            format_values.update(self.args.hyperparams.specific.get(self.format, {}))
+            format_values.update(self.hyperparams.specific.get(self.format, {}))
             for attr, value in format_values.items():
                 setattr(self.args, attr, value)
         if f not in (None, "text"):
@@ -251,7 +264,7 @@ class Config(object, metaclass=Singleton):
     def __str__(self):
         return " ".join(list(self.args.passages) + [""]) + \
                " ".join("--" + ("no-" if v is False else "") + k.replace("_", "-") + ("" if v is False or v is True else
-                        (" " + str(" ".join(v) if hasattr(v, "__iter__") and not isinstance(v, str) else v)))
+                        (" " + str(" ".join(map(str, v)) if hasattr(v, "__iter__") and not isinstance(v, str) else v)))
                         for (k, v) in sorted(vars(self.args).items()) if v not in (None, (), "")
                         and not k.startswith("_")
                         and (self.args.node_labels or ("node_label" not in k and "node_categor" not in k))
