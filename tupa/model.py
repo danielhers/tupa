@@ -67,7 +67,7 @@ class Model(object):
             self.restore(*args, **kwargs)
 
     def init_model(self, init_params=True):
-        if self.feature_extractor or self.classifier:
+        if self.feature_extractor or self.classifier:  # Already initialized, but perhaps not for the current format
             if Config().format not in self.classifier.labels:
                 self.classifier.labels[Config().format] = self.init_actions()
             if self.args.node_labels and NODE_LABEL_KEY not in self.classifier.labels:
