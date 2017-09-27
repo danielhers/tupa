@@ -70,7 +70,7 @@ def main():
         ("learning_rate_decay",     np.r_[0, np.logspace(-5, -1, 9)]),
         ("update_word_vectors",     [True, False]),
         ("word_vectors",            [None] + word_vectors_files),
-        ("word_dim_external", 301),
+        ("word_dim_external", (0, 300)),
         ("word_dim", 301),
         ("tag_dim", 21),
         ("dep_dim", 21),
