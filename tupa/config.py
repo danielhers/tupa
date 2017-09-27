@@ -1,4 +1,5 @@
 import argparse
+import json
 import sys
 
 import numpy as np
@@ -29,12 +30,18 @@ RNNS = ("lstm", "gru", "vanilla_lstm", "compact_vanilla_lstm", "coupled_lstm", "
 # Input/output formats
 FORMATS = [e.lstrip(".") for e in UCCA_EXT] + ["ucca"] + list(CONVERTERS)
 
-# Arguments that may be updated dynamically depending on input passage format
-FORMAT_DEPENDENT_ARGUMENTS = ("node_labels", "implicit", "node_label_dim", "node_category_dim",
-                              "max_node_labels", "max_node_categories", "max_action_labels", "max_edge_labels")
-
 # Required number of edge labels per format
 EDGE_LABELS_NUM = {"amr": 110, "sdp": 70, "conllu": 60}
+
+
+class Hyperparams(object):
+    def __init__(self, shared=None, **kwargs):
+        self.shared = shared
+        self.specific = kwargs
+
+    @staticmethod
+    def from_json(s):
+        return Hyperparams(**json.loads(s))
 
 
 class Config(object, metaclass=Singleton):
@@ -101,7 +108,9 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--min-update", type=int, default=5, help="minimum #updates for using a feature")
         self.sparse_arg_names = get_group_arg_names(group)
         group = argparser.add_argument_group(title="Neural network parameters")
-        # group.add_argument("-s", "--format-specific-parameters", type=json.loads, help="any format-specific parameters")
+        group.add_argument("-H", "--hyperparams", type=Hyperparams.from_json, default=Hyperparams(),
+                           help="shared hyperparameters or hyperparameters for specific formats, given as JSON, "
+                                "e.g., {'shared': {'lstm_layer_dim': 100}, 'ucca': {'word_dim': 300}}")
         group.add_argument("--word-dim-external", type=int, default=300, help="dimension for external word embeddings")
         group.add_argument("--word-vectors", help="file to load external word embeddings from (default: GloVe)")
         add_boolean_option(group, "update-word-vectors", "external word vectors in training parameters")
@@ -164,16 +173,20 @@ class Config(object, metaclass=Singleton):
         elif not self.args.log:
             self.args.log = "parse.log"
         self._logger = self.format = None
-        for attr in FORMAT_DEPENDENT_ARGUMENTS:  # Keep original given values of arguments, to restore if changed
-            setattr(self.args, "_" + attr, getattr(self.args, attr))
+        self.original_values = {attr: getattr(self.args, attr) for attr in ("node_labels", "implicit", "node_label_dim",
+                                                                            "node_category_dim", "max_node_labels",
+                                                                            "max_node_categories", "max_action_labels",
+                                                                            "max_edge_labels")}
         self.set_format()
         self.set_external()
         self.random = np.random
 
     def set_format(self, f=None):
         if self.format != f:
-            for attr in FORMAT_DEPENDENT_ARGUMENTS:  # Restore original values of arguments
-                setattr(self.args, attr, getattr(self.args, "_" + attr))
+            format_values = dict(self.original_values)
+            format_values.update(self.args.hyperparams.specific.get(self.format, {}))
+            for attr, value in format_values.items():
+                setattr(self.args, attr, value)
         if f not in (None, "text"):
             self.format = f
         if self.format == "amr":
