@@ -218,15 +218,15 @@ class Config(object, metaclass=Singleton):
 
     @property
     def line_end(self):
-        return "\n" if self.args.verbose > 1 else " "  # show all in one line unless verbose
+        return "\n" if self.args.verbose > 2 else " "  # show all in one line unless verbose
 
     def log(self, message):
         try:
             if self._logger is None:
-                FileHandler(self.args.log).push_application()
-                if self.args.verbose:
-                    StderrHandler(format_string="{record.time:%Y-%m-%d %H:%M:%S} {record.message}",
-                                  bubble=True).push_application()
+                FileHandler(self.args.log,
+                            format_string="{record.time:%Y-%m-%d %H:%M:%S} {record.message}").push_application()
+                if self.args.verbose > 1:
+                    StderrHandler(bubble=True).push_application()
                 self._logger = Logger("tupa")
             self._logger.warn(message)
         except OSError:
