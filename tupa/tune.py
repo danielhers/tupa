@@ -92,7 +92,6 @@ def main():
         ("output_dim",              range(20, 1001)),
         ("activation",              config.ACTIVATIONS),
         ("init",                    5 * [config.INITIALIZATIONS[0]] + list(config.INITIALIZATIONS)),
-        ("batch_size",              range(10, 501)),
         ("minibatch_size",          range(50, 1001)),
         ("optimizer",               config.OPTIMIZERS),
         ("swap_importance",         (1, 2)),
