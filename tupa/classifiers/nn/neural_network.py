@@ -188,8 +188,7 @@ class NeuralNetwork(Classifier):
         self.init_model(axis=axis)
         value = self.value.get(axis)
         if value is None:
-            value = self.evaluate_mlp(features=features, axis=axis, train=train)
-            self.value[axis] = value
+            self.value[axis] = value = self.evaluate_mlp(features=features, axis=axis, train=train)
         return value
 
     def score(self, features, axis):
@@ -200,13 +199,11 @@ class NeuralNetwork(Classifier):
         :return: array with score for each label
         """
         super().score(features, axis)
-        assert self.num_labels[axis], "No labels exist to score for '%s'" % axis
-        if self.updates > 0:
+        if self.updates > 0 and self.num_labels[axis] > 1:
             return self.evaluate(features, axis).npvalue()[:self.num_labels[axis]]
-        else:
-            if self.args.verbose > 3:
-                print("  no updates done yet, returning zero vector.")
-            return np.zeros(self.num_labels[axis])
+        if self.args.verbose > 3:
+            print("  no updates done yet, returning zero vector.")
+        return np.zeros(self.num_labels[axis])
 
     def update(self, features, axis, pred, true, importance=1):
         """
