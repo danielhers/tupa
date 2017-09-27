@@ -68,7 +68,7 @@ class Oracle(object):
         self.log = "\n".join(["Oracle found no valid action",
                               state.str("\n"), self.str("\n"),
                               "Actions returned by the oracle:"] +
-                             ["  %s: %s" % (action, e) for (action, e) in invalid])
+                             ["  %s: %s" % (action, e) for (action, e) in invalid] or ["None"])
         return self.log
 
     def generate_actions(self, state):

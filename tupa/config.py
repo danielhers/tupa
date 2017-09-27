@@ -223,10 +223,10 @@ class Config(object, metaclass=Singleton):
     def log(self, message):
         try:
             if self._logger is None:
-                format_string = "{record.time:%Y-%m-%d %H:%M:%S} {record.message}"
-                FileHandler(self.args.log, format_string=format_string).push_application()
+                FileHandler(self.args.log).push_application()
                 if self.args.verbose:
-                    StderrHandler(format_string=format_string, bubble=True).push_application()
+                    StderrHandler(format_string="{record.time:%Y-%m-%d %H:%M:%S} {record.message}",
+                                  bubble=True).push_application()
                 self._logger = Logger("tupa")
             self._logger.warn(message)
         except OSError:
