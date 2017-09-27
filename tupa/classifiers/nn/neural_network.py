@@ -200,6 +200,7 @@ class NeuralNetwork(Classifier):
         :return: array with score for each label
         """
         super().score(features, axis)
+        assert self.num_labels[axis], "No labels exist to score for '%s'" % axis
         if self.updates > 0:
             return self.evaluate(features, axis).npvalue()[:self.num_labels[axis]]
         else:
@@ -217,11 +218,10 @@ class NeuralNetwork(Classifier):
         :param importance: add this many samples with the same features
         """
         super().update(features, axis, pred, true, importance)
-        for _ in range(int(importance)):
-            self.losses.append(dy.pick(self.evaluate(features, axis, train=True), true))
-            if self.args.dynet_viz:
-                dy.print_graphviz()
-                sys.exit(0)
+        self.losses.append(importance * dy.pick(self.evaluate(features, axis, train=True), true))
+        if self.args.dynet_viz:
+            dy.print_graphviz()
+            sys.exit(0)
 
     def finished_step(self, train=False):
         self.value = {}  # For caching the result of _evaluate
