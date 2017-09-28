@@ -197,7 +197,7 @@ class Config(object, metaclass=Singleton):
     def set_format(self, f=None):
         if self.format != f:
             format_values = dict(self.original_values)
-            format_values.update(self.hyperparams.specific.get(self.format, {}))
+            format_values.update(vars(self.hyperparams.specific.get(self.format, argparse.Namespace())))
             for attr, value in format_values.items():
                 setattr(self.args, attr, value)
         if f not in (None, "text"):
