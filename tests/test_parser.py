@@ -35,7 +35,8 @@ class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         Config("", "-m", "test", "--max-words-external=100", "--word-dim-external=100", "--optimizer=sgd",
-               "--layer-dim=100", "--layers=1", "--lstm-layer-dim=100", "--lstm-layers=1")
+               "--layer-dim=100", "--layers=1", "--lstm-layer-dim=100", "--lstm-layers=1",
+               "--hyperparams", "shared --lstm-layer-dim=100 --lstm-layers=1", "ucca --word-dim=300")
 
     def test_oracle(self):
         self.maxDiff = None
