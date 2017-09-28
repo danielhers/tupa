@@ -93,7 +93,7 @@ def main():
         ("activation",              ("cube", "tanh", "relu")),
         ("init",                    ("glorot_uniform", "normal")),
         ("minibatch_size",          range(50, 2001)),
-        ("optimizer",               config.TRAINERS),
+        ("optimizer",               list(config.TRAINERS)),
         ("swap_importance",         np.arange(1, 2, step=.1)),
         ("iterations",              range(1, 51)),
         ("word_dropout",            np.arange(.31, step=.01)),
@@ -108,7 +108,7 @@ def main():
         ("max_swap",                range(2, 21)),
         ("max_words",               range(2000, 20001)),
         ("max_words_external",      [None] + list(range(5000, 100001))),
-        ("rnn",                     config.RNNS),
+        ("rnn",                     list(config.RNNS)),
     )
     params = [Params(OrderedDict(p)) for p in zip(*[[(n, v.item() if hasattr(v, "item") else v)
                                                      for v in np.random.choice(vs, num)] for n, vs in domains])]
