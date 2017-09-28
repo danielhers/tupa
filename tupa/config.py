@@ -36,7 +36,7 @@ EDGE_LABELS_NUM = {"amr": 110, "sdp": 70, "conllu": 60}
 class Hyperparams(object):
     def __init__(self, shared=None, **kwargs):
         self.shared = shared if isinstance(shared, Namespace) else Namespace(**shared) if shared else Namespace()
-        self.specific = {name: Namespace(**values) for name, values in kwargs.items()}
+        self.specific = {k: v if isinstance(v, Namespace) else Namespace(**v) for k, v in kwargs.items()}
 
 
 class HyperparamsInitializer(object):
