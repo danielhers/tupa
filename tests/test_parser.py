@@ -94,7 +94,7 @@ class ParserTests(unittest.TestCase):
 class ConfigTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        Config("", "-m", "test", "--no-remote", "--implicit", "--hyperparams=shared=--layer-dim=50")
+        Config("", "-m", "test", "--no-node-labels", "--evaluate", "--hyperparams=shared=--layer-dim=50")
 
     def test_params(self):
         d = {"max_words_external": 100, "word_dim_external": 100, "optimizer": "sgd", "layer_dim": 100, "layers": 1,
@@ -116,9 +116,9 @@ class ConfigTests(unittest.TestCase):
             self.assertEqual(getattr(Config().hyperparams.shared, attr), value, attr)
 
     def test_boolean_params(self):
-        self.assertFalse(Config().args.remote)
-        self.assertTrue(Config().args.implicit)
-        self.assertFalse(Config().args.linkage)
+        self.assertFalse(Config().args.node_labels)
+        self.assertTrue(Config().args.evaluate)
+        self.assertFalse(Config().args.verify)
 
 
 if __name__ == "__main__":
