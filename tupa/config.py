@@ -35,7 +35,7 @@ EDGE_LABELS_NUM = {"amr": 110, "sdp": 70, "conllu": 60}
 
 class Hyperparams(object):
     def __init__(self, shared=None, **kwargs):
-        self.shared = Namespace(**shared) if shared else Namespace()
+        self.shared = shared if isinstance(shared, Namespace) else Namespace(**shared) if shared else Namespace()
         self.specific = {name: Namespace(**values) for name, values in kwargs.items()}
 
 
@@ -174,7 +174,7 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("-H", "--hyperparams", type=initializer, nargs="*",
                                help="shared hyperparameters or hyperparameters for specific formats, "
                                     'e.g., "shared --lstm-layer-dim=100 --lstm-layers=1" "ucca --word-dim=300"',
-                               default=(initializer("shared"),))
+                               default=[initializer("shared")])
         self.dynet_arg_names = get_group_arg_names(group)
         self.args = argparser.parse_args(args if args else None)
 
