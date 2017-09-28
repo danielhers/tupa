@@ -1,5 +1,5 @@
-import argparse
 import sys
+from argparse import ArgumentParser, Namespace, ArgumentDefaultsHelpFormatter
 
 import numpy as np
 from logbook import Logger, FileHandler, StderrHandler
@@ -35,20 +35,23 @@ EDGE_LABELS_NUM = {"amr": 110, "sdp": 70, "conllu": 60}
 
 class Hyperparams(object):
     def __init__(self, shared=None, **kwargs):
-        self.shared = shared
-        self.specific = kwargs
+        self.shared = Namespace(**shared) if shared else Namespace()
+        self.specific = {name: Namespace(**values) for name, values in kwargs.items()}
 
 
 class HyperparamsInitializer(object):
-    def __init__(self, parent, name=None, *args):
+    def __init__(self, name=None, *args, parent=None, **kwargs):
         self.parent = parent
         self.name = name
         self.args = args
-        self.parsed_args = argparse.ArgumentParser(parents=[self.parent], add_help=False).parse_args(args) \
-            if self.args else ()
+        if kwargs:  # parent is a Namespace and kwargs are already parsed and initialized values
+            self.parsed_args = vars(parent)
+            self.parsed_args.update(kwargs)
+        else:  # parent is an ArgumentParser and args are strings
+            self.parsed_args = ArgumentParser(parents=[parent], add_help=False).parse_args(args) if args else ()
 
     def __call__(self, args):
-        return HyperparamsInitializer(self.parent, *args.replace("=", " ").split())
+        return HyperparamsInitializer(*args.replace("=", " ").split(), parent=self.parent)
 
     def __str__(self):
         return '"%s"' % " ".join([self.name] + list(self.args)) if self.args else self.name
@@ -56,8 +59,8 @@ class HyperparamsInitializer(object):
 
 class Config(object, metaclass=Singleton):
     def __init__(self, *args):
-        argparser = argparse.ArgumentParser(description="""Transition-based parser for UCCA.""",
-                                            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        argparser = ArgumentParser(description="Transition-based parser for UCCA.",
+                                   formatter_class=ArgumentDefaultsHelpFormatter)
         argparser.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
         argparser.add_argument("-m", "--model", help="model file basename to load/save (default: <format>_<model_type>")
         argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=SPARSE, help="model type")
@@ -167,7 +170,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--dynet-gpu-ids", help="the GPUs that you want to use by device ID")
         add_boolean_option(group, "dynet-viz", "visualization of neural network structure")
         add_boolean_option(group, "dynet-autobatch", "auto-batching of training examples")
-        initializer = HyperparamsInitializer(argparser)
+        initializer = HyperparamsInitializer(parent=argparser)
         argparser.add_argument("-H", "--hyperparams", type=initializer, nargs="*",
                                help="shared hyperparameters or hyperparameters for specific formats, "
                                     'e.g., "shared --lstm-layer-dim=100 --lstm-layers=1" "ucca --word-dim=300"',
@@ -185,19 +188,25 @@ class Config(object, metaclass=Singleton):
         elif not self.args.log:
             self.args.log = "parse.log"
         self._logger = self.format = None
-        self.original_values = {attr: getattr(self.args, attr) for attr in ("node_labels", "implicit", "node_label_dim",
-                                                                            "node_category_dim", "max_node_labels",
-                                                                            "max_node_categories", "max_action_labels",
-                                                                            "max_edge_labels")}
-        self.hyperparams = Hyperparams(**{h.name: h.parsed_args for h in self.args.hyperparams or ()})
+        self.original_values = self.create_original_values()
+        self.hyperparams = self.create_hyperparams()
         self.set_format()
         self.set_external()
         self.random = np.random
 
+    def create_original_values(self):
+        return {attr: getattr(self.args, attr) for attr in ("node_labels", "implicit", "node_label_dim",
+                                                            "node_category_dim", "max_node_labels",
+                                                            "max_node_categories", "max_action_labels",
+                                                            "max_edge_labels")}
+
+    def create_hyperparams(self):
+        return Hyperparams(**{h.name: h.parsed_args for h in self.args.hyperparams or ()})
+
     def set_format(self, f=None):
         if self.format != f:
             format_values = dict(self.original_values)
-            format_values.update(vars(self.hyperparams.specific.get(self.format, argparse.Namespace())))
+            format_values.update(vars(self.hyperparams.specific.get(self.format, Namespace())))
             for attr, value in format_values.items():
                 setattr(self.args, attr, value)
         if f not in (None, "text"):
@@ -242,8 +251,13 @@ class Config(object, metaclass=Singleton):
     def update(self, params):
         for name, value in params.items():
             setattr(self.args, name, value)
+        self.original_values = self.create_original_values()
+        self.hyperparams = self.create_hyperparams()
         self.set_format()
         self.set_external()
+
+    def update_hyperparams(self, **kwargs):
+        self.update({"hyperparams": [HyperparamsInitializer(k, parent=self.args, **v) for k, v in kwargs.items()]})
 
     @property
     def line_end(self):
@@ -264,7 +278,10 @@ class Config(object, metaclass=Singleton):
     def __str__(self):
         return " ".join(list(self.args.passages) + [""]) + \
                " ".join("--" + ("no-" if v is False else "") + k.replace("_", "-") + ("" if v is False or v is True else
-                        (" " + str(" ".join(map(str, v)) if hasattr(v, "__iter__") and not isinstance(v, str) else v)))
+                                                                                      (" " + str(" ".join(
+                                                                                          map(str, v)) if hasattr(v,
+                                                                                                                  "__iter__") and not isinstance(
+                                                                                          v, str) else v)))
                         for (k, v) in sorted(vars(self.args).items()) if v not in (None, (), "")
                         and not k.startswith("_")
                         and (self.args.node_labels or ("node_label" not in k and "node_categor" not in k))
@@ -272,5 +289,6 @@ class Config(object, metaclass=Singleton):
                         and (self.args.swap == COMPOUND or k != "max_swap")
                         and (not self.args.require_connected or k != "orphan_label")
                         and (self.args.classifier == SPARSE or k not in self.sparse_arg_names)
-                        and (self.args.classifier in NN_CLASSIFIERS or k not in self.nn_arg_names+self.dynet_arg_names)
+                        and (
+                        self.args.classifier in NN_CLASSIFIERS or k not in self.nn_arg_names + self.dynet_arg_names)
                         and k != "passages")
