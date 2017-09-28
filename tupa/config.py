@@ -43,7 +43,7 @@ class HyperparamsInitializer(object):
             self.parsed_args = vars(parent)
             self.parsed_args.update(kwargs)
         else:  # parent is an ArgumentParser and args are strings
-            self.parsed_args = ArgumentParser(parents=[parent], add_help=False).parse_args(args) if args else ()
+            self.parsed_args = ArgumentParser(parents=[parent], add_help=False).parse_args(args)
 
     def __call__(self, args):
         return HyperparamsInitializer(*args.replace("=", " ").split(), parent=self.parent)
