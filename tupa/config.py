@@ -7,6 +7,7 @@ from ucca import constructions
 
 from scheme.cfgutil import Singleton, add_verbose_argument, add_boolean_option, get_group_arg_names
 from scheme.convert import UCCA_EXT, CONVERTERS
+from tupa.classifiers.nn.constants import *
 
 # Classifiers
 SPARSE = "sparse"
@@ -19,12 +20,6 @@ CLASSIFIERS = (SPARSE, MLP_NN, BILSTM_NN, NOOP)
 # Swap types
 REGULAR = "regular"
 COMPOUND = "compound"
-
-# Neural network options: the first one is always the default
-ACTIVATIONS = ("relu", "sigmoid", "tanh", "cube")
-INITIALIZATIONS = ("glorot_uniform", "normal", "uniform", "const")
-OPTIMIZERS = ("adam", "sgd", "cyclic", "momentum", "adagrad", "adadelta", "rmsprop")
-RNNS = ("lstm", "gru", "vanilla_lstm", "compact_vanilla_lstm", "coupled_lstm", "fast_lstm")
 
 # Input/output formats
 FORMATS = [e.lstrip(".") for e in UCCA_EXT] + ["ucca"] + list(CONVERTERS)
@@ -140,10 +135,10 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--lstm-layers", type=int, default=2, help="number of LSTM hidden layers")
         group.add_argument("--embedding-layer-dim", type=int, default=500, help="dimension for layers before LSTM")
         group.add_argument("--embedding-layers", type=int, default=1, help="number of layers before LSTM")
-        group.add_argument("--activation", choices=ACTIVATIONS, default=ACTIVATIONS[0], help="activation function")
-        group.add_argument("--init", choices=INITIALIZATIONS, default=INITIALIZATIONS[0], help="weight initialization")
+        group.add_argument("--activation", choices=ACTIVATIONS, default=DEFAULT_ACTIVATION, help="activation function")
+        group.add_argument("--init", choices=INITIALIZERS, default=DEFAULT_INITIALIZER, help="weight initialization")
         group.add_argument("--minibatch-size", type=int, default=100, help="mini-batch size for optimization")
-        group.add_argument("--optimizer", choices=OPTIMIZERS, default=OPTIMIZERS[0], help="algorithm for optimization")
+        group.add_argument("--optimizer", choices=TRAINERS, default=DEFAULT_TRAINER, help="algorithm for optimization")
         group.add_argument("--max-words-external", type=int, help="max external word vectors to use")
         group.add_argument("--max-words", type=int, default=10000, help="max number of words to keep embeddings for")
         group.add_argument("--max-tags", type=int, default=100, help="max number of POS tags to keep embeddings for")
@@ -160,7 +155,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--node-label-dropout", type=float, default=0.2, help="node label dropout parameter")
         group.add_argument("--dropout", type=float, default=0.4, help="dropout parameter between layers")
         group.add_argument("--max-length", type=int, default=120, help="maximum length of input sentence")
-        group.add_argument("--rnn", choices=RNNS, default=RNNS[0], help="type of recurrent neural network to use")
+        group.add_argument("--rnn", choices=RNNS, default=DEFAULT_RNN, help="type of recurrent neural network to use")
         self.nn_arg_names = get_group_arg_names(group)
         group = argparser.add_argument_group(title="DyNet parameters")
         group.add_argument("--dynet-mem", help="memory for dynet")
@@ -277,12 +272,11 @@ class Config(object, metaclass=Singleton):
 
     def __str__(self):
         return " ".join(list(self.args.passages) + [""]) + \
-               " ".join("--" + ("no-" if v is False else "") + k.replace("_", "-") + ("" if v is False or v is True else
-                                                                                      (" " + str(" ".join(
-                                                                                          map(str, v)) if hasattr(v,
-                                                                                                                  "__iter__") and not isinstance(
-                                                                                          v, str) else v)))
-                        for (k, v) in sorted(vars(self.args).items()) if v not in (None, (), "")
+               " ".join("--" + ("no-" if v is False else "") + k.replace("_", "-") +
+                        ("" if v is False or v is True else
+                         (" " + str(" ".join(map(str, v)) if hasattr(v, "__iter__") and not isinstance(v, str) else v)))
+                        for (k, v) in sorted(vars(self.args).items()) if
+                        v not in (None, (), "")
                         and not k.startswith("_")
                         and (self.args.node_labels or ("node_label" not in k and "node_categor" not in k))
                         and (self.args.swap or "swap_" not in k)
@@ -290,5 +284,5 @@ class Config(object, metaclass=Singleton):
                         and (not self.args.require_connected or k != "orphan_label")
                         and (self.args.classifier == SPARSE or k not in self.sparse_arg_names)
                         and (
-                        self.args.classifier in NN_CLASSIFIERS or k not in self.nn_arg_names + self.dynet_arg_names)
+                            self.args.classifier in NN_CLASSIFIERS or k not in self.nn_arg_names + self.dynet_arg_names)
                         and k != "passages")

@@ -2,32 +2,22 @@ import dynet as dy
 import numpy as np
 
 from tupa.features.feature_params import MISSING_VALUE
-
-RNNS = {
-    "simple": dy.SimpleRNNBuilder,
-    "gru": dy.GRUBuilder,
-    "lstm": dy.LSTMBuilder,
-    "vanilla_lstm": dy.VanillaLSTMBuilder,
-    "compact_vanilla_lstm": dy.CompactVanillaLSTMBuilder,
-    "coupled_lstm": dy.CoupledLSTMBuilder,
-    "fast_lstm": dy.FastLSTMBuilder,
-}
+from .constants import ACTIVATIONS, INITIALIZERS, RNNS, CategoricalParameter
 
 
 class BiRNN(object):
-    def __init__(self, args, params, init, dropout, activation):
+    def __init__(self, args, params):
         self.args = args
         self.params = params
-        self.init = init
-        self.dropout = dropout
-        self.activation = activation
+        self.dropout = self.args.dropout
         self.lstm_layers = self.args.lstm_layers
         self.lstm_layer_dim = self.args.lstm_layer_dim
         self.embedding_layers = self.args.embedding_layers
         self.embedding_layer_dim = self.args.embedding_layer_dim
         self.max_length = self.args.max_length
-        self.rnn_str = self.args.rnn
-        self.rnn_builder = RNNS[self.rnn_str]
+        self.activation = CategoricalParameter(ACTIVATIONS, self.args.activation)
+        self.init = CategoricalParameter(INITIALIZERS, self.args.init)
+        self.rnn_builder = CategoricalParameter(RNNS, self.args.rnn)
         self.model = self.input_reps = self.empty_rep = None
 
     @property
@@ -44,11 +34,11 @@ class BiRNN(object):
         for i in range(1, self.embedding_layers + 1):
             in_dim = indexed_dim if i == 1 else self.embedding_layer_dim
             out_dim = self.embedding_layer_dim if i < self.embedding_layers else self.lstm_layer_dim
-            self.params[("We", i)] = self.model.add_parameters((out_dim, in_dim), init=self.init)
-            self.params[("be", i)] = self.model.add_parameters(out_dim, init=self.init)
+            self.params[("We", i)] = self.model.add_parameters((out_dim, in_dim), init=self.init())
+            self.params[("be", i)] = self.model.add_parameters(out_dim, init=self.init())
         self.params["bilstm"] = dy.BiRNNBuilder(self.lstm_layers,
                                                 self.lstm_layer_dim if self.embedding_layers else indexed_dim,
-                                                self.lstm_layer_dim, self.model, self.rnn_builder)
+                                                self.lstm_layer_dim, self.model, self.rnn_builder())
         return indexed_num * self.lstm_layer_dim
 
     def init_features(self, features, train=False):
@@ -66,7 +56,7 @@ class BiRNN(object):
 
     def evaluate_embeddings(self, embeddings, train=False):
         """
-        Apply MLP to process a single time-step of embeddings to prepare input for LSTM
+        Apply MLP to process a single time-step of embeddings to prepare input for RNN
         :param embeddings: list of embedding features for a single time step
         :param train: whether to apply dropout
         :return: expression corresponding to MLP output
@@ -77,7 +67,7 @@ class BiRNN(object):
             b = dy.parameter(self.params[("be", i)])
             if train and self.dropout:
                 x = dy.dropout(x, self.dropout)
-            x = self.activation(W * x + b)
+            x = self.activation()(W * x + b)
         return x
 
     def index_input(self, indices):
@@ -97,7 +87,9 @@ class BiRNN(object):
             "embedding_layers": self.embedding_layers,
             "embedding_layer_dim": self.embedding_layer_dim,
             "max_length": self.max_length,
-            "rnn": self.rnn_str,
+            "activation": str(self.activation),
+            "init": str(self.init),
+            "rnn": str(self.rnn_builder),
         }
 
     def load(self, d):
@@ -106,4 +98,10 @@ class BiRNN(object):
         self.args.embedding_layers = self.embedding_layers = d["embedding_layers"]
         self.args.embedding_layer_dim = self.embedding_layer_dim = d["embedding_layer_dim"]
         self.args.max_length = self.max_length = d["max_length"]
-        self.args.rnn = self.rnn_str = d.get("rnn", self.args.rnn)
+        self.args.rnn = self.rnn_builder.string = d.get("rnn", self.args.rnn)
+        activation = d.get("activation")
+        if activation:
+            self.args.activation = self.activation.string = activation
+        init = d.get("init")
+        if init:
+            self.args.init = self.init.string = init

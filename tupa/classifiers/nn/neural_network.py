@@ -2,7 +2,6 @@ import os
 import sys
 import time
 from collections import OrderedDict
-from functools import partial
 
 import dynet as dy
 import numpy as np
@@ -11,31 +10,7 @@ from tupa.classifiers.classifier import Classifier
 from tupa.config import Config, MLP_NN
 from tupa.features.feature_params import MISSING_VALUE
 from .birnn import BiRNN
-
-TRAINERS = {
-    "sgd": (dy.SimpleSGDTrainer, "learning_rate"),
-    "cyclic": (dy.CyclicalSGDTrainer, "learning_rate_max"),
-    "momentum": (dy.MomentumSGDTrainer, "learning_rate"),
-    "adagrad": (dy.AdagradTrainer, "learning_rate"),
-    "adadelta": (dy.AdadeltaTrainer, None),
-    "rmsprop": (dy.RMSPropTrainer, "learning_rate"),
-    "adam": (partial(dy.AdamTrainer, beta_2=0.9), "alpha"),
-}
-
-INITIALIZERS = {
-    "glorot_uniform": dy.GlorotInitializer(),
-    "normal": dy.NormalInitializer(),
-    "uniform": dy.UniformInitializer(1),
-    "const": dy.ConstInitializer(0),
-}
-
-ACTIVATIONS = {
-    "square": dy.square,
-    "cube": dy.cube,
-    "tanh": dy.tanh,
-    "sigmoid": dy.logistic,
-    "relu": dy.rectify,
-}
+from .constants import ACTIVATIONS, INITIALIZERS, TRAINERS, CategoricalParameter
 
 
 class NeuralNetwork(Classifier):
@@ -54,20 +29,17 @@ class NeuralNetwork(Classifier):
         self.layers = self.args.layers
         self.layer_dim = self.args.layer_dim
         self.output_dim = self.args.output_dim
-        self.activation_str = self.args.activation
-        self.init_str = self.args.init
         self.minibatch_size = self.args.minibatch_size
+        self.activation = CategoricalParameter(ACTIVATIONS, self.args.activation)
+        self.init = CategoricalParameter(INITIALIZERS, self.args.init)
+        self.trainer_type = CategoricalParameter(TRAINERS, self.args.optimizer)
         self.dropout = self.args.dropout
-        self.trainer_str = self.args.optimizer
-        self.activation = ACTIVATIONS[self.activation_str]
-        self.init = INITIALIZERS[self.init_str]
-        self.trainer_type, self.learning_rate_param_name = TRAINERS[self.trainer_str]
         self.params = OrderedDict()
         self.empty_values = OrderedDict()
         self.losses = []
         self.indexed_num = self.indexed_dim = self.trainer = self.value = None
         self.axes = set()
-        self.birnn = BiRNN(self.args, self.params, self.init, self.dropout, self.activation)
+        self.birnn = BiRNN(self.args, self.params)
 
     def resize(self, axis=None):
         for axis_, labels in self.labels.items():
@@ -82,9 +54,10 @@ class NeuralNetwork(Classifier):
             self.model = dy.ParameterCollection()
             self.birnn.model = self.model
             trainer_kwargs = {}
-            if self.learning_rate_param_name and self.learning_rate:
-                trainer_kwargs[self.learning_rate_param_name] = self.learning_rate
-            self.trainer = self.trainer_type(self.model, **trainer_kwargs)
+            trainer_type, learning_rate_param_name = self.trainer_type()
+            if learning_rate_param_name and self.learning_rate:
+                trainer_kwargs[learning_rate_param_name] = self.learning_rate
+            self.trainer = trainer_type(self.model, **trainer_kwargs)
             self.init_input_params()
         if axis and axis not in self.axes:
             self.axes.add(axis)
@@ -120,8 +93,8 @@ class NeuralNetwork(Classifier):
         in_dim = [self.input_dim] + (self.layers - 1) * [self.layer_dim] + [self.output_dim]
         out_dim = (self.layers - 1) * [self.layer_dim] + [self.output_dim, self.labels[axis].size]
         for i in range(self.layers + 1):
-            self.params[("W", i, axis)] = self.model.add_parameters((out_dim[i], in_dim[i]), init=self.init)
-            self.params[("b", i, axis)] = self.model.add_parameters(out_dim[i], init=self.init)
+            self.params[("W", i, axis)] = self.model.add_parameters((out_dim[i], in_dim[i]), init=self.init())
+            self.params[("b", i, axis)] = self.model.add_parameters(out_dim[i], init=self.init())
 
     def init_cg(self):
         dy.renew_cg()
@@ -166,7 +139,7 @@ class NeuralNetwork(Classifier):
             b = dy.parameter(self.params[("b", i, axis)])
             if train and self.dropout:
                 x = dy.dropout(x, self.dropout)
-            x = self.activation(W * x + b)
+            x = self.activation()(W * x + b)
         return dy.log_softmax(x, restrict=None if "--dynet-gpu" in sys.argv else list(range(self.num_labels[axis])))
 
     def evaluate(self, features, axis, train=False):
@@ -256,8 +229,8 @@ class NeuralNetwork(Classifier):
             "layers": self.layers,
             "layer_dim": self.layer_dim,
             "output_dim": self.output_dim,
-            "activation": self.activation_str,
-            "init": self.init_str,
+            "activation": str(self.activation),
+            "init": str(self.init),
         }
         if self.model_type != MLP_NN:
             d.update(self.birnn.save())
@@ -281,10 +254,8 @@ class NeuralNetwork(Classifier):
         self.args.layers = self.layers = d["layers"]
         self.args.layer_dim = self.layer_dim = d["layer_dim"]
         self.args.output_dim = self.output_dim = d["output_dim"]
-        self.args.activation = self.activation_str = d["activation"]
-        self.activation = ACTIVATIONS[self.activation_str]
-        self.args.init = self.init_str = d["init"]
-        self.init = INITIALIZERS[self.init_str]
+        self.args.activation = self.activation.string = d["activation"]
+        self.args.init = self.init.string = d["init"]
         if self.model_type != MLP_NN:
             self.birnn.load(d)
         for axis in self.axes:
