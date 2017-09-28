@@ -90,5 +90,36 @@ class ParserTests(unittest.TestCase):
             p.parse(convert.to_text(load_passages()[0]))
             self.assertFalse(list(p.parse(())))  # parsing nothing returns nothing
 
+
+class ConfigTests(unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        Config("", "-m", "test", "--no-remote", "--implicit")
+
+    def test_params(self):
+        d = {"max_words_external": 100, "word_dim_external": 100, "optimizer": "sgd", "layer_dim": 100, "layers": 1,
+             "lstm_layer_dim": 100, "lstm_layers": 1}
+        Config().update(d)
+        for attr, value in d.items():
+            self.assertEqual(getattr(Config().args, attr), value, attr)
+
+    def test_hyperparams(self):
+        self.assertFalse(vars(Config().hyperparams.shared))
+        self.assertFalse(Config().hyperparams.specific)
+        d = {"max_words_external": 100, "word_dim_external": 100, "optimizer": "sgd", "layer_dim": 100, "layers": 1}
+        Config().update(d)
+        Config().update_hyperparams(shared={"lstm_layer_dim": 100, "lstm_layers": 1}, ucca={"word_dim": 300})
+        self.assertEqual(Config().hyperparams.shared.lstm_layer_dim, 100, "shared --lstm-layer-dim=100")
+        self.assertEqual(Config().hyperparams.shared.lstm_layers, 1, "shared --lstm-layers=1")
+        self.assertEqual(Config().hyperparams.specific["ucca"].word_dim, 300, "ucca --word-dim=300")
+        for attr, value in d.items():
+            self.assertEqual(getattr(Config().hyperparams.shared, attr), value, attr)
+
+    def test_boolean_params(self):
+        self.assertFalse(Config().args.remote)
+        self.assertTrue(Config().args.implicit)
+        self.assertFalse(Config().args.linkage)
+
+
 if __name__ == "__main__":
     unittest.main()
