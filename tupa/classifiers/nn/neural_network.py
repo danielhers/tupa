@@ -9,6 +9,7 @@ import numpy as np
 from tupa.classifiers.classifier import Classifier
 from tupa.config import Config, MLP_NN
 from tupa.features.feature_params import MISSING_VALUE
+from . import mlp
 from .birnn import BiRNN
 from .constants import ACTIVATIONS, INITIALIZERS, TRAINERS, CategoricalParameter
 
@@ -61,7 +62,8 @@ class NeuralNetwork(Classifier):
             self.init_input_params()
         if axis and axis not in self.axes:
             self.axes.add(axis)
-            self.init_mlp_params(axis)
+            self.params.update(mlp.init(self.model, self.layers, self.input_dim, self.layer_dim, self.output_dim,
+                                        self.init(), self.labels[axis].size, suffix2=(axis,)))
         if init:
             self.init_cg()
             self.finished_step()
@@ -88,13 +90,6 @@ class NeuralNetwork(Classifier):
                 else:
                     self.input_dim += param.num * param.dim
         self.input_dim += self.birnn.init_indexed_input_params(self.indexed_dim, self.indexed_num)
-
-    def init_mlp_params(self, axis):
-        in_dim = [self.input_dim] + (self.layers - 1) * [self.layer_dim] + [self.output_dim]
-        out_dim = (self.layers - 1) * [self.layer_dim] + [self.output_dim, self.labels[axis].size]
-        for i in range(self.layers + 1):
-            self.params[("W", i, axis)] = self.model.add_parameters((out_dim[i], in_dim[i]), init=self.init())
-            self.params[("b", i, axis)] = self.model.add_parameters(out_dim[i], init=self.init())
 
     def init_cg(self):
         dy.renew_cg()
@@ -125,7 +120,7 @@ class NeuralNetwork(Classifier):
                 len(indices), self.indexed_num)
             yield self.birnn.index_input(indices)
 
-    def evaluate_mlp(self, features, axis, train=False):
+    def evaluate(self, features, axis, train=False):
         """
         Apply MLP and log softmax to input features
         :param features: dictionary of suffix, values for each feature type
@@ -133,20 +128,13 @@ class NeuralNetwork(Classifier):
         :param train: whether to apply dropout
         :return: expression corresponding to log softmax applied to MLP output
         """
-        x = dy.concatenate(list(self.generate_inputs(features)))
-        for i in range(self.layers + 1):
-            W = dy.parameter(self.params[("W", i, axis)])
-            b = dy.parameter(self.params[("b", i, axis)])
-            if train and self.dropout:
-                x = dy.dropout(x, self.dropout)
-            x = self.activation()(W * x + b)
-        return dy.log_softmax(x, restrict=None if "--dynet-gpu" in sys.argv else list(range(self.num_labels[axis])))
-
-    def evaluate(self, features, axis, train=False):
         self.init_model(axis=axis)
         value = self.value.get(axis)
         if value is None:
-            self.value[axis] = value = self.evaluate_mlp(features=features, axis=axis, train=train)
+            self.value[axis] = value = dy.log_softmax(mlp.evaluate(
+                self.params, self.generate_inputs(features), self.layers + 1, self.dropout, self.activation(),
+                suffix2=(axis,), train=train),
+                restrict=None if "--dynet-gpu" in sys.argv else list(range(self.num_labels[axis])))
         return value
 
     def score(self, features, axis):

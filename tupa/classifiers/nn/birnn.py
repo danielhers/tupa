@@ -2,6 +2,7 @@ import dynet as dy
 import numpy as np
 
 from tupa.features.feature_params import MISSING_VALUE
+from . import mlp
 from .constants import ACTIVATIONS, INITIALIZERS, RNNS, CategoricalParameter
 
 
@@ -31,11 +32,8 @@ class BiRNN(object):
         """
         if self.empty:
             return indexed_dim * indexed_num
-        for i in range(1, self.embedding_layers + 1):
-            in_dim = indexed_dim if i == 1 else self.embedding_layer_dim
-            out_dim = self.embedding_layer_dim if i < self.embedding_layers else self.lstm_layer_dim
-            self.params[("We", i)] = self.model.add_parameters((out_dim, in_dim), init=self.init())
-            self.params[("be", i)] = self.model.add_parameters(out_dim, init=self.init())
+        self.params.update(mlp.init(self.model, self.embedding_layers, indexed_dim, self.embedding_layer_dim,
+                                    self.lstm_layer_dim, self.init(), suffix1="e", offset=1))
         self.params["bilstm"] = dy.BiRNNBuilder(self.lstm_layers,
                                                 self.lstm_layer_dim if self.embedding_layers else indexed_dim,
                                                 self.lstm_layer_dim, self.model, self.rnn_builder())
@@ -45,7 +43,8 @@ class BiRNN(object):
         if self.empty:
             return
         embeddings = [[self.params[s][k] for k in ks] for s, ks in sorted(features.items())]  # time-lists of vectors
-        inputs = [self.evaluate_embeddings(e, train=train) for e in zip(*embeddings)]  # join each time step to a vector
+        inputs = [mlp.evaluate(self.params, e, self.embedding_layers, self.dropout, self.activation(), suffix1="e",
+                               offset=1, train=train) for e in zip(*embeddings)]  # join each time step to a vector
         bilstm = self.params["bilstm"]
         if train:
             bilstm.set_dropout(self.dropout)
@@ -53,22 +52,6 @@ class BiRNN(object):
             bilstm.disable_dropout()
         self.input_reps = bilstm.transduce(inputs[:self.max_length])
         self.empty_rep = dy.inputVector(np.zeros(self.lstm_layer_dim, dtype=float))
-
-    def evaluate_embeddings(self, embeddings, train=False):
-        """
-        Apply MLP to process a single time-step of embeddings to prepare input for RNN
-        :param embeddings: list of embedding features for a single time step
-        :param train: whether to apply dropout
-        :return: expression corresponding to MLP output
-        """
-        x = dy.concatenate(list(embeddings))
-        for i in range(1, self.embedding_layers + 1):
-            W = dy.parameter(self.params[("We", i)])
-            b = dy.parameter(self.params[("be", i)])
-            if train and self.dropout:
-                x = dy.dropout(x, self.dropout)
-            x = self.activation()(W * x + b)
-        return x
 
     def index_input(self, indices):
         """
