@@ -11,7 +11,6 @@ class Classifier(object):
         """
         :param labels: dict of axis (string) -> Labels object, can be updated later to add new axes and labels
         :param input_params: dict of feature type name -> FeatureInformation
-        :param model: if given, copy the weights (from a trained model)
         """
         self.args = Config().args
         self.model = None

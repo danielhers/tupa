@@ -8,11 +8,11 @@ class Perceptron(Classifier):
     Abstract multi-class averaged perceptron.
     """
 
-    def __init__(self, *args, epoch):
+    def __init__(self, *args, epoch, **kwargs):
         """
         Create a new untrained Perceptron or copy the weights from an existing one
         """
-        super().__init__(*args)
+        super().__init__(*args, **kwargs)
         self.initial_learning_rate = self.learning_rate if self.learning_rate else 1.0
         self.epoch = epoch
         self.update_learning_rate()

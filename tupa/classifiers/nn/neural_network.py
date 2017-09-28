@@ -45,11 +45,11 @@ class NeuralNetwork(Classifier):
     Expects features from FeatureEnumerator.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         """
         Create a new untrained NN
         """
-        super().__init__(*args)
+        super().__init__(*args, **kwargs)
         self.layers = self.args.layers
         self.layer_dim = self.args.layer_dim
         self.output_dim = self.args.output_dim

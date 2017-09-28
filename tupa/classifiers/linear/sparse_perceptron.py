@@ -69,14 +69,14 @@ class SparsePerceptron(Perceptron):
     Expects features from SparseFeatureExtractor.
     """
 
-    def __init__(self, *args, epoch=0):
+    def __init__(self, *args, epoch=0, **kwargs):
         """
         Create a new untrained Perceptron or copy the weights from an existing one
         :param labels: tuple of lists of labels that can be updated later to add new labels
         :param min_update: minimum number of updates to a feature required for consideration
         :param model: if given, copy the weights (from a trained model)
         """
-        super().__init__(SPARSE, *args, epoch=epoch)
+        super().__init__(SPARSE, *args, epoch=epoch, **kwargs)
         model = KeyBasedDefaultDict(self.create_axis_weights)
         if self.is_frozen:
             for axis, feature_weights in self.model.items():
