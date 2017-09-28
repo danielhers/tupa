@@ -40,7 +40,7 @@ class NeuralNetwork(Classifier):
         self.losses = []
         self.indexed_num = self.indexed_dim = self.trainer = self.value = None
         self.axes = set()
-        self.birnn = BiRNN(self.args, self.params)
+        self.birnn = BiRNN(Config().hyperparams.shared, self.params)
 
     def resize(self, axis=None):
         for axis_, labels in self.labels.items():
@@ -73,9 +73,7 @@ class NeuralNetwork(Classifier):
         Initialize lookup parameters and any other parameters that process the input (e.g. LSTMs)
         :return: total output dimension of inputs
         """
-        self.input_dim = 0
-        self.indexed_dim = 0
-        self.indexed_num = 0
+        self.input_dim = self.indexed_dim = self.indexed_num = 0
         for suffix, param in sorted(self.input_params.items()):
             if param.dim:
                 if not param.numeric:  # lookup feature
