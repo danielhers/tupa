@@ -63,10 +63,10 @@ class ParserTests(unittest.TestCase):
         self.train_test(SPARSE)
 
     def test_parser_mlp(self):
-        self.train_test(MLP_NN)
+        self.train_test(MLP_NN, compare=False)
 
     def test_parser_bilstm(self):
-        self.train_test(BILSTM_NN)
+        self.train_test(BILSTM_NN, compare=False)
 
     def test_parser_noop(self):
         self.train_test(NOOP)
