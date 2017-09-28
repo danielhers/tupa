@@ -95,14 +95,11 @@ class Model(object):
             self.classifier = NoOp(self.filename, labels)
         elif self.model_type in (MLP_NN, BILSTM_NN):
             from .features.dense_features import DenseFeatureExtractor
+            from .classifiers.nn.neural_network import NeuralNetwork
             self.feature_extractor = FeatureEnumerator(DenseFeatureExtractor(), self.feature_params)
-            if self.model_type == MLP_NN:
-                from .classifiers.nn.feedforward import MLP
-                self.classifier = MLP(self.filename, labels)
-            else:  # BILSTM_NN
-                from .classifiers.nn.bilstm import BiLSTM
-                self.feature_extractor = FeatureIndexer(self.feature_extractor)
-                self.classifier = BiLSTM(self.filename, labels)
+            if self.model_type == BILSTM_NN:
+                self.feature_extractor = FeatureIndexer(self.feature_extractor)  # Pass positions in input, not identity
+            self.classifier = NeuralNetwork(self.model_type, self.filename, labels)
         else:
             raise ValueError("Invalid model type: '%s'" % self.model_type)
         self._update_input_params()

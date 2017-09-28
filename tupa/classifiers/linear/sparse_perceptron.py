@@ -160,11 +160,14 @@ class SparsePerceptron(Perceptron):
         ret.is_frozen = True
         return ret
 
-    def save_extra(self):
+    def save_model(self):
         save_dict(self.filename + ".data", self.copy_model())
-        return {"min_update": self.min_update}
+        d = {"min_update": self.min_update}
+        d.update(super().save_model())
+        return d
 
-    def load_extra(self, d):
+    def load_model(self, d):
         self.model.clear()
         self.update_model(load_dict(self.filename + ".data"))
         self.args.min_update = self.min_update = d["min_update"]
+        super().load_model(d)

@@ -8,8 +8,9 @@ import dynet as dy
 import numpy as np
 
 from tupa.classifiers.classifier import Classifier
-from tupa.config import Config
+from tupa.config import Config, MLP_NN
 from tupa.features.feature_params import MISSING_VALUE
+from .birnn import BiRNN
 
 TRAINERS = {
     "sgd": (dy.SimpleSGDTrainer, "learning_rate"),
@@ -66,6 +67,7 @@ class NeuralNetwork(Classifier):
         self.losses = []
         self.indexed_num = self.indexed_dim = self.trainer = self.value = None
         self.axes = set()
+        self.birnn = BiRNN(self.args, self.params, self.init, self.dropout, self.activation)
 
     def resize(self, axis=None):
         for axis_, labels in self.labels.items():
@@ -78,6 +80,7 @@ class NeuralNetwork(Classifier):
         init = self.model is None
         if init:
             self.model = dy.ParameterCollection()
+            self.birnn.model = self.model
             trainer_kwargs = {}
             if self.learning_rate_param_name and self.learning_rate:
                 trainer_kwargs[self.learning_rate_param_name] = self.learning_rate
@@ -111,13 +114,7 @@ class NeuralNetwork(Classifier):
                     self.indexed_num = max(self.indexed_num, param.num)  # indices to be looked up are collected
                 else:
                     self.input_dim += param.num * param.dim
-        self.input_dim += self.init_indexed_input_params()
-
-    def init_indexed_input_params(self):
-        """
-        :return: total output dimension of indexed features
-        """
-        return self.indexed_dim * self.indexed_num
+        self.input_dim += self.birnn.init_indexed_input_params(self.indexed_dim, self.indexed_num)
 
     def init_mlp_params(self, axis):
         in_dim = [self.input_dim] + (self.layers - 1) * [self.layer_dim] + [self.output_dim]
@@ -130,16 +127,11 @@ class NeuralNetwork(Classifier):
         dy.renew_cg()
         for suffix, param in sorted(self.input_params.items()):
             if not param.numeric and param.dim:  # lookup feature
-                self.empty_values[suffix] = self.zero_input(param.dim)
+                self.empty_values[suffix] = dy.inputVector(np.zeros(param.dim, dtype=float))
 
-    @staticmethod
-    def zero_input(dim):
-        """
-        Representation for missing elements
-        :param dim: dimension of vector to return
-        :return: zero vector (as in e.g. Kiperwasser and Goldberg 2016; an alternative could be to learn this value)
-        """
-        return dy.inputVector(np.zeros(dim, dtype=float))
+    def init_features(self, *args, **kwargs):
+        self.init_model()
+        self.birnn.init_features(*args, **kwargs)
 
     def generate_inputs(self, features):
         indices = []  # list, not set, in order to maintain consistent order
@@ -158,14 +150,7 @@ class NeuralNetwork(Classifier):
         if indices:
             assert len(indices) == self.indexed_num, "Wrong number of index features: got %d, expected %d" % (
                 len(indices), self.indexed_num)
-            yield self.index_input(indices)
-
-    def index_input(self, indices):
-        """
-        :param indices: indices of inputs
-        :return: feature values at given indices
-        """
-        raise ValueError("Input representations not initialized, cannot evaluate indexed features")
+            yield self.birnn.index_input(indices)
 
     def evaluate_mlp(self, features, axis, train=False):
         """
@@ -274,7 +259,8 @@ class NeuralNetwork(Classifier):
             "activation": self.activation_str,
             "init": self.init_str,
         }
-        d.update(self.save_extra())
+        if self.model_type != MLP_NN:
+            d.update(self.birnn.save())
         started = time.time()
         try:
             os.remove(self.filename)
@@ -299,7 +285,8 @@ class NeuralNetwork(Classifier):
         self.activation = ACTIVATIONS[self.activation_str]
         self.args.init = self.init_str = d["init"]
         self.init = INITIALIZERS[self.init_str]
-        self.load_extra(d)
+        if self.model_type != MLP_NN:
+            self.birnn.load(d)
         for axis in self.axes:
             self.init_model(axis)
         print("Loading model from '%s'... " % self.filename, end="", flush=True)

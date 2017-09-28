@@ -6,7 +6,7 @@ INDEXED_FEATURES = "W", "w", "t", "d", "T"  # external + learned word embeddings
 class FeatureIndexer(FeatureExtractorWrapper):
     """
     Wrapper for FeatureEnumerator to replace non-numeric feature values with indices.
-    To be used with BiLSTM classifier.
+    To be used with BiRNN (NeuralNetwork) classifier.
     """
     def __init__(self, feature_extractor, params=None):
         super().__init__(feature_extractor, feature_extractor.params if params is None else params)

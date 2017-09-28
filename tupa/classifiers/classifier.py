@@ -92,9 +92,6 @@ class Classifier(object):
         """
         Save all parameters to file
         """
-        return self.save_extra()
-
-    def save_extra(self):
         return {}
 
     def load(self):
@@ -113,9 +110,6 @@ class Classifier(object):
         self.load_model(d)
 
     def load_model(self, d):
-        self.load_extra(d)
-
-    def load_extra(self, d):
         pass
 
     def __str__(self):
