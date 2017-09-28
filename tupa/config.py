@@ -48,7 +48,7 @@ class HyperparamsInitializer(object):
             if self.args else ()
 
     def __call__(self, args):
-        return HyperparamsInitializer(self.parent, *args.split())
+        return HyperparamsInitializer(self.parent, *args.replace("=", " ").split())
 
     def __str__(self):
         return '"%s"' % " ".join([self.name] + list(self.args)) if self.args else self.name
