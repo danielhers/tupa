@@ -34,7 +34,7 @@ class Classifier(object):
         if not self.is_frozen:
             self._update_num_labels(axis)
 
-    def init_features(self, features, train=False):
+    def init_features(self, features, axis, train=False):
         pass
 
     def update(self, features, axis, pred, true, importance=1):
@@ -69,13 +69,13 @@ class Classifier(object):
         """
         pass
 
-    def save(self):
+    def save(self, skip_labels=()):
         """
         Save all parameters to file
         """
         d = {
             "type": self.model_type,
-            "labels": self.save_labels(),
+            "labels": {a: ([], 0) if a in skip_labels else l.save() for a, l in self.labels.items()},  # (all, size)
             "is_frozen": self.is_frozen,
             "learning_rate": self.learning_rate,
             "learning_rate_decay": self.learning_rate_decay,
@@ -84,9 +84,6 @@ class Classifier(object):
         }
         d.update(self.save_model())
         save_json(self.filename + ".json", d)
-
-    def save_labels(self):
-        return {a: l.save() for a, l in self.labels.items()}
 
     def save_model(self):
         """

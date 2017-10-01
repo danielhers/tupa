@@ -124,9 +124,9 @@ class Model(object):
     def labels(self):
         return self.classifier.labels[NODE_LABEL_KEY]
 
-    def init_features(self, state, train):
+    def init_features(self, state, axis, train):
         self.init_model()
-        self.classifier.init_features(self.feature_extractor.init_features(state), train)
+        self.classifier.init_features(self.feature_extractor.init_features(state), axis, train)
 
     def finalize(self, finished_epoch):
         self.init_model()
@@ -139,7 +139,8 @@ class Model(object):
             self.init_model()
             try:
                 self.feature_extractor.save(self.filename)
-                self.classifier.save()
+                node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
+                self.classifier.save(skip_labels=(NODE_LABEL_KEY,) if node_labels and node_labels.size else ())
             except Exception as e:
                 raise IOError("Failed saving model to '%s'" % self.filename) from e
 
@@ -183,7 +184,7 @@ class Model(object):
         for axis, (all_labels, size) in self.classifier.labels.items():
             if axis == NODE_LABEL_KEY:  # These are node labels rather than action labels
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
-                if node_labels is not None and node_labels.size:  # Also used for features, so share the dict
+                if node_labels and node_labels.size:  # Also used for features, so share the dict
                     del all_labels, size
                     labels = node_labels.data
                 else:  # Not used as a feature, just get labels

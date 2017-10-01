@@ -14,6 +14,14 @@ from .birnn import BiRNN
 from .constants import ACTIVATIONS, INITIALIZERS, TRAINERS, CategoricalParameter
 
 
+class AxisModel(object):
+    """
+    Format-specific parameters that are part of the network
+    """
+    def __init__(self, axis, *args, **kwargs):
+        self.birnn = BiRNN(Config().hyperparams.specific.setdefault(axis, Config().args), *args, **kwargs)
+
+
 class NeuralNetwork(Classifier):
     """
     Neural network to be used by the parser for action classification. Uses dense features.
@@ -35,12 +43,15 @@ class NeuralNetwork(Classifier):
         self.init = CategoricalParameter(INITIALIZERS, self.args.init)
         self.trainer_type = CategoricalParameter(TRAINERS, self.args.optimizer)
         self.dropout = self.args.dropout
-        self.params = OrderedDict()
-        self.empty_values = OrderedDict()
+        self.params = OrderedDict()  # string (param identifier) -> parameter
+        self.empty_values = OrderedDict()  # string (feature suffix) -> expression
+        self.axes = OrderedDict()  # string (axis) -> AxisParams
         self.losses = []
-        self.indexed_num = self.indexed_dim = self.trainer = self.value = None
-        self.axes = set()
-        self.birnn = BiRNN(Config().hyperparams.shared, self.params)
+        self.indexed_num = self.indexed_dim = self.trainer = self.value = self.birnn = None
+
+    @property
+    def all_birnns(self):
+        return [m.birnn for m in self.axes.values()] + [self.birnn]
 
     def resize(self, axis=None):
         for axis_, labels in self.labels.items():
@@ -49,29 +60,33 @@ class NeuralNetwork(Classifier):
                 assert num_labels <= labels.size, "Exceeded maximum number of labels at axis '%s': %d > %d:\n%s" % (
                     axis_, num_labels, labels.size, "\n".join(map(str, labels.all)))
 
-    def init_model(self, axis=None):
+    def init_model(self, axis=None, init_params=True):
         init = self.model is None
         if init:
             self.model = dy.ParameterCollection()
-            self.birnn.model = self.model
             trainer_kwargs = {}
             trainer_type, learning_rate_param_name = self.trainer_type()
             if learning_rate_param_name and self.learning_rate:
                 trainer_kwargs[learning_rate_param_name] = self.learning_rate
             self.trainer = trainer_type(self.model, **trainer_kwargs)
-            self.init_input_params()
-        if axis and axis not in self.axes:
-            self.axes.add(axis)
-            self.params.update(mlp.init(self.model, self.layers, self.input_dim, self.layer_dim, self.output_dim,
-                                        self.init(), self.labels[axis].size, suffix2=(axis,)))
+            self.birnn = BiRNN(Config().hyperparams.shared, self.model, self.params, shared=True)
+            if init_params:
+                self.init_input_params()
+                self.input_dim += self.birnn.init_params(self.indexed_dim, self.indexed_num)
+        if axis and init_params:
+            axis_model = self.axes.get(axis)
+            if axis_model is None:
+                axis_model = self.axes[axis] = AxisModel(axis, self.model, self.params)
+                axis_input_dim = self.input_dim + axis_model.birnn.init_params(self.indexed_dim, self.indexed_num)
+                self.params.update(mlp.init(self.model, self.layers, axis_input_dim, self.layer_dim, self.output_dim,
+                                            self.init(), self.labels[axis].size, suffix2=(axis,)))
         if init:
             self.init_cg()
             self.finished_step()
 
     def init_input_params(self):
         """
-        Initialize lookup parameters and any other parameters that process the input (e.g. LSTMs)
-        :return: total output dimension of inputs
+        Initialize lookup parameters, and calculate the number and dimension of indexed and non-indexed inputs
         """
         self.input_dim = self.indexed_dim = self.indexed_num = 0
         for suffix, param in sorted(self.input_params.items()):
@@ -87,7 +102,6 @@ class NeuralNetwork(Classifier):
                     self.indexed_num = max(self.indexed_num, param.num)  # indices to be looked up are collected
                 else:
                     self.input_dim += param.num * param.dim
-        self.input_dim += self.birnn.init_indexed_input_params(self.indexed_dim, self.indexed_num)
 
     def init_cg(self):
         dy.renew_cg()
@@ -95,11 +109,12 @@ class NeuralNetwork(Classifier):
             if not param.numeric and param.dim:  # lookup feature
                 self.empty_values[suffix] = dy.inputVector(np.zeros(param.dim, dtype=float))
 
-    def init_features(self, *args, **kwargs):
-        self.init_model()
-        self.birnn.init_features(*args, **kwargs)
+    def init_features(self, features, axis, train=False):
+        self.init_model(axis)
+        self.birnn.init_features(features, train)
+        self.axes[axis].birnn.init_features(features, train)
 
-    def generate_inputs(self, features):
+    def generate_inputs(self, features, axis):
         indices = []  # list, not set, in order to maintain consistent order
         for suffix, values in sorted(features.items()):
             param = self.input_params.get(suffix)
@@ -113,10 +128,10 @@ class NeuralNetwork(Classifier):
                 else:
                     yield dy.concatenate([self.empty_values[suffix] if x == MISSING_VALUE else self.params[suffix][x]
                                           for x in values])
+        assert self.indexed_num is None or len(indices) == self.indexed_num, \
+            "Wrong number of index features: got %d, expected %d" % (len(indices), self.indexed_num)
         if indices:
-            assert len(indices) == self.indexed_num, "Wrong number of index features: got %d, expected %d" % (
-                len(indices), self.indexed_num)
-            yield self.birnn.index_input(indices)
+            yield dy.concatenate(self.birnn.index_input(indices) + self.axes[axis].birnn.index_input(indices))
 
     def evaluate(self, features, axis, train=False):
         """
@@ -130,7 +145,7 @@ class NeuralNetwork(Classifier):
         value = self.value.get(axis)
         if value is None:
             self.value[axis] = value = dy.log_softmax(mlp.evaluate(
-                self.params, self.generate_inputs(features), self.layers + 1, self.dropout, self.activation(),
+                self.params, self.generate_inputs(features, axis), self.layers + 1, self.dropout, self.activation(),
                 suffix2=(axis,), train=train),
                 restrict=None if "--dynet-gpu" in sys.argv else list(range(self.num_labels[axis])))
         return value
@@ -143,11 +158,12 @@ class NeuralNetwork(Classifier):
         :return: array with score for each label
         """
         super().score(features, axis)
-        if self.updates > 0 and self.num_labels[axis] > 1:
-            return self.evaluate(features, axis).npvalue()[:self.num_labels[axis]]
+        num_labels = self.num_labels[axis]
+        if self.updates > 0 and num_labels > 1:
+            return self.evaluate(features, axis).npvalue()[:num_labels]
         if self.args.verbose > 3:
             print("  no updates done yet, returning zero vector.")
-        return np.zeros(self.num_labels[axis])
+        return np.zeros(num_labels)
 
     def update(self, features, axis, pred, true, importance=1):
         """
@@ -202,24 +218,21 @@ class NeuralNetwork(Classifier):
             self.trainer.status()
         return self
 
-    def save_labels(self):
-        node_labels = self.input_params.get("n")  # Do not save node labels as they are saved as features already
-        omit_node_labels = node_labels is not None and node_labels.size
-        return {a: ([], 0) if a == "n" and omit_node_labels else l.save() for a, l in self.labels.items()}
-
     def save_model(self):
         self.finalize()
         d = {
-            "param_keys": list(self.params.keys()),
-            "axes": list(self.axes),
             "layers": self.layers,
             "layer_dim": self.layer_dim,
             "output_dim": self.output_dim,
             "activation": str(self.activation),
             "init": str(self.init),
+            "param_keys": list(self.params.keys()),
+            "axes_param_keys": [list(m.birnn.params.keys()) for m in self.axes.values()],
+            "axes": list(self.axes),
         }
-        if self.model_type != MLP_NN:
+        if self.model_type != MLP_NN:  # Save BiRNN hyperparams
             d.update(self.birnn.save())
+            d.update((a, m.birnn.save()) for a, m in self.axes.items())
         started = time.time()
         try:
             os.remove(self.filename)
@@ -228,29 +241,37 @@ class NeuralNetwork(Classifier):
             pass
         print("Saving model to '%s'... " % self.filename, end="", flush=True)
         try:
-            dy.save(self.filename, self.params.values())
+            dy.save(self.filename, [x for m in [self] + list(self.axes.values()) for x in m.birnn.params.values()])
             print("Done (%.3fs)." % (time.time() - started))
         except ValueError as e:
             print("Failed saving model: %s" % e)
         return d
 
     def load_model(self, d):
-        param_keys = [tuple(k) if isinstance(k, list) else k for k in d["param_keys"]]
-        self.axes = set(d["axes"])
         self.args.layers = self.layers = d["layers"]
         self.args.layer_dim = self.layer_dim = d["layer_dim"]
         self.args.output_dim = self.output_dim = d["output_dim"]
         self.args.activation = self.activation.string = d["activation"]
         self.args.init = self.init.string = d["init"]
-        if self.model_type != MLP_NN:
+        axes = d["axes"]
+        param_keys, *axes_param_keys = [[tuple(k) if isinstance(k, list) else k for k in keys]  # param key can be tuple
+                                        for keys in [d["param_keys"]] + d.get("axes_param_keys", [[]] * len(axes))]
+        self.init_model(init_params=False)
+        if self.model_type != MLP_NN:  # Load BiRNN hyperparams
             self.birnn.load(d)
-        for axis in self.axes:
-            self.init_model(axis)
         print("Loading model from '%s'... " % self.filename, end="", flush=True)
         started = time.time()
         try:
-            param_values = dy.load(self.filename, self.model)
+            param_values = dy.load(self.filename, self.model)  # All shared + specific parameter values concatenated
             print("Done (%.3fs)." % (time.time() - started))
-            self.params = OrderedDict(zip(param_keys, param_values))
+            self.params = self.birnn.params = self.birnn.global_params = OrderedDict(zip(param_keys, param_values))
+            del param_values[:len(param_keys)]
+            self.axes = OrderedDict()
+            for axis, axis_param_keys in zip(axes, axes_param_keys):
+                self.axes[axis] = axis_model = AxisModel(axis, self.model,
+                                                         params=OrderedDict(zip(axis_param_keys, param_values)))
+                del param_values[:len(axis_param_keys)]
+                if self.model_type != MLP_NN:
+                    axis_model.birnn.load(d[axis])
         except KeyError as e:
             print("Failed loading model: %s" % e)

@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import dynet as dy
 import numpy as np
 
@@ -7,9 +9,11 @@ from .constants import ACTIVATIONS, INITIALIZERS, RNNS, CategoricalParameter
 
 
 class BiRNN(object):
-    def __init__(self, args, params):
+    def __init__(self, args, model, params, shared=False):
         self.args = args
-        self.params = params
+        self.model = model
+        self.params = params if shared else OrderedDict()  # string (param identifier) -> parameter
+        self.global_params = params  # from parent network: string (param identifier) -> parameter
         self.dropout = self.args.dropout
         self.lstm_layers = self.args.lstm_layers
         self.lstm_layer_dim = self.args.lstm_layer_dim
@@ -19,19 +23,19 @@ class BiRNN(object):
         self.activation = CategoricalParameter(ACTIVATIONS, self.args.activation)
         self.init = CategoricalParameter(INITIALIZERS, self.args.init)
         self.rnn_builder = CategoricalParameter(RNNS, self.args.rnn)
-        self.model = self.input_reps = self.empty_rep = None
+        self.input_reps = self.empty_rep = None
 
     @property
     def empty(self):
         return not (self.lstm_layer_dim and self.lstm_layers)
 
-    def init_indexed_input_params(self, indexed_dim, indexed_num):
+    def init_params(self, indexed_dim, indexed_num):
         """
         Initialize BiRNN builder
         :return: total output dimension of BiRNN
         """
         if self.empty:
-            return indexed_dim * indexed_num
+            return 0
         self.params.update(mlp.init(self.model, self.embedding_layers, indexed_dim, self.embedding_layer_dim,
                                     self.lstm_layer_dim, self.init(), suffix1="e", offset=1))
         self.params["bilstm"] = dy.BiRNNBuilder(self.lstm_layers,
@@ -40,9 +44,9 @@ class BiRNN(object):
         return indexed_num * self.lstm_layer_dim
 
     def init_features(self, features, train=False):
-        if self.empty:
+        if self.empty or not self.params:
             return
-        embeddings = [[self.params[s][k] for k in ks] for s, ks in sorted(features.items())]  # time-lists of vectors
+        embeddings = [[self.global_params[s][k] for k in ks] for s, ks in sorted(features.items())]  # lists of vectors
         inputs = [mlp.evaluate(self.params, e, self.embedding_layers, self.dropout, self.activation(), suffix1="e",
                                offset=1, train=train) for e in zip(*embeddings)]  # join each time step to a vector
         bilstm = self.params["bilstm"]
@@ -56,12 +60,10 @@ class BiRNN(object):
     def index_input(self, indices):
         """
         :param indices: indices of inputs
-        :return: BiRNN outputs at given indices
+        :return: list of BiRNN outputs at given indices
         """
-        if self.empty:
-            raise ValueError("Input representations not initialized, cannot evaluate indexed features")
-        return dy.concatenate([self.empty_rep if i == MISSING_VALUE else self.input_reps[min(i, self.max_length - 1)]
-                               for i in indices])
+        return [] if self.empty or not self.params else \
+            [self.empty_rep if i == MISSING_VALUE else self.input_reps[min(i, self.max_length - 1)] for i in indices]
 
     def save(self):
         return {

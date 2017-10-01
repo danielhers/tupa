@@ -150,7 +150,7 @@ class Parser(object):
                                                        ) and (edges or node_labels) or self.args.verify else None
             self.model.init_model()
             if ClassifierProperty.require_init_features in self.model.get_classifier_properties():
-                self.model.init_features(self.state, train)
+                self.model.init_features(self.state, axis=Config().format, train=train)
             failed = False
             try:
                 self.parse_passage(train)  # This is where the actual parsing takes place

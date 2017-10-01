@@ -132,7 +132,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--layer-dim", type=int, default=50, help="dimension for hidden layers")
         group.add_argument("--layers", type=int, default=2, help="number of hidden layers")
         group.add_argument("--lstm-layer-dim", type=int, default=500, help="dimension for LSTM hidden layers")
-        group.add_argument("--lstm-layers", type=int, default=2, help="number of LSTM hidden layers")
+        group.add_argument("--lstm-layers", type=int, default=0, help="number of LSTM hidden layers")
         group.add_argument("--embedding-layer-dim", type=int, default=500, help="dimension for layers before LSTM")
         group.add_argument("--embedding-layers", type=int, default=1, help="number of layers before LSTM")
         group.add_argument("--activation", choices=ACTIVATIONS, default=DEFAULT_ACTIVATION, help="activation function")
@@ -169,7 +169,7 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("-H", "--hyperparams", type=initializer, nargs="*",
                                help="shared hyperparameters or hyperparameters for specific formats, "
                                     'e.g., "shared --lstm-layer-dim=100 --lstm-layers=1" "ucca --word-dim=300"',
-                               default=[initializer("shared")])
+                               default=[initializer("shared --lstm-layers 2")])
         self.dynet_arg_names = get_group_arg_names(group)
         self.args = argparser.parse_args(args if args else None)
 
