@@ -9,17 +9,22 @@ import numpy as np
 from tupa.classifiers.classifier import Classifier
 from tupa.config import Config, MLP_NN
 from tupa.features.feature_params import MISSING_VALUE
-from . import mlp
 from .birnn import BiRNN
 from .constants import ACTIVATIONS, INITIALIZERS, TRAINERS, CategoricalParameter
+from .mlp import MultilayerPerceptron
 
 
 class AxisModel(object):
     """
     Format-specific parameters that are part of the network
     """
-    def __init__(self, axis, *args, **kwargs):
-        self.birnn = BiRNN(Config().hyperparams.specific.setdefault(axis, Config().args), *args, **kwargs)
+    def __init__(self, axis, num_labels, *args, **kwargs):
+        config_args = Config().hyperparams.specific.setdefault(axis, Config().args)
+        self.birnn = BiRNN(config_args, *args, **kwargs)
+        self.mlp = MultilayerPerceptron(config_args, *args, **kwargs, num_labels=num_labels, suffix2=(axis,))
+
+    def init_params(self, input_dim, indexed_dim, indexed_num):
+        self.mlp.init_params(input_dim + self.birnn.init_params(indexed_dim, indexed_num))
 
 
 class NeuralNetwork(Classifier):
@@ -49,10 +54,6 @@ class NeuralNetwork(Classifier):
         self.losses = []
         self.indexed_num = self.indexed_dim = self.trainer = self.value = self.birnn = None
 
-    @property
-    def all_birnns(self):
-        return [m.birnn for m in self.axes.values()] + [self.birnn]
-
     def resize(self, axis=None):
         for axis_, labels in self.labels.items():
             if axis in (axis_, None):  # None means all
@@ -72,14 +73,11 @@ class NeuralNetwork(Classifier):
             self.birnn = BiRNN(Config().hyperparams.shared, self.model, self.params, shared=True)
             if init_params:
                 self.init_input_params()
-                self.input_dim += self.birnn.init_params(self.indexed_dim, self.indexed_num)
         if axis and init_params:
             axis_model = self.axes.get(axis)
             if axis_model is None:
-                axis_model = self.axes[axis] = AxisModel(axis, self.model, self.params)
-                axis_input_dim = self.input_dim + axis_model.birnn.init_params(self.indexed_dim, self.indexed_num)
-                self.params.update(mlp.init(self.model, self.layers, axis_input_dim, self.layer_dim, self.output_dim,
-                                            self.init(), self.labels[axis].size, suffix2=(axis,)))
+                axis_model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model, self.params)
+                axis_model.init_params(self.input_dim, self.indexed_dim, self.indexed_num)
         if init:
             self.init_cg()
             self.finished_step()
@@ -102,6 +100,7 @@ class NeuralNetwork(Classifier):
                     self.indexed_num = max(self.indexed_num, param.num)  # indices to be looked up are collected
                 else:
                     self.input_dim += param.num * param.dim
+        self.input_dim += self.birnn.init_params(self.indexed_dim, self.indexed_num)
 
     def init_cg(self):
         dy.renew_cg()
@@ -144,9 +143,8 @@ class NeuralNetwork(Classifier):
         self.init_model(axis=axis)
         value = self.value.get(axis)
         if value is None:
-            self.value[axis] = value = dy.log_softmax(mlp.evaluate(
-                self.params, self.generate_inputs(features, axis), self.layers + 1, self.dropout, self.activation(),
-                suffix2=(axis,), train=train),
+            self.value[axis] = value = dy.log_softmax(
+                self.axes[axis].mlp.evaluate(self.generate_inputs(features, axis), train=train),
                 restrict=None if "--dynet-gpu" in sys.argv else list(range(self.num_labels[axis])))
         return value
 
@@ -264,11 +262,12 @@ class NeuralNetwork(Classifier):
         try:
             param_values = dy.load(self.filename, self.model)  # All shared + specific parameter values concatenated
             print("Done (%.3fs)." % (time.time() - started))
-            self.params = self.birnn.params = self.birnn.global_params = OrderedDict(zip(param_keys, param_values))
+            self.params.update(zip(param_keys, param_values))
             del param_values[:len(param_keys)]
             self.axes = OrderedDict()
             for axis, axis_param_keys in zip(axes, axes_param_keys):
-                self.axes[axis] = axis_model = AxisModel(axis, self.model,
+                self.axes[axis] = axis_model = AxisModel(axis, self.labels[axis][1], self.model,
+                                                         global_params=self.params,
                                                          params=OrderedDict(zip(axis_param_keys, param_values)))
                 del param_values[:len(axis_param_keys)]
                 if self.model_type != MLP_NN:

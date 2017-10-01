@@ -1,21 +1,46 @@
 import dynet as dy
 
-
-def init(model, layers, input_dim, layer_dim, output_dim, init, num_labels=None, **kwargs):
-    i_dim = [input_dim] + (layers-1) * [layer_dim] + ([output_dim] if num_labels else [])
-    o_dim = (layers-1) * [layer_dim] + [output_dim] + ([num_labels] if num_labels else [])
-    return {key(prefix, i, **kwargs): model.add_parameters(dims[i], init=init)
-            for prefix, dims in (("W", list(zip(o_dim, i_dim))), ("b", o_dim)) for i, dim in enumerate(dims)}
+from .constants import ACTIVATIONS, INITIALIZERS, CategoricalParameter
 
 
-def evaluate(params, inputs, layers, dropout, activation, train=False, **kwargs):
-    x = dy.concatenate(list(inputs))
-    for i in range(layers):
-        if train and dropout:
-            x = dy.dropout(x, dropout)
-        W, b = [dy.parameter(params[key(prefix, i, **kwargs)]) for prefix in ("W", "b")]
-        x = activation(W * x + b)
-    return x
+class MultilayerPerceptron(object):
+    def __init__(self, args, model, global_params, layers=None, layer_dim=None, output_dim=None,
+                 num_labels=None, params=None, **kwargs):
+        del params
+        self.args = args
+        self.model = model
+        self.params = global_params
+        self.layers = self.args.layers if layers is None else layers
+        self.layer_dim = self.args.layer_dim if layer_dim is None else layer_dim
+        self.output_dim = self.args.output_dim if output_dim is None else output_dim
+        self.init = CategoricalParameter(INITIALIZERS, self.args.init)
+        self.dropout = self.args.dropout
+        self.activation = CategoricalParameter(ACTIVATIONS, self.args.activation)
+        self.num_labels = num_labels
+        self.key_args = kwargs
+
+    def init_params(self, input_dim):
+        hidden_dim = (self.layers - 1) * [self.layer_dim]
+        i_dim = [input_dim] + hidden_dim
+        o_dim = hidden_dim + [self.output_dim]
+        if self.num_labels:  # Adding another layer at the top
+            i_dim.append(self.output_dim)
+            o_dim.append(self.num_labels)
+        self.params.update((key(prefix, i, **self.key_args), self.model.add_parameters(dims[i], init=self.init()))
+                           for prefix, dims in (("W", list(zip(o_dim, i_dim))), ("b", o_dim))
+                           for i, dim in enumerate(dims))
+
+    def evaluate(self, inputs, train=False):
+        x = dy.concatenate(list(inputs))
+        for i in range(self.layers):
+            try:
+                if train and self.dropout:
+                    x = dy.dropout(x, self.dropout)
+                W, b = [dy.parameter(self.params[key(prefix, i, **self.key_args)]) for prefix in ("W", "b")]
+                x = self.activation()(W * x + b)
+            except ValueError as e:
+                raise ValueError("Error in evaluating layer %d of %d" % (i + 1, self.layers)) from e
+        return x
 
 
 def key(prefix, i, offset=0, suffix1="", suffix2=()):

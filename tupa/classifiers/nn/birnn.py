@@ -4,16 +4,16 @@ import dynet as dy
 import numpy as np
 
 from tupa.features.feature_params import MISSING_VALUE
-from . import mlp
 from .constants import ACTIVATIONS, INITIALIZERS, RNNS, CategoricalParameter
+from .mlp import MultilayerPerceptron
 
 
 class BiRNN(object):
-    def __init__(self, args, model, params, shared=False):
+    def __init__(self, args, model, global_params, params=None, shared=False):
         self.args = args
         self.model = model
-        self.params = params if shared else OrderedDict()  # string (param identifier) -> parameter
-        self.global_params = params  # from parent network: string (param identifier) -> parameter
+        self.params = global_params if shared else params or OrderedDict()  # string (param identifier) -> parameter
+        self.global_params = global_params  # from parent network: string (param identifier) -> parameter
         self.dropout = self.args.dropout
         self.lstm_layers = self.args.lstm_layers
         self.lstm_layer_dim = self.args.lstm_layer_dim
@@ -24,6 +24,8 @@ class BiRNN(object):
         self.init = CategoricalParameter(INITIALIZERS, self.args.init)
         self.rnn_builder = CategoricalParameter(RNNS, self.args.rnn)
         self.input_reps = self.empty_rep = None
+        self.mlp = MultilayerPerceptron(self.args, self.model, self.params, self.embedding_layers,
+                                        self.embedding_layer_dim, self.lstm_layer_dim, suffix1="e", offset=1)
 
     @property
     def empty(self):
@@ -36,8 +38,7 @@ class BiRNN(object):
         """
         if self.empty:
             return 0
-        self.params.update(mlp.init(self.model, self.embedding_layers, indexed_dim, self.embedding_layer_dim,
-                                    self.lstm_layer_dim, self.init(), suffix1="e", offset=1))
+        self.mlp.init_params(indexed_dim)
         self.params["bilstm"] = dy.BiRNNBuilder(self.lstm_layers,
                                                 self.lstm_layer_dim if self.embedding_layers else indexed_dim,
                                                 self.lstm_layer_dim, self.model, self.rnn_builder())
@@ -47,8 +48,7 @@ class BiRNN(object):
         if self.empty or not self.params:
             return
         embeddings = [[self.global_params[s][k] for k in ks] for s, ks in sorted(features.items())]  # lists of vectors
-        inputs = [mlp.evaluate(self.params, e, self.embedding_layers, self.dropout, self.activation(), suffix1="e",
-                               offset=1, train=train) for e in zip(*embeddings)]  # join each time step to a vector
+        inputs = [self.mlp.evaluate(e, train=train) for e in zip(*embeddings)]  # join each time step to a vector
         bilstm = self.params["bilstm"]
         if train:
             bilstm.set_dropout(self.dropout)
