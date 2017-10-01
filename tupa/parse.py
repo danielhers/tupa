@@ -391,7 +391,8 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
 
 
 def get_output_converter(out_format, default=None):
-    return partial(TO_FORMAT.get(out_format, default), wikification=Config().args.wikification)
+    converter = TO_FORMAT.get(out_format)
+    return partial(converter, wikification=Config().args.wikification) if converter else default
 
 
 def percents_str(part, total, infix=""):
