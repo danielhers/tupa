@@ -58,7 +58,7 @@ class CategoricalParameter(object):
     @string.setter
     def string(self, s):
         self._string = s
-        self._value = self.values[s]
+        self._value = self.values.get(s)
 
     def __str__(self):
         return self._string
