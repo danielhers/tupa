@@ -249,7 +249,7 @@ def resolve_label(node, label=None, reverse=False, conservative=False):
                                                         not reverse and WIKIFICATION_PLACEHOLDER in label):
                             try:
                                 label = _replace(WIKIFICATION_PLACEHOLDER, WIKIFIER.wikify_terminal(terminal))
-                            except ValueError:
+                            except (ValueError, IOError):
                                 pass
         if reverse:
             KNOWN_LABELS.add(label)
