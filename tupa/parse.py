@@ -10,7 +10,7 @@ from tqdm import tqdm
 from ucca import diffutil, ioutil, textutil, layer1, evaluation
 from ucca.convert import from_text, to_text
 
-from scheme.convert import FROM_FORMAT, TO_FORMAT, CONVERTERS
+from scheme.convert import FROM_FORMAT, TO_FORMAT
 from scheme.evaluate import EVALUATORS, Scores
 from scheme.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
 from tupa.config import Config
@@ -328,9 +328,9 @@ class Parser(object):
         self.state_hash_history.add(h)
 
     def evaluate_passage(self, guessed, ref):
-        converters = CONVERTERS.get(ref.extra.get("format"))  # returns (input converter, output converter) tuple
-        score = EVALUATORS.get(ref.extra.get("format"), evaluation).evaluate(
-            guessed, ref, converter=converters and converters[1],  # converter output is list of lines
+        ref_format = ref.extra.get("format")
+        score = EVALUATORS.get(ref_format, evaluation).evaluate(
+            guessed, ref, converter=get_output_converter(ref_format),
             verbose=guessed and self.args.verbose > 3, constructions=self.args.constructions)
         if self.args.verbose:
             print("F1=%.3f" % score.average_f1(), flush=True)
@@ -379,8 +379,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 for out_format in args.formats or ("ucca",) if passage_format in (None, "text") else (passage_format,):
                     ioutil.write_passage(guessed_passage, output_format=out_format, binary=out_format == "pickle",
                                          outdir=args.outdir, prefix=args.prefix,
-                                         converter=partial(TO_FORMAT.get(out_format, to_text),
-                                                           wikification=Config().args.wikification))
+                                         converter=get_output_converter(out_format, default=to_text))
         if passage_scores:
             scores = Scores(passage_scores)
             if args.verbose <= 1 or len(passage_scores) > 1:
@@ -389,6 +388,10 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 scores.print()
             print_scores(scores, args.testscores)
             yield scores
+
+
+def get_output_converter(out_format, default=None):
+    return partial(TO_FORMAT.get(out_format, default), wikification=Config().args.wikification)
 
 
 def percents_str(part, total, infix=""):
