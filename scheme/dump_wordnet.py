@@ -22,8 +22,8 @@ def related_forms(w):  # list of all derivationally related forms and their part
     related = {None: w}
     while len(related) > num_related:
         num_related = len(related)
-        related.update({v.synset().pos().upper(): v.name() for x in related.values()
-                        for l in wn.lemmas(x) for v in l.derivationally_related_forms()})
+        related.update((v.synset().pos().upper(), v.name()) for x in related.values()
+                       for l in wn.lemmas(x) for v in l.derivationally_related_forms())
     return [(k, v) for k, v in related.items() if k]
 
 
