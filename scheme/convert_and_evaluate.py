@@ -7,7 +7,7 @@ import sys
 
 from ucca import ioutil
 
-from scheme.cfgutil import add_verbose_argument
+from scheme.cfgutil import add_verbose_argument, add_boolean_option
 from scheme.convert import CONVERTERS
 from scheme.evaluate import EVALUATORS, Scores
 
@@ -19,6 +19,7 @@ def main():
     argparser = argparse.ArgumentParser(description=desc)
     argparser.add_argument("filenames", nargs="+", help="file names to convert and evaluate")
     add_verbose_argument(argparser, help="detailed evaluation output")
+    add_boolean_option(argparser, "wikification", "use Spotlight to wikify any named node")
     argparser.add_argument("-o", "--outdir", help="output directory (if unspecified, files are not written)")
     args = argparser.parse_args()
 
@@ -42,7 +43,7 @@ def main():
                         print("Writing '%s'..." % outfile, file=sys.stderr, flush=True)
                         ioutil.passage2file(passage, outfile)
                     try:
-                        guessed = converters[1](passage)
+                        guessed = converters[1](passage, wikification=args.wikification)
                     except Exception as e:
                         raise ValueError("Error converting %s back from %s" % (filename, passage_format)) from e
                     if args.outdir:
