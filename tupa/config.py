@@ -163,6 +163,7 @@ class Config(object, metaclass=Singleton):
         add_boolean_option(group, "dynet-gpu", "GPU for training")
         group.add_argument("--dynet-gpus", type=int, default=1, help="how many GPUs you want to use")
         group.add_argument("--dynet-gpu-ids", help="the GPUs that you want to use by device ID")
+        group.add_argument("--dynet-devices")
         add_boolean_option(group, "dynet-viz", "visualization of neural network structure")
         add_boolean_option(group, "dynet-autobatch", "auto-batching of training examples")
         initializer = HyperparamsInitializer(parent=argparser)
@@ -238,6 +239,8 @@ class Config(object, metaclass=Singleton):
             sys.argv += ["--dynet-gpus", str(self.args.dynet_gpus)]
         if self.args.dynet_gpu_ids:
             sys.argv += ["--dynet-gpu-ids", str(self.args.dynet_gpu_ids)]
+        if self.args.dynet_devices:
+            sys.argv += ["--dynet-devices", str(self.args.dynet_devices)]
         if self.args.dynet_viz:
             sys.argv += ["--dynet-viz"]
         if self.args.dynet_autobatch:
