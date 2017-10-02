@@ -144,8 +144,7 @@ class NeuralNetwork(Classifier):
         value = self.value.get(axis)
         if value is None:
             self.value[axis] = value = dy.log_softmax(
-                self.axes[axis].mlp.evaluate(self.generate_inputs(features, axis), train=train),
-                restrict=None if "--dynet-gpu" in sys.argv else list(range(self.num_labels[axis])))
+                self.axes[axis].mlp.evaluate(self.generate_inputs(features, axis), train=train))
         return value
 
     def score(self, features, axis):
