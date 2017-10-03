@@ -88,12 +88,12 @@ class Oracle(object):
             s0 = state.stack[-1]
             incoming = self.edges_remaining.intersection(s0.orig_node.incoming)
             outgoing = self.edges_remaining.intersection(s0.orig_node.outgoing)
-            if not incoming and not outgoing and not self.needs_label(s0):
+            if not incoming and not outgoing and not self.need_label(s0):
                 yield Actions.Reduce
                 return
             else:
                 # Check for node label action: if all terminals have already been connected
-                if self.needs_label(s0) and not any(e for e in outgoing if e.tag == layer1.EdgeTags.Terminal):
+                if self.need_label(s0) and not any(e for e in outgoing if e.tag == layer1.EdgeTags.Terminal):
                     self.found = True
                     yield Actions.Label(orig_node=s0.orig_node, oracle=self)
 
@@ -155,7 +155,7 @@ class Oracle(object):
         if node is not None:
             self.nodes_remaining.discard(node.ID)
 
-    def needs_label(self, node):
+    def need_label(self, node):
         return self.args.node_labels and not node.labeled and node.orig_node.attrib.get(LABEL_ATTRIB)
 
     def str(self, sep):

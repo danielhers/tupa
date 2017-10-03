@@ -124,9 +124,9 @@ class Model(object):
     def labels(self):
         return self.classifier.labels[NODE_LABEL_KEY]
 
-    def init_features(self, state, axis, train):
+    def init_features(self, state, axes, train):
         self.init_model()
-        self.classifier.init_features(self.feature_extractor.init_features(state), axis, train)
+        self.classifier.init_features(self.feature_extractor.init_features(state), axes, train)
 
     def finalize(self, finished_epoch):
         self.init_model()

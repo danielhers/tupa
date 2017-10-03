@@ -108,10 +108,12 @@ class NeuralNetwork(Classifier):
             if not param.numeric and param.dim:  # lookup feature
                 self.empty_values[suffix] = dy.inputVector(np.zeros(param.dim, dtype=float))
 
-    def init_features(self, features, axis, train=False):
-        self.init_model(axis)
+    def init_features(self, features, axes, train=False):
+        for axis in axes:
+            self.init_model(axis)
         self.birnn.init_features(features, train)
-        self.axes[axis].birnn.init_features(features, train)
+        for axis in axes:
+            self.axes[axis].birnn.init_features(features, train)
 
     def generate_inputs(self, features, axis):
         indices = []  # list, not set, in order to maintain consistent order

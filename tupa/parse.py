@@ -146,11 +146,14 @@ class Parser(object):
             Config().set_format(passage_format)
             self.state = State(passage)
             self.state_hash_history = set()
-            self.oracle = Oracle(passage) if train or (self.args.verbose > 1 or Config().args.use_gold_node_labels
+            self.oracle = Oracle(passage) if train or (self.args.verbose > 1 or self.args.use_gold_node_labels
                                                        ) and (edges or node_labels) or self.args.verify else None
             self.model.init_model()
             if ClassifierProperty.require_init_features in self.model.get_classifier_properties():
-                self.model.init_features(self.state, axis=Config().format, train=train)
+                axes = [Config().format]
+                if self.args.node_labels and not self.args.use_gold_node_labels:
+                    axes.append(NODE_LABEL_KEY)
+                self.model.init_features(self.state, axes, train)
             failed = False
             try:
                 self.parse_passage(train)  # This is where the actual parsing takes place
@@ -229,7 +232,7 @@ class Parser(object):
                 label, predicted_label = self.choose_label(features, train, true_label)
                 self.state.label_node(label)
                 if self.args.verbose > 2:
-                    if self.oracle and not Config().args.use_gold_node_labels:
+                    if self.oracle and not self.args.use_gold_node_labels:
                         print("  predicted label: %-15s true label: %-15s" % (predicted_label, true_label))
                     else:
                         print("  label: %-15s" % label)
@@ -287,7 +290,7 @@ class Parser(object):
 
     def choose_label(self, features, train, true_label):
         true_id = self.model.labels[true_label] if self.oracle else None  # Needs to happen before score()
-        if Config().args.use_gold_node_labels:
+        if self.args.use_gold_node_labels:
             return true_label, true_label
         scores = self.model.classifier.score(features, axis=NODE_LABEL_KEY)
         if self.args.verbose > 3:
