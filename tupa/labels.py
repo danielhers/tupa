@@ -10,8 +10,8 @@ class Labels(object):
     def all(self, labels):
         raise NotImplementedError()
 
-    def save(self):
-        return self.all, self.size
+    def save(self, skip=False):
+        return (None if skip else self.all), self.size
 
     def load(self, all_size):
         self.all, self.size = all_size

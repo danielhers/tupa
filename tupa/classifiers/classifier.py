@@ -75,7 +75,7 @@ class Classifier(object):
         """
         d = {
             "type": self.model_type,
-            "labels": {a: ([], 0) if a in skip_labels else l.save() for a, l in self.labels.items()},  # (all, size)
+            "labels": {a: l.save(skip=a in skip_labels) for a, l in self.labels.items()},  # (all, size) for each
             "is_frozen": self.is_frozen,
             "learning_rate": self.learning_rate,
             "learning_rate_decay": self.learning_rate_decay,
