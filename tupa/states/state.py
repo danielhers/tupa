@@ -87,7 +87,7 @@ class State(object):
             self.check(node.text is None, message and "Terminals may not have children: %s" % node.text, is_type=True)
             if self.args.constraints:
                 for rule in self.constraints.tag_rules:
-                    violation = rule.violation(node, action.tag, Direction.outgoing)
+                    violation = rule.violation(node, action.tag, Direction.outgoing, message=message)
                     self.check(violation is None, violation)
                 self.check(self.constraints.allow_parent(node, action.tag),
                            message and "%s may not be a '%s' parent (currently %s)" % (
@@ -102,7 +102,7 @@ class State(object):
                            message and "Edge tag must be %s iff child is terminal, but node is %s and edge tag is %s" %
                            (EdgeTags.Terminal, node, action.tag))
                 for rule in self.constraints.tag_rules:
-                    violation = rule.violation(node, action.tag, Direction.incoming)
+                    violation = rule.violation(node, action.tag, Direction.incoming, message=message)
                     self.check(violation is None, violation)
                 self.check(self.constraints.allow_child(node, action.tag),
                            message and "%s may not be a '%s' child (currently %s, %s)" % (
