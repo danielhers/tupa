@@ -141,10 +141,11 @@ class State(object):
             if self.args.swap:  # Without swap, the oracle may be incapable even of single action
                 self.check(self.root.outgoing or all(n is self.root or n.is_linkage or n.text for n in self.nodes),
                            message and "Root has no child at parse end", is_type=True)
-                if self.args.require_connected:
-                    for n in self.nodes:
-                        self.check(n is self.root or n.is_linkage or n.text or n.incoming,
-                                   message and "Non-terminal %s has no parent at parse end" % n, is_type=True)
+            for n in self.nodes:
+                self.check(not self.args.require_connected or n is self.root or n.is_linkage or n.text or
+                           n.incoming, message and "Non-terminal %s has no parent at parse end" % n, is_type=True)
+                self.check(not self.args.node_labels or n.text or n.labeled,
+                           message and "Non-terminal %s has no label at parse end" % n, is_type=True)
         else:
             self.check(self.action_ratio() < self.args.max_action_ratio,
                        message and "Actions/terminals ratio: %.3f" % self.args.max_action_ratio, is_type=True)
@@ -164,10 +165,15 @@ class State(object):
                     self.check(not s0.labeled, message and "Labeling already-labeled node: %s" % s0, is_type=True)
                     self.check(s0.text is None, message and "Terminals do not have labels: %s" % s0, is_type=True)
                 elif action.is_type(Actions.Reduce):
-                    self.check(s0 is not self.root or s0.outgoing, message and "Reducing childless root", is_type=True)
-                    if self.args.require_connected:
-                        self.check(s0 is self.root or s0.is_linkage or s0.text or s0.incoming,
+                    if s0 is self.root:
+                        self.check(s0.outgoing, message and "Reducing childless root", is_type=True)
+                        self.check(self.root.labeled or not self.args.node_labels,
+                                   message and "Reducing root without label", is_type=True)
+                    else:
+                        self.check(not self.args.require_connected or s0.is_linkage or s0.text or s0.incoming,
                                    message and "Reducing parentless non-terminal %s" % s0, is_type=True)
+                    self.check(not self.args.node_labels or s0.text or s0.labeled,
+                               message and "Reducing non-terminal %s without label" % s0, is_type=True)
                 else:  # Binary actions
                     self.check(len(self.stack) > 1, message and "%s with len(stack) < 2" % action, is_type=True)
                     if action.is_type(Actions.LeftEdge, Actions.RightEdge, Actions.LeftRemote, Actions.RightRemote):
