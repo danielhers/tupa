@@ -63,6 +63,8 @@ def main():
     if not os.path.exists(MODELS_DIR):
         os.makedirs(MODELS_DIR)
     Config().args.write = False
+    if not Config().args.verbose:
+        Config().args.verbose = 1
     out_file = os.environ.get("PARAMS_FILE", "params.csv")
     word_vectors_files = [os.environ[f] for f in os.environ if f.startswith("WORD_VECTORS")]
     size = int(os.environ.get("PARAMS_NUM", 30))
