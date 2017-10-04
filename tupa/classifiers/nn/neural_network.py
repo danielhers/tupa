@@ -261,18 +261,15 @@ class NeuralNetwork(Classifier):
             self.birnn.load(d)
         print("Loading model from '%s'... " % self.filename, end="", flush=True)
         started = time.time()
-        try:
-            param_values = dy.load(self.filename, self.model)  # All shared + specific parameter values concatenated
-            print("Done (%.3fs)." % (time.time() - started))
-            self.params.update(zip(param_keys, param_values))
-            del param_values[:len(param_keys)]
-            self.axes = OrderedDict()
-            for axis, axis_param_keys in zip(axes, axes_param_keys):
-                self.axes[axis] = axis_model = AxisModel(axis, self.labels[axis][1], self.model,
-                                                         global_params=self.params,
-                                                         params=OrderedDict(zip(axis_param_keys, param_values)))
-                del param_values[:len(axis_param_keys)]
-                if self.model_type != MLP_NN:
-                    axis_model.birnn.load(d[axis])
-        except KeyError as e:
-            print("Failed loading model: %s" % e)
+        param_values = dy.load(self.filename, self.model)  # All shared + specific parameter values concatenated
+        print("Done (%.3fs)." % (time.time() - started))
+        self.params.update(zip(param_keys, param_values))
+        del param_values[:len(param_keys)]
+        self.axes = OrderedDict()
+        for axis, axis_param_keys in zip(axes, axes_param_keys):
+            self.axes[axis] = axis_model = AxisModel(axis, self.labels[axis][1], self.model,
+                                                     global_params=self.params,
+                                                     params=OrderedDict(zip(axis_param_keys, param_values)))
+            del param_values[:len(axis_param_keys)]
+            if self.model_type != MLP_NN:
+                axis_model.birnn.load(d.get(axis, d))
