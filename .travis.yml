@@ -34,6 +34,7 @@ env:
   - TEST_SUITE=toy-amr
   - TEST_SUITE=sparse-amr
   - TEST_SUITE=noop-amr
+  - TEST_SUITE=tune-amr
   - TEST_SUITE=convert-amr
   - TEST_SUITE=toy-sdp
   - TEST_SUITE=sparse-sdp
