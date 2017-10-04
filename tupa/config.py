@@ -190,11 +190,11 @@ class Config(object, metaclass=Singleton):
         self.set_external()
         self.random = np.random
 
-    def create_original_values(self):
-        return {attr: getattr(self.args, attr) for attr in ("node_labels", "implicit", "node_label_dim",
-                                                            "node_category_dim", "max_node_labels",
-                                                            "max_node_categories", "max_action_labels",
-                                                            "max_edge_labels")}
+    def create_original_values(self, args=None):
+        return {attr: getattr(self.args, attr) if args is None else args[attr]
+                for attr in ("node_labels", "implicit", "node_label_dim", "node_category_dim", "max_node_labels",
+                             "max_node_categories", "max_action_labels", "max_edge_labels")
+                if args is None or attr in args}
 
     def create_hyperparams(self):
         return Hyperparams(**{h.name: h.parsed_args for h in self.args.hyperparams or ()})
@@ -249,7 +249,7 @@ class Config(object, metaclass=Singleton):
     def update(self, params):
         for name, value in params.items():
             setattr(self.args, name, value)
-        self.original_values = self.create_original_values()
+        self.original_values.update(self.create_original_values(params))
         self.hyperparams = self.create_hyperparams()
         self.set_format()
         self.set_external()
