@@ -28,7 +28,7 @@ class MultilayerPerceptron(object):
             i_dim.append(self.output_dim)
             o_dim.append(self.num_labels)
             self.total_layers += 1
-        self.params.update((key(prefix, i, **self.key_args), self.model.add_parameters(dims[i], init=self.init()))
+        self.params.update((key(prefix, i, **self.key_args), self.model.add_parameters(dims[i], init=self.init()()))
                            for prefix, dims in (("W", list(zip(o_dim, i_dim))), ("b", o_dim))
                            for i, dim in enumerate(dims))
 

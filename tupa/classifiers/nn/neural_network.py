@@ -10,7 +10,8 @@ from tupa.classifiers.classifier import Classifier
 from tupa.config import Config, MLP_NN
 from tupa.features.feature_params import MISSING_VALUE
 from .birnn import BiRNN
-from .constants import ACTIVATIONS, INITIALIZERS, TRAINERS, CategoricalParameter
+from .constants import ACTIVATIONS, INITIALIZERS, TRAINERS, TRAINER_LEARNING_RATE_PARAM_NAMES, TRAINER_KWARGS, \
+    CategoricalParameter
 from .mlp import MultilayerPerceptron
 
 
@@ -65,11 +66,11 @@ class NeuralNetwork(Classifier):
         init = self.model is None
         if init:
             self.model = dy.ParameterCollection()
-            trainer_kwargs = {}
-            trainer_type, learning_rate_param_name = self.trainer_type()
+            trainer_kwargs = dict(TRAINER_KWARGS.get(str(self.trainer_type), {}))
+            learning_rate_param_name = TRAINER_LEARNING_RATE_PARAM_NAMES.get(str(self.trainer_type))
             if learning_rate_param_name and self.learning_rate:
                 trainer_kwargs[learning_rate_param_name] = self.learning_rate
-            self.trainer = trainer_type(self.model, **trainer_kwargs)
+            self.trainer = self.trainer_type()(self.model, **trainer_kwargs)
             self.birnn = BiRNN(Config().hyperparams.shared, self.model, self.params, shared=True)
             if init_params:
                 self.init_input_params()

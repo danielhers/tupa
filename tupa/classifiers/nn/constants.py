@@ -1,43 +1,39 @@
-from functools import partial
-
-import dynet as dy
-
 TRAINERS = {
-    "sgd": (dy.SimpleSGDTrainer, "learning_rate"),
-    "cyclic": (dy.CyclicalSGDTrainer, "learning_rate_max"),
-    "momentum": (dy.MomentumSGDTrainer, "learning_rate"),
-    "adagrad": (dy.AdagradTrainer, "learning_rate"),
-    "adadelta": (dy.AdadeltaTrainer, None),
-    "rmsprop": (dy.RMSPropTrainer, "learning_rate"),
-    "adam": (partial(dy.AdamTrainer, beta_2=0.9), "alpha"),
+    "sgd": "SimpleSGDTrainer",
+    "cyclic": "CyclicalSGDTrainer",
+    "momentum": "MomentumSGDTrainer",
+    "adagrad": "AdagradTrainer",
+    "adadelta": "AdadeltaTrainer",
+    "rmsprop": "RMSPropTrainer",
+    "adam": "AdamTrainer",
 }
 DEFAULT_TRAINER = "adam"
+TRAINER_LEARNING_RATE_PARAM_NAMES = {k: "learning_rate" for k in ("sgd", "momentum", "adagrad", "rmsprop")}
+TRAINER_LEARNING_RATE_PARAM_NAMES.update(cyclic="learning_rate_max", adam="alpha")
+TRAINER_KWARGS = {"adam": dict(beta_2=0.9)}
 
 INITIALIZERS = {
-    "glorot_uniform": dy.GlorotInitializer(),
-    "normal": dy.NormalInitializer(),
-    # "uniform": dy.UniformInitializer(1),
-    # "const": dy.ConstInitializer(0),
+    "glorot_uniform": "GlorotInitializer",
+    "normal": "NormalInitializer",
 }
 DEFAULT_INITIALIZER = "glorot_uniform"
 
 ACTIVATIONS = {
-    # "square": dy.square,
-    "cube": dy.cube,
-    "tanh": dy.tanh,
-    "sigmoid": dy.logistic,
-    "relu": dy.rectify,
+    "cube": "cube",
+    "tanh": "tanh",
+    "sigmoid": "logistic",
+    "relu": "rectify",
 }
 DEFAULT_ACTIVATION = "relu"
 
 RNNS = {
-    # "simple": dy.SimpleRNNBuilder,
-    "gru": dy.GRUBuilder,
-    "lstm": dy.LSTMBuilder,
-    "vanilla_lstm": dy.VanillaLSTMBuilder,
-    "compact_vanilla_lstm": dy.CompactVanillaLSTMBuilder,
-    "coupled_lstm": dy.CoupledLSTMBuilder,
-    "fast_lstm": dy.FastLSTMBuilder,
+    # "simple": "SimpleRNNBuilder",
+    "gru": "GRUBuilder",
+    "lstm": "LSTMBuilder",
+    "vanilla_lstm": "VanillaLSTMBuilder",
+    "compact_vanilla_lstm": "CompactVanillaLSTMBuilder",
+    "coupled_lstm": "CoupledLSTMBuilder",
+    "fast_lstm": "FastLSTMBuilder",
 }
 DEFAULT_RNN = "lstm"
 
@@ -49,7 +45,8 @@ class CategoricalParameter(object):
         self.string = string
 
     def __call__(self):
-        return self._value
+        import dynet as dy
+        return getattr(dy, self._value)
 
     @property
     def string(self):
