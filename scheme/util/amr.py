@@ -315,18 +315,21 @@ class keydefaultdict(defaultdict):
 
 
 class Wikifier:
-    def __init__(self):
+    def __init__(self, enabled=True):
         self.address = os.environ.get("SPOTLIGHT_ADDRESS", "http://model.dbpedia-spotlight.org/en/annotate")
         self.confidence = float(os.environ.get("SPOTLIGHT_CONFIDENCE", 0.3))
         self.text = None
         self.spots = ()
         self.passage_texts = keydefaultdict(lambda passage: to_text(passage, sentences=False)[0])
+        self.enabled = enabled
 
     def wikify_terminal(self, terminal):
         text = self.passage_texts[terminal.root]
         return self.wikify_text(text, text.find(terminal.text))
 
     def wikify_text(self, text, offset):
+        if not self.enabled:
+            raise ValueError("Wikifier is disabled")
         error = ValueError("Failed to wikify '%s' offset %d" % (text, offset))
         if self.text != text:
             self.text = text

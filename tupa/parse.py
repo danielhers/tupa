@@ -12,7 +12,7 @@ from ucca.convert import from_text, to_text
 
 from scheme.convert import FROM_FORMAT, TO_FORMAT
 from scheme.evaluate import EVALUATORS, Scores
-from scheme.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
+from scheme.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR, WIKIFIER
 from tupa.config import Config
 from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
 from tupa.oracle import Oracle
@@ -144,6 +144,7 @@ class Parser(object):
             self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = 0
             textutil.annotate(passage, verbose=self.args.verbose > 2)  # tag POS and parse dependencies
             Config().set_format(passage_format)
+            WIKIFIER.enabled = self.args.wikification
             self.state = State(passage)
             self.state_hash_history = set()
             self.oracle = Oracle(passage) if train or (self.args.verbose > 1 or self.args.use_gold_node_labels
@@ -382,7 +383,8 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
                 passage_scores.append(score)
             else:
                 guessed_passage = result
-                print()
+                if args.verbose:
+                    print()
             if guessed_passage is not None and args.write:
                 passage_format = guessed_passage.extra.get("format")
                 for out_format in args.formats or ("ucca",) if passage_format in (None, "text") else (passage_format,):
