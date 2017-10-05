@@ -60,10 +60,10 @@ tune-*)
     column -t -s, params.csv
     ;;
 sparse-amr)
-    python tupa/parse.py -v -c sparse --max-node-labels=250 -We alignment-release-dev-bio.amr -t "alignment-release-training-bio/*10.amr" --no-wikification
+    python tupa/parse.py -v -c sparse --max-node-labels=250 -We alignment-release-dev-bio.amr -t "alignment-release-training-bio/*10.amr"
     ;;
 noop-amr)
-    python tupa/parse.py -v -c noop -We alignment-release-dev-bio.amr -t alignment-release-training-bio --no-wikification
+    python tupa/parse.py -v -c noop -We -t alignment-release-training-bio alignment-release-dev-bio.amr
     ;;
 sparse-sdp|mlp-sdp|bilstm-sdp|noop-sdp)
     python tupa/parse.py -v -c "$ACTION" -We data/sdp/trial/dm/dev -t data/sdp/trial/dm/train
