@@ -50,7 +50,7 @@ toy-*)
     done
     ;;
 sparse-ucca|mlp-ucca|bilstm-ucca|noop-ucca)
-    python tupa/parse.py -v -c "$ACTION" --max-words-external=5000 --layer-dim=100 -We pickle/dev/*0.pickle -t pickle/train/*0.pickle
+    python tupa/parse.py -v -c "$ACTION" --max-words-external=5000 --layer-dim=100 -We "pickle/dev/*0.pickle" -t "pickle/train/*0.pickle"
     ;;
 tune-*)
     export PARAMS_NUM=3
@@ -60,7 +60,7 @@ tune-*)
     column -t -s, params.csv
     ;;
 sparse-amr)
-    python tupa/parse.py -v -c sparse --max-node-labels=250 -We alignment-release-dev-bio.amr -t alignment-release-training-bio/*10.amr --no-wikification
+    python tupa/parse.py -v -c sparse --max-node-labels=250 -We alignment-release-dev-bio.amr -t "alignment-release-training-bio/*10.amr" --no-wikification
     ;;
 noop-amr)
     python tupa/parse.py -v -c noop -We alignment-release-dev-bio.amr -t alignment-release-training-bio --no-wikification
