@@ -258,7 +258,7 @@ class Parser(object):
         if self.args.verbose > 3:
             print("  action scores: " + ",".join(("%s: %g" % x for x in zip(self.model.actions.all, scores))))
         try:
-            predicted_action = self.predict(scores, self.model.actions.all, self.state.is_valid_action)
+            predicted_action = self.predict(scores, self.model.actions.all, self.state.is_valid_action, unit="action")
         except StopIteration as e:
             raise ParserException("No valid action available\n%s" % (self.oracle.log if self.oracle else "")) from e
         action = true_actions.get(predicted_action.id)
@@ -295,7 +295,7 @@ class Parser(object):
         scores = self.model.classifier.score(features, axis=NODE_LABEL_KEY)
         if self.args.verbose > 3:
             print("  label scores: " + ",".join(("%s: %g" % x for x in zip(self.model.labels.all, scores))))
-        label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label)
+        label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label, unit="label")
         if self.oracle:
             is_correct = (label == true_label)
             if is_correct:
@@ -307,14 +307,18 @@ class Parser(object):
         self.label_count += 1
         return label, predicted_label
 
-    def predict(self, scores, values, is_valid=None):
+    def predict(self, scores, values, is_valid=None, unit=None):
         """
         Choose action/label based on classifier
         Usually the best action/label is valid, so max is enough to choose it in O(n) time
         Otherwise, sorts all the other scores to choose the best valid one in O(n lg n)
         :return: valid action/label with maximum probability according to classifier
         """
-        return next(filter(is_valid, (values[i] for i in self.generate_descending(scores))))
+        indices = (values[i] for i in self.generate_descending(scores))
+        if unit and self.args.verbose > 2:
+            print("Finding valid %s..." % unit)
+            indices = tqdm(indices, total=len(scores), unit=" " + unit + "s")
+        return next(filter(is_valid, indices))
 
     @staticmethod
     def generate_descending(scores):

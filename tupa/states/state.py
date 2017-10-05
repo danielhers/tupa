@@ -317,6 +317,8 @@ class State(object):
         :param verify: fail if this results in an improper passage
         :return: core.Passage created from self.nodes
         """
+        if self.args.verbose > 2:
+            print("Creating passage %s from state..." % self.passage.ID)
         passage = core.Passage(self.passage.ID)
         passage_format = self.passage.extra.get("format")
         if passage_format:
