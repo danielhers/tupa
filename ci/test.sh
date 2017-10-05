@@ -55,7 +55,7 @@ sparse-ucca|mlp-ucca|bilstm-ucca|noop-ucca)
 tune-*)
     export PARAMS_NUM=3
     while :; do
-      python tupa/tune.py -t "$TOY_DATA" -d "$TOY_DATA" && break
+      python tupa/tune.py -f "$FORMAT" -t "$TOY_DATA" -d "$TOY_DATA" && break
     done
     column -t -s, params.csv
     ;;
