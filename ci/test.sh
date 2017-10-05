@@ -38,7 +38,7 @@ conllu)
 esac
 
 case "$TEST_SUITE" in
-unit)
+unit*)
     # unit tests
     python -m unittest discover -v || exit 1
     ;;
