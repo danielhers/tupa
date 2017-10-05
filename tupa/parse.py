@@ -332,6 +332,8 @@ class Parser(object):
 
     def evaluate_passage(self, guessed, ref):
         ref_format = ref.extra.get("format")
+        if self.args.verbose > 2:
+            print("Converting to %s and evaluating..." % ref_format, flush=True)
         score = EVALUATORS.get(ref_format, evaluation).evaluate(
             guessed, ref, converter=get_output_converter(ref_format),
             verbose=guessed and self.args.verbose > 3, constructions=self.args.constructions)
@@ -395,7 +397,8 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
 
 def get_output_converter(out_format, default=None):
     converter = TO_FORMAT.get(out_format)
-    return partial(converter, wikification=Config().args.wikification) if converter else default
+    return partial(converter, wikification=Config().args.wikification,
+                   verbose=Config().args.verbose > 2) if converter else default
 
 
 def percents_str(part, total, infix=""):

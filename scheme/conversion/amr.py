@@ -220,12 +220,18 @@ class AmrConverter(convert.FormatConverter):
                     label = CONST + "(" + MINUS + ")"
             node.attrib[LABEL_ATTRIB] = label
 
-    def to_format(self, passage, metadata=True, wikification=True):
+    def to_format(self, passage, metadata=True, wikification=True, verbose=False):
+        if verbose:
+            print("Annotating passage..")
         textutil.annotate(passage)
         lines = ["# ::id " + passage.ID,
                  "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all)] if metadata else []
         if wikification:
+            if verbose:
+                print("Wikifying passage...")
             WIKIFIER.wikify_passage(passage)
+        if verbose:
+            print("Expanding names...")
         self._expand_names(passage.layer(layer1.LAYER_ID))
         return lines + (penman.encode(penman.Graph(list(self._to_triples(passage)))).split("\n") or ["(y / yes)"])
 
@@ -304,14 +310,15 @@ def from_amr(lines, passage_id=None, return_original=False, *args, **kwargs):
     return AmrConverter().from_format(lines, passage_id, return_original=return_original)
 
 
-def to_amr(passage, metadata=True, wikification=True, *args, **kwargs):
+def to_amr(passage, metadata=True, wikification=True, verbose=False, *args, **kwargs):
     """ Convert from a Passage object to a string in AMR PENMAN format (export)
 
     :param passage: the Passage object to convert
     :param metadata: whether to print ::id and ::tok lines
     :param wikification: whether to wikify named concepts, adding a :wiki triple
+    :param verbose: whether to print extra information
 
     :return list of lines representing an AMR in PENMAN format, constructed from the passage
     """
     del args, kwargs
-    return AmrConverter().to_format(passage, metadata, wikification)
+    return AmrConverter().to_format(passage, metadata, wikification, verbose)
