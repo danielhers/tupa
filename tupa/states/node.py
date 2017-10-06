@@ -28,7 +28,7 @@ class Node(object):
             if not self.category:
                 self.category = None
         # Whether a label has been set yet (necessary because None is a valid label too):
-        self.labeled = self.orig_node is not None and self.orig_node.attrib.get(LABEL_ATTRIB) is not None
+        self.labeled = self.orig_node is not None and self.orig_node.attrib.get(LABEL_ATTRIB) is None
         self.node_index = int(self.node_id.split(core.Node.ID_SEPARATOR)[1]) if orig_node else None
         self.outgoing = []  # Edge list
         self.incoming = []  # Edge list
