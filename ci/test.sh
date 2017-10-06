@@ -60,7 +60,7 @@ tune-*)
     column -t -s, params.csv
     ;;
 sparse-amr)
-    python tupa/parse.py -v -c sparse --max-node-labels=250 -We alignment-release-dev-bio.amr -t "alignment-release-training-bio/*10.amr"
+    python tupa/parse.py -v -c sparse --max-node-labels=250 -We "$TOY_DATA" -t "alignment-release-training-bio/*10.amr"
     ;;
 noop-amr)
     python tupa/parse.py -v -c noop -We -t alignment-release-training-bio alignment-release-dev-bio.amr
