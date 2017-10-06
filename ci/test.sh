@@ -50,7 +50,7 @@ toy-*)
     done
     ;;
 sparse-ucca|mlp-ucca|bilstm-ucca|noop-ucca)
-    python tupa/parse.py -v -c "$ACTION" --max-words-external=5000 --layer-dim=100 -We "pickle/dev/*0.pickle" -t "pickle/train/*0.pickle"
+    python tupa/parse.py -vv -c "$ACTION" --max-words-external=5000 --layer-dim=100 -We "pickle/dev/*0.pickle" -t "pickle/train/*0.pickle"
     ;;
 tune-*)
     export PARAMS_NUM=3
@@ -60,13 +60,13 @@ tune-*)
     column -t -s, params.csv
     ;;
 sparse-amr)
-    python tupa/parse.py -v -c sparse --max-node-labels=250 -We "$TOY_DATA" -t "alignment-release-training-bio/*10.amr"
+    python tupa/parse.py -vv -c sparse --max-node-labels=250 -We "$TOY_DATA" -t "alignment-release-training-bio/*10.amr"
     ;;
 noop-amr)
-    python tupa/parse.py -v -c noop -We -t alignment-release-training-bio alignment-release-dev-bio.amr
+    python tupa/parse.py -vv -c noop -We -t alignment-release-training-bio alignment-release-dev-bio.amr
     ;;
 sparse-sdp|mlp-sdp|bilstm-sdp|noop-sdp)
-    python tupa/parse.py -v -c "$ACTION" -We data/sdp/trial/dm/dev -t data/sdp/trial/dm/train
+    python tupa/parse.py -vv -c "$ACTION" -We data/sdp/trial/dm/dev -t data/sdp/trial/dm/train
     ;;
 convert-*)
     python scheme/convert_and_evaluate.py "$CONVERT_DATA" -v
