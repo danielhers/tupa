@@ -224,9 +224,9 @@ class Parser(object):
                 raise ParserException("Invalid transition: %s %s" % (action, self.state)) from e
             true_label = label = predicted_label = None
             if self.state.need_label:  # Label action that requires a choice of label
-                true_label = self.get_true_label(action.orig_node)
+                true_label, raw_true_label = self.get_true_label(action.orig_node)
                 label, predicted_label = self.choose_label(features, train, true_label)
-                self.state.label_node(label)
+                self.state.label_node(raw_true_label if label == true_label else label)
             self.model.classifier.finished_step(train)
             if self.args.verbose > 2:
                 if self.oracle:
@@ -279,15 +279,15 @@ class Parser(object):
         return action, predicted_action
 
     def get_true_label(self, node):
-        true_label = None
+        true_label = raw_true_label = None
         if self.oracle:
             if node is not None:
-                true_label = node.attrib.get(LABEL_ATTRIB)
-            if true_label is not None:
-                true_label, _, _ = true_label.partition(LABEL_SEPARATOR)
+                raw_true_label = node.attrib.get(LABEL_ATTRIB)
+            if raw_true_label is not None:
+                true_label, _, _ = raw_true_label.partition(LABEL_SEPARATOR)
                 if not self.state.is_valid_label(true_label):
                     raise ParserException("True label is invalid: %s %s" % (true_label, self.state))
-        return true_label
+        return true_label, raw_true_label
 
     def choose_label(self, features, train, true_label):
         true_id = self.model.labels[true_label] if self.oracle else None  # Needs to happen before score()
