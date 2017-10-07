@@ -214,8 +214,8 @@ class State(object):
 
     def check_valid_label(self, label, message=False):
         if self.args.constraints and label is not None:
-            self.check(self.constraints.allow_label(self.stack[-1], label),
-                       message and "May not label %s as %s" % (self.stack[-1], label))
+            self.check(self.constraints.allow_label(self.stack[self.need_label], label),
+                       message and "May not label %s as %s" % (self.stack[self.need_label], label))
 
     @staticmethod
     def check(condition, *args, **kwargs):
