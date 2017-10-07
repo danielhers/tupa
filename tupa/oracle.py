@@ -93,9 +93,9 @@ class Oracle(object):
                 return
             else:
                 # Check for node label action: if all terminals have already been connected
-                if self.need_label(s0) and not any(e for e in outgoing if e.tag == layer1.EdgeTags.Terminal):
+                if self.need_label(s0) and not any(e.tag == layer1.EdgeTags.Terminal for e in outgoing):
                     self.found = True
-                    yield Actions.Label(orig_node=s0.orig_node, oracle=self)
+                    yield Actions.Label(0, orig_node=s0.orig_node, oracle=self)
 
                 # Check for actions to create new nodes
                 for edge in incoming:
@@ -112,6 +112,12 @@ class Oracle(object):
 
                 if len(state.stack) > 1:
                     s1 = state.stack[-2]
+                    # Check for node label action: if all terminals have already been connected
+                    if self.need_label(s1) and not any(e.tag == layer1.EdgeTags.Terminal for e in
+                                                       self.edges_remaining.intersection(s1.orig_node.outgoing)):
+                        self.found = True
+                        yield Actions.Label(1, orig_node=s1.orig_node, oracle=self)
+
                     # Check for actions to create binary edges
                     for edge in incoming:
                         if edge.parent.ID == s1.node_id:

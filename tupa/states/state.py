@@ -162,8 +162,14 @@ class State(object):
                     _check_possible_node()
                 elif action.is_type(Actions.Label):
                     self.check(self.args.node_labels, message and "Node labels disabled", is_type=True)
-                    self.check(not s0.labeled, message and "Labeling already-labeled node: %s" % s0, is_type=True)
-                    self.check(s0.text is None, message and "Terminals do not have labels: %s" % s0, is_type=True)
+                    try:
+                        node = self.stack[-1 - (action.tag or 0)]
+                    except IndexError:
+                        node = None
+                    self.check(node is not None, message and "Labeling invalid node %s when stack size is %d" % (
+                        action.tag, len(self.stack)))
+                    self.check(not node.labeled, message and "Labeling already-labeled node: %s" % node, is_type=True)
+                    self.check(node.text is None, message and "Terminals do not have labels: %s" % node, is_type=True)
                 elif action.is_type(Actions.Reduce):
                     if s0 is self.root:
                         self.check(s0.outgoing, message and "Reducing childless root", is_type=True)
@@ -235,7 +241,7 @@ class State(object):
             self.add_edge(Edge(self.stack[-1], action.node, action.tag))
             self.buffer.appendleft(action.node)
         elif action.is_type(Actions.Label):
-            self.need_label = True  # The parser is responsible to choose a label and set it
+            self.need_label = -1 - (action.tag or 0)  # The parser is responsible to choose a label and set it
         elif action.is_type(Actions.Reduce):  # Pop stack (no more edges to create with this node)
             self.stack.pop()
         elif action.is_type(Actions.LeftEdge, Actions.LeftRemote, Actions.RightEdge, Actions.RightRemote):
@@ -304,12 +310,12 @@ class State(object):
             return None, None
 
     def label_node(self, label):
-        self.need_label = False
-        node = self.stack[-1]
+        node = self.stack[self.need_label]
         node.label = label
         node.labeled = True
         self.log.append("label: %s" % node)
         self.type_validity_cache = {}
+        self.need_label = False
 
     def create_passage(self, verify=True):
         """
