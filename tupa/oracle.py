@@ -77,7 +77,8 @@ class Oracle(object):
         :param state: current State of the parser
         :return: generator of Action items to perform
         """
-        if not ((state.buffer or state.stack) and (self.edges_remaining or any(map(self.need_label, state.stack)))):
+        if not ((state.buffer or state.stack) and (self.edges_remaining or
+                                                   any(map(self.need_label, state.stack + list(state.buffer))))):
             yield Actions.Finish
             if state.stack and not self.need_label(state.stack[-1]):
                 yield Actions.Reduce
