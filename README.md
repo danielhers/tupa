@@ -59,15 +59,19 @@ Run the parser using any of them:
     
 ### Other languages
 
-To get a French model pre-trained on [the *20K Leagues* corpus](https://github.com/huji-nlp/ucca-corpus/tree/master/vmlslm/fr), run:
+To get a French/German model pre-trained on [the *20K Leagues* corpus](https://github.com/huji-nlp/ucca-corpus/tree/master/vmlslm/fr), run:
 
-    curl -O http://www.cs.huji.ac.il/~danielh/ucca/sparse-1.2-fr.tar.gz
+    curl -O http://www.cs.huji.ac.il/~danielh/ucca/sparse-1.2-{fr,de}.tar.gz
     tar xvzf sparse-1.2-fr.tar.gz
+    tar xvzf sparse-1.2-de.tar.gz
 
-Run the parser on a French text file, using the French spaCy models too:
+Run the parser on a French/German text file, using the French/German spaCy models too:
 
     export SPACY_MODEL=fr_depvec_web_lg
     python -m tupa.parse exemple.txt -c sparse -m models/sparse-fr
+
+    export SPACY_MODEL=de_core_news_md
+    python -m tupa.parse beispiel.txt -c sparse -m models/sparse-de
 
 Author
 ------
