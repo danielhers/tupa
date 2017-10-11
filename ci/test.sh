@@ -45,7 +45,7 @@ unit*)
 toy-*)
     # basic parser tests
     for m in "" --sentences --paragraphs; do
-      python tupa/parse.py --verify -I 10 -t "$TOY_DATA" -d "$TOY_DATA" $m -m "model_$FORMAT$m" -v || exit 1
+      python tupa/parse.py -I 10 -t "$TOY_DATA" -d "$TOY_DATA" $m -m "model_$FORMAT$m" -v || exit 1
       python tupa/parse.py "$TOY_DATA" $m -em "model_$FORMAT$m" -v || exit 1
     done
     ;;
