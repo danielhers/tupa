@@ -1,11 +1,11 @@
 ucca>=1.0.11
 spacy>=1.9.0
-cython>=0.27
-penman>=0.6.1
+cython>=0.27.1
+penman>=0.6.2
 nltk>=3.2.5
 parsimonious>=0.8.0
 word2number>=1.1
 pyspotlight>=0.7.1
 requests>=2.8.14
 logbook>=1.1.0
-tqdm>=4.18.0
+tqdm>=4.19.4
