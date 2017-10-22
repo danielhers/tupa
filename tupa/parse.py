@@ -337,7 +337,7 @@ class Parser(object):
 
     def evaluate_passage(self, guessed, ref):
         ref_format = ref.extra.get("format")
-        if self.args.verbose > 2:
+        if self.args.verbose > 2 and ref_format:
             print("Converting to %s and evaluating..." % ref_format, flush=True)
         score = EVALUATORS.get(ref_format, evaluation).evaluate(
             guessed, ref, converter=get_output_converter(ref_format),
