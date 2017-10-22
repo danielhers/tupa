@@ -318,7 +318,7 @@ class Parser(object):
         indices = (values[i] for i in self.generate_descending(scores))
         if unit and self.args.verbose > 2:
             print("Finding valid %s..." % unit)
-            indices = tqdm(indices, total=len(scores), unit=" " + unit + "s")
+            indices = tqdm(indices, total=len(scores), unit=" " + unit + "s", file=sys.stdout)
         return next(filter(is_valid, indices))
 
     @staticmethod
