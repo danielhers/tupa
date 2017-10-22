@@ -1,4 +1,4 @@
-from tupa.config import Config
+from ..config import Config
 
 
 class Edge(object):

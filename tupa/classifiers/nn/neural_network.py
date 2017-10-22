@@ -6,13 +6,13 @@ from collections import OrderedDict
 import dynet as dy
 import numpy as np
 
-from tupa.classifiers.classifier import Classifier
-from tupa.config import Config, MLP_NN
-from tupa.features.feature_params import MISSING_VALUE
 from .birnn import BiRNN
 from .constants import ACTIVATIONS, INITIALIZERS, TRAINERS, TRAINER_LEARNING_RATE_PARAM_NAMES, TRAINER_KWARGS, \
     CategoricalParameter
 from .mlp import MultilayerPerceptron
+from ..classifier import Classifier
+from ...config import Config, MLP_NN
+from ...features.feature_params import MISSING_VALUE
 
 
 class AxisModel(object):

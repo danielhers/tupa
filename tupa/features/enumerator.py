@@ -1,9 +1,9 @@
 import numpy as np
 
-from tupa.model_util import DropoutDict
 from .feature_extractor_wrapper import FeatureExtractorWrapper
 from .feature_params import MISSING_VALUE
 from .feature_params import NumericFeatureParameters
+from ..model_util import DropoutDict
 
 
 class FeatureEnumerator(FeatureExtractorWrapper):

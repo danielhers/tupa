@@ -1,8 +1,8 @@
 from ucca.textutil import get_word_vectors
 
-from tupa.model_util import load_dict, save_dict, UnknownDict
 from .feature_extractor import FeatureExtractor
 from .feature_params import copy_params, NumericFeatureParameters
+from ..model_util import load_dict, save_dict, UnknownDict
 
 
 class FeatureExtractorWrapper(FeatureExtractor):

@@ -1,5 +1,5 @@
-from scheme.constraints import Constraints
-from scheme.conversion.sdp import SdpConverter
+from ..constraints import Constraints
+from ..conversion.sdp import SdpConverter
 
 TOP_LEVEL = (SdpConverter.ROOT, SdpConverter.TOP)
 

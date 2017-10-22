@@ -1,7 +1,7 @@
 from ucca import evaluation
 from ucca.constructions import PRIMARY
 
-from scheme.conversion.sdp import SdpConverter
+from ..conversion.sdp import SdpConverter
 
 EVAL_TYPES = (evaluation.LABELED, evaluation.UNLABELED)
 

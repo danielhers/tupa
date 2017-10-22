@@ -1,7 +1,7 @@
-from scheme.constraint.amr import AmrConstraints
-from scheme.constraint.conllu import ConlluConstraints
-from scheme.constraint.sdp import SdpConstraints
-from scheme.constraints import UccaConstraints
+from .constraint.amr import AmrConstraints
+from .constraint.conllu import ConlluConstraints
+from .constraint.sdp import SdpConstraints
+from .constraints import UccaConstraints
 
 CONSTRAINTS = {
     None:     UccaConstraints,

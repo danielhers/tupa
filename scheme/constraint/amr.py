@@ -1,5 +1,5 @@
-from scheme.constraints import Constraints
-from scheme.util.amr import *
+from ..constraints import Constraints
+from ..util.amr import *
 
 
 class AmrConstraints(Constraints):

@@ -8,10 +8,10 @@ from scheme.constrain import CONSTRAINTS
 from scheme.constraints import Constraints
 from scheme.constraints import Direction
 from scheme.util.amr import LABEL_ATTRIB
-from tupa.action import Actions
-from tupa.config import Config
 from .edge import Edge
 from .node import Node
+from ..action import Actions
+from ..config import Config
 
 
 class InvalidActionError(AssertionError):

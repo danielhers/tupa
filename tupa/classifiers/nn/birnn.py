@@ -3,9 +3,9 @@ from collections import OrderedDict
 import dynet as dy
 import numpy as np
 
-from tupa.features.feature_params import MISSING_VALUE
 from .constants import ACTIVATIONS, INITIALIZERS, RNNS, CategoricalParameter
 from .mlp import MultilayerPerceptron
+from ...features.feature_params import MISSING_VALUE
 
 
 class BiRNN(object):

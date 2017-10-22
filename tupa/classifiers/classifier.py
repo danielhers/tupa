@@ -1,5 +1,5 @@
-from tupa.config import Config
-from tupa.model_util import load_json, save_json
+from ..config import Config
+from ..model_util import load_json, save_json
 
 
 class Classifier(object):

@@ -5,7 +5,7 @@ from ucca import core, layer0
 from ucca.layer1 import EdgeTags
 
 from scheme.util.amr import LABEL_ATTRIB, UNKNOWN_LABEL, LABEL_SEPARATOR
-from tupa.config import Config
+from ..config import Config
 
 
 class Node(object):

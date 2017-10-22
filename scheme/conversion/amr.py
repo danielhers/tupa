@@ -3,7 +3,7 @@ from collections import namedtuple, OrderedDict
 import penman
 from ucca import layer0, convert
 
-from scheme.util.amr import *
+from ..util.amr import *
 
 DELETE_PATTERN = re.compile("\\\\|(?<=(?<!<)<)[^<>]+(?=>(?!>))")  # Delete text inside single angle brackets
 

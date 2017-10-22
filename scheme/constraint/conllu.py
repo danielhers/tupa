@@ -1,4 +1,4 @@
-from scheme.constraints import Constraints
+from ..constraints import Constraints
 
 TOP_LEVEL = ("root",)
 

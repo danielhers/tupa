@@ -1,6 +1,6 @@
 from copy import copy
 
-from tupa.labels import Labels
+from ..labels import Labels
 
 MISSING_VALUE = -1
 UNKNOWN_VALUE = 0

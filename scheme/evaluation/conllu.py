@@ -1,7 +1,7 @@
 from ucca import evaluation
 from ucca.constructions import PRIMARY
 
-from scheme.conversion.conllu import ConlluConverter
+from ..conversion.conllu import ConlluConverter
 
 EVAL_TYPES = (evaluation.LABELED, evaluation.UNLABELED)
 
