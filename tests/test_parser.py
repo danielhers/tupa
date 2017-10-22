@@ -94,7 +94,8 @@ class ParserTests(unittest.TestCase):
 class ConfigTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        Config("", "-m", "test", "--no-node-labels", "--evaluate", "--hyperparams=shared=--layer-dim=50")
+        Config("", "-m", "test", "--no-node-labels", "--evaluate", "--hyperparams=shared=--layer-dim=50",
+               "--minibatch-size=50")
 
     def test_params(self):
         d = {"max_words_external": 100, "word_dim_external": 100, "optimizer": "sgd", "layer_dim": 100, "layers": 1,
@@ -111,7 +112,9 @@ class ConfigTests(unittest.TestCase):
         Config().update_hyperparams(shared={"lstm_layer_dim": 100, "lstm_layers": 1}, ucca={"word_dim": 300})
         self.assertEqual(Config().hyperparams.shared.lstm_layer_dim, 100, "shared --lstm-layer-dim=100")
         self.assertEqual(Config().hyperparams.shared.lstm_layers, 1, "shared --lstm-layers=1")
+        self.assertEqual(Config().hyperparams.shared.minibatch_size, 50, "--minibatch-size=50")
         self.assertEqual(Config().hyperparams.specific["ucca"].word_dim, 300, "ucca --word-dim=300")
+        self.assertEqual(Config().hyperparams.specific["ucca"].minibatch_size, 50, "--minibatch-size=50")
         for attr, value in d.items():
             self.assertEqual(getattr(Config().hyperparams.shared, attr), value, attr)
 
