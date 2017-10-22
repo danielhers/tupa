@@ -20,7 +20,7 @@ class AxisModel(object):
     Format-specific parameters that are part of the network
     """
     def __init__(self, axis, num_labels, *args, **kwargs):
-        config_args = Config().hyperparams.specific.setdefault(axis, Config().args)
+        config_args = Config().hyperparams.specific[axis]
         self.birnn = BiRNN(config_args, *args, **kwargs)
         self.mlp = MultilayerPerceptron(config_args, *args, **kwargs, num_labels=num_labels, suffix2=(axis,))
 

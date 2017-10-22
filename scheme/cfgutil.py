@@ -25,7 +25,7 @@ class VAction(argparse.Action):
 
 
 def add_verbose_argument(argparser, **kwargs):
-    argparser.add_argument("-v", "--verbose", nargs="?", action=VAction, default=0, **kwargs)
+    return argparser.add_argument("-v", "--verbose", nargs="?", action=VAction, default=0, **kwargs)
 
 
 def get_group_arg_names(group):

@@ -104,9 +104,8 @@ class Node(object):
             self.node.extra["remarks"] = self.node_id  # Keep original node ID for reference
 
     def set_node_label(self):
-        label = self.label or UNKNOWN_LABEL
-        if self.node is not None and label is not None:
-            self.node.attrib[LABEL_ATTRIB] = label
+        if self.node is not None:
+            self.node.attrib[LABEL_ATTRIB] = self.label or UNKNOWN_LABEL
 
     @property
     def is_linkage(self):

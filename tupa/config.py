@@ -1,5 +1,7 @@
 import sys
-from argparse import ArgumentParser, Namespace, ArgumentDefaultsHelpFormatter
+from argparse import ArgumentParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
+from collections import defaultdict
+from functools import partial
 
 import numpy as np
 from logbook import Logger, FileHandler, StderrHandler
@@ -26,30 +28,144 @@ FORMATS = [e.lstrip(".") for e in UCCA_EXT] + ["ucca"] + list(CONVERTERS)
 
 # Required number of edge labels per format
 EDGE_LABELS_NUM = {"amr": 110, "sdp": 70, "conllu": 60}
+SPARSE_ARG_NAMES = set()
+NN_ARG_NAMES = set()
+DYNET_ARG_NAMES = set()
+RESTORED_ARGS = set()
+
+
+def add_param_arguments(argparser=None, arg_default=None):  # arguments with possible format-specific parameter values
+    
+    def add_argument(a, *args, **kwargs):
+        return a.add_argument(*args, **kwargs)
+    
+    def add(a, *args, default=None, restore=False, func=add_argument, **kwargs):
+        arg = func(a, *args, default=default if arg_default is None else arg_default, **kwargs)
+        if restore:
+            try:
+                RESTORED_ARGS.add(arg.dest)
+            except AttributeError:
+                RESTORED_ARGS.update(get_group_arg_names(arg))
+    
+    def add_boolean(a, *args, **kwargs):
+        add(a, *args, func=add_boolean_option, **kwargs)
+
+    if not argparser:
+        argparser = ArgumentParser()
+    
+    group = argparser.add_argument_group(title="Node labels")
+    add(group, "--max-node-labels", type=int, default=0, help="max number of node labels to allow", restore=True)
+    add(group, "--max-node-categories", type=int, default=0, help="max node categories to allow", restore=True)
+    add(group, "--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
+    add_boolean(group, "use-gold-node-labels", "gold node labels when parsing")
+    add_boolean(group, "wikification", "use Spotlight to wikify any named node")
+    add_boolean(group, "node-labels", "prediction of node labels, if supported by format", default=True, restore=True)
+
+    group = argparser.add_argument_group(title="Structural constraints")
+    add_boolean(group, "linkage", "linkage nodes and edges")
+    add_boolean(group, "implicit", "implicit nodes and edges", restore=True)
+    add_boolean(group, "remote", "remote edges", default=True)
+    add_boolean(group, "constraints", "scheme-specific rules", default=True)
+    add_boolean(group, "require-connected", "constraint that output graph must be connected")
+    add(group, "--orphan-label", default="orphan", help="edge label to use for nodes without parents")
+    add(group, "--max-action-ratio", type=float, default=100, help="max action/terminal ratio", restore=True)
+    add(group, "--max-node-ratio", type=float, default=10, help="max node/terminal ratio")
+    add(group, "--max-height", type=int, default=20, help="max graph height")
+
+    group = argparser.add_mutually_exclusive_group()
+    add(group, "--swap", choices=(REGULAR, COMPOUND), default=REGULAR, help="swap transitions")
+    add(group, "--no-swap", action="store_false", dest="swap", help="exclude swap transitions")
+    add(argparser, "--max-swap", type=int, default=15, help="if compound swap enabled, maximum swap size")
+
+    group = argparser.add_argument_group(title="General classifier training parameters")
+    add(group, "--learning-rate", type=float, help="rate for model weight updates (default: by trainer/1)")
+    add(group, "--learning-rate-decay", type=float, default=0.0, help="learning rate decay per iteration")
+    add(group, "--swap-importance", type=float, default=1, help="learning rate factor for Swap")
+
+    group = argparser.add_argument_group(title="Perceptron parameters")
+    add(group, "--min-update", type=int, default=5, help="minimum #updates for using a feature")
+    SPARSE_ARG_NAMES.update(get_group_arg_names(group))
+
+    group = argparser.add_argument_group(title="Neural network parameters")
+    add(group, "--word-dim-external", type=int, default=300, help="dimension for external word embeddings")
+    add(group, "--word-vectors", help="file to load external word embeddings from (default: GloVe)")
+    add_boolean(group, "update-word-vectors", "external word vectors in training parameters", default=True)
+    add(group, "--word-dim", type=int, default=200, help="dimension for learned word embeddings")
+    add(group, "--tag-dim", type=int, default=20, help="dimension for POS tag embeddings")
+    add(group, "--dep-dim", type=int, default=10, help="dimension for dependency relation embeddings")
+    add(group, "--edge-label-dim", type=int, default=20, help="dimension for edge label embeddings")
+    add(group, "--node-label-dim", type=int, default=0, help="dimension for node label embeddings", restore=True)
+    add(group, "--node-category-dim", type=int, default=0, help="dimension for node category embeddings", restore=True)
+    add(group, "--punct-dim", type=int, default=1, help="dimension for separator punctuation embeddings")
+    add(group, "--action-dim", type=int, default=3, help="dimension for input action type embeddings")
+    add(group, "--ner-dim", type=int, default=5, help="dimension for input entity type embeddings")
+    add(group, "--output-dim", type=int, default=50, help="dimension for output action embeddings")
+    add(group, "--layer-dim", type=int, default=50, help="dimension for hidden layers")
+    add(group, "--layers", type=int, default=2, help="number of hidden layers")
+    add(group, "--lstm-layer-dim", type=int, default=500, help="dimension for LSTM hidden layers")
+    add(group, "--lstm-layers", type=int, default=0, help="number of LSTM hidden layers")
+    add(group, "--embedding-layer-dim", type=int, default=500, help="dimension for layers before LSTM")
+    add(group, "--embedding-layers", type=int, default=1, help="number of layers before LSTM")
+    add(group, "--activation", choices=ACTIVATIONS, default=DEFAULT_ACTIVATION, help="activation function")
+    add(group, "--init", choices=INITIALIZERS, default=DEFAULT_INITIALIZER, help="weight initialization")
+    add(group, "--minibatch-size", type=int, default=100, help="mini-batch size for optimization")
+    add(group, "--optimizer", choices=TRAINERS, default=DEFAULT_TRAINER, help="algorithm for optimization")
+    add(group, "--max-words-external", type=int, help="max external word vectors to use")
+    add(group, "--max-words", type=int, default=10000, help="max number of words to keep embeddings for")
+    add(group, "--max-tags", type=int, default=100, help="max number of POS tags to keep embeddings for")
+    add(group, "--max-deps", type=int, default=100, help="max number of dep labels to keep embeddings for")
+    add(group, "--max-edge-labels", type=int, default=15, help="max number of edge labels for embeddings", restore=True)
+    add(group, "--max-puncts", type=int, default=5, help="max number of punctuations for embeddings")
+    add(group, "--max-action-types", type=int, default=10, help="max number of action types for embeddings")
+    add(group, "--max-action-labels", type=int, default=100, help="max number of action labels to allow")
+    add(group, "--max-ner-types", type=int, default=18, help="max number of entity types to allow")
+    add(group, "--word-dropout", type=float, default=0.2, help="word dropout parameter")
+    add(group, "--word-dropout-external", type=float, default=0, help="word dropout for word vectors")
+    add(group, "--tag-dropout", type=float, default=0.2, help="POS tag dropout parameter")
+    add(group, "--dep-dropout", type=float, default=0.2, help="dependency label dropout parameter")
+    add(group, "--node-label-dropout", type=float, default=0.2, help="node label dropout parameter")
+    add(group, "--dropout", type=float, default=0.4, help="dropout parameter between layers")
+    add(group, "--max-length", type=int, default=120, help="maximum length of input sentence")
+    add(group, "--rnn", choices=RNNS, default=DEFAULT_RNN, help="type of recurrent neural network to use")
+    NN_ARG_NAMES.update(get_group_arg_names(group))
+
+    return argparser
+
+
+class FallbackNamespace(Namespace):
+    def __init__(self, fallback, kwargs=None):
+        super().__init__(**(kwargs or {}))
+        self._fallback = fallback
+
+    def __getattr__(self, item):
+        return getattr(super(), item, getattr(self._fallback, item))
 
 
 class Hyperparams(object):
-    def __init__(self, shared=None, **kwargs):
-        self.shared = shared if isinstance(shared, Namespace) else Namespace(**shared) if shared else Namespace()
-        self.specific = {k: v if isinstance(v, Namespace) else Namespace(**v) for k, v in kwargs.items()}
+    def __init__(self, parent, shared=None, **kwargs):
+        self.shared = FallbackNamespace(parent, shared)
+        self.specific = defaultdict(partial(FallbackNamespace, parent),
+                                    **{k: FallbackNamespace(parent, v) for k, v in kwargs.items()})
 
 
 class HyperparamsInitializer(object):
-    def __init__(self, name=None, *args, parent=None, **kwargs):
-        self.parent = parent
+    def __init__(self, name=None, *args, **kwargs):
+        """
+        :param name: name of hyperparams subset
+        :param args: raw arg strings
+        :param kwargs: parsed and initialized values
+        """
         self.name = name
-        self.args = args
-        if kwargs:  # parent is a Namespace and kwargs are already parsed and initialized values
-            self.parsed_args = vars(parent)
-            self.parsed_args.update(kwargs)
-        else:  # parent is an ArgumentParser and args are strings
-            self.parsed_args = ArgumentParser(parents=[parent], add_help=False).parse_args(args)
-
-    def __call__(self, args):
-        return HyperparamsInitializer(*args.replace("=", " ").split(), parent=self.parent)
+        self.str_args = list(args) + ["%s %s" % k for k in kwargs.items()]
+        self.args = vars(add_param_arguments(arg_default=SUPPRESS).parse_args(args))
+        self.args.update(kwargs)
 
     def __str__(self):
-        return '"%s"' % " ".join([self.name] + list(self.args)) if self.args else self.name
+        return '"%s"' % " ".join([self.name] + list(self.str_args))
+
+
+def hyperparams_action(args):
+    return HyperparamsInitializer(*args.replace("=", " ").split())
 
 
 class Config(object, metaclass=Singleton):
@@ -62,21 +178,19 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("-B", "--beam", type=int, choices=(1,), default=1, help="beam size for beam search")
         add_boolean_option(argparser, "evaluate", "evaluation of parsed passages", short="e")
         add_verbose_argument(argparser, help="detailed parse output")
-        group = argparser.add_argument_group(title="Node labels")
-        group.add_argument("--max-node-labels", type=int, default=0, help="max number of node labels to allow")
-        group.add_argument("--max-node-categories", type=int, default=0, help="max number of node categories to allow")
-        group.add_argument("--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
-        add_boolean_option(group, "use-gold-node-labels", "gold node labels when parsing")
-        add_boolean_option(group, "wikification", "use Spotlight to wikify any named node")
         constructions.add_argument(argparser)
         add_boolean_option(argparser, "sentences", "split to sentences")
         add_boolean_option(argparser, "paragraphs", "split to paragraphs")
+
         group = argparser.add_argument_group(title="Training parameters")
         group.add_argument("-t", "--train", nargs="+", default=(), help="passage files/directories to train on")
         group.add_argument("-d", "--dev", nargs="+", default=(), help="passage files/directories to tune on")
         group.add_argument("-I", "--iterations", type=int, default=1, help="number of training iterations")
         group.add_argument("--folds", type=int, choices=(3, 5, 10), help="#folds for cross validation")
         group.add_argument("--seed", type=int, default=1, help="random number generator seed")
+        add_boolean_option(group, "early-update", "early update procedure (finish example on first error)")
+        group.add_argument("--save-every", type=int, help="every this many passages, evaluate on dev and save model")
+
         group = argparser.add_argument_group(title="Output files")
         group.add_argument("-o", "--outdir", default=".", help="output directory for parsed files")
         group.add_argument("-p", "--prefix", default="", help="output filename prefix")
@@ -88,75 +202,12 @@ class Config(object, metaclass=Singleton):
                                help="input formats for creating all parameters before training starts "
                                     "(otherwise created dynamically based on filename suffix), "
                                     "and output formats for written files (each will be written; default: UCCA XML)")
-        add_boolean_option(group, "node-labels", "prediction of node labels, if supported by format", default=True)
-        group = argparser.add_argument_group(title="Structural constraints")
-        add_boolean_option(group, "linkage", "linkage nodes and edges")
-        add_boolean_option(group, "implicit", "implicit nodes and edges")
-        add_boolean_option(group, "remote", "remote edges", default=True)
-        add_boolean_option(group, "constraints", "scheme-specific rules", default=True)
-        add_boolean_option(group, "require-connected", "constraint that output graph must be connected")
-        group.add_argument("--orphan-label", default="orphan", help="edge label to use for nodes without parents")
-        group.add_argument("--max-action-ratio", type=float, default=100, help="max action/terminal ratio")
-        group.add_argument("--max-node-ratio", type=float, default=10, help="max node/terminal ratio")
-        group.add_argument("--max-height", type=int, default=20, help="max graph height")
-        group = argparser.add_mutually_exclusive_group()
-        group.add_argument("--swap", choices=(REGULAR, COMPOUND), default=REGULAR, help="swap transitions")
-        group.add_argument("--no-swap", action="store_false", dest="swap", help="exclude swap transitions")
-        argparser.add_argument("--max-swap", type=int, default=15, help="if compound swap enabled, maximum swap size")
+
         group = argparser.add_argument_group(title="Sanity checks")
         add_boolean_option(group, "check-loops", "check for parser state loop")
         add_boolean_option(group, "verify", "check for oracle reproducing original passage")
-        group = argparser.add_argument_group(title="General classifier training parameters")
-        group.add_argument("--learning-rate", type=float, help="rate for model weight updates (default: by trainer/1)")
-        group.add_argument("--learning-rate-decay", type=float, default=0.0, help="learning rate decay per iteration")
-        group.add_argument("--swap-importance", type=float, default=1, help="learning rate factor for Swap")
-        add_boolean_option(group, "early-update", "early update procedure (finish example on first error)")
-        group.add_argument("--save-every", type=int, help="every this many passages, evaluate on dev and save model")
-        group = argparser.add_argument_group(title="Perceptron parameters")
-        group.add_argument("--min-update", type=int, default=5, help="minimum #updates for using a feature")
-        self.sparse_arg_names = get_group_arg_names(group)
-        group = argparser.add_argument_group(title="Neural network parameters")
-        group.add_argument("--word-dim-external", type=int, default=300, help="dimension for external word embeddings")
-        group.add_argument("--word-vectors", help="file to load external word embeddings from (default: GloVe)")
-        add_boolean_option(group, "update-word-vectors", "external word vectors in training parameters", default=True)
-        group.add_argument("--word-dim", type=int, default=200, help="dimension for learned word embeddings")
-        group.add_argument("--tag-dim", type=int, default=20, help="dimension for POS tag embeddings")
-        group.add_argument("--dep-dim", type=int, default=10, help="dimension for dependency relation embeddings")
-        group.add_argument("--edge-label-dim", type=int, default=20, help="dimension for edge label embeddings")
-        group.add_argument("--node-label-dim", type=int, default=0, help="dimension for node label embeddings")
-        group.add_argument("--node-category-dim", type=int, default=0, help="dimension for node category embeddings")
-        group.add_argument("--punct-dim", type=int, default=1, help="dimension for separator punctuation embeddings")
-        group.add_argument("--action-dim", type=int, default=3, help="dimension for input action type embeddings")
-        group.add_argument("--ner-dim", type=int, default=5, help="dimension for input entity type embeddings")
-        group.add_argument("--output-dim", type=int, default=50, help="dimension for output action embeddings")
-        group.add_argument("--layer-dim", type=int, default=50, help="dimension for hidden layers")
-        group.add_argument("--layers", type=int, default=2, help="number of hidden layers")
-        group.add_argument("--lstm-layer-dim", type=int, default=500, help="dimension for LSTM hidden layers")
-        group.add_argument("--lstm-layers", type=int, default=0, help="number of LSTM hidden layers")
-        group.add_argument("--embedding-layer-dim", type=int, default=500, help="dimension for layers before LSTM")
-        group.add_argument("--embedding-layers", type=int, default=1, help="number of layers before LSTM")
-        group.add_argument("--activation", choices=ACTIVATIONS, default=DEFAULT_ACTIVATION, help="activation function")
-        group.add_argument("--init", choices=INITIALIZERS, default=DEFAULT_INITIALIZER, help="weight initialization")
-        group.add_argument("--minibatch-size", type=int, default=100, help="mini-batch size for optimization")
-        group.add_argument("--optimizer", choices=TRAINERS, default=DEFAULT_TRAINER, help="algorithm for optimization")
-        group.add_argument("--max-words-external", type=int, help="max external word vectors to use")
-        group.add_argument("--max-words", type=int, default=10000, help="max number of words to keep embeddings for")
-        group.add_argument("--max-tags", type=int, default=100, help="max number of POS tags to keep embeddings for")
-        group.add_argument("--max-deps", type=int, default=100, help="max number of dep labels to keep embeddings for")
-        group.add_argument("--max-edge-labels", type=int, default=15, help="max number of edge labels for embeddings")
-        group.add_argument("--max-puncts", type=int, default=5, help="max number of punctuations for embeddings")
-        group.add_argument("--max-action-types", type=int, default=10, help="max number of action types for embeddings")
-        group.add_argument("--max-action-labels", type=int, default=100, help="max number of action labels to allow")
-        group.add_argument("--max-ner-types", type=int, default=18, help="max number of entity types to allow")
-        group.add_argument("--word-dropout", type=float, default=0.2, help="word dropout parameter")
-        group.add_argument("--word-dropout-external", type=float, default=0, help="word dropout for word vectors")
-        group.add_argument("--tag-dropout", type=float, default=0.2, help="POS tag dropout parameter")
-        group.add_argument("--dep-dropout", type=float, default=0.2, help="dependency label dropout parameter")
-        group.add_argument("--node-label-dropout", type=float, default=0.2, help="node label dropout parameter")
-        group.add_argument("--dropout", type=float, default=0.4, help="dropout parameter between layers")
-        group.add_argument("--max-length", type=int, default=120, help="maximum length of input sentence")
-        group.add_argument("--rnn", choices=RNNS, default=DEFAULT_RNN, help="type of recurrent neural network to use")
-        self.nn_arg_names = get_group_arg_names(group)
+        add_param_arguments(argparser)
+
         group = argparser.add_argument_group(title="DyNet parameters")
         group.add_argument("--dynet-mem", help="memory for dynet")
         group.add_argument("--dynet-weight-decay", type=float, default=1e-5, help="weight decay for parameters")
@@ -166,12 +217,13 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--dynet-devices")
         add_boolean_option(group, "dynet-viz", "visualization of neural network structure")
         add_boolean_option(group, "dynet-autobatch", "auto-batching of training examples")
-        initializer = HyperparamsInitializer(parent=argparser)
-        argparser.add_argument("-H", "--hyperparams", type=initializer, nargs="*",
+        DYNET_ARG_NAMES.update(get_group_arg_names(group))
+
+        argparser.add_argument("-H", "--hyperparams", type=hyperparams_action, nargs="*",
                                help="shared hyperparameters or hyperparameters for specific formats, "
                                     'e.g., "shared --lstm-layer-dim=100 --lstm-layers=1" "ucca --word-dim=300"',
-                               default=[initializer("shared --lstm-layers 2")])
-        self.dynet_arg_names = get_group_arg_names(group)
+                               default=[hyperparams_action("shared --lstm-layers 2")])
+
         self.args = argparser.parse_args(args if args else None)
 
         if self.args.model:
@@ -183,26 +235,20 @@ class Config(object, metaclass=Singleton):
                 self.args.testscores = self.args.model + ".test.csv"
         elif not self.args.log:
             self.args.log = "parse.log"
-        self._logger = self.format = None
-        self.original_values = self.create_original_values()
-        self.hyperparams = self.create_hyperparams()
-        self.set_format()
-        self.set_external()
+        self._logger = self.format = self.hyperparams = None
+        self.original_values = {}
         self.random = np.random
+        self.update()
 
     def create_original_values(self, args=None):
         return {attr: getattr(self.args, attr) if args is None else args[attr]
-                for attr in ("node_labels", "implicit", "node_label_dim", "node_category_dim", "max_node_labels",
-                             "max_node_categories", "max_action_labels", "max_edge_labels")
-                if args is None or attr in args}
-
-    def create_hyperparams(self):
-        return Hyperparams(**{h.name: h.parsed_args for h in self.args.hyperparams or ()})
+                for attr in RESTORED_ARGS if args is None or attr in args}
 
     def set_format(self, f=None):
         if self.format != f:
             format_values = dict(self.original_values)
-            format_values.update(vars(self.hyperparams.specific.get(self.format, Namespace())))
+            format_values.update({k: v for k, v in vars(self.hyperparams.specific[self.format]).items()
+                                  if not k.startswith("_")})
             for attr, value in format_values.items():
                 setattr(self.args, attr, value)
         if f not in (None, "text"):
@@ -226,8 +272,8 @@ class Config(object, metaclass=Singleton):
             self.args.max_edge_labels = max(self.args.max_edge_labels, required_edge_labels)
             self.args.max_action_labels = max(self.args.max_action_labels, 6 * required_edge_labels)
 
-    def set_external(self):
-        np.random.seed(self.args.seed)
+    def set_dynet_arguments(self):
+        self.random.seed(self.args.seed)
         sys.argv += ["--dynet-seed", str(self.args.seed)]
         if self.args.dynet_mem:
             sys.argv += ["--dynet-mem", str(self.args.dynet_mem)]
@@ -246,16 +292,20 @@ class Config(object, metaclass=Singleton):
         if self.args.dynet_autobatch:
             sys.argv += ["--dynet-autobatch", "1"]
 
-    def update(self, params):
-        for name, value in params.items():
-            setattr(self.args, name, value)
+    def update(self, params=None):
+        if params:
+            for name, value in params.items():
+                setattr(self.args, name, value)
         self.original_values.update(self.create_original_values(params))
         self.hyperparams = self.create_hyperparams()
         self.set_format()
-        self.set_external()
+        self.set_dynet_arguments()
+
+    def create_hyperparams(self):
+        return Hyperparams(parent=self.args, **{h.name: h.args for h in self.args.hyperparams or ()})
 
     def update_hyperparams(self, **kwargs):
-        self.update({"hyperparams": [HyperparamsInitializer(k, parent=self.args, **v) for k, v in kwargs.items()]})
+        self.update({"hyperparams": [HyperparamsInitializer(k, **v) for k, v in kwargs.items()]})
 
     @property
     def line_end(self):
@@ -285,7 +335,7 @@ class Config(object, metaclass=Singleton):
                         and (self.args.swap or "swap_" not in k)
                         and (self.args.swap == COMPOUND or k != "max_swap")
                         and (not self.args.require_connected or k != "orphan_label")
-                        and (self.args.classifier == SPARSE or k not in self.sparse_arg_names)
+                        and (self.args.classifier == SPARSE or k not in SPARSE_ARG_NAMES)
                         and (
-                            self.args.classifier in NN_CLASSIFIERS or k not in self.nn_arg_names + self.dynet_arg_names)
+                            self.args.classifier in NN_CLASSIFIERS or k not in NN_ARG_NAMES | DYNET_ARG_NAMES)
                         and k != "passages")
