@@ -16,7 +16,7 @@ from scheme.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR, WIKIFIER
 from tupa.config import Config
 from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
 from tupa.oracle import Oracle
-from tupa.states.state import State
+from tupa.states.state import State, InvalidActionError
 
 
 class ParserException(Exception):
@@ -285,8 +285,10 @@ class Parser(object):
                 raw_true_label = node.attrib.get(LABEL_ATTRIB)
             if raw_true_label is not None:
                 true_label, _, _ = raw_true_label.partition(LABEL_SEPARATOR)
-                if not self.state.is_valid_label(true_label):
-                    raise ParserException("True label is invalid: %s %s" % (true_label, self.state))
+                try:
+                    self.state.check_valid_label(true_label, message=True)
+                except InvalidActionError as e:
+                    raise ParserException("True label is invalid: " + "\n".join(map(str, (true_label, self.state, e))))
         return true_label, raw_true_label
 
     def choose_label(self, features, train, true_label):
