@@ -91,7 +91,7 @@ EXTENSIONS = {
 }
 
 NEGATIONS = {}
-VERBALIZATION = {}
+VERBALIZATION = defaultdict(dict)
 ROLESETS = {}
 CATEGORIES = {}
 
@@ -101,24 +101,26 @@ def read_resources():
         os.chdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "resources"))
         with open("negations.txt", encoding="utf-8") as f:
             NEGATIONS.update(csv.reader(f, delimiter=" "))
+        with open("rolesets.txt", encoding="utf-8") as f:
+            ROLESETS.update((l[0], tuple(l[1:])) for l in csv.reader(f))
+        lines = []
+        with open("wordnet.txt", encoding="utf-8") as f:
+            lines += [re.findall(r'(\S):(\S+)', l) for l in f if l]
         with open("morph-verbalization-v1.01.txt", encoding="utf-8") as f:
-            lines = (re.findall(r'::DERIV\S*-(\S)\S+ "(\S+)"', l) for l in f if l and l[0] != "#")
-            VERBALIZATION.update((w, l) for l in lines for (_, w) in l)
+            lines += [re.findall(r'::DERIV\S*-(\S)\S+ "(\S+)"', l) for l in f if l and l[0] != "#"]
+        for pairs in lines:
+            for prefix, word in pairs:
+                VERBALIZATION[word].update(pairs)
         with open("verbalization-list-v1.06.txt", encoding="utf-8") as f:
-            lines = (re.findall(r" (\S+) TO *(\S+ :\S+)? (\S+-\d+) *(\S+)?", l)[0] for l in f if l and l[0] not in "#D")
+            lines = (re.findall(r"(\S+) TO *(\S+ :\S+)? (\S+-\d+) *(\S+)?", l)[0] for l in f if l and l[0] not in "#D")
             for word, category, verb, suffix in lines:
-                VERBALIZATION.setdefault(word, []).append(("V", verb))
+                VERBALIZATION[word]["V"] = verb
                 if category or suffix:
                     CATEGORIES[word] = category.replace(" ", "") + suffix
         with open("have-org-role-91-roles-v1.06.txt", encoding="utf-8") as f:
             CATEGORIES.update(l.split()[::-1] for l in f if l and l[0] not in "#")
         with open("have-rel-role-91-roles-v1.06.txt", encoding="utf-8") as f:
             CATEGORIES.update(re.findall(r"(\S+) (\S+(?: [^:#]\S)*)", l)[0][::-1] for l in f if l and l[0] not in "#")
-        with open("rolesets.txt", encoding="utf-8") as f:
-            ROLESETS.update((l[0], tuple(l[1:])) for l in csv.reader(f))
-        with open("wordnet.txt", encoding="utf-8") as f:
-            lines = (re.findall(r'(\S):(\S+)', l) for l in f if l)
-            VERBALIZATION.update((w, l) for l in lines for (_, w) in l)
     finally:
         os.chdir(prev_dir)
 
@@ -247,7 +249,7 @@ def resolve_label(node, label=None, reverse=False, conservative=False):
                         if label.startswith(CONCEPT):
                             morph = VERBALIZATION.get(lemma)
                             if morph is not None:
-                                for prefix, value in morph:  # V: verb, N: noun, A: noun actor
+                                for prefix, value in morph.items():  # V: verb, N: noun, A: noun actor
                                     label = _replace("<%s>" % prefix, value)
                         elif label.startswith('"') and (reverse and not PLACEHOLDER_PATTERN.search(label) or
                                                         not reverse and WIKIFICATION_PLACEHOLDER in label):
