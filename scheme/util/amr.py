@@ -13,6 +13,8 @@ from ucca import textutil
 from ucca.convert import to_text
 from word2number import w2n
 
+from ..constraints import Valid
+
 prev_dir = os.getcwd()
 try:
     os.chdir(os.path.dirname(importlib.util.find_spec("src.amr").origin))  # to find amr.peg
@@ -132,9 +134,9 @@ def is_concept(label):
 def is_int_in_range(label, s=None, e=None):
     m = re.match(NUM + "\(-?(\d+)\)", label)
     if not m:
-        return False
+        return Valid(False, "%s is not numeric" % label)
     num = int(m.group(1))
-    return (s is None or num >= s) and (e is None or num <= e)
+    return Valid(s is None or num >= s, "%s < %s" % (num, s)) and Valid(e is None or num <= e, "%s > %s" % (num, e))
 
 
 def is_valid_arg(node, label, *tags, is_parent=True):
@@ -145,19 +147,20 @@ def is_valid_arg(node, label, *tags, is_parent=True):
     const = label[len(CONST) + 1:-1] if label.startswith(CONST) else None
     if PLACEHOLDER_PATTERN.search(label):
         return True
+    valid = Valid(message="%s incompatible as %s of %s" % (label, "parent" if is_parent else "child", ", ".join(tags)))
     if is_parent:  # node is a parent of the edge
         if {DAY, MONTH, YEAR, YEAR2, DECADE, WEEKDAY, QUARTER, CENTURY, SEASON, TIMEZONE}.intersection(tags):
-            return concept == DATE_ENTITY
+            return valid(concept == DATE_ENTITY)
     elif const == MINUS:  # :polarity excl,b_isconst,b_const=-
-        return {POLARITY, ARG2, VALUE, WIKI}.issuperset(tags)
+        return valid({POLARITY, ARG2, VALUE, WIKI}.issuperset(tags))
     elif POLARITY in tags:
-        return const == MINUS
+        return valid(const == MINUS)
     elif MODE in tags:  # :mode excl,b_isconst,b_const=[interrogative|expressive|imperative]
-        return const in MODES
+        return valid(const in MODES)
     elif const in MODES:
-        return MODE in tags
+        return valid(MODE in tags)
     elif WIKI in tags:  # :wiki b_isconst (:value and :timezone are not really always const)
-        return const == MINUS
+        return valid(const == MINUS)
     elif DAY in tags:  # :day  a=date-entity,b_isconst,b_const=[...]
         return is_int_in_range(label, 1, 31)
     elif MONTH in tags:  # :month  a=date-entity,b_isconst,b_const=[1|2|3|4|5|6|7|8|9|10|11|12]
@@ -167,15 +170,15 @@ def is_valid_arg(node, label, *tags, is_parent=True):
     elif {YEAR, YEAR2, DECADE, CENTURY}.intersection(tags):  # :year a=date-entity,b_isconst,b_const=[0-9]+
         return is_int_in_range(label)
     elif WEEKDAY in tags:  # :weekday  excl,a=date-entity,b=[monday|tuesday|wednesday|thursday|friday|saturday|sunday]
-        return concept in WEEKDAYS
+        return valid(concept in WEEKDAYS)
     elif concept in WEEKDAYS:
-        return WEEKDAY in tags
+        return valid(WEEKDAY in tags)
     elif SEASON in tags:  # :season excl,a=date-entity,b=[winter|fall|spring|summer]+
-        return concept in SEASONS
+        return valid(concept in SEASONS)
     elif PUNCTUATION_DEP in tags:
-        return label == PUNCTUATION_LABEL
+        return valid(label == PUNCTUATION_LABEL)
     elif label == PUNCTUATION_LABEL:
-        return tags == {PUNCTUATION_DEP}
+        return valid(tags == {PUNCTUATION_DEP})
 
     if not concept or "-" not in concept:
         return True  # What follows is a check for predicate arguments, only relevant for predicates
@@ -183,7 +186,8 @@ def is_valid_arg(node, label, *tags, is_parent=True):
     if not args:
         return True
     valid_args = ROLESETS.get(concept, ())
-    return not valid_args or all(t.replace("-of", "").endswith(valid_args) for t in args)
+    return not valid_args or valid(all(t.replace("-of", "").endswith(valid_args) for t in args),
+                                   "valid args: " + ", ".join(valid_args))
 
 
 def resolve_label(node, label=None, reverse=False, conservative=False):

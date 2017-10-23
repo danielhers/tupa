@@ -55,6 +55,21 @@ def set_prod(set1, set2=None):
             yield x, y
 
 
+class Valid:
+    def __init__(self, valid=True, message=""):
+        self.valid = valid
+        self.message = message
+
+    def __bool__(self):
+        return self.valid
+
+    def __str__(self):
+        return self.message
+
+    def __call__(self, valid, message=None):
+        return Valid(valid, "; ".join(filter(None, (self.message, message))))
+
+
 # Generic class to define constraints on parser actions
 class Constraints(object):
     def __init__(self, args, require_implicit_childless=True, allow_root_terminal_children=False,
