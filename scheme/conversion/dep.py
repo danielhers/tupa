@@ -13,22 +13,24 @@ class DependencyConverter(convert.DependencyConverter):
         self.constituency = constituency
         self.lines_read = []
 
+    def split_line(self, line):
+        return line.split("\t")
+
     def create_non_terminals(self, dep_nodes, l1):
         if self.constituency:
             super().create_non_terminals(dep_nodes, l1)
-        for dep_node in dep_nodes:
+        for dep_node in dep_nodes:  # Create top nodes
             if dep_node.position != 0 and not dep_node.incoming and dep_node.outgoing:
                 dep_node.node = dep_node.preterminal = l1.add_fnode(None, self.TOP if dep_node.is_top else self.ROOT)
-        for dep_node in self._topological_sort(dep_nodes):
-            # create pre-terminals and edges
+        for dep_node in self._topological_sort(dep_nodes):  # Create all other nodes
             incoming = list(dep_node.incoming)
             if dep_node.is_top and incoming[0].head_index != 0:
-                top_edge = self.Edge(0, self.TOP, False)
+                top_edge = self.Edge(head_index=0, rel=self.TOP, remote=False)
                 top_edge.head = dep_nodes[0]
                 incoming[:0] = [top_edge]
-            edge = incoming[0]
-            dep_node.node = dep_node.preterminal = l1.add_fnode(edge.head.node, edge.rel)
-            for edge in incoming[1:]:
+            primary_edge, *remote_edges = incoming
+            dep_node.node = dep_node.preterminal = l1.add_fnode(primary_edge.head.node, primary_edge.rel)
+            for edge in remote_edges:
                 l1.add_remote(edge.head.node, edge.rel, dep_node.node)
 
     def from_format(self, lines, passage_id, split=False, return_original=False):
