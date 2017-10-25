@@ -156,7 +156,7 @@ class HyperparamsInitializer(object):
         :param kwargs: parsed and initialized values
         """
         self.name = name
-        self.str_args = list(args) + ["%s %s" % k for k in kwargs.items()]
+        self.str_args = list(args) + ["--%s %s" % k for k in kwargs.items()]
         self.args = vars(add_param_arguments(arg_default=SUPPRESS).parse_args(args))
         self.args.update(kwargs)
 
