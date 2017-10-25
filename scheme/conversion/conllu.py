@@ -4,8 +4,6 @@ from .dep import DependencyConverter
 
 
 class ConlluConverter(DependencyConverter, convert.ConllConverter):
-    # TODO multi-word tokens
-    # http://universaldependencies.org/conll17/evaluation.html
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -23,7 +21,7 @@ class ConlluConverter(DependencyConverter, convert.ConllConverter):
         super().break_cycles(dep_nodes)
         for dep_node in dep_nodes:
             if not dep_node.incoming:
-                dep_node.incoming = [(self.Edge(-1, "root", False))]
+                dep_node.incoming = [(self.Edge(head_index=-1, rel="root", remote=False))]
 
 
 def from_conllu(lines, passage_id, split=True, return_original=False, *args, **kwargs):
