@@ -40,7 +40,7 @@ esac
 case "$TEST_SUITE" in
 unit*)
     # unit tests
-    python -m unittest discover -v || exit 1
+    pytest tests -v || exit 1
     ;;
 toy-*)
     # basic parser tests
