@@ -34,9 +34,10 @@ def load_passages():
 class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        Config("", "-m", "test", "--max-words-external=100", "--word-dim-external=100", "--optimizer=sgd",
-               "--layer-dim=100", "--layers=1", "--lstm-layer-dim=100", "--lstm-layers=1",
-               "--hyperparams", "shared --lstm-layer-dim=100 --lstm-layers=1", "ucca --word-dim=300")
+        Config("", "-m", "test")
+        Config().update({"max_words_external": 100, "word_dim_external": 100, "optimizer": "sgd",
+            "layer_dim": 100, "layers": 1, "lstm_layer_dim": 100, "lstm_layers": 1})
+        Config().update_hyperparams(shared={"lstm_layer_dim": 100, "lstm_layers": 1}, ucca={"word_dim": 300})
 
     def test_oracle(self):
         self.maxDiff = None
@@ -94,8 +95,9 @@ class ParserTests(unittest.TestCase):
 class ConfigTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        Config("", "-m", "test", "--no-node-labels", "--evaluate", "--hyperparams=shared=--layer-dim=50",
-               "--minibatch-size=50")
+        Config("", "-m", "test")
+        Config().update({"no_node_labels": True, "evaluate": True, "minibatch_size": 50})
+        Config().update_hyperparams(shared={"layer_dim": 50})
 
     def test_params(self):
         d = {"max_words_external": 100, "word_dim_external": 100, "optimizer": "sgd", "layer_dim": 100, "layers": 1,
