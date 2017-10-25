@@ -51,7 +51,7 @@ class NeuralNetwork(Classifier):
         self.dropout = self.args.dropout
         self.params = OrderedDict()  # string (param identifier) -> parameter
         self.empty_values = OrderedDict()  # string (feature suffix) -> expression
-        self.axes = OrderedDict()  # string (axis) -> AxisParams
+        self.axes = OrderedDict()  # string (axis) -> AxisModel
         self.losses = []
         self.indexed_num = self.indexed_dim = self.trainer = self.value = self.birnn = None
 
