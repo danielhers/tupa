@@ -14,9 +14,7 @@ class ConversionTests(unittest.TestCase):
     def test_convert(self):
         """Test that converting an Universal Dependencies tree to UCCA and back retains perfect LAS F1"""
         for passage, ref, _ in read_test_conllu():
-            converted = to_conllu(passage)
-            scores = evaluate(converted, ref)
-            self.assertAlmostEqual(scores.average_f1(), 1, msg=converted)
+            self.convert_and_evaluate(passage, ref)
 
     def test_split(self):
         """Test that splitting a single-sentence Universal Dependencies tree converted to UCCA returns the same tree"""
@@ -24,9 +22,12 @@ class ConversionTests(unittest.TestCase):
             sentences = split2sentences(passage)
             self.assertEqual(len(sentences), 1, "Should be one sentence: %s" % passage)
             sentence = sentences[0]
-            converted = to_conllu(sentence)
-            scores = evaluate(converted, ref)
-            self.assertAlmostEqual(scores.average_f1(), 1, msg=converted)
+            self.convert_and_evaluate(sentence, ref)
+
+    def convert_and_evaluate(self, passage, ref):
+        converted = to_conllu(passage)
+        scores = evaluate(converted, ref)
+        self.assertAlmostEqual(scores.average_f1(), 1, msg="\n".join(converted))
 
 
 class EvaluationTests(unittest.TestCase):

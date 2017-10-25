@@ -14,9 +14,7 @@ class ConversionTests(unittest.TestCase):
     def test_convert(self):
         """Test that converting an AMR to UCCA and back retains perfect Smatch F1"""
         for passage, ref, amr_id in read_test_amr():
-            converted = "\n".join(to_amr(passage, metadata=False))
-            scores = evaluate(converted, ref, amr_id=amr_id)
-            self.assertAlmostEqual(scores.f1, 1, msg=converted)
+            self.convert_and_evaluate(amr_id, passage, ref)
 
     def test_split(self):
         """Test that splitting a single-sentence AMR converted to UCCA returns the same AMR"""
@@ -24,9 +22,12 @@ class ConversionTests(unittest.TestCase):
             sentences = split2sentences(passage)
             self.assertEqual(len(sentences), 1, "Should be one sentence: %s" % passage)
             sentence = sentences[0]
-            converted = "\n".join(to_amr(sentence, metadata=False))
-            scores = evaluate(converted, ref, amr_id=amr_id)
-            self.assertAlmostEqual(scores.f1, 1, msg=converted)
+            self.convert_and_evaluate(amr_id, sentence, ref)
+
+    def convert_and_evaluate(self, amr_id, passage, ref):
+        converted = "\n".join(to_amr(passage, metadata=False))
+        scores = evaluate(converted, ref, amr_id=amr_id)
+        self.assertAlmostEqual(scores.f1, 1, msg=converted)
 
 
 class EvaluationTests(unittest.TestCase):

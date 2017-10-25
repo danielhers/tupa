@@ -14,9 +14,7 @@ class ConversionTests(unittest.TestCase):
     def test_convert(self):
         """Test that converting an SDP graph to UCCA and back retains perfect Smatch F1"""
         for passage, ref, _ in read_test_sdp():
-            converted = to_sdp(passage)
-            scores = evaluate(converted, ref)
-            self.assertAlmostEqual(scores.average_f1(), 1, msg=converted)
+            self.convert_and_evaluate(passage, ref)
 
     def test_split(self):
         """Test that splitting a single-sentence SDP graph converted to UCCA returns the same SDP graph"""
@@ -24,9 +22,12 @@ class ConversionTests(unittest.TestCase):
             sentences = split2sentences(passage)
             self.assertEqual(len(sentences), 1, "Should be one sentence: %s" % passage)
             sentence = sentences[0]
-            converted = to_sdp(sentence)
-            scores = evaluate(converted, ref)
-            self.assertAlmostEqual(scores.average_f1(), 1, msg=converted)
+            self.convert_and_evaluate(sentence, ref)
+
+    def convert_and_evaluate(self, passage, ref):
+        converted = to_sdp(passage)
+        scores = evaluate(converted, ref)
+        self.assertAlmostEqual(scores.average_f1(), 1, msg="\n".join(converted))
 
 
 class EvaluationTests(unittest.TestCase):
