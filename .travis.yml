@@ -10,10 +10,14 @@ python:
   - "3.6"
 addons:
   apt:
+    sources:
+    - ubuntu-toolchain-r-test
     packages:
+    - g++-6
     - libstdc++6
     - pandoc
 install:
+  - export CXX=g++-6 CC=gcc-6 MAKE_FLAGS="-j 2"
   - python setup.py install
   - pip install pytest
 env:
