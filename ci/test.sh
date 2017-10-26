@@ -2,6 +2,7 @@
 
 ACTION=${TEST_SUITE%-*}
 FORMAT=${TEST_SUITE#*-}
+SUFFIX="$FORMAT"
 
 # download data
 case "$FORMAT" in
@@ -11,7 +12,7 @@ ucca)
         curl -L http://www.cs.huji.ac.il/~danielh/ucca/ucca_corpus_pickle.tgz | tar xz -C pickle || curl -L https://www.dropbox.com/s/q4ycn45zlmhuf9k/ucca_corpus_pickle.tgz | tar xz -C pickle
         python -m scripts.split_corpus -q pickle -t 4282 -d 454 -l
     fi
-    TOY_DATA=test_files/504.xml
+    SUFFIX="xml"
     ;;
 amr)
     if [[ "$ACTION" != toy ]]; then
@@ -19,7 +20,6 @@ amr)
         rename 's/.txt/.amr/' alignment-release-*-bio.txt
         python scheme/split.py -q alignment-release-training-bio.amr alignment-release-training-bio
     fi
-    TOY_DATA=test_files/LDC2014T12.amr
     CONVERT_DATA=alignment-release-dev-bio.amr
     ;;
 sdp)
@@ -29,18 +29,15 @@ sdp)
         python scheme/split.py -q data/sdp/trial/dm.sdp data/sdp/trial/dm
         python -m scripts.split_corpus -q data/sdp/trial/dm -t 120 -d 36 -l
     fi
-    TOY_DATA=test_files/20001001.sdp
     CONVERT_DATA=data/sdp/trial/*.sdp
     ;;
-conllu)
-    TOY_DATA=test_files/UD_English.conllu
-    ;;
 esac
+export TOY_DATA="test_files/*.$SUFFIX"
 
 case "$TEST_SUITE" in
 unit*)
     # unit tests
-    pytest tests -v || exit 1
+    pytest tests -v tests/test_"$FORMAT".py tests/test_parser.py || exit 1
     ;;
 toy-*)
     # basic parser tests

@@ -2,6 +2,7 @@
 
 import os
 import unittest
+from glob import glob
 
 from ucca import convert, evaluation, ioutil
 
@@ -27,7 +28,7 @@ def settings_suffix(settings):
 def load_passages():
     passages = []
     for _ in range(NUM_PASSAGES):
-        passages += ioutil.read_files_and_dirs((os.environ.get("TOY_DATA", "test_files/120.xml"),))
+        passages += ioutil.read_files_and_dirs(glob(os.environ.get("TOY_DATA", "test_files/120.xml")))
     return passages
 
 
@@ -54,7 +55,7 @@ class ParserTests(unittest.TestCase):
                     actions_taken.append("%s\n" % action)
                     if state.finished:
                         break
-                compare_file = "test_files/%s.oracle_actions%s.txt" % (passage.ID, settings_suffix(settings))
+                compare_file = "test_files/oracle_actions/%s%s.txt" % (passage.ID, settings_suffix(settings))
                 # with open(compare_file, "w") as f:
                 #     f.writelines(actions_taken)
                 with open(compare_file) as f:
