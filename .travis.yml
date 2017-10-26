@@ -17,7 +17,6 @@ addons:
     - libstdc++6
     - pandoc
 install:
-  - export CXX=g++-6 CC=gcc-6 MAKE_FLAGS="-j 2"
   - python setup.py install
   - pip install pytest
 env:
