@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 import numpy as np
 
@@ -162,7 +162,7 @@ class SparsePerceptron(Perceptron):
 
     def save_model(self):
         save_dict(self.filename + ".data", self.copy_model())
-        d = {"min_update": self.min_update}
+        d = OrderedDict(min_update=self.min_update)
         d.update(super().save_model())
         return d
 

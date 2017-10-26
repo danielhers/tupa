@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from ..config import Config
 from ..model_util import load_json, save_json
 
@@ -73,15 +75,15 @@ class Classifier(object):
         """
         Save all parameters to file
         """
-        d = {
-            "type": self.model_type,
-            "labels": {a: l.save(skip=a in skip_labels) for a, l in self.labels.items()},  # (all, size) for each
-            "is_frozen": self.is_frozen,
-            "learning_rate": self.learning_rate,
-            "learning_rate_decay": self.learning_rate_decay,
-            "updates": self.updates,
-            "epoch": self.epoch,
-        }
+        d = OrderedDict(
+            type=self.model_type,
+            labels={a: l.save(skip=a in skip_labels) for a, l in self.labels.items()},  # (all, size) for each
+            is_frozen=self.is_frozen,
+            learning_rate=self.learning_rate,
+            learning_rate_decay=self.learning_rate_decay,
+            updates=self.updates,
+            epoch=self.epoch,
+        )
         d.update(self.save_model())
         save_json(self.filename + ".json", d)
 

@@ -220,16 +220,16 @@ class NeuralNetwork(Classifier):
 
     def save_model(self):
         self.finalize()
-        d = {
-            "layers": self.layers,
-            "layer_dim": self.layer_dim,
-            "output_dim": self.output_dim,
-            "activation": str(self.activation),
-            "init": str(self.init),
-            "param_keys": list(self.params.keys()),
-            "axes_param_keys": [list(m.birnn.params.keys()) for m in self.axes.values()],
-            "axes": list(self.axes),
-        }
+        d = OrderedDict(
+            layers=self.layers,
+            layer_dim=self.layer_dim,
+            output_dim=self.output_dim,
+            activation=str(self.activation),
+            init=str(self.init),
+            param_keys=list(self.params.keys()),
+            axes_param_keys=[list(m.birnn.params.keys()) for m in self.axes.values()],
+            axes=list(self.axes),
+        )
         if self.model_type != MLP_NN:  # Save BiRNN hyperparams
             d.update(self.birnn.save())
             d.update((a, m.birnn.save()) for a, m in self.axes.items())

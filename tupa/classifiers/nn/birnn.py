@@ -66,16 +66,16 @@ class BiRNN(object):
             [self.empty_rep if i == MISSING_VALUE else self.input_reps[min(i, self.max_length - 1)] for i in indices]
 
     def save(self):
-        return {
-            "lstm_layers": self.lstm_layers,
-            "lstm_layer_dim": self.lstm_layer_dim,
-            "embedding_layers": self.embedding_layers,
-            "embedding_layer_dim": self.embedding_layer_dim,
-            "max_length": self.max_length,
-            "activation": str(self.activation),
-            "init": str(self.init),
-            "rnn": str(self.rnn_builder),
-        }
+        return OrderedDict(
+            lstm_layers=self.lstm_layers,
+            lstm_layer_dim=self.lstm_layer_dim,
+            embedding_layers=self.embedding_layers,
+            embedding_layer_dim=self.embedding_layer_dim,
+            max_length=self.max_length,
+            activation=str(self.activation),
+            init=str(self.init),
+            rnn=str(self.rnn_builder),
+        )
 
     def load(self, d):
         self.args.lstm_layers = self.lstm_layers = d["lstm_layers"]
