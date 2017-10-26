@@ -1,0 +1,37 @@
+# sent_id = train-s10000
+1	In	in	ADP	APPR	_	3	case	_	_
+2	den	der	DET	ART	Case=Dat|Definite=Def|Number=Plur|PronType=Art	3	det	_	_
+3	Jahren	Jahr	NOUN	NN	Case=Dat|Number=Plur	16	nmod	_	_
+4	1974	1974	NUM	CARD	NumType=Card	3	nmod	_	_
+5	bis	bis	ADP	KON	_	6	case	_	_
+6	1982	1982	NUM	CARD	NumType=Card	3	nmod	_	_
+7	war	sein	VERB	VAFIN	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	16	cop	_	_
+8	er	er	PRON	PPER	Case=Nom|Gender=Masc|Number=Sing|Person=3|PronType=Prs	16	nsubj	_	_
+9	als	als	ADP	KOKOM	_	10	case	_	_
+10	Jugendtrainer	Jugendtrainer	NOUN	NN	_	16	nmod	_	_
+11-12	beim	_	_	_	_	_	_	_	_
+11	bei	bei	ADP	APPR	_	14	case	_	_
+12	dem	der	DET	ART	Case=Dat|Definite=Def|Gender=Masc,Neut|Number=Sing|PronType=Art	14	det	_	_
+13	Münchner	Münchner	PROPN	ADJA	Case=Dat|Gender=Masc,Neut|Number=Sing	14	amod	_	_
+14	TSV	TSV	PROPN	NE	Case=Dat|Gender=Masc,Neut|Number=Sing	16	nmod	_	_
+15	Forstenried	Forstenried	PROPN	NN	_	14	appos	_	_
+16	aktiv	aktiv	ADJ	ADJD	Degree=Pos	0	root	_	SpaceAfter=No
+17	,	,	PUNCT	$,	_	16	punct	_	_
+18	wo	wo	ADV	PWAV	_	32	advmod	_	_
+19	er	er	PRON	PPER	Case=Nom|Gender=Masc|Number=Sing|Person=3|PronType=Prs	32	nsubj	_	_
+20	seine	sein	DET	PPOSAT	Gender[psor]=Masc,Neut|Number[psor]=Sing|Person=3|Poss=Yes|PronType=Prs	21	det:poss	_	_
+21	Fähigkeiten	Fähigkeit	NOUN	NN	Case=Acc|Gender=Fem|Number=Plur	32	obj	_	_
+22	an	an	ADP	APPR	_	24	case	_	_
+23	seinen	sein	DET	PPOSAT	Gender[psor]=Masc,Neut|Number[psor]=Sing|Person=3|Poss=Yes|PronType=Prs	24	det:poss	_	_
+24	Sohn	Sohn	NOUN	NN	_	32	obl	_	_
+25	und	und	CCONJ	KON	_	31	cc	_	_
+26	die	der	DET	ART	Definite=Def|PronType=Art	31	det	_	_
+27	von	von	ADP	APPR	_	28	case	_	_
+28	ihm	er	PRON	PPER	Case=Dat|Gender=Masc|Number=Sing|Person=3|PronType=Prs	29	nmod	_	_
+29	betreuten	betreuen	ADJ	VVFIN	_	31	amod	_	_
+30	jungen	jung	ADJ	ADJA	Degree=Pos	31	amod	_	_
+31	Spieler	Spieler	NOUN	NN	_	24	conj	_	_
+32	weitervermitteln	weitervermitteln	VERB	VVINF	VerbForm=Inf	14	acl	_	_
+33	konnte	können	AUX	VMFIN	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	32	aux	_	SpaceAfter=No
+34	.	.	PUNCT	$.	_	16	punct	_	_
+

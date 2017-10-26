@@ -1,4 +1,4 @@
-"""Testing code for the conllu package, unit-testing only."""
+"""Testing code for the conllu format, unit-testing only."""
 
 import unittest
 
@@ -42,5 +42,7 @@ class EvaluationTests(unittest.TestCase):
 
 def read_test_conllu():
     with open("test_files/UD_English.conllu") as f:
-        return list(from_conllu(f, "weblog-juancole.com_juancole_20051126063000_ENG_20051126_063000",
-                                return_original=True))
+        yield from from_conllu(f, "weblog-juancole.com_juancole_20051126063000_ENG_20051126_063000",
+                               return_original=True)
+    with open("test_files/UD_German.conllu") as f:
+        yield from from_conllu(f, "train-s10000", return_original=True)

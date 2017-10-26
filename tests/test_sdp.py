@@ -1,4 +1,4 @@
-"""Testing code for the sdp package, unit-testing only."""
+"""Testing code for the sdp format, unit-testing only."""
 
 import unittest
 
@@ -42,4 +42,4 @@ class EvaluationTests(unittest.TestCase):
 
 def read_test_sdp():
     with open("test_files/20001001.sdp") as f:
-        return list(from_sdp(f, "20001001", return_original=True))
+        yield from from_sdp(f, "20001001", return_original=True)

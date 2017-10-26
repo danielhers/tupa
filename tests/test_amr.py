@@ -1,4 +1,4 @@
-"""Testing code for the amr package, unit-testing only."""
+"""Testing code for the amr format, unit-testing only."""
 
 import unittest
 
@@ -42,4 +42,4 @@ class EvaluationTests(unittest.TestCase):
 
 def read_test_amr():
     with open("test_files/LDC2014T12.amr") as f:
-        return list(from_amr(f, return_original=True))
+        yield from from_amr(f, return_original=True)
