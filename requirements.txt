@@ -1,4 +1,5 @@
 ucca>=1.0.13
+numpy
 spacy>=1.9.0
 cython>=0.27.1
 penman>=0.6.2
