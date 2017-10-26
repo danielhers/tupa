@@ -37,7 +37,7 @@ class ParserTests(unittest.TestCase):
         super().__init__(*args, **kwargs)
         Config("", "-m", "test")
         Config().update({"max_words_external": 100, "word_dim_external": 100, "optimizer": "sgd",
-                         "layer_dim": 100, "layers": 1, "lstm_layer_dim": 100, "lstm_layers": 1})
+                         "layer_dim": 30, "layers": 1, "lstm_layer_dim": 40, "lstm_layers": 1})
         Config().update_hyperparams(shared={"lstm_layer_dim": 100, "lstm_layers": 1}, ucca={"word_dim": 300})
 
     def test_oracle(self):
