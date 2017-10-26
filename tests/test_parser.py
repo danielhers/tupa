@@ -108,7 +108,6 @@ class ConfigTests(unittest.TestCase):
 
     def test_hyperparams(self):
         self.assertEqual(Config().hyperparams.shared.layer_dim, 50, "--hyperparams=shared=--layer-dim=50")
-        self.assertFalse(Config().hyperparams.specific)
         d = {"max_words_external": 100, "word_dim_external": 100, "optimizer": "sgd", "layer_dim": 100, "layers": 1}
         Config().update(d)
         Config().update_hyperparams(shared={"lstm_layer_dim": 100, "lstm_layers": 1}, ucca={"word_dim": 300})
