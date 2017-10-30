@@ -181,17 +181,17 @@ class Model(object):
         Copy classifier's labels to create new Actions/UnknownDict objects
         Restoring from a model that was just loaded from file, or called by restore()
         """
-        for axis, (all_labels, size) in self.classifier.labels.items():
+        for axis, all_size in self.classifier.labels.items():  # all_size is a pair of (list of all labels, size limit)
             if axis == NODE_LABEL_KEY:  # These are node labels rather than action labels
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
                 if node_labels and node_labels.size:  # Also used for features, so share the dict
-                    del all_labels, size
+                    del all_size
                     labels = node_labels.data
                 else:  # Not used as a feature, just get labels
                     labels = UnknownDict()
-                    labels.all = all_labels  # Same as AutoIncrementDict(keys=all_labels)?
+                    labels.load(all_size)
             else:  # Action labels for format determined by axis
-                labels = Actions(all_labels, size)
+                labels = Actions(*all_size)
             self.classifier.labels[axis] = labels
 
     def get_classifier_properties(self):
