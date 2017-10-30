@@ -4,9 +4,10 @@ import os
 import unittest
 from glob import glob
 
-from ucca import convert, evaluation, ioutil
+from ucca import convert, ioutil
 
 from scheme.convert import FROM_FORMAT
+from scheme.evaluate import Scores
 from tupa.action import Actions
 from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP
 from tupa.oracle import Oracle
@@ -93,7 +94,7 @@ class ParserTests(unittest.TestCase):
                 model_filename = model_type + settings_suffix(settings)
                 p = Parser(model_file="test_files/models/%s" % model_filename, model_type=model_type)
                 list(p.train(load_passages() if mode == "train" else None, iterations=10))
-                score = evaluation.Scores.aggregate([s for _, s in p.parse(load_passages(), evaluate=True)])
+                score = Scores([s for _, s in p.parse(load_passages(), evaluate=True)])
                 scores.append(score.average_f1())
                 print()
             print("-- average labeled f1: %.3f, %.3f\n" % tuple(scores))
