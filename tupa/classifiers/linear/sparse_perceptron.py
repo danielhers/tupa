@@ -135,12 +135,11 @@ class SparsePerceptron(Perceptron):
             weights.update(pred, -importance * self.learning_rate * value, self.updates)
         self.input_dim = len(self.model)
 
-    def resize(self, axis=None):
-        for axis_, model in self.model.items():
-            if axis in (axis_, None):  # None means all
-                num_labels = self.num_labels[axis_]
-                for weights in model.values():
-                    weights.resize(num_labels)
+    def resize(self):
+        for axis, model in self.model.items():
+            num_labels = self.num_labels[axis]
+            for weights in model.values():
+                weights.resize(num_labels)
 
     def _finalize_model(self, finished_epoch, average):
         # If finished an epoch, remove rare features from our model directly. Otherwise, copy it.

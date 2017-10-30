@@ -34,25 +34,25 @@ class Classifier(object):
 
     def score(self, features, axis):
         if not self.is_frozen:
-            self._update_num_labels(axis)
+            self._update_num_labels()
 
     def init_features(self, features, axes, train=False):
         pass
 
     def update(self, features, axis, pred, true, importance=1):
         assert not self.is_frozen, "Cannot update a frozen model"
-        self._update_num_labels(axis)
+        self._update_num_labels()
 
-    def _update_num_labels(self, axis=None):
+    def _update_num_labels(self):
         """
         self.num_labels is a property, and so updated automatically when a label is added to self.labels,
         but we may need to resize the weight matrices whenever that happens
         """
         if self._num_labels != self.num_labels:
-            self._num_labels = dict(self.num_labels)
-            self.resize(axis)
+            self._num_labels = self.num_labels
+            self.resize()
 
-    def resize(self, axis=None):
+    def resize(self):
         raise NotImplementedError()
 
     def finalize(self, *args, **kwargs):

@@ -55,12 +55,11 @@ class NeuralNetwork(Classifier):
         self.losses = []
         self.indexed_num = self.indexed_dim = self.trainer = self.value = self.birnn = None
 
-    def resize(self, axis=None):
-        for axis_, labels in self.labels.items():
-            if axis in (axis_, None):  # None means all
-                num_labels = self.num_labels[axis_]
-                assert num_labels <= labels.size, "Exceeded maximum number of labels at axis '%s': %d > %d:\n%s" % (
-                    axis_, num_labels, labels.size, "\n".join(map(str, labels.all)))
+    def resize(self):
+        for axis, labels in self.labels.items():
+            num_labels = self.num_labels[axis]
+            assert num_labels <= labels.size, "Exceeded maximum number of labels at axis '%s': %d > %d:\n%s" % (
+                axis, num_labels, labels.size, "\n".join(map(str, labels.all)))
 
     def init_model(self, axis=None, init_params=True):
         init = self.model is None

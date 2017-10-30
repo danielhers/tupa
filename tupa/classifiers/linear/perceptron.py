@@ -30,7 +30,7 @@ class Perceptron(Classifier):
         super().update(features, axis, pred, true, importance)
         self.updates += 1
 
-    def resize(self, axis=None):
+    def resize(self):
         raise NotImplementedError()
 
     def finalize(self, finished_epoch=False, average=True):
