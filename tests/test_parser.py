@@ -131,7 +131,6 @@ class ConfigTests(unittest.TestCase):
             self.assertEqual(getattr(Config().hyperparams.shared, attr), value, attr)
 
     def test_boolean_params(self):
-        self.assertFalse(Config().args.node_labels)
         self.assertTrue(Config().args.evaluate)
         self.assertFalse(Config().args.verify)
 
