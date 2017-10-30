@@ -65,6 +65,7 @@ class Parser(object):
             for f in self.args.formats or ():
                 Config().set_format(f)
                 self.model.init_model()
+            print_config()
             self.best_score = 0
             self.dev = dev
             for self.iteration in range(1, iterations + 1):
@@ -76,6 +77,8 @@ class Parser(object):
             print("Trained %d iterations" % iterations)
         if dev and test or not passages:
             self.model.load()  # Load best model (on dev) to prepare for test
+            if not passages:
+                print_config()
 
     def eval_and_save(self, last=False, finished_epoch=False):
         scores = None
@@ -366,7 +369,6 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
     """
     model_base, model_ext = os.path.splitext(args.model or args.classifier)
     p = Parser(model_file=model_base + model_suffix + model_ext, model_type=args.classifier, beam=args.beam)
-    print("%s %s" % (os.path.basename(__file__), Config()))
     yield from filter(None, p.train(train_passages, dev=dev_passages, test=test_passages, iterations=args.iterations))
     if test_passages:
         if args.train or args.folds:
@@ -420,6 +422,10 @@ def print_scores(scores, filename, prefix=None, prefix_title=None):
             if prefix is not None:
                 fields.insert(0, prefix)
             print(",".join(fields), file=f)
+
+
+def print_config():
+    print("%s %s" % (os.path.basename(__file__), Config()))
 
 
 class TextReader:  # Marks input passages as text so that we don't accidentally train on them
