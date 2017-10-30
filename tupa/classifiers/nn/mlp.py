@@ -10,14 +10,15 @@ class MultilayerPerceptron(object):
         self.args = args
         self.model = model
         self.params = global_params
-        self.layers = self.args.layers if layers is None else layers
-        self.total_layers = self.layers
+        self.total_layers = self.layers = self.args.layers if layers is None else layers
         self.layer_dim = self.args.layer_dim if layer_dim is None else layer_dim
         self.output_dim = self.args.output_dim if output_dim is None else output_dim
         self.init = CategoricalParameter(INITIALIZERS, self.args.init)
         self.dropout = self.args.dropout
         self.activation = CategoricalParameter(ACTIVATIONS, self.args.activation)
         self.num_labels = num_labels
+        if self.num_labels:
+            self.total_layers += 1
         self.key_args = kwargs
 
     def init_params(self, input_dim):
@@ -27,7 +28,6 @@ class MultilayerPerceptron(object):
         if self.num_labels:  # Adding another layer at the top
             i_dim.append(self.output_dim)
             o_dim.append(self.num_labels)
-            self.total_layers += 1
         self.params.update((key(prefix, i, **self.key_args), self.model.add_parameters(dims[i], init=self.init()()))
                            for prefix, dims in (("W", list(zip(o_dim, i_dim))), ("b", o_dim))
                            for i, dim in enumerate(dims))
