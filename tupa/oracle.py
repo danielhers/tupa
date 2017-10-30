@@ -1,6 +1,6 @@
 from ucca import layer1
 
-from scheme.util.amr import LABEL_ATTRIB
+from scheme.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
 from .action import Actions
 from .config import Config, COMPOUND
 from .states.state import InvalidActionError
@@ -158,6 +158,19 @@ class Oracle(object):
 
     def need_label(self, node):
         return self.args.node_labels and not node.labeled and node.orig_node.attrib.get(LABEL_ATTRIB)
+
+    @staticmethod
+    def get_label(state, action):
+        true_label = raw_true_label = None
+        if action.orig_node is not None:
+            raw_true_label = action.orig_node.attrib.get(LABEL_ATTRIB)
+        if raw_true_label is not None:
+            true_label, _, _ = raw_true_label.partition(LABEL_SEPARATOR)
+            try:
+                state.check_valid_label(true_label, message=True)
+            except InvalidActionError as e:
+                raise InvalidActionError("True label is invalid: " + "\n".join(map(str, (true_label, state, e))))
+        return true_label, raw_true_label
 
     def str(self, sep):
         return "nodes left: [%s]%sedges left: [%s]" % (" ".join(self.nodes_remaining), sep,

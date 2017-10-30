@@ -6,12 +6,14 @@ from glob import glob
 
 from ucca import convert, evaluation, ioutil
 
+from scheme.convert import FROM_FORMAT
 from tupa.action import Actions
 from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP
 from tupa.oracle import Oracle
 from tupa.parse import Parser
 from tupa.states.state import State
 
+TOY_DATA = glob(os.environ.get("TOY_DATA", "test_files/*.xml"))
 SETTINGS = ([], ["implicit"], ["linkage"], ["implicit", "linkage"])
 NUM_PASSAGES = 2
 
@@ -28,7 +30,7 @@ def settings_suffix(settings):
 def load_passages():
     passages = []
     for _ in range(NUM_PASSAGES):
-        passages += ioutil.read_files_and_dirs(glob(os.environ.get("TOY_DATA", "test_files/120.xml")))
+        passages += ioutil.read_files_and_dirs(TOY_DATA, converters=FROM_FORMAT)
     return passages
 
 
@@ -47,6 +49,7 @@ class ParserTests(unittest.TestCase):
         for settings in SETTINGS:
             update_settings(settings)
             for passage in load_passages():
+                Config().set_format(passage.extra.get("format"))
                 oracle = Oracle(passage)
                 state = State(passage)
                 actions = Actions()
@@ -54,7 +57,12 @@ class ParserTests(unittest.TestCase):
                 while True:
                     action = min(oracle.get_actions(state, actions).values(), key=str)
                     state.transition(action)
-                    actions_taken.append("%s\n" % action)
+                    s = str(action)
+                    if state.need_label:
+                        label, _ = oracle.get_label(state, action)
+                        state.label_node(label)
+                        s += " " + str(label)
+                    actions_taken.append(s + "\n")
                     if state.finished:
                         break
                 compare_file = "test_files/oracle_actions/%s%s.txt" % (passage.ID, settings_suffix(settings))

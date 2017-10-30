@@ -12,11 +12,11 @@ from ucca.convert import from_text, to_text
 
 from scheme.convert import FROM_FORMAT, TO_FORMAT
 from scheme.evaluate import EVALUATORS, Scores
-from scheme.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR, WIKIFIER
+from scheme.util.amr import LABEL_ATTRIB, WIKIFIER
 from tupa.config import Config
 from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
 from tupa.oracle import Oracle
-from tupa.states.state import State, InvalidActionError
+from tupa.states.state import State
 
 
 class ParserException(Exception):
@@ -224,7 +224,7 @@ class Parser(object):
                 raise ParserException("Invalid transition: %s %s" % (action, self.state)) from e
             true_label = label = predicted_label = None
             if self.state.need_label:  # Label action that requires a choice of label
-                true_label, raw_true_label = self.get_true_label(action.orig_node)
+                true_label, raw_true_label = self.get_true_label(action, train)
                 label, predicted_label = self.choose_label(features, train, true_label)
                 self.state.label_node(raw_true_label if label == true_label else label)
             self.model.classifier.finished_step(train)
@@ -251,7 +251,7 @@ class Parser(object):
                 true_actions = self.oracle.get_actions(self.state, self.model.actions, create=train)
             except (AttributeError, AssertionError) as e:
                 if train:
-                    raise ParserException("Error in oracle during training") from e
+                    raise ParserException("Error in getting action from oracle during training") from e
         return true_actions
 
     def choose_action(self, features, train, true_actions):
@@ -278,18 +278,12 @@ class Parser(object):
         self.action_count += 1
         return action, predicted_action
 
-    def get_true_label(self, node):
-        true_label = raw_true_label = None
-        if self.oracle:
-            if node is not None:
-                raw_true_label = node.attrib.get(LABEL_ATTRIB)
-            if raw_true_label is not None:
-                true_label, _, _ = raw_true_label.partition(LABEL_SEPARATOR)
-                try:
-                    self.state.check_valid_label(true_label, message=True)
-                except InvalidActionError as e:
-                    raise ParserException("True label is invalid: " + "\n".join(map(str, (true_label, self.state, e))))
-        return true_label, raw_true_label
+    def get_true_label(self, action, train):
+        try:
+            return self.oracle.get_label(self.state, action) if self.oracle else (None, None)
+        except AssertionError as e:
+            if train:
+                raise ParserException("Error in getting label from oracle during training") from e
 
     def choose_label(self, features, train, true_label):
         true_id = self.model.labels[true_label] if self.oracle else None  # Needs to happen before score()
