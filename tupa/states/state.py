@@ -138,6 +138,7 @@ class State(object):
                        message and "Action not allowed: %s " % action + (
                            ("after " + ", ".join("%s" % a for a in self.actions[-3:])) if self.actions else "as first"))
         if action.is_type(Actions.Finish):
+            self.check(not self.buffer, "May only finish at the end of the input buffer", is_type=True)
             if self.args.swap:  # Without swap, the oracle may be incapable even of single action
                 self.check(self.root.outgoing or all(n is self.root or n.is_linkage or n.text for n in self.nodes),
                            message and "Root has no child at parse end", is_type=True)
@@ -172,7 +173,6 @@ class State(object):
                     self.check(node.text is None, message and "Terminals do not have labels: %s" % node, is_type=True)
                 elif action.is_type(Actions.Reduce):
                     if s0 is self.root:
-                        self.check(s0.outgoing, message and "Reducing childless root", is_type=True)
                         self.check(self.root.labeled or not self.args.node_labels,
                                    message and "Reducing root without label", is_type=True)
                     else:

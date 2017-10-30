@@ -8,6 +8,7 @@ from .states.state import InvalidActionError
 # Constants for readability, used by Oracle.action
 RIGHT = PARENT = NODE = 0
 LEFT = CHILD = EDGE = 1
+LABEL = 2
 ACTIONS = (  # index by [NODE/EDGE][PARENT/CHILD or RIGHT/LEFT][True/False (remote)]
     (  # node actions
         (Actions.Node, Actions.RemoteNode),  # creating a parent
@@ -77,26 +78,16 @@ class Oracle(object):
         :param state: current State of the parser
         :return: generator of Action items to perform
         """
-        if not ((state.buffer or state.stack) and (self.edges_remaining or
-                                                   any(map(self.need_label, state.stack + list(state.buffer))))):
-            yield Actions.Finish
-            if state.stack and not self.need_label(state.stack[-1]):
-                yield Actions.Reduce
-            return
-
         self.found = False
         if state.stack:
             s0 = state.stack[-1]
-            incoming = self.edges_remaining.intersection(s0.orig_node.incoming)
-            outgoing = self.edges_remaining.intersection(s0.orig_node.outgoing)
+            incoming, outgoing = map(self.edges_remaining.intersection, (s0.orig_node.incoming, s0.orig_node.outgoing))
             if not incoming and not outgoing and not self.need_label(s0):
-                yield Actions.Reduce
-                return
+                yield self.action(Actions.Reduce)
             else:
                 # Check for node label action: if all terminals have already been connected
                 if self.need_label(s0) and not any(e.tag == layer1.EdgeTags.Terminal for e in outgoing):
-                    self.found = True
-                    yield Actions.Label(0, orig_node=s0.orig_node, oracle=self)
+                    yield self.action(s0, LABEL, 0)
 
                 # Check for actions to create new nodes
                 for edge in incoming:
@@ -116,8 +107,7 @@ class Oracle(object):
                     # Check for node label action: if all terminals have already been connected
                     if self.need_label(s1) and not any(e.tag == layer1.EdgeTags.Terminal for e in
                                                        self.edges_remaining.intersection(s1.orig_node.outgoing)):
-                        self.found = True
-                        yield Actions.Label(1, orig_node=s1.orig_node, oracle=self)
+                        yield self.action(s1, LABEL, 1)
 
                     # Check for actions to create binary edges
                     for edge in incoming:
@@ -129,7 +119,7 @@ class Oracle(object):
                             yield self.action(edge, EDGE, LEFT)  # LeftEdge or LeftRemote
                         elif state.buffer and edge.child.ID == state.buffer[0].node_id and \
                                 len(state.buffer[0].orig_node.incoming) == 1:
-                            yield Actions.Shift  # Special case to allow getting rid of simple children quickly
+                            yield self.action(Actions.Shift)  # Special case to allow discarding simple children quickly
 
                     if not self.found:
                         # Check if a swap is necessary, and how far (if compound swap is enabled)
@@ -145,14 +135,18 @@ class Oracle(object):
                                 if distance is None and self.args.swap == COMPOUND:  # Save the first one
                                     distance = min(i, Config().args.max_swap)  # Do not swap more than allowed
                                 if not related:  # All related nodes are in the stack
-                                    yield Actions.Swap(distance)
-                                    return
+                                    yield self.action(Actions.Swap(distance))
+                                    break
 
-        if state.buffer and not self.found:
-            yield Actions.Shift
+        if not self.found:
+            yield self.action(Actions.Shift if state.buffer else Actions.Finish)
 
-    def action(self, edge, kind, direction):
+    def action(self, edge, kind=None, direction=None):
         self.found = True
+        if kind is None:
+            return edge  # Will be just an Action object in this case
+        if kind == LABEL:
+            return Actions.Label(direction, orig_node=edge.orig_node, oracle=self)
         remote = edge.attrib.get("remote", False)
         node = (edge.parent, edge.child)[direction] if kind == NODE else None
         return ACTIONS[kind][direction][remote](tag=edge.tag, orig_edge=edge, orig_node=node, oracle=self)
