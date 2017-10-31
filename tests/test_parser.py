@@ -70,7 +70,7 @@ class ParserTests(unittest.TestCase):
                 # with open(compare_file, "w") as f:
                 #     f.writelines(actions_taken)
                 with open(compare_file) as f:
-                    self.assertSequenceEqual(actions_taken, f.readlines())
+                    self.assertSequenceEqual(f.readlines(), actions_taken)
 
     def test_parser_sparse(self):
         self.train_test(SPARSE)
