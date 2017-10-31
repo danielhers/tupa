@@ -99,7 +99,7 @@ class ParserTests(unittest.TestCase):
                 print()
             print("-- average labeled f1: %.3f, %.3f\n" % tuple(scores))
             if compare:
-                self.assertAlmostEqual(*scores, places=2)
+                self.assertAlmostEqual(*scores, places=1)
             p.parse(convert.to_text(load_passages()[0]))
             self.assertFalse(list(p.parse(())))  # parsing nothing returns nothing
 
