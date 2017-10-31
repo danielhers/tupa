@@ -28,6 +28,10 @@ class Scores(object):
     def __init__(self, scores):
         self.scores_by_format = [(t, t.aggregate(s)) for t, s in groupby(scores, type)]
 
+    @staticmethod
+    def aggregate(scores):
+        return Scores([s for score in scores for _, s in score.scores_by_format])
+
     def average_f1(self, *args, **kwargs):
         return sum(s.average_f1(*args, **kwargs) for t, s in self.scores_by_format) / len(self.scores_by_format)
 
