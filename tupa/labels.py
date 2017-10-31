@@ -12,6 +12,3 @@ class Labels(object):
 
     def save(self, skip=False):
         return (None if skip else self.all), self.size
-
-    def load(self, all_size):
-        self.all, self.size = all_size

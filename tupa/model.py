@@ -189,7 +189,7 @@ class Model(object):
                     labels = node_labels.data
                 else:  # Not used as a feature, just get labels
                     labels = UnknownDict()
-                    labels.load(all_size)
+                    labels.all, _ = all_size
             else:  # Action labels for format determined by axis
                 labels = Actions(*all_size)
             self.classifier.labels[axis] = labels
