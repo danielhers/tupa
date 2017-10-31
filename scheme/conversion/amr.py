@@ -74,7 +74,7 @@ class AmrConverter(convert.FormatConverter):
         assert len(top) == 1, "There must be exactly one %s edge, but %d are found" % (TOP_DEP, len(top))
         _, _, root = top[0]  # init with child of TOP
         pending = amr.triples(head=root)
-        self.nodes = {}  # map triples to UCCA nodes: dep gets a new node each time unless it's a variable
+        self.nodes = OrderedDict()  # map triples to UCCA nodes: dep gets a new node each time unless it's a variable
         variables = {root: l1.heads[0]}  # map AMR variables to UCCA nodes
         names = set()  # to collapse :name (... / name) :op "..." into one string node
         excluded = set()  # nodes whose outgoing edges (except for instance-of edges) will be ignored
