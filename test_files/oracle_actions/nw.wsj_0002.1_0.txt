@@ -60,14 +60,14 @@ SHIFT
 IMPLICIT-mod
 IMPLICIT-mod
 SHIFT
-LABEL Concept(industry)
-REDUCE
-SHIFT
 IMPLICIT-name
 LABEL Concept(country)
 REDUCE
 SHIFT
 LABEL "Britain"
+REDUCE
+SHIFT
+LABEL Concept(industry)
 REDUCE
 SHIFT
 SWAP
