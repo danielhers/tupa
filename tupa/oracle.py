@@ -1,3 +1,5 @@
+from operator import attrgetter
+
 from ucca import layer1
 
 from scheme.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
@@ -81,7 +83,8 @@ class Oracle(object):
         self.found = False
         if state.stack:
             s0 = state.stack[-1]
-            incoming, outgoing = map(self.edges_remaining.intersection, (s0.orig_node.incoming, s0.orig_node.outgoing))
+            incoming, outgoing = [[e for e in l if e in self.edges_remaining]
+                                  for l in (s0.orig_node.incoming, s0.orig_node.outgoing)]
             if not incoming and not outgoing and not self.need_label(s0):
                 yield self.action(Actions.Reduce)
             else:
