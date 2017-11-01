@@ -45,7 +45,7 @@ class Parser(object):
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
         self.ignore_node = None if self.args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
         self.best_score = self.dev = self.iteration = self.eval_index = None
-        self.trained = False
+        self.training = self.trained = False
 
     def train(self, passages=None, dev=None, test=None, iterations=1):
         """
@@ -122,8 +122,8 @@ class Parser(object):
                  or, if evaluate=True, of pairs of (Passage, Scores).
         """
         assert mode in ParseMode, "Invalid parse mode: %s" % mode
-        train = (mode is ParseMode.train)
-        if not train and not self.trained:
+        self.training = (mode is ParseMode.train)
+        if not self.training and not self.trained:
             list(self.train())  # Try to load model from file
         passage_word = "sentence" if self.args.sentences else "paragraph" if self.args.paragraphs else "passage"
         self.total_actions = 0
@@ -142,7 +142,7 @@ class Parser(object):
             passage_format = passage.extra.get("format") or "ucca"
             if self.args.verbose:
                 print("%-6s %s %-7s" % (passage_format, passage_word, passage.ID), end=Config().line_end, flush=True)
-            assert not (train and passage_format == "text"), "Cannot train on unannotated plain text"
+            assert not (self.training and passage_format == "text"), "Cannot train on unannotated plain text"
             started = time.time()
             self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = 0
             textutil.annotate(passage, verbose=self.args.verbose > 2)  # tag POS and parse dependencies
@@ -150,30 +150,31 @@ class Parser(object):
             WIKIFIER.enabled = self.args.wikification
             self.state = State(passage)
             self.state_hash_history = set()
-            self.oracle = Oracle(passage) if train or (self.args.verbose > 1 or self.args.use_gold_node_labels
-                                                       ) and (edges or node_labels) or self.args.verify else None
+            self.oracle = Oracle(passage) if self.training or ((self.args.verbose > 1 or self.args.use_gold_node_labels)
+                                                               and (edges or node_labels)) or self.args.verify else None
             self.model.init_model()
             if ClassifierProperty.require_init_features in self.model.get_classifier_properties():
                 axes = [Config().format]
                 if self.args.node_labels and not self.args.use_gold_node_labels:
                     axes.append(NODE_LABEL_KEY)
-                self.model.init_features(self.state, axes, train)
+                self.model.init_features(self.state, axes, self.training)
             failed = False
             try:
-                self.parse_passage(train)  # This is where the actual parsing takes place
+                self.parse_passage()  # This is where the actual parsing takes place
             except ParserException as e:
-                if train:
+                if self.training:
                     raise
                 Config().log("%s %s: %s" % (passage_word, passage.ID, e))
                 failed = True
-            guessed = self.state.create_passage(verify=self.args.verify) if not train or self.args.verify else passage
+            guessed = self.state.create_passage(verify=self.args.verify) if not self.training or self.args.verify else \
+                passage
             duration = time.time() - started
             total_duration += duration
             num_tokens = len(set(self.state.terminals).difference(self.state.buffer))
             total_tokens += num_tokens
             if self.oracle:  # We have an oracle to verify by
                 if not failed and self.args.verify:
-                    self.verify_passage(guessed, passage, train)
+                    self.verify_passage(guessed, passage)
                 if self.action_count:
                     accuracy_str = percents_str(self.correct_action_count, self.action_count)
                     if self.label_count:
@@ -186,12 +187,12 @@ class Parser(object):
                 print(Config().line_end, end="")
                 if self.oracle:
                     print(Config().line_end, flush=True)
-            self.model.classifier.finished_item(train)
+            self.model.classifier.finished_item(self.training)
             self.total_correct_actions += self.correct_action_count
             self.total_actions += self.action_count
             self.total_correct_labels += self.correct_label_count
             self.total_labels += self.label_count
-            if train and self.args.save_every and passage_index % self.args.save_every == 0:
+            if self.training and self.args.save_every and passage_index % self.args.save_every == 0:
                 self.eval_and_save()
                 self.eval_index += 1
             yield (guessed, self.evaluate_passage(guessed, passage)) if evaluate else guessed
@@ -208,10 +209,10 @@ class Parser(object):
                     total_duration, passage_word, total_duration / passage_index,
                     total_tokens / total_duration), flush=True)
 
-    def parse_passage(self, train):
+    def parse_passage(self):
         """
-        Internal method to parse a single passage
-        :param train: use oracle to train on given passages, or just parse with classifier?
+        Internal method to parse a single passage.
+        If training, use oracle to train on given passages. Otherwise just parse with classifier.
         """
         if self.args.verbose > 2:
             print("  initial state: %s" % self.state)
@@ -219,18 +220,18 @@ class Parser(object):
             if self.args.check_loops:
                 self.check_loop()
             features = self.model.feature_extractor.extract_features(self.state)
-            true_actions = self.get_true_actions(train)
-            action, predicted_action = self.choose_action(features, train, true_actions)
+            true_actions = self.get_true_actions()
+            action, predicted_action = self.choose_action(features, true_actions)
             try:
                 self.state.transition(action)
             except AssertionError as e:
                 raise ParserException("Invalid transition: %s %s" % (action, self.state)) from e
             true_label = label = predicted_label = None
             if self.state.need_label:  # Label action that requires a choice of label
-                true_label, raw_true_label = self.get_true_label(action, train)
-                label, predicted_label = self.choose_label(features, train, true_label)
+                true_label, raw_true_label = self.get_true_label(action)
+                label, predicted_label = self.choose_label(features, true_label)
                 self.state.label_node(raw_true_label if label == true_label else label)
-            self.model.classifier.finished_step(train)
+            self.model.classifier.finished_step(self.training)
             if self.args.verbose > 2:
                 if self.oracle:
                     print("  predicted: %-15s true: %-15s taken: %-15s %s" % (
@@ -247,17 +248,17 @@ class Parser(object):
             if self.state.finished:
                 return  # action is Finish (or early update is triggered)
 
-    def get_true_actions(self, train):
+    def get_true_actions(self):
         true_actions = {}
         if self.oracle:
             try:
-                true_actions = self.oracle.get_actions(self.state, self.model.actions, create=train)
+                true_actions = self.oracle.get_actions(self.state, self.model.actions, create=self.training)
             except (AttributeError, AssertionError) as e:
-                if train:
+                if self.training:
                     raise ParserException("Error in getting action from oracle during training") from e
         return true_actions
 
-    def choose_action(self, features, train, true_actions):
+    def choose_action(self, features, true_actions):
         scores = self.model.classifier.score(features, axis=Config().format)  # Returns NumPy array
         if self.args.verbose > 3:
             print("  action scores: " + ",".join(("%s: %g" % x for x in zip(self.model.actions.all, scores))))
@@ -270,25 +271,25 @@ class Parser(object):
         if is_correct:
             self.correct_action_count += 1
         else:
-            action = Config().random.choice(list(true_actions.values())) if train else predicted_action
-        if train and not (is_correct and
-                          ClassifierProperty.update_only_on_error in self.model.get_classifier_properties()):
+            action = Config().random.choice(list(true_actions.values())) if self.training else predicted_action
+        if self.training and not (
+                    is_correct and ClassifierProperty.update_only_on_error in self.model.get_classifier_properties()):
             best_action = self.predict(scores[list(true_actions.keys())], list(true_actions.values()))
             self.model.classifier.update(features, axis=Config().format, pred=predicted_action.id, true=best_action.id,
                                          importance=self.args.swap_importance if best_action.is_swap else 1)
-        if train and not is_correct and self.args.early_update:
+        if self.training and not is_correct and self.args.early_update:
             self.state.finished = True
         self.action_count += 1
         return action, predicted_action
 
-    def get_true_label(self, action, train):
+    def get_true_label(self, action):
         try:
             return self.oracle.get_label(self.state, action) if self.oracle else (None, None)
         except AssertionError as e:
-            if train:
+            if self.training:
                 raise ParserException("Error in getting label from oracle during training") from e
 
-    def choose_label(self, features, train, true_label):
+    def choose_label(self, features, true_label):
         true_id = self.model.labels[true_label] if self.oracle else None  # Needs to happen before score()
         if self.args.use_gold_node_labels:
             return true_label, true_label
@@ -300,8 +301,8 @@ class Parser(object):
             is_correct = (label == true_label)
             if is_correct:
                 self.correct_label_count += 1
-            if train and not (is_correct and
-                              ClassifierProperty.update_only_on_error in self.model.get_classifier_properties()):
+            if self.training and not (is_correct and ClassifierProperty.update_only_on_error in
+                                      self.model.get_classifier_properties()):
                 self.model.classifier.update(features, axis=NODE_LABEL_KEY, pred=self.model.labels[label], true=true_id)
                 label = true_label
         self.label_count += 1
@@ -345,16 +346,14 @@ class Parser(object):
             print("F1=%.3f" % score.average_f1(), flush=True)
         return score
 
-    def verify_passage(self, guessed, ref, show_diff):
+    def verify_passage(self, guessed, ref):
         """
         Compare predicted passage to true passage and raise an exception if they differ
         :param ref: true passage
         :param guessed: predicted passage to compare
-        :param show_diff: if passages differ, show the difference between them?
-                          Depends on guessed having the original node IDs annotated in the "remarks" field for each node
         """
         assert ref.equals(guessed, ignore_node=self.ignore_node), \
-            "Failed to produce true passage" + (diffutil.diff_passages(ref, guessed) if show_diff else "")
+            "Failed to produce true passage" + (diffutil.diff_passages(ref, guessed) if self.training else "")
 
 
 def train_test(train_passages, dev_passages, test_passages, args, model_suffix=""):
