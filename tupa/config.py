@@ -181,6 +181,7 @@ class Config(object, metaclass=Singleton):
         constructions.add_argument(argparser)
         add_boolean_option(argparser, "sentences", "split to sentences")
         add_boolean_option(argparser, "paragraphs", "split to paragraphs")
+        argparser.add_argument("--timeout", type=float, help="max number of seconds to wait for a single passage")
 
         group = argparser.add_argument_group(title="Training parameters")
         group.add_argument("-t", "--train", nargs="+", default=(), help="passage files/directories to train on")

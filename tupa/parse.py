@@ -1,3 +1,4 @@
+import concurrent.futures
 import os
 import sys
 import time
@@ -158,14 +159,18 @@ class Parser(object):
                 if self.args.node_labels and not self.args.use_gold_node_labels:
                     axes.append(NODE_LABEL_KEY)
                 self.model.init_features(self.state, axes, self.training)
-            failed = False
+            status = None
             try:
-                self.parse_passage()  # This is where the actual parsing takes place
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    executor.submit(self.parse_passage).result(self.args.timeout)  # This does the actual parsing
             except ParserException as e:
                 if self.training:
                     raise
                 Config().log("%s %s: %s" % (passage_word, passage.ID, e))
-                failed = True
+                status = "failed"
+            except concurrent.futures.TimeoutError:
+                Config().log("%s %s: timeout (%fs)" % (passage_word, passage.ID, self.args.timeout))
+                status = "timeout"
             guessed = self.state.create_passage(verify=self.args.verify) if not self.training or self.args.verify else \
                 passage
             duration = time.time() - started
@@ -173,7 +178,7 @@ class Parser(object):
             num_tokens = len(set(self.state.terminals).difference(self.state.buffer))
             total_tokens += num_tokens
             if self.oracle:  # We have an oracle to verify by
-                if not failed and self.args.verify:
+                if status is None and self.args.verify:
                     self.verify_passage(guessed, passage)
                 if self.action_count:
                     accuracy_str = percents_str(self.correct_action_count, self.action_count)
@@ -182,9 +187,9 @@ class Parser(object):
                     if self.args.verbose:
                         print("%-30s" % accuracy_str, end=Config().line_end)
             if self.args.verbose:
-                print("%0.3fs" % duration, end="")
-                print("%-15s" % (" (failed)" if failed else " (%d tokens/s)" % (num_tokens / duration)), end="")
-                print(Config().line_end, end="")
+                if status is None:
+                    status = "%d tokens/s" % (num_tokens / duration)
+                print("%0.3fs%-15s%s" % (duration, " (" + status + ")", Config().line_end), end="")
                 if self.oracle:
                     print(Config().line_end, flush=True)
             self.model.classifier.finished_item(self.training)
