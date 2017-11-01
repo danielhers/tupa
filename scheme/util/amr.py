@@ -43,7 +43,6 @@ NEGATION_PLACEHOLDER = "<n>"
 WIKIFICATION_PLACEHOLDER = "<w>"
 LABEL_ATTRIB = "label"
 LABEL_SEPARATOR = "|"  # after the separator there is the label category
-KNOWN_LABELS = set()  # used to avoid escaping when unnecessary
 PUNCTUATION_REMOVER = str.maketrans("", "", string.punctuation)
 PREFIXED_RELATION_ENUM = ("op", "snt")
 PREFIXED_RELATION_PREP = "prep"
@@ -219,7 +218,7 @@ def resolve_label(node, label=None, reverse=False, conservative=False):
             category = CATEGORIES.get(label)  # category suffix to append to label
         elif LABEL_SEPARATOR in label:
             label = label[:label.find(LABEL_SEPARATOR)]  # remove category suffix
-        if not reverse or label not in KNOWN_LABELS:
+        if not reverse:
             children = [c.children[0] if c.tag == "PNCT" else c for c in node.children]
             terminals = sorted([c for c in children if getattr(c, "text", None)],
                                key=lambda c: getattr(c, "index", getattr(c, "position", None)))
@@ -258,7 +257,6 @@ def resolve_label(node, label=None, reverse=False, conservative=False):
                             except (ValueError, IOError):
                                 pass
         if reverse:
-            KNOWN_LABELS.add(label)
             if category is not None:
                 label += LABEL_SEPARATOR + category
     return label

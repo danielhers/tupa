@@ -37,7 +37,7 @@ NODE-Terminal
 NODE-Terminal
 REDUCE
 SHIFT
-LABEL Concept(executive)
+LABEL Concept(<n>)
 NODE-mod
 SHIFT
 NODE-ARG2
