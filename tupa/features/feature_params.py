@@ -83,9 +83,5 @@ def copy_params(params, copy_dict=dict):
         param_copy = copy(param)
         if param.data is not None:
             param_copy.data = copy_dict(param.data)
-            try:
-                param_copy.data.size = param.size
-            except AttributeError:
-                pass
         params_copy[suffix] = param_copy
     return params_copy
