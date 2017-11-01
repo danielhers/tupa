@@ -8,6 +8,7 @@ from ucca import convert, ioutil
 
 from scheme.convert import FROM_FORMAT
 from scheme.evaluate import Scores
+from scheme.util.amr import WIKIFIER
 from tupa.action import Actions
 from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP
 from tupa.oracle import Oracle
@@ -44,6 +45,7 @@ class ParserTests(unittest.TestCase):
                          "tag_dim": 5, "dep_dim": 5, "optimizer": "sgd", "output_dim": 35,
                          "layer_dim": 30, "layers": 1, "lstm_layer_dim": 40, "lstm_layers": 1})
         Config().update_hyperparams(shared={"lstm_layer_dim": 100, "lstm_layers": 1}, ucca={"word_dim": 300})
+        WIKIFIER.enabled = False
 
     def test_oracle(self):
         self.maxDiff = None
@@ -70,7 +72,7 @@ class ParserTests(unittest.TestCase):
                 # with open(compare_file, "w") as f:
                 #     f.writelines(actions_taken)
                 with open(compare_file) as f:
-                    self.assertSequenceEqual(f.readlines(), actions_taken)
+                    self.assertSequenceEqual(f.readlines(), actions_taken, compare_file)
 
     def test_parser_sparse(self):
         self.train_test(SPARSE)
