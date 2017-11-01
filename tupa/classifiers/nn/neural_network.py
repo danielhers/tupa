@@ -57,9 +57,10 @@ class NeuralNetwork(Classifier):
 
     def resize(self):
         for axis, labels in self.labels.items():
-            num_labels = self.num_labels[axis]
-            assert num_labels <= labels.size, "Exceeded maximum number of labels at axis '%s': %d > %d:\n%s" % (
-                axis, num_labels, labels.size, "\n".join(map(str, labels.all)))
+            if labels.size is not None:
+                num_labels = self.num_labels[axis]
+                assert num_labels <= labels.size, "Exceeded maximum number of labels at axis '%s': %d > %d:\n%s" % (
+                    axis, num_labels, labels.size, "\n".join(map(str, labels.all)))
 
     def init_model(self, axis=None, init_params=True):
         init = self.model is None
