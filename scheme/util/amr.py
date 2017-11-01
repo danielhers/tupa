@@ -218,47 +218,45 @@ def resolve_label(node, label=None, reverse=False, conservative=False):
             category = CATEGORIES.get(label)  # category suffix to append to label
         elif LABEL_SEPARATOR in label:
             label = label[:label.find(LABEL_SEPARATOR)]  # remove category suffix
-        if not reverse:
-            children = [c.children[0] if c.tag == "PNCT" else c for c in node.children]
-            terminals = sorted([c for c in children if getattr(c, "text", None)],
-                               key=lambda c: getattr(c, "index", getattr(c, "position", None)))
-            if terminals:
-                if not reverse and label.startswith(NUM):  # numeric label (always 1 unless "numbers" layer is on)
-                    number = terminals_to_number(terminals)  # try replacing spelled-out numbers/months with digits
-                    if number is not None:
-                        label = NUM + "(%s)" % number
-                else:
-                    if len(terminals) > 1:
-                        if reverse or label.count(TOKEN_PLACEHOLDER) == 1:
-                            label = _replace(TOKEN_PLACEHOLDER, "".join(t.text for t in terminals))
-                        if reverse or label.count(TOKEN_TITLE_PLACEHOLDER) == 1:
-                            label = _replace(TOKEN_TITLE_PLACEHOLDER, "_".join(merge_punct(t.text for t in terminals)))
-                        if conservative:
-                            terminals = ()
-                    for terminal in terminals:
-                        lemma = lemmatize(terminal)
-                        if reverse and category is None:
-                            category = CATEGORIES.get(lemma)
-                        label = _replace(LEMMA_PLACEHOLDER, lemma)
-                        label = _replace(TOKEN_PLACEHOLDER, terminal.text)
-                        label = _replace(TOKEN_TITLE_PLACEHOLDER, terminal.text.title())
-                        negation = NEGATIONS.get(terminal.text)
-                        if negation is not None:
-                            label = _replace(NEGATION_PLACEHOLDER, negation)
-                        if label.startswith(CONCEPT):
-                            morph = VERBALIZATION.get(lemma)
-                            if morph is not None:
-                                for prefix, value in morph.items():  # V: verb, N: noun, A: noun actor
-                                    label = _replace("<%s>" % prefix, value)
-                        elif label.startswith('"') and (reverse and not PLACEHOLDER_PATTERN.search(label) or
-                                                        not reverse and WIKIFICATION_PLACEHOLDER in label):
-                            try:
-                                label = _replace(WIKIFICATION_PLACEHOLDER, WIKIFIER.wikify_terminal(terminal))
-                            except (ValueError, IOError):
-                                pass
-        if reverse:
-            if category is not None:
-                label += LABEL_SEPARATOR + category
+        children = [c.children[0] if c.tag == "PNCT" else c for c in node.children]
+        terminals = sorted([c for c in children if getattr(c, "text", None)],
+                           key=lambda c: getattr(c, "index", getattr(c, "position", None)))
+        if terminals:
+            if not reverse and label.startswith(NUM):  # numeric label (always 1 unless "numbers" layer is on)
+                number = terminals_to_number(terminals)  # try replacing spelled-out numbers/months with digits
+                if number is not None:
+                    label = NUM + "(%s)" % number
+            else:
+                if len(terminals) > 1:
+                    if reverse or label.count(TOKEN_PLACEHOLDER) == 1:
+                        label = _replace(TOKEN_PLACEHOLDER, "".join(t.text for t in terminals))
+                    if reverse or label.count(TOKEN_TITLE_PLACEHOLDER) == 1:
+                        label = _replace(TOKEN_TITLE_PLACEHOLDER, "_".join(merge_punct(t.text for t in terminals)))
+                    if conservative:
+                        terminals = ()
+                for terminal in terminals:
+                    lemma = lemmatize(terminal)
+                    if reverse and category is None:
+                        category = CATEGORIES.get(lemma)
+                    label = _replace(LEMMA_PLACEHOLDER, lemma)
+                    label = _replace(TOKEN_PLACEHOLDER, terminal.text)
+                    label = _replace(TOKEN_TITLE_PLACEHOLDER, terminal.text.title())
+                    negation = NEGATIONS.get(terminal.text)
+                    if negation is not None:
+                        label = _replace(NEGATION_PLACEHOLDER, negation)
+                    if label.startswith(CONCEPT):
+                        morph = VERBALIZATION.get(lemma)
+                        if morph is not None:
+                            for prefix, value in morph.items():  # V: verb, N: noun, A: noun actor
+                                label = _replace("<%s>" % prefix, value)
+                    elif label.startswith('"') and (reverse and not PLACEHOLDER_PATTERN.search(label) or
+                                                    not reverse and WIKIFICATION_PLACEHOLDER in label):
+                        try:
+                            label = _replace(WIKIFICATION_PLACEHOLDER, WIKIFIER.wikify_terminal(terminal))
+                        except (ValueError, IOError):
+                            pass
+        if reverse and category:
+            label += LABEL_SEPARATOR + category
     return label
 
 
