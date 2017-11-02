@@ -135,8 +135,9 @@ class Parser(object):
         if not hasattr(passages, "__iter__"):  # Single passage given
             passages = (passages,)
         passages_iter = enumerate(passages, start=1)
-        for passage_index, passage in passages_iter if self.args.verbose else \
-                tqdm(passages_iter, unit=passage_word, total=len(passages), file=sys.stdout):
+        for passage_index, passage in passages_iter if self.args.verbose else tqdm(
+                passages_iter, unit=passage_word, total=len(passages) if hasattr(passages, "__len__") else None,
+                file=sys.stdout):
             edges, node_labels = map(any, zip(*[(n.outgoing, n.attrib.get(LABEL_ATTRIB))
                                                 for n in passage.layer(layer1.LAYER_ID).all]))
             # Passage is considered labeled if there are any edges or node labels in it
