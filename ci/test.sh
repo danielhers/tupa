@@ -9,7 +9,7 @@ else
 fi
 
 # download data
-if [[ "$ACTION" =~ ^(toy|unit)$ ]]; then
+if ! [[ "$ACTION" =~ ^(toy|unit)$ ]]; then
     case "$FORMAT" in
     ucca)
         mkdir pickle
