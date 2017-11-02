@@ -39,8 +39,9 @@ class ParserTests(unittest.TestCase):
         Config("", "-m", "test")
         Config().update({"max_words_external": 100, "word_dim_external": 100, "word_dim": 10,
                          "max_words": 100, "max_node_labels": 20, "max_node_categories": 5,
-                         "tag_dim": 5, "dep_dim": 5, "optimizer": "sgd", "output_dim": 35,
-                         "layer_dim": 30, "layers": 1, "lstm_layer_dim": 40, "lstm_layers": 1})
+                         "node_label_dim": 2, "node_category_dim": 2, "edge_label_dim": 2,
+                         "tag_dim": 2, "dep_dim": 2, "optimizer": "sgd", "output_dim": 10,
+                         "layer_dim": 15, "layers": 1, "lstm_layer_dim": 10, "lstm_layers": 1})
         Config().update_hyperparams(shared={"lstm_layer_dim": 100, "lstm_layers": 1}, ucca={"word_dim": 300})
         WIKIFIER.enabled = False
 
