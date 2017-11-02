@@ -30,10 +30,7 @@ def settings_suffix(settings):
 
 
 def load_passages():
-    passages = []
-    for _ in range(NUM_PASSAGES):
-        passages += ioutil.read_files_and_dirs(TOY_DATA, converters=FROM_FORMAT)
-    return passages
+    return ioutil.read_files_and_dirs(NUM_PASSAGES * TOY_DATA, converters=FROM_FORMAT)
 
 
 class ParserTests(unittest.TestCase):
@@ -90,20 +87,26 @@ class ParserTests(unittest.TestCase):
         for settings in SETTINGS:
             update_settings(settings)
             scores = []
-            p = None
+            passages = load_passages()
             for mode in "train", "load":
                 print("-- %sing %s" % (mode, model_type))
                 model_filename = model_type + settings_suffix(settings)
                 p = Parser(model_file="test_files/models/%s" % model_filename, model_type=model_type)
-                list(p.train(load_passages() if mode == "train" else None, iterations=10))
-                score = Scores([s for _, s in p.parse(load_passages(), evaluate=True)])
+                list(p.train(passages if mode == "train" else None, iterations=10))
+                results, s = zip(*p.parse(passages, evaluate=True))
+                score = Scores(s)
                 scores.append(score.average_f1())
+                print("Converting to text and parsing...")
+                text_results = list(p.parse([p3 for p1 in passages for p2 in convert.to_text(p1, sentences=False) for p3
+                                             in convert.from_text(p2, p1.ID, extra_format=p1.extra.get("format"))]))
+                self.assertEqual(len(results), len(text_results))
+                for t, r in zip(text_results, results):
+                    print("  %s F1=%.3f" % (r.ID, p.evaluate_passage(t, r).average_f1()))
+                self.assertFalse(list(p.parse(())))  # parsing nothing returns nothing
                 print()
             print("-- average labeled f1: %.3f, %.3f\n" % tuple(scores))
             if compare:
                 self.assertAlmostEqual(*scores, places=1)
-            p.parse(convert.to_text(load_passages()[0]))
-            self.assertFalse(list(p.parse(())))  # parsing nothing returns nothing
 
 
 class ConfigTests(unittest.TestCase):
