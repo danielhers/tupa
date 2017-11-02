@@ -2,45 +2,42 @@
 
 ACTION=${TEST_SUITE%-*}
 FORMAT=${TEST_SUITE#*-}
-SUFFIX="$FORMAT"
+if [[ "$FORMAT" == ucca ]]; then
+    SUFFIX="xml"
+else
+    SUFFIX="$FORMAT"
+fi
 
 # download data
-case "$FORMAT" in
-ucca)
-    if [[ "$ACTION" != toy ]]; then
+if [[ "$ACTION" =~ ^(toy|unit)$ ]]; then
+    case "$FORMAT" in
+    ucca)
         mkdir pickle
         curl -L http://www.cs.huji.ac.il/~danielh/ucca/ucca_corpus_pickle.tgz | tar xz -C pickle || curl -L https://www.dropbox.com/s/q4ycn45zlmhuf9k/ucca_corpus_pickle.tgz | tar xz -C pickle
         python -m scripts.split_corpus -q pickle -t 4282 -d 454 -l
-    fi
-    SUFFIX="xml"
-    ;;
-amr)
-    if [[ "$ACTION" != toy ]]; then
+        ;;
+    amr)
         curl --remote-name-all https://amr.isi.edu/download/2016-03-14/alignment-release-{training,dev,test}-bio.txt
         rename 's/.txt/.amr/' alignment-release-*-bio.txt
         python scheme/split.py -q alignment-release-training-bio.amr alignment-release-training-bio
-    fi
-    CONVERT_DATA=alignment-release-dev-bio.amr
-    ;;
-sdp)
-    if [[ "$ACTION" != toy ]]; then
+        CONVERT_DATA=alignment-release-dev-bio.amr
+        ;;
+    sdp)
         mkdir data
         curl -L http://svn.delph-in.net/sdp/public/2015/trial/current.tgz | tar xz -C data
         python scheme/split.py -q data/sdp/trial/dm.sdp data/sdp/trial/dm
         python -m scripts.split_corpus -q data/sdp/trial/dm -t 120 -d 36 -l
-    fi
-    CONVERT_DATA=data/sdp/trial/*.sdp
-    ;;
-esac
+        CONVERT_DATA=data/sdp/trial/*.sdp
+        ;;
+    esac
+fi
 export TOY_DATA="test_files/*.$SUFFIX"
 
 case "$TEST_SUITE" in
-unit*)
-    # unit tests
-    pytest tests -v tests/test_"$FORMAT".py tests/test_parser.py || exit 1
+unit-*)  # unit tests
+    pytest tests --durations=0 -v tests/test_"$FORMAT".py tests/test_parser.py || exit 1
     ;;
-toy-*)
-    # basic parser tests
+toy-*)  # basic parser tests
     for m in "" --sentences --paragraphs; do
       python tupa/parse.py -I 10 -t "$TOY_DATA" -d "$TOY_DATA" $m -m "model_$FORMAT$m" -v || exit 1
       python tupa/parse.py "$TOY_DATA" $m -em "model_$FORMAT$m" -v || exit 1
