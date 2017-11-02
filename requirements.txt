@@ -1,4 +1,4 @@
-ucca>=1.0.13
+ucca>=1.0.14
 numpy
 spacy>=1.9.0
 cython>=0.27.1
