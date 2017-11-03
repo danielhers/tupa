@@ -16,8 +16,7 @@ from tupa.parse import Parser
 from tupa.states.state import State
 
 TOY_DATA = glob(os.environ.get("TOY_DATA", "test_files/*.xml"))
-SETTINGS = ([], ["implicit"], ["linkage"], ["implicit", "linkage"]) \
-        if TOY_DATA and TOY_DATA[0].endswith("xml") else (["implicit"],)
+SETTINGS = ([], ["implicit"], ["linkage"], ["implicit", "linkage"])
 NUM_PASSAGES = 2
 
 
@@ -38,7 +37,8 @@ class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         Config("", "-m", "test")
-        Config().update({"max_words_external": 100, "word_dim_external": 100, "word_dim": 10,
+        Config().update({"timeout": 1,
+                         "max_words_external": 100, "word_dim_external": 100, "word_dim": 10,
                          "max_words": 100, "max_node_labels": 20, "max_node_categories": 5,
                          "node_label_dim": 2, "node_category_dim": 2, "edge_label_dim": 2,
                          "tag_dim": 2, "dep_dim": 2, "optimizer": "sgd", "output_dim": 10,
