@@ -93,7 +93,7 @@ class ParserTests(unittest.TestCase):
                 print("-- %sing %s" % (mode, model_type))
                 model_filename = model_type + settings_suffix(settings)
                 p = Parser(model_file="test_files/models/%s" % model_filename, model_type=model_type)
-                list(p.train(passages if mode == "train" else None, iterations=10))
+                list(p.train(passages if mode == "train" else None, iterations=2))
                 results, s = zip(*p.parse(passages, evaluate=True))
                 score = Scores(s)
                 scores.append(score.average_f1())
