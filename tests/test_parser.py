@@ -16,7 +16,8 @@ from tupa.parse import Parser
 from tupa.states.state import State
 
 TOY_DATA = glob(os.environ.get("TOY_DATA", "test_files/*.xml"))
-SETTINGS = ([], ["implicit"], ["linkage"], ["implicit", "linkage"])
+SETTINGS = ([], ["implicit"], ["linkage"], ["implicit", "linkage"]) \
+        if TOY_DATA and TOY_DATA[0].endswith("xml") else (["implicit"],)
 NUM_PASSAGES = 2
 
 
