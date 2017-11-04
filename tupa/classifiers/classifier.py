@@ -21,7 +21,7 @@ class Classifier(object):
         self.labels = labels
         self.input_params = input_params
         self._num_labels = self.num_labels
-        self.input_dim = None
+        self.input_dim = self.labels_t = None
         self.is_frozen = False
         self.updates = 0
         self.epoch = 0
@@ -100,7 +100,7 @@ class Classifier(object):
         d = load_json(self.filename + ".json")
         model_type = d.get("type")
         assert model_type is None or model_type == self.model_type, "Model type does not match: %s" % model_type
-        self.labels = d["labels"]  # Just a dict of (all, size) pairs, to be corrected by Model to Actions and Labels
+        self.labels_t = d["labels"]  # Just a dict of (all, size) pairs, to be corrected by Model to Actions and Labels
         self.is_frozen = d["is_frozen"]
         self.updates = d.get("updates", d.get("_update_index", 0))
         self.epoch = d.get("epoch", 0)

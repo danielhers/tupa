@@ -22,7 +22,7 @@ class AxisModel(object):
     def __init__(self, axis, num_labels, *args, **kwargs):
         config_args = Config().hyperparams.specific[axis]
         self.birnn = BiRNN(config_args, *args, **kwargs)
-        self.mlp = MultilayerPerceptron(config_args, *args, **kwargs, num_labels=num_labels, suffix2=(axis,))
+        self.mlp = MultilayerPerceptron(config_args, *args, num_labels=num_labels, suffix2=(axis,), **kwargs)
 
     def init_params(self, input_dim, indexed_dim, indexed_num):
         self.mlp.init_params(input_dim + self.birnn.init_params(indexed_dim, indexed_num))
@@ -267,7 +267,9 @@ class NeuralNetwork(Classifier):
         del param_values[:len(param_keys)]
         self.axes = OrderedDict()
         for axis, axis_param_keys in zip(axes, axes_param_keys):
-            self.axes[axis] = axis_model = AxisModel(axis, self.labels[axis][1], self.model,
+            size = self.labels_t[axis][1]
+            assert size, "Maximum size of %s labels list is %s" % (axis, size)
+            self.axes[axis] = axis_model = AxisModel(axis, size, self.model,
                                                      global_params=self.params,
                                                      params=OrderedDict(zip(axis_param_keys, param_values)))
             del param_values[:len(axis_param_keys)]

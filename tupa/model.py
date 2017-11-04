@@ -173,7 +173,7 @@ class Model(object):
         self.classifier = classifier or model.classifier
         self.feature_params = model.feature_params
         self._update_input_params()
-        self.classifier.labels = {a: l.save() for a, l in self.classifier.labels.items()}
+        self.classifier.labels_t = {a: l.save() for a, l in self.classifier.labels.items()}
         self.load_labels()
 
     def load_labels(self):
@@ -181,7 +181,7 @@ class Model(object):
         Copy classifier's labels to create new Actions/UnknownDict objects
         Restoring from a model that was just loaded from file, or called by restore()
         """
-        for axis, all_size in self.classifier.labels.items():  # all_size is a pair of (list of all labels, size limit)
+        for axis, all_size in self.classifier.labels_t.items():  # all_size is a pair of (list of all labels, size limit)
             if axis == NODE_LABEL_KEY:  # These are node labels rather than action labels
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
                 if node_labels and node_labels.size:  # Also used for features, so share the dict
