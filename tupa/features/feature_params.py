@@ -41,6 +41,11 @@ class FeatureParameters(Labels):
             map(str, (self.suffix, self.dim, self.size, self.dropout, self.updated, self.num, self.init, self.data,
                       self.indexed, self.copy_from, self.filename, self.min_count))) + ")"
 
+    def __eq__(self, other):
+        return self.suffix == other.suffix and self.dim == other.dim and self.size == other.size and \
+               self.dropout == other.dropout and self.updated == other.updated and self.num == other.num and \
+               self.indexed == other.indexed and self.min_count == other.min_count and self.numeric == other.numeric
+
     @property
     def all(self):
         return self.data.all
