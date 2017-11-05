@@ -20,7 +20,6 @@ from tupa.states.state import State
 TOY_DATA = glob(os.environ.get("TOY_DATA", "test_files/*.xml"))
 SETTINGS = ([], ["implicit"], ["linkage"], ["implicit", "linkage"]) \
         if TOY_DATA and TOY_DATA[0].endswith("xml") else (["implicit"],)
-NUM_PASSAGES = 2
 
 
 def update_settings(settings):
@@ -33,7 +32,7 @@ def settings_suffix(settings):
 
 
 def load_passages():
-    return ioutil.read_files_and_dirs(NUM_PASSAGES * TOY_DATA, converters=FROM_FORMAT)
+    return ioutil.read_files_and_dirs(TOY_DATA, converters=FROM_FORMAT)
 
 
 class ParserTests(unittest.TestCase):
