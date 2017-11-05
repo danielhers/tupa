@@ -49,7 +49,7 @@ class install(_install):
 
 
 setup(name="TUPA",
-      version="1.2.2",
+      version="1.2.3",
       description="Transition-based UCCA Parser",
       long_description=long_description,
       classifiers=[
