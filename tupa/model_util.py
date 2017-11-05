@@ -80,12 +80,13 @@ class AutoIncrementDict(DefaultOrderedDict):
         :param unknown: value to return for missing keys
         """
         super().__init__(None, d or {}, size=size)
+        self.finalized = (size is None)
         self.unknown = self.setdefault(None, unknown)
         for key in keys:
             self.__missing__(key)
 
     def __missing__(self, key):
-        if self.size is not None and len(self) < self.size:
+        if not self.finalized and len(self) < self.size:
             ret = self[key] = len(self)
             return ret
         return self.unknown

@@ -83,5 +83,7 @@ def copy_params(params, copy_dict=dict):
         param_copy = copy(param)
         if param.data is not None:
             param_copy.data = copy_dict(param.data)
+            if hasattr(param_copy.data, "size"):  # It may be an UnknownDict but we still want it to know its size
+                param_copy.data.size = param.size
         params_copy[suffix] = param_copy
     return params_copy
