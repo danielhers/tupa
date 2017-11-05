@@ -129,12 +129,20 @@ class Model(object):
         self.classifier.init_features(self.feature_extractor.init_features(state), axes, train)
 
     def finalize(self, finished_epoch):
+        """
+        Copy model, finalizing features (new values will not be added during subsequent use) and classifier (update it)
+        :param finished_epoch: whether this is the end of an epoch (or just intermediate checkpoint), for bookkeeping
+        :return: a copy of this model with a new feature extractor and classifier (actually classifier may be the same)
+        """
         self.init_model()
         return Model(None, None, model=self,
                      feature_extractor=self.feature_extractor.finalize(),
                      classifier=self.classifier.finalize(finished_epoch=finished_epoch))
 
     def save(self):
+        """
+        Save feature and classifier parameters to files
+        """
         if self.filename is not None:
             self.init_model()
             try:
@@ -144,11 +152,17 @@ class Model(object):
             except Exception as e:
                 raise IOError("Failed saving model to '%s'" % self.filename) from e
 
-    def load(self):
+    def load(self, finalized=True):
+        """
+        Load the feature and classifier parameters from files
+        :param finalized: whether the loaded model should be finalized, or allow feature values to be added subsequently
+        """
         if self.filename is not None:
             try:
                 self.init_model(init_params=False)
                 self.feature_extractor.load(self.filename)
+                if not finalized:
+                    self.feature_extractor.restore()
                 self._update_input_params()  # Must be before classifier.load() because it uses them to init the model
                 self.classifier.load()
                 self.load_labels()
@@ -162,7 +176,8 @@ class Model(object):
 
     def restore(self, model, feature_extractor=None, classifier=None):
         """
-        Set all attributes to a reference to existing model, except labels, which will be copied
+        Set all attributes to a reference to existing model, except labels, which will be copied.
+        Restored model is not finalized: new feature values will be added during subsequent training
         :param model: Model to restore
         :param feature_extractor: optional FeatureExtractor to restore instead of model's
         :param classifier: optional Classifier to restore instead of model's
@@ -181,7 +196,7 @@ class Model(object):
         Copy classifier's labels to create new Actions/UnknownDict objects
         Restoring from a model that was just loaded from file, or called by restore()
         """
-        for axis, all_size in self.classifier.labels_t.items():  # all_size is a pair of (list of all labels, size limit)
+        for axis, all_size in self.classifier.labels_t.items():  # all_size is a pair of (label list, size limit)
             if axis == NODE_LABEL_KEY:  # These are node labels rather than action labels
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
                 if node_labels and node_labels.size:  # Also used for features, so share the dict

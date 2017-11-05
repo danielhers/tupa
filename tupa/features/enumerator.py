@@ -64,6 +64,13 @@ class FeatureEnumerator(FeatureExtractorWrapper):
                     #     "Invalid feature numbers for '%s': %s" % (suffix, features[suffix])
         return features
 
+    def restore(self):
+        """
+        Opposite of finalize(): replace each feature parameter's data dict with a DropoutDict again, to keep training
+        """
+        for param in self.params.values():
+            param.data = DropoutDict(param.data, size=param.size, dropout=param.dropout, min_count=param.min_count)
+
     def collapse_features(self, suffixes):
         self.feature_extractor.collapse_features({p.copy_from if p.external else s for s, p in self.params.items()
                                                   if p.dim and s in suffixes})

@@ -60,7 +60,7 @@ class Parser(object):
         if passages:
             if ClassifierProperty.trainable_after_saving in self.model.get_classifier_properties():
                 try:
-                    self.model.load()
+                    self.model.load(finalized=False)
                 except FileNotFoundError:
                     print("not found, starting from untrained model.")
             for f in self.args.formats or ():

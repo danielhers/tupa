@@ -126,6 +126,9 @@ class FeatureExtractor(object):
     def finalize(self):
         return self
 
+    def restore(self):
+        pass
+
     def save(self, filename):
         pass
 

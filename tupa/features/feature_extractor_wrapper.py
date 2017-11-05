@@ -31,6 +31,9 @@ class FeatureExtractorWrapper(FeatureExtractor):
     def finalize(self):
         return type(self)(self.feature_extractor, copy_params(self.params, UnknownDict))
 
+    def restore(self):
+        self.feature_extractor.restore()
+
     def save(self, filename):
         save_dict(filename + self.filename_suffix(), copy_params(self.params))
 
