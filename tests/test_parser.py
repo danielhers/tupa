@@ -4,13 +4,15 @@ import os
 import unittest
 from glob import glob
 
-from ucca import convert, ioutil
+import pytest
+from ucca import convert, ioutil, textutil
 
 from scheme.convert import FROM_FORMAT
 from scheme.evaluate import Scores
 from scheme.util.amr import WIKIFIER
 from tupa.action import Actions
-from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP
+from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP, CLASSIFIERS
+from tupa.model import Model, ClassifierProperty
 from tupa.oracle import Oracle
 from tupa.parse import Parser
 from tupa.states.state import State
@@ -142,6 +144,29 @@ class ConfigTests(unittest.TestCase):
     def test_boolean_params(self):
         self.assertTrue(Config().args.evaluate)
         self.assertFalse(Config().args.verify)
+
+
+@pytest.mark.parametrize("model_type", CLASSIFIERS)
+@pytest.mark.parametrize("passage", load_passages())
+def test_model(model_type, passage):
+    filename = "test_files/models/test_%s_%s" % (model_type, passage.ID)
+    axis = "test"
+    Config().set_format(axis)
+    textutil.annotate(passage)
+    model = Model(model_type, filename)
+    model.init_model()
+    state = State(passage)
+    if ClassifierProperty.require_init_features in model.get_classifier_properties():
+        model.init_features(state, (axis,), train=True)
+    features = model.feature_extractor.extract_features(state)
+    pred = model.classifier.score(features, axis).argmax()
+    model.classifier.update(features, axis, pred=pred, true=0)
+    model.finalize(finished_epoch=True).save()
+    loaded = Model(model_type, filename)
+    loaded.load(finalized=False)
+    for suffix, param in sorted(model.feature_extractor.params.items()):
+        loaded_param = loaded.feature_extractor.params[suffix]
+        assert param == loaded_param
 
 
 if __name__ == "__main__":
