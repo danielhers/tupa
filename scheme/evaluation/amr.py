@@ -42,6 +42,10 @@ class SmatchScores(object):
         self.counts = counts
         self.precision, self.recall, self.f1 = smatch.compute_f(*counts)
 
+    @staticmethod
+    def name():
+        return "AMR"
+
     def average_f1(self, *args, **kwargs):
         del args, kwargs
         return self.f1
@@ -56,7 +60,7 @@ class SmatchScores(object):
         return SmatchScores(map(sum, zip(*[s.counts for s in scores])))
 
     def print(self, *args, **kwargs):
-        print("Smatch precision: %.3f\nSmatch recall: %.3f\nSmatch F1: %.3f" % (self.precision, self.recall, self.f1),
+        print("Smatch precision: %.3f\nSmatch recall: %.3f\nSmatch F1: %.3f\n" % (self.precision, self.recall, self.f1),
               *args, **kwargs)
 
     def fields(self):

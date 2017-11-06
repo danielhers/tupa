@@ -29,6 +29,10 @@ class Scores(object):
         self.scores_by_format = [(t, t.aggregate(s)) for t, s in groupby(scores, type)]
 
     @staticmethod
+    def name():
+        return "Multiple formats"
+
+    @staticmethod
     def aggregate(scores):
         return Scores([s for score in scores for _, s in score.scores_by_format])
 
@@ -36,17 +40,23 @@ class Scores(object):
         return sum(s.average_f1(*args, **kwargs) for t, s in self.scores_by_format) / len(self.scores_by_format)
 
     def print(self, *args, **kwargs):
-        for _, s in self.scores_by_format:
+        for t, s in self.scores_by_format:
+            if len(self.scores_by_format):
+                print(name(t) + ":", *args, **kwargs)
             s.print(*args, **kwargs)
 
     def fields(self):
         return [f for _, s in self.scores_by_format for f in s.fields()]
 
     def titles(self):
-        return [t for _, s in self.scores_by_format for t in s.titles()]
+        return [(name(t) + "_" + f) for t, s in self.scores_by_format for f in s.titles()]
 
     def __str__(self):
         print(",".join(self.fields()))
+
+
+def name(t):
+    return t.name() if hasattr(t, "name") else "UCCA"
 
 
 def main():
