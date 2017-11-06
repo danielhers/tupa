@@ -248,6 +248,12 @@ class NeuralNetwork(Classifier):
         return d
 
     def load_model(self, d):
+        self.model = None
+        self.params.clear()
+        if self.birnn:
+            self.birnn.params.clear()
+        for axis_model in self.axes.values():
+            axis_model.birnn.params.clear()
         self.args.layers = self.layers = d["layers"]
         self.args.layer_dim = self.layer_dim = d["layer_dim"]
         self.args.output_dim = self.output_dim = d["output_dim"]
