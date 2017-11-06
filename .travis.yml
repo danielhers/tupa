@@ -48,6 +48,18 @@ env:
   - TEST_SUITE=unit-conllu
   - TEST_SUITE=toy-conllu
   - TEST_SUITE=tune-conllu
+jobs:
+  include:
+    - os: osx
+      language:
+      before_install:
+        - curl -LO https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+        - bash Miniconda3-latest-MacOSX-x86_64.sh -b -p miniconda
+        - export PATH="$PWD/miniconda/bin:$PATH"
+        - conda config --set always_yes yes --set changeps1 no
+        - conda update -q conda
+        - conda create -q -n env python=3.6 numpy cython
+        - source activate env
 script:
   - ci/test.sh
 deploy:
