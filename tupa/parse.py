@@ -201,6 +201,7 @@ class Parser(object):
             if self.training and self.args.save_every and passage_index % self.args.save_every == 0:
                 self.eval_and_save()
                 self.eval_index += 1
+                self.training = True
             yield (guessed, self.evaluate_passage(guessed, passage)) if evaluate else guessed
 
         if passages:
