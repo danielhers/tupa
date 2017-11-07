@@ -295,6 +295,7 @@ class Parser(object):
         except AssertionError as e:
             if self.training:
                 raise ParserException("Error in getting label from oracle during training") from e
+            return (None, None)
 
     def choose_label(self, features, true_label):
         true_id = self.model.labels[true_label] if self.oracle else None  # Needs to happen before score()
