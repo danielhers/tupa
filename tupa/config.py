@@ -252,7 +252,10 @@ class Config(object, metaclass=Singleton):
                                   if not k.startswith("_")})
             for attr, value in format_values.items():
                 setattr(self.args, attr, value)
-        if f not in (None, "text"):
+        if f in (None, "text"):
+            if not self.format:
+                self.format = "ucca"
+        else:
             self.format = f
         if self.format == "amr":
             self.args.implicit = True
