@@ -101,7 +101,7 @@ To reproduce the experiments from the paper, run in an empty directory (with a n
     tar xvzf sparse.tgz
     tar xvzf mlp.tgz
     tar xvzf bilstm.tgz
-    python -m spacy download en
+    python -m spacy download en_core_web_lg
     python -m scripts.split_corpus pickle -t 4282 -d 454 -l
     python -m tupa.parse -c sparse -m models/ucca-sparse -Web pickle/test
     python -m tupa.parse -c mlp -m models/ucca-mlp -Web pickle/test

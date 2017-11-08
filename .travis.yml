@@ -19,6 +19,7 @@ addons:
 install:
   - python setup.py install
   - pip install pytest
+  - python -m spacy download en_core_web_md
 env:
   global:
     - TWINE_USERNAME=danielh
