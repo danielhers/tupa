@@ -2,6 +2,7 @@ import os
 import sys
 import time
 from collections import OrderedDict
+from itertools import repeat
 
 import dynet as dy
 import numpy as np
@@ -176,21 +177,19 @@ class NeuralNetwork(Classifier):
         :param importance: how much to scale the update for the weight update for each true label
         """
         super().update(features, axis, pred, true, importance)
-        self.losses += self.calculate_loss(self.evaluate(features, axis, train=True), true, importance or len(true)*[1])
+        self.losses += self.calc_loss(self.evaluate(features, axis, train=True), axis, true, importance or repeat(1))
         self.steps += 1
         if self.args.dynet_viz:
             dy.print_graphviz()
             sys.exit(0)
 
-    def calculate_loss(self, scores, true, importance):
+    def calc_loss(self, scores, axis, true, importance):
         if self.loss == "softmax":
             return [i * dy.pickneglogsoftmax(scores, t) for t, i in zip(true, importance)]
         elif self.loss == "max_margin":
-            true_scores = scores[true]
-            max_true_index = true_scores.argmax()
-            incorrect_scores = np.ma.array(scores, mask=False)
-            incorrect_scores.mask[true] = True
-            return [dy.rectify(1 - importance[max_true_index] * true_scores[max_true_index] + incorrect_scores.max())]
+            max_true = dy.emax([i * dy.pick(scores, t) for t, i in zip(true, importance)])
+            max_false = dy.emax([dy.pick(scores, t) for t in range(self.num_labels[axis]) if t not in true])
+            return [dy.rectify(1 - max_true + max_false)]
         raise NotImplementedError("%s loss is not supported" % self.loss)
 
     def finished_step(self, train=False):
