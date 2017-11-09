@@ -70,13 +70,14 @@ class Parser(object):
             self.best_score = 0
             self.dev = dev
             start = self.model.classifier.epoch + 1 if self.model.classifier else 1
-            for self.iteration in range(start, iterations + start):
+            total_iterations = iterations + start
+            for self.iteration in range(start, total_iterations):
                 self.eval_index = 0
-                print("Training iteration %d of %d: " % (self.iteration, iterations))
+                print("Training iteration %d of %d: " % (self.iteration, total_iterations))
                 Config().random.shuffle(passages)
                 list(self.parse(passages, mode=ParseMode.train))
-                yield self.eval_and_save(self.iteration == iterations, finished_epoch=True)
-            print("Trained %d iterations" % iterations)
+                yield self.eval_and_save(self.iteration == total_iterations, finished_epoch=True)
+            print("Trained %d iterations" % total_iterations)
         if dev and test or not passages:
             self.model.load()  # Load best model (on dev) to prepare for test
             if not passages:
