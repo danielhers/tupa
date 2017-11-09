@@ -70,8 +70,8 @@ class Parser(object):
             self.best_score = 0
             self.dev = dev
             start = self.model.classifier.epoch + 1 if self.model.classifier else 1
-            total_iterations = iterations + start
-            for self.iteration in range(start, total_iterations):
+            total_iterations = iterations + start - 1
+            for self.iteration in range(start, total_iterations + 1):
                 self.eval_index = 0
                 print("Training iteration %d of %d: " % (self.iteration, total_iterations))
                 Config().random.shuffle(passages)
