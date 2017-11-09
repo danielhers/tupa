@@ -1,4 +1,5 @@
 from collections import defaultdict, OrderedDict
+from itertools import repeat
 
 import numpy as np
 
@@ -116,14 +117,14 @@ class SparsePerceptron(Perceptron):
                     scores += value * weights.weights
         return scores
 
-    def update(self, features, axis, pred, true, importance=1):
+    def update(self, features, axis, pred, true, importance=None):
         """
         Update classifier weights according to predicted and true labels
         :param features: extracted feature values, in the form of a dict (name: value)
         :param axis: axis of the label we are predicting
         :param pred: label predicted by the classifier (non-negative integer bounded by num_labels[axis])
-        :param true: true label (non-negative integer bounded by num_labels[axis])
-        :param importance: how much to scale the feature vector for the weight update
+        :param true: true labels (non-negative integers bounded by num_labels[axis])
+        :param importance: how much to scale the update for the weight update for each true label
         """
         super().update(features, axis, pred, true, importance)
         model = self.model[axis]
@@ -131,8 +132,9 @@ class SparsePerceptron(Perceptron):
             if not value or feature in self.dropped:
                 continue
             weights = model[feature]
-            weights.update(true, importance * self.learning_rate * value, self.updates)
-            weights.update(pred, -importance * self.learning_rate * value, self.updates)
+            for t, i in zip(true, importance or repeat(1)):
+                weights.update(t, i * self.learning_rate * value, self.updates)
+            weights.update(pred, -self.learning_rate * value, self.updates)
         self.input_dim = len(self.model)
 
     def resize(self):

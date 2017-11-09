@@ -18,14 +18,14 @@ class Perceptron(Classifier):
         self.epoch = epoch
         self.update_learning_rate()
 
-    def update(self, features, axis, pred, true, importance=1):
+    def update(self, features, axis, pred, true, importance=None):
         """
         Update classifier weights according to predicted and true labels
         :param features: extracted feature values, of size num_features
         :param axis: axis of the label we are predicting
         :param pred: label predicted by the classifier (non-negative integer bounded by num_labels[axis])
-        :param true: true label (non-negative integer bounded by num_labels[axis])
-        :param importance: how much to scale the feature vector for the weight update
+        :param true: true labels (non-negative integers bounded by num_labels[axis])
+        :param importance: how much to scale the update for the weight update for each true label
         """
         super().update(features, axis, pred, true, importance)
         self.updates += 1

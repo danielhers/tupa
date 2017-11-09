@@ -279,12 +279,12 @@ class Parser(object):
         if is_correct:
             self.correct_action_count += 1
         else:
-            action = Config().random.choice(list(true_actions.values())) if self.training else predicted_action
+            action = Config().random.choice(tuple(true_actions.values())) if self.training else predicted_action
         if self.training and not (
                     is_correct and ClassifierProperty.update_only_on_error in self.model.get_classifier_properties()):
-            best_action = self.predict(scores[list(true_actions.keys())], list(true_actions.values()))
-            self.model.classifier.update(features, axis=Config().format, pred=predicted_action.id, true=best_action.id,
-                                         importance=self.args.swap_importance if best_action.is_swap else 1)
+            self.model.classifier.update(
+                features, axis=Config().format, pred=predicted_action.id, true=tuple(true_actions.keys()),
+                importance=[self.args.swap_importance if a.is_swap else 1 for a in true_actions.values()])
         if self.training and not is_correct and self.args.early_update:
             self.state.finished = True
         self.action_count += 1
@@ -296,10 +296,10 @@ class Parser(object):
         except AssertionError as e:
             if self.training:
                 raise ParserException("Error in getting label from oracle during training") from e
-            return (None, None)
+            return None, None
 
     def choose_label(self, features, true_label):
-        true_id = self.model.labels[true_label] if self.oracle else None  # Needs to happen before score()
+        true = (self.model.labels[true_label],) if self.oracle else ()  # Needs to happen before score()
         if self.args.use_gold_node_labels:
             return true_label, true_label
         scores = self.model.classifier.score(features, axis=NODE_LABEL_KEY)
@@ -312,7 +312,7 @@ class Parser(object):
                 self.correct_label_count += 1
             if self.training and not (is_correct and ClassifierProperty.update_only_on_error in
                                       self.model.get_classifier_properties()):
-                self.model.classifier.update(features, axis=NODE_LABEL_KEY, pred=self.model.labels[label], true=true_id)
+                self.model.classifier.update(features, axis=NODE_LABEL_KEY, pred=self.model.labels[label], true=true)
                 label = true_label
         self.label_count += 1
         return label, predicted_label

@@ -2,6 +2,7 @@ import os
 import sys
 import time
 from collections import OrderedDict
+from itertools import repeat
 
 import dynet as dy
 import numpy as np
@@ -52,7 +53,8 @@ class NeuralNetwork(Classifier):
         self.params = OrderedDict()  # string (param identifier) -> parameter
         self.empty_values = OrderedDict()  # string (feature suffix) -> expression
         self.axes = OrderedDict()  # string (axis) -> AxisModel
-        self.losses = []
+        self.negative_losses = []
+        self.steps = 0
         self.indexed_num = self.indexed_dim = self.trainer = self.value = self.birnn = None
 
     def resize(self):
@@ -165,17 +167,19 @@ class NeuralNetwork(Classifier):
             print("  no updates done yet, returning zero vector.")
         return np.zeros(num_labels)
 
-    def update(self, features, axis, pred, true, importance=1):
+    def update(self, features, axis, pred, true, importance=None):
         """
         Update classifier weights according to predicted and true labels
         :param features: extracted feature values, in the form of a dict (name: value)
         :param axis: axis of the label we are predicting
         :param pred: label predicted by the classifier (non-negative integer bounded by num_labels[axis])
-        :param true: true label (non-negative integer bounded by num_labels[axis])
-        :param importance: add this many samples with the same features
+        :param true: true labels (non-negative integers bounded by num_labels[axis])
+        :param importance: how much to scale the update for the weight update for each true label
         """
         super().update(features, axis, pred, true, importance)
-        self.losses.append(importance * dy.pick(self.evaluate(features, axis, train=True), true))
+        self.negative_losses += [i * dy.pick(self.evaluate(features, axis, train=True), t)
+                                 for t, i in zip(true, importance or repeat(1))]
+        self.steps += 1
         if self.args.dynet_viz:
             dy.print_graphviz()
             sys.exit(0)
@@ -184,7 +188,7 @@ class NeuralNetwork(Classifier):
         self.value = {}  # For caching the result of _evaluate
 
     def finished_item(self, train=False):
-        if len(self.losses) >= self.minibatch_size:
+        if self.steps >= self.minibatch_size:
             self.finalize()
         elif not train:
             self.init_cg()
@@ -197,11 +201,11 @@ class NeuralNetwork(Classifier):
         """
         super().finalize()
         assert self.model, "Cannot finalize a model without initializing it first"
-        if self.losses:
-            loss = -dy.esum(self.losses)
+        if self.negative_losses:
+            loss = -dy.esum(self.negative_losses)
             loss.forward()
             if self.args.verbose > 3:
-                print("Total loss from %d time steps: %g" % (len(self.losses), loss.value()))
+                print("Total loss from %d time steps: %g" % (self.steps, loss.value()))
             loss.backward()
             # if np.linalg.norm(loss.gradient()) not in (np.inf, np.nan):
             try:
@@ -209,7 +213,8 @@ class NeuralNetwork(Classifier):
             except RuntimeError as e:
                 Config().log("Error in update(): %s\n" % e)
             self.init_cg()
-            self.losses = []
+            self.negative_losses = []
+            self.steps = 0
             self.updates += 1
         if finished_epoch:
             self.trainer.learning_rate /= (1 - self.learning_rate_decay)
