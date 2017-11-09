@@ -159,7 +159,7 @@ def test_model(model_type, passage):
         model.init_features(state, (axis,), train=True)
     features = model.feature_extractor.extract_features(state)
     pred = model.classifier.score(features, axis).argmax()
-    model.classifier.update(features, axis, pred=pred, true=0)
+    model.classifier.update(features, axis, pred=pred, true=[0])
     model.finalize(finished_epoch=True).save()
     loaded = Model(model_type, filename)
     loaded.load(finalized=False)
