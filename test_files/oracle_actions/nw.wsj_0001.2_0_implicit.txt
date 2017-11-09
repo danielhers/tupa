@@ -59,7 +59,7 @@ SHIFT
 NODE-Terminal
 REDUCE
 SHIFT
-LABEL Concept(publish-01)
+LABEL Concept(<l>-01)
 RIGHT-EDGE-ARG0-of
 REDUCE
 SHIFT
