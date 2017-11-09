@@ -54,7 +54,7 @@ class NeuralNetwork(Classifier):
         self.params = OrderedDict()  # string (param identifier) -> parameter
         self.empty_values = OrderedDict()  # string (feature suffix) -> expression
         self.axes = OrderedDict()  # string (axis) -> AxisModel
-        self.negative_losses = []
+        self.losses = []
         self.steps = 0
         self.indexed_num = self.indexed_dim = self.trainer = self.value = self.birnn = None
 
@@ -178,8 +178,8 @@ class NeuralNetwork(Classifier):
         """
         super().update(features, axis, pred, true, importance)
         if self.loss == "softmax":
-            self.negative_losses += [i * dy.pickneglogsoftmax(self.evaluate(features, axis, train=True), t)
-                                     for t, i in zip(true, importance or repeat(1))]
+            self.losses += [i * dy.pickneglogsoftmax(self.evaluate(features, axis, train=True), t)
+                            for t, i in zip(true, importance or repeat(1))]
         else:
             raise NotImplementedError("%s loss not supported yet" % self.loss)
         self.steps += 1
@@ -204,8 +204,8 @@ class NeuralNetwork(Classifier):
         """
         super().finalize()
         assert self.model, "Cannot finalize a model without initializing it first"
-        if self.negative_losses:
-            loss = -dy.esum(self.negative_losses)
+        if self.losses:
+            loss = dy.esum(self.losses)
             loss.forward()
             if self.args.verbose > 3:
                 print("Total loss from %d time steps: %g" % (self.steps, loss.value()))
@@ -216,7 +216,7 @@ class NeuralNetwork(Classifier):
             except RuntimeError as e:
                 Config().log("Error in update(): %s\n" % e)
             self.init_cg()
-            self.negative_losses = []
+            self.losses = []
             self.steps = 0
             self.updates += 1
         if finished_epoch:
