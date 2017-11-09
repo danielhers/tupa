@@ -148,8 +148,7 @@ class NeuralNetwork(Classifier):
         self.init_model(axis=axis)
         value = self.value.get(axis)
         if value is None:
-            self.value[axis] = value = dy.log_softmax(
-                self.axes[axis].mlp.evaluate(self.generate_inputs(features, axis), train=train))
+            self.value[axis] = value = self.axes[axis].mlp.evaluate(self.generate_inputs(features, axis), train=train)
         return value
 
     def score(self, features, axis):
@@ -177,7 +176,7 @@ class NeuralNetwork(Classifier):
         :param importance: how much to scale the update for the weight update for each true label
         """
         super().update(features, axis, pred, true, importance)
-        self.negative_losses += [i * dy.pick(self.evaluate(features, axis, train=True), t)
+        self.negative_losses += [i * dy.pickneglogsoftmax(self.evaluate(features, axis, train=True), t)
                                  for t, i in zip(true, importance or repeat(1))]
         self.steps += 1
         if self.args.dynet_viz:
