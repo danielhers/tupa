@@ -99,6 +99,7 @@ def main():
         ("output_dim",              False,  range(40, 351)),
         ("activation",              True,   ("cube", "tanh", "relu")),
         ("init",                    True,   ("glorot_uniform", "normal")),
+        ("loss",                    False,  list(config.LOSSES)),
         ("minibatch_size",          False,  range(50, 2001)),
         ("optimizer",               False,  list(config.TRAINERS)),
         ("swap_importance",         False,  np.arange(1, 2, step=.1)),
