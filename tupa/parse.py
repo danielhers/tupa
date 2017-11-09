@@ -69,7 +69,8 @@ class Parser(object):
             print_config()
             self.best_score = 0
             self.dev = dev
-            for self.iteration in range(1, iterations + 1):
+            start = self.model.classifier.epoch + 1 if self.model.classifier else 1
+            for self.iteration in range(start, iterations + start):
                 self.eval_index = 0
                 print("Training iteration %d of %d: " % (self.iteration, iterations))
                 Config().random.shuffle(passages)
