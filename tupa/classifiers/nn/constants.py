@@ -1,3 +1,6 @@
+LOSSES = ("softmax", "max_margin")
+DEFAULT_LOSS = "softmax"
+
 TRAINERS = {
     "sgd": "SimpleSGDTrainer",
     "cyclic": "CyclicalSGDTrainer",

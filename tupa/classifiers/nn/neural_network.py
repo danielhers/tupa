@@ -49,6 +49,7 @@ class NeuralNetwork(Classifier):
         self.activation = CategoricalParameter(ACTIVATIONS, self.args.activation)
         self.init = CategoricalParameter(INITIALIZERS, self.args.init)
         self.trainer_type = CategoricalParameter(TRAINERS, self.args.optimizer)
+        self.loss = self.args.loss
         self.dropout = self.args.dropout
         self.params = OrderedDict()  # string (param identifier) -> parameter
         self.empty_values = OrderedDict()  # string (feature suffix) -> expression
@@ -176,8 +177,11 @@ class NeuralNetwork(Classifier):
         :param importance: how much to scale the update for the weight update for each true label
         """
         super().update(features, axis, pred, true, importance)
-        self.negative_losses += [i * dy.pickneglogsoftmax(self.evaluate(features, axis, train=True), t)
-                                 for t, i in zip(true, importance or repeat(1))]
+        if self.loss == "softmax":
+            self.negative_losses += [i * dy.pickneglogsoftmax(self.evaluate(features, axis, train=True), t)
+                                     for t, i in zip(true, importance or repeat(1))]
+        else:
+            raise NotImplementedError("%s loss not supported yet" % self.loss)
         self.steps += 1
         if self.args.dynet_viz:
             dy.print_graphviz()
@@ -230,6 +234,7 @@ class NeuralNetwork(Classifier):
             output_dim=self.output_dim,
             activation=str(self.activation),
             init=str(self.init),
+            loss=self.loss,
             param_keys=list(self.params.keys()),
             axes_param_keys=[list(m.birnn.params.keys()) for m in self.axes.values()],
             axes=list(self.axes),
@@ -263,6 +268,7 @@ class NeuralNetwork(Classifier):
         self.args.output_dim = self.output_dim = d["output_dim"]
         self.args.activation = self.activation.string = d["activation"]
         self.args.init = self.init.string = d["init"]
+        self.args.loss = self.loss = d.get("loss", self.args.loss)
         axes = d["axes"]
         param_keys, *axes_param_keys = [[tuple(k) if isinstance(k, list) else k for k in keys]  # param key can be tuple
                                         for keys in [d["param_keys"]] + d.get("axes_param_keys", [[]] * len(axes))]

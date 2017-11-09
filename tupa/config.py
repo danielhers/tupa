@@ -110,6 +110,7 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
     add(group, "--init", choices=INITIALIZERS, default=DEFAULT_INITIALIZER, help="weight initialization")
     add(group, "--minibatch-size", type=int, default=100, help="mini-batch size for optimization")
     add(group, "--optimizer", choices=TRAINERS, default=DEFAULT_TRAINER, help="algorithm for optimization")
+    add(group, "--loss", choices=LOSSES, default=DEFAULT_LOSS, help="loss function for training")
     add(group, "--max-words-external", type=int, help="max external word vectors to use")
     add(group, "--max-words", type=int, default=10000, help="max number of words to keep embeddings for")
     add(group, "--max-tags", type=int, default=100, help="max number of POS tags to keep embeddings for")
