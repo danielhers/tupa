@@ -67,10 +67,10 @@ To get a French/German model pre-trained on [the *20K Leagues* corpus](https://g
 
 Run the parser on a French/German text file, using the French/German spaCy models too:
 
-    export SPACY_MODEL=fr_depvec_web_lg
+    export SPACY_MODEL=fr_core_news_md
     python -m tupa.parse exemple.txt -c sparse -m models/sparse-fr
 
-    export SPACY_MODEL=de_core_news_md
+    export SPACY_MODEL=de_core_news_sm
     python -m tupa.parse beispiel.txt -c sparse -m models/sparse-de
 
 Author
