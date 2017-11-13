@@ -1,1 +1,2 @@
-parse.py
+from .parse import *
+list(main())
