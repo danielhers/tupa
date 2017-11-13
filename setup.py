@@ -75,4 +75,5 @@ setup(name="TUPA",
       },
       package_data={"src": ["amr.peg"], "scheme.util": ["resources/*.txt"]},
       cmdclass={"install": install},
+      entry_points={"console_scripts": ["tupa = tupa.__main__:main"]},
       )
