@@ -105,7 +105,7 @@ class Classifier(object):
         """
         Load all parameters from file
         """
-        d = load_json(self.filename + ".json")
+        d = self.load_file(self.filename, clear=True)
         model_type = d.get("type")
         assert model_type is None or model_type == self.model_type, "Model type does not match: %s" % model_type
         self.labels_t = d["labels"]  # Just a dict of (all, size) pairs, to be corrected by Model to Actions and Labels
@@ -118,6 +118,22 @@ class Classifier(object):
 
     def load_model(self, d):
         pass
+
+    @classmethod
+    def get_model_type(cls, filename):
+        return cls.load_file(filename).get("type")
+
+    LOADED = {}  # Cache for loaded JSON files
+
+    @classmethod
+    def load_file(cls, filename, clear=False):
+        d = cls.LOADED.get(filename)
+        if d is None:
+            d = load_json(filename + ".json")
+            cls.LOADED[filename] = d
+        if clear:
+            cls.LOADED.clear()
+        return d
 
     def __str__(self):
         return "Labels: %s, %d features" % (next(iter(self.num_labels.values())) if len(self.num_labels) == 1 else

@@ -1,6 +1,7 @@
 from enum import Enum
 
 from .action import Actions
+from .classifiers.classifier import Classifier
 from .config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP
 from .features.enumerator import FeatureEnumerator
 from .features.feature_params import FeatureParameters
@@ -159,6 +160,7 @@ class Model(object):
         """
         if self.filename is not None:
             try:
+                self.model_type = Classifier.get_model_type(self.filename)
                 self.init_model(init_params=False)
                 self.feature_extractor.load(self.filename)
                 if not finalized:
