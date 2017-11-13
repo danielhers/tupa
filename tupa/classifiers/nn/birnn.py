@@ -25,7 +25,7 @@ class BiRNN(object):
         self.rnn_builder = CategoricalParameter(RNNS, self.args.rnn)
         self.input_reps = self.empty_rep = None
         self.mlp = MultilayerPerceptron(self.args, self.model, self.params, self.embedding_layers,
-                                        self.embedding_layer_dim, self.lstm_layer_dim, suffix1="e", offset=1)
+                                        self.embedding_layer_dim, self.lstm_layer_dim, suffix1="e")
 
     @property
     def empty(self):

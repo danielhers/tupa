@@ -45,5 +45,5 @@ class MultilayerPerceptron(object):
         return x
 
 
-def key(prefix, i, offset=0, suffix1="", suffix2=()):
-    return (prefix + suffix1, i + offset) + suffix2
+def key(prefix, i, suffix1="", suffix2=()):
+    return (prefix + suffix1, i) + suffix2
