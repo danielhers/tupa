@@ -172,3 +172,8 @@ class SparsePerceptron(Perceptron):
         self.update_model(load_dict(self.filename + ".data"))
         self.args.min_update = self.min_update = d["min_update"]
         super().load_model(d)
+
+    def get_all_params(self):
+        d = super().get_all_params()
+        d.update(("_".join((axis, k)), v.weights) for axis, model in self.model.items() for k, v in model.items())
+        return d

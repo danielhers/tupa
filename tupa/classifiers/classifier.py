@@ -135,6 +135,9 @@ class Classifier(object):
             cls.LOADED.clear()
         return d
 
+    def get_all_params(self):
+        return OrderedDict((k, v.all) for k, v in self.labels.items())
+
     def __str__(self):
         return "Labels: %s, %d features" % (next(iter(self.num_labels.values())) if len(self.num_labels) == 1 else
                                             self.num_labels, self.input_dim)

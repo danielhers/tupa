@@ -296,3 +296,16 @@ class NeuralNetwork(Classifier):
             del param_values[:len(axis_param_keys)]
             if self.model_type != MLP_NN:
                 axis_model.birnn.load(d.get(axis, d))
+
+    def get_all_params(self):
+        d = super().get_all_params()
+        d.update(("input_" + s, p.data.all) for s, p in self.input_params.items())
+        for prefix, model in [("", self)] + [(a + "_birnn_", m.birnn) for a, m in self.axes.items()]:
+            for key, param in model.params.items():
+                k = prefix + "".join(map(str, key))
+                if isinstance(param, dy.BiRNNBuilder):
+                    # for f, b in param.builder_layers:
+                    pass
+                else:
+                    d[k] = param.as_array()
+        return d
