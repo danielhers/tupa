@@ -200,6 +200,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("-l", "--log", help="output log file (default: model filename + .log)")
         group.add_argument("--devscores", help="output CSV file for dev scores (default: model filename + .dev.csv)")
         group.add_argument("--testscores", help="output CSV file for test scores (default: model filename + .test.csv)")
+        group.add_argument("--action-stats", help="output CSV file for action statistics")
         argparser.add_argument("-f", "--formats", nargs="*", choices=FORMATS,
                                help="input formats for creating all parameters before training starts "
                                     "(otherwise created dynamically based on filename suffix), "

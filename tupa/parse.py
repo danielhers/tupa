@@ -154,8 +154,9 @@ class Parser(object):
             WIKIFIER.enabled = self.args.wikification
             self.state = State(passage)
             self.state_hash_history = set()
-            self.oracle = Oracle(passage) if self.training or ((self.args.verbose > 1 or self.args.use_gold_node_labels)
-                                                               and (edges or node_labels)) or self.args.verify else None
+            self.oracle = Oracle(passage) if self.training or self.args.verify or (
+                (self.args.verbose > 1 or self.args.use_gold_node_labels or self.args.action_stats)
+                and (edges or node_labels)) else None
             self.model.init_model()
             if ClassifierProperty.require_init_features in self.model.get_classifier_properties():
                 axes = [Config().format]
@@ -241,6 +242,9 @@ class Parser(object):
                 label, predicted_label = self.choose_label(features, true_label)
                 self.state.label_node(raw_true_label if label == true_label else label)
             self.model.classifier.finished_step(self.training)
+            if self.args.action_stats:
+                with open(self.args.action_stats, "a") as f:
+                    print(",".join(map(str, [predicted_action, action] + list(true_actions.values()))), file=f)
             if self.args.verbose > 2:
                 if self.oracle:
                     print("  predicted: %-15s true: %-15s taken: %-15s %s" % (
