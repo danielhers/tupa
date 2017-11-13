@@ -454,7 +454,7 @@ def read_passages(args, files):
 
 
 # noinspection PyTypeChecker,PyStringFormat
-def main():
+def main_generator():
     args = Config().args
     assert args.passages or args.train, "Either passages or --train is required (use -h for help)"
     assert args.model or args.train or args.folds, "Either --model or --train or --folds is required"
@@ -500,5 +500,9 @@ def main():
 # import sys
 # sys.setprofile(tracefunc)
 
+def main():
+    list(main_generator())
+
+
 if __name__ == "__main__":
-    list(main())
+    main()

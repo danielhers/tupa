@@ -30,7 +30,7 @@ Having a directory with UCCA passage files
 (for example, [the Wiki corpus](https://github.com/huji-nlp/ucca-corpus/tree/master/wiki/pickle)),
 run:
 
-    python -m tupa.parse -t <train_dir> -d <dev_dir> -c <model_type> -m <model_filename>
+    python -m tupa -t <train_dir> -d <dev_dir> -c <model_type> -m <model_filename>
 
 The possible model types are `sparse`, `mlp` and `bilstm`.
 
@@ -38,7 +38,7 @@ The possible model types are `sparse`, `mlp` and `bilstm`.
 
 Run the parser on a text file (here named `example.txt`) using a trained model:
 
-    python -m tupa.parse example.txt -m <model_filename>
+    python -m tupa example.txt -m <model_filename>
 
 An `xml` file will be created per passage (separate by blank lines in the text file).
 
@@ -53,9 +53,9 @@ To download and extract models pre-trained on the Wiki corpus, run:
 
 Run the parser using any of them:
 
-    python -m tupa.parse example.txt -m models/sparse
-    python -m tupa.parse example.txt -m models/mlp
-    python -m tupa.parse example.txt -m models/bilstm
+    python -m tupa example.txt -m models/sparse
+    python -m tupa example.txt -m models/mlp
+    python -m tupa example.txt -m models/bilstm
     
 ### Other languages
 
@@ -68,10 +68,10 @@ To get a French/German model pre-trained on [the *20K Leagues* corpus](https://g
 Run the parser on a French/German text file, using the French/German spaCy models too:
 
     export SPACY_MODEL=fr_core_news_md
-    python -m tupa.parse exemple.txt -m models/sparse-fr
+    python -m tupa exemple.txt -m models/sparse-fr
 
     export SPACY_MODEL=de_core_news_sm
-    python -m tupa.parse beispiel.txt -m models/sparse-de
+    python -m tupa beispiel.txt -m models/sparse-de
 
 Author
 ------

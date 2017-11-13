@@ -36,7 +36,7 @@ class Params(object):
         print("Running with %s" % self)
         Config().update(self.params)
         Config().update_hyperparams(**self.hyperparams)
-        for i, self.scores in enumerate(parse.main(), start=1):
+        for i, self.scores in enumerate(parse.main_generator(), start=1):
             print_title = not os.path.exists(out_file)
             with open(out_file, "a") as f:
                 if print_title:
@@ -72,7 +72,7 @@ def main():
     domains = (
         # Parameter name            Shared  Domain of possible values
         ("seed",                    False,  2147483647),  # max value for int
-        ("classifier",              False,  (config.MLP_NN, config.BILSTM_NN)),
+        ("classifier",              False,  (config.MLP_NN, config.BILSTM_NN,)),
         ("learning_rate",           False,  np.logspace(-5, 0, 11)),
         ("learning_rate_decay",     False,  np.r_[0, np.logspace(-5, -1, 9)]),
         ("update_word_vectors",     False,  [True, False]),
