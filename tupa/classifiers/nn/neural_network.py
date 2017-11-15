@@ -240,13 +240,12 @@ class NeuralNetwork(Classifier, SubModel):
             ("indexed_num", self.indexed_num),
         )
 
-    def load_sub_model(self, d):
-        d, param_keys = SubModel.load_sub_model(self, d)
+    def load_sub_model(self, d, *args):
+        d = SubModel.load_sub_model(self, d, *args)
         self.args.loss = self.loss = d["loss"]
         self.input_dim = d["input_dim"]
         self.indexed_dim = d["indexed_dim"]
         self.indexed_num = d["indexed_num"]
-        return param_keys
 
     def save_model(self, d):
         Classifier.save_model(self, d)
@@ -271,7 +270,7 @@ class NeuralNetwork(Classifier, SubModel):
         self.init_model(init_params=False)
         print("Loading model from '%s'... " % self.filename, end="", flush=True)
         started = time.time()
-        param_values = dy.load(self.filename, self.model)  # All sub-model parameter values, concatenated
+        values = dy.load(self.filename, self.model)  # All sub-model parameter values, concatenated
         print("Done (%.3fs)." % (time.time() - started))
         self.axes = OrderedDict()
         for axis, labels in self.labels_t.items():
@@ -279,10 +278,8 @@ class NeuralNetwork(Classifier, SubModel):
             assert size, "Size limit for '%s' axis labels is %s" % (axis, size)
             self.axes[axis] = AxisModel(axis, size, self.model, with_birnn=self.model_type == BILSTM_NN)
         for model in self.sub_models():
-            param_keys = model.load_sub_model(d)
-            model.params.clear()
-            model.params.update(zip(param_keys, param_values))  # Take next len(param_keys) values
-            del param_values[:len(param_keys)]
+            model.load_sub_model(d, *values)
+            del values[:len(model.params)]  # Take next len(model.params) values
 
     def get_all_params(self):
         d = super().get_all_params()

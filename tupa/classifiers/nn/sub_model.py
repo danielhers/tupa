@@ -9,9 +9,11 @@ class SubModel(object):
     def save_sub_model(self, d, *args):
         self.get_sub_dict(d).update(args + (("param_keys", list(self.params.keys())),))
 
-    def load_sub_model(self, d):
+    def load_sub_model(self, d, *args):
         d = self.get_sub_dict(d)
-        return d, d["param_keys"]
+        self.params.clear()
+        self.params.update(zip(d["param_keys"], args))
+        return d
 
     def get_sub_dict(self, d):
         for element in self.save_path:

@@ -74,9 +74,9 @@ class BiRNN(SubModel):
                 ("rnn", str(self.rnn_builder)),
             )
 
-    def load_sub_model(self, d):
+    def load_sub_model(self, d, *args):
         if self.with_birnn:
-            d, param_keys = super().load_sub_model(d)
+            d = super().load_sub_model(d, *args)
             self.args.lstm_layers = self.lstm_layers = d["lstm_layers"]
             self.args.lstm_layer_dim = self.lstm_layer_dim = d["lstm_layer_dim"]
             self.args.embedding_layers = self.embedding_layers = d["embedding_layers"]
@@ -86,5 +86,3 @@ class BiRNN(SubModel):
             self.args.activation = self.activation.string = d["activation"]
             self.args.init = self.init.string = d["init"]
             self.args.dropout = self.dropout = d["dropout"]
-            return param_keys
-        return []

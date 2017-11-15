@@ -56,8 +56,8 @@ class MultilayerPerceptron(SubModel):
             ("num_labels", self.num_labels),
         )
 
-    def load_sub_model(self, d):
-        d, param_keys = super().load_sub_model(d)
+    def load_sub_model(self, d, *args):
+        d = super().load_sub_model(d, *args)
         self.args.layers = self.layers = d["layers"]
         self.total_layers = d["total_layers"]
         self.args.layer_dim = self.layer_dim = d["layer_dim"]
@@ -66,4 +66,3 @@ class MultilayerPerceptron(SubModel):
         self.args.init = self.init.string = d["init"]
         self.args.dropout = self.dropout = d["dropout"]
         self.num_labels = d["num_labels"]
-        return param_keys
