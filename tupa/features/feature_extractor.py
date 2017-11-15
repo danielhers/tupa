@@ -3,8 +3,8 @@ import re
 from ucca import layer0
 from ucca.layer1 import EdgeTags
 
-FEATURE_ELEMENT_PATTERN = re.compile("([sba])(\d)([lruLRU]*)([wtdhencpqxyAPCIRNT]*)")
-FEATURE_TEMPLATE_PATTERN = re.compile("^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
+FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lruLRU]*)([wtdhencpqxyAPCIRNT]*)")
+FEATURE_TEMPLATE_PATTERN = re.compile(r"^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 
 
 class FeatureTemplate(object):
@@ -206,6 +206,7 @@ def get_node(element, state):
             return None
     return node
 
+
 ACTION_PROPS = {
     "A": "type",
     "e": "tag",
@@ -226,6 +227,7 @@ def separator_prop(nodes, terminals, prop):
     if prop == "q":
         return len(punctuation)
     return None
+
 
 EDGE_PRIORITY = {tag: i for i, tag in enumerate((
     EdgeTags.Center,
@@ -256,6 +258,15 @@ def height(node, *_):
     return head_terminal_height(node, True)
 
 
+def static_vars(**kwargs):
+    def decorate(func):
+        for k, v in kwargs.items():
+            setattr(func, k, v)
+        return func
+    return decorate
+
+
+@static_vars(node=None, head_terminal=None, height=None)
 def head_terminal_height(node, return_height=False):
     if node is not head_terminal_height.node:
         head_terminal_height.node = head_terminal_height.head_terminal = node
@@ -268,7 +279,6 @@ def head_terminal_height(node, return_height=False):
             head_terminal_height.head_terminal = min(edges, key=lambda edge: EDGE_PRIORITY.get(edge.tag, 0)).child
             head_terminal_height.height += 1
     return head_terminal_height.height if return_height else head_terminal_height.head_terminal
-head_terminal_height.node = head_terminal_height.head_terminal = head_terminal_height.height = None
 
 
 def has_gaps(node, *_):  # Possibly the same as FoundationalNode.discontiguous
@@ -300,6 +310,7 @@ def dependency_distance(node1, node2, *_):
     elif t2.dep_head == t1.index:
         return -1
     return None
+
 
 NODE_PROP_GETTERS = {
     "w": lambda node, *_: head_terminal(node).text,
