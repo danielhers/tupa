@@ -280,6 +280,7 @@ class NeuralNetwork(Classifier, SubModel):
         for model in self.sub_models():
             model.load_sub_model(d, *values)
             del values[:len(model.params)]  # Take next len(model.params) values
+        assert not values, "Loaded values: %d more than expected" % len(values)
 
     def get_all_params(self):
         d = super().get_all_params()

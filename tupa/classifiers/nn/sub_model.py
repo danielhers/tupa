@@ -11,8 +11,11 @@ class SubModel(object):
 
     def load_sub_model(self, d, *args):
         d = self.get_sub_dict(d)
+        param_keys = d["param_keys"]
+        assert len(param_keys) <= len(args), "%s loaded values: expected %d, got %d" % ("/".join(self.save_path),
+                                                                                        len(param_keys), len(args))
         self.params.clear()
-        self.params.update(zip(d["param_keys"], args))
+        self.params.update(zip(param_keys, args))
         return d
 
     def get_sub_dict(self, d):
