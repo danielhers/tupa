@@ -8,11 +8,12 @@ import dynet as dy
 import numpy as np
 
 from .birnn import BiRNN
-from .constants import ACTIVATIONS, INITIALIZERS, TRAINERS, TRAINER_LEARNING_RATE_PARAM_NAMES, TRAINER_KWARGS, \
+from .constants import TRAINERS, TRAINER_LEARNING_RATE_PARAM_NAMES, TRAINER_KWARGS, \
     CategoricalParameter
 from .mlp import MultilayerPerceptron
+from .sub_model import SubModel
 from ..classifier import Classifier
-from ...config import Config, MLP_NN
+from ...config import Config
 from ...features.feature_params import MISSING_VALUE
 
 
@@ -20,16 +21,16 @@ class AxisModel(object):
     """
     Format-specific parameters that are part of the network
     """
-    def __init__(self, axis, num_labels, *args, **kwargs):
-        config_args = Config().hyperparams.specific[axis]
-        self.birnn = BiRNN(config_args, *args, **kwargs)
-        self.mlp = MultilayerPerceptron(config_args, *args, num_labels=num_labels, suffix2=(axis,), **kwargs)
+    def __init__(self, axis, num_labels, model):
+        args = Config().hyperparams.specific[axis]
+        self.birnn = BiRNN(args, model, save_path=("axes", axis, "birnn"))
+        self.mlp = MultilayerPerceptron(args, model, num_labels=num_labels, save_path=("axes", axis, "mlp"))
 
     def init_params(self, input_dim, indexed_dim, indexed_num):
         self.mlp.init_params(input_dim + self.birnn.init_params(indexed_dim, indexed_num))
 
 
-class NeuralNetwork(Classifier):
+class NeuralNetwork(Classifier, SubModel):
     """
     Neural network to be used by the parser for action classification. Uses dense features.
     Keeps weights in constant-size matrices. Does not allow adding new features on-the-fly.
@@ -41,17 +42,11 @@ class NeuralNetwork(Classifier):
         """
         Create a new untrained NN
         """
-        super().__init__(*args, **kwargs)
-        self.layers = self.args.layers
-        self.layer_dim = self.args.layer_dim
-        self.output_dim = self.args.output_dim
+        Classifier.__init__(self, *args, **kwargs)
+        SubModel.__init__(self)
         self.minibatch_size = self.args.minibatch_size
-        self.activation = CategoricalParameter(ACTIVATIONS, self.args.activation)
-        self.init = CategoricalParameter(INITIALIZERS, self.args.init)
         self.trainer_type = CategoricalParameter(TRAINERS, self.args.optimizer)
         self.loss = self.args.loss
-        self.dropout = self.args.dropout
-        self.params = OrderedDict()  # string (param identifier) -> parameter
         self.empty_values = OrderedDict()  # string (feature suffix) -> expression
         self.axes = OrderedDict()  # string (axis) -> AxisModel
         self.losses = []
@@ -74,13 +69,13 @@ class NeuralNetwork(Classifier):
             if learning_rate_param_name and self.learning_rate:
                 trainer_kwargs[learning_rate_param_name] = self.learning_rate
             self.trainer = self.trainer_type()(self.model, **trainer_kwargs)
-            self.birnn = BiRNN(Config().hyperparams.shared, self.model, self.params, shared=True)
+            self.birnn = BiRNN(Config().hyperparams.shared, self.model, save_path=("shared", "birnn"))
             if init_params:
-                self.init_input_params()
+                self.init_input_params()  # TODO call again per axis in case input params differ, separate input_dim
         if axis and init_params:
             axis_model = self.axes.get(axis)
             if axis_model is None:
-                axis_model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model, self.params)
+                axis_model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model)
                 axis_model.init_params(self.input_dim, self.indexed_dim, self.indexed_num)
         if init:
             self.init_cg()
@@ -115,9 +110,10 @@ class NeuralNetwork(Classifier):
     def init_features(self, features, axes, train=False):
         for axis in axes:
             self.init_model(axis)
-        self.birnn.init_features(features, train)
+        embeddings = [[self.params[s][k] for k in ks] for s, ks in sorted(features.items())]  # lists of vectors
+        self.birnn.init_features(embeddings, train)
         for axis in axes:
-            self.axes[axis].birnn.init_features(features, train)
+            self.axes[axis].birnn.init_features(embeddings, train)
 
     def generate_inputs(self, features, axis):
         indices = []  # list, not set, in order to maintain consistent order
@@ -136,7 +132,7 @@ class NeuralNetwork(Classifier):
         assert self.indexed_num is None or len(indices) == self.indexed_num, \
             "Wrong number of index features: got %d, expected %d" % (len(indices), self.indexed_num)
         if indices:
-            yield dy.concatenate(self.birnn.index_input(indices) + self.axes[axis].birnn.index_input(indices))
+            yield dy.concatenate(self.birnn.evaluate(indices) + self.axes[axis].birnn.evaluate(indices))
 
     def evaluate(self, features, axis, train=False):
         """
@@ -215,7 +211,6 @@ class NeuralNetwork(Classifier):
             if self.args.verbose > 3:
                 print("Total loss from %d time steps: %g" % (self.steps, loss.value()))
             loss.backward()
-            # if np.linalg.norm(loss.gradient()) not in (np.inf, np.nan):
             try:
                 self.trainer.update()
             except RuntimeError as e:
@@ -230,23 +225,33 @@ class NeuralNetwork(Classifier):
         if self.args.verbose > 2:
             self.trainer.status()
         return self
-
-    def save_model(self):
-        self.finalize()
-        d = OrderedDict(
-            layers=self.layers,
-            layer_dim=self.layer_dim,
-            output_dim=self.output_dim,
-            activation=str(self.activation),
-            init=str(self.init),
-            loss=self.loss,
-            param_keys=list(self.params.keys()),
-            axes_param_keys=[list(m.birnn.params.keys()) for m in self.axes.values()],
-            axes=list(self.axes),
+            
+    def sub_models(self):
+        """ :return: ordered list of SubModels """
+        return [self] + [m.mlp for m in self.axes.values()] + [m.birnn for m in list(self.axes.values()) + [self]]
+    
+    def save_sub_model(self, d, *args):
+        SubModel.save_sub_model(
+            self, d,
+            ("loss", self.loss),
+            ("input_dim", self.input_dim),
+            ("indexed_dim", self.indexed_dim),
+            ("indexed_num", self.indexed_num),
         )
-        if self.model_type != MLP_NN:  # Save BiRNN hyperparams
-            d.update(self.birnn.save())
-            d.update((a, m.birnn.save()) for a, m in self.axes.items())
+
+    def load_sub_model(self, d):
+        d, param_keys = SubModel.load_sub_model(self, d)
+        self.args.loss = self.loss = d["loss"]
+        self.input_dim = d["input_dim"]
+        self.indexed_dim = d["indexed_dim"]
+        self.indexed_num = d["indexed_num"]
+        return param_keys
+
+    def save_model(self, d):
+        Classifier.save_model(self, d)
+        self.finalize()
+        for model in self.sub_models():
+            model.save_sub_model(d)
         started = time.time()
         try:
             os.remove(self.filename)
@@ -255,57 +260,38 @@ class NeuralNetwork(Classifier):
             pass
         print("Saving model to '%s'... " % self.filename, end="", flush=True)
         try:
-            dy.save(self.filename, [x for m in [self] + list(self.axes.values()) for x in m.birnn.params.values()])
+            dy.save(self.filename, [p for m in self.sub_models() for p in m.params.values()])
             print("Done (%.3fs)." % (time.time() - started))
         except ValueError as e:
             print("Failed saving model: %s" % e)
-        return d
 
     def load_model(self, d):
         self.model = None
-        self.params.clear()
-        if self.birnn:
-            self.birnn.params.clear()
-        for axis_model in self.axes.values():
-            axis_model.birnn.params.clear()
-        self.args.layers = self.layers = d["layers"]
-        self.args.layer_dim = self.layer_dim = d["layer_dim"]
-        self.args.output_dim = self.output_dim = d["output_dim"]
-        self.args.activation = self.activation.string = d["activation"]
-        self.args.init = self.init.string = d["init"]
-        self.args.loss = self.loss = d.get("loss", self.args.loss)
-        axes = d["axes"]
-        param_keys, *axes_param_keys = [[tuple(k) if isinstance(k, list) else k for k in keys]  # param key can be tuple
-                                        for keys in [d["param_keys"]] + d.get("axes_param_keys", [[]] * len(axes))]
         self.init_model(init_params=False)
-        if self.model_type != MLP_NN:  # Load BiRNN hyperparams
-            self.birnn.load(d)
         print("Loading model from '%s'... " % self.filename, end="", flush=True)
         started = time.time()
-        param_values = dy.load(self.filename, self.model)  # All shared + specific parameter values concatenated
+        param_values = dy.load(self.filename, self.model)  # All sub-model parameter values, concatenated
         print("Done (%.3fs)." % (time.time() - started))
-        self.params.update(zip(param_keys, param_values))
-        del param_values[:len(param_keys)]
         self.axes = OrderedDict()
-        for axis, axis_param_keys in zip(axes, axes_param_keys):
-            size = self.labels_t[axis][1]
-            assert size, "Maximum size of %s labels list is %s" % (axis, size)
-            self.axes[axis] = axis_model = AxisModel(axis, size, self.model,
-                                                     global_params=self.params,
-                                                     params=OrderedDict(zip(axis_param_keys, param_values)))
-            del param_values[:len(axis_param_keys)]
-            if self.model_type != MLP_NN:
-                axis_model.birnn.load(d.get(axis, d))
+        for axis, labels in self.labels_t.items():
+            _, size = labels
+            assert size, "Size limit for '%s' axis labels is %s" % (axis, size)
+            self.axes[axis] = AxisModel(axis, size, self.model)
+        for model in self.sub_models():
+            param_keys = model.load_sub_model(d)
+            model.params.clear()
+            model.params.update(zip(param_keys, param_values))  # Take next len(param_keys) values
+            del param_values[:len(param_keys)]
 
     def get_all_params(self):
         d = super().get_all_params()
         d.update(("input_" + s, p.data.all) for s, p in self.input_params.items())
-        for prefix, model in [("", self)] + [(a + "_birnn_", m.birnn) for a, m in self.axes.items()]:
-            for key, param in model.params.items():
-                k = prefix + "".join(map(str, key))
-                if isinstance(param, dy.BiRNNBuilder):
-                    # for f, b in param.builder_layers:
-                    pass
-                else:
-                    d[k] = param.as_array()
+        for model in self.sub_models():
+            for key, value in model.params:
+                for name, param in [("%s%s%d%d%d" % (key, p, i, j, k), v) for i, (f, b) in
+                                    enumerate(value.builder_layers)
+                                    for p, r in (("f", f), ("b", b)) for j, l in enumerate(r.get_parameters())
+                                    for k, v in enumerate(l)] \
+                        if isinstance(value, dy.BiRNNBuilder) else ((key, value),):
+                    d["_".join(model.save_path + (name,))] = param.as_array()
         return d

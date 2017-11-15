@@ -72,19 +72,17 @@ class Model(object):
             self.restore(*args, **kwargs)
 
     def init_model(self, init_params=True):
-        if self.feature_extractor or self.classifier:  # Already initialized, but perhaps not for the current format
-            if Config().format not in self.classifier.labels:
-                self.classifier.labels[Config().format] = self.init_actions()
-            if self.args.node_labels and NODE_LABEL_KEY not in self.classifier.labels:
-                self.classifier.labels[NODE_LABEL_KEY] = self.init_node_labels().data
-            return
-        labels = {}
+        labels = self.classifier.labels if self.classifier else {}
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
-            labels[Config().format] = self.init_actions()  # Uses config to determine actions
-            self.feature_params = [p.create_from_config() for p in PARAM_DEFS if not p.empty()]
-            if self.args.node_labels:
-                labels[NODE_LABEL_KEY] = self.init_node_labels().data
-        if self.model_type == SPARSE:
+            if self.feature_params is None:  # TODO call again for each axis in case they need to be modified
+                self.feature_params = [p.create_from_config() for p in PARAM_DEFS if not p.empty()]
+            if Config().format not in labels:
+                labels[Config().format] = self.init_actions()  # Uses config to determine actions
+            if self.args.node_labels and NODE_LABEL_KEY not in labels:
+                labels[NODE_LABEL_KEY] = self.init_node_labels().data  # Uses self.feature_params
+        if self.classifier:  # Already initialized
+            pass
+        elif self.model_type == SPARSE:
             from .features.sparse_features import SparseFeatureExtractor
             from .classifiers.linear.sparse_perceptron import SparsePerceptron
             self.feature_extractor = SparseFeatureExtractor()
@@ -206,7 +204,7 @@ class Model(object):
                     labels = node_labels.data
                 else:  # Not used as a feature, just get labels
                     labels = UnknownDict()
-                    labels.all, _ = all_size
+                    labels.load(all_size)
             else:  # Action labels for format determined by axis
                 labels = Actions(*all_size)
             self.classifier.labels[axis] = labels

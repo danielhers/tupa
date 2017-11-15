@@ -83,23 +83,25 @@ class Classifier(object):
         """
         Save all parameters to file
         """
-        d = OrderedDict(
-            type=self.model_type,
-            labels={a: l.save(skip=a in skip_labels) for a, l in self.labels.items()},  # (all, size) for each
-            is_frozen=self.is_frozen,
-            learning_rate=self.learning_rate,
-            learning_rate_decay=self.learning_rate_decay,
-            updates=self.updates,
-            epoch=self.epoch,
-        )
-        d.update(self.save_model())
+        d = OrderedDict((
+            ("type", self.model_type),
+            ("axes", OrderedDict(
+                (a, OrderedDict(labels=l.save(skip=a in skip_labels))) for a, l in self.labels.items()  # (all, size)
+            )),
+            ("is_frozen", self.is_frozen),
+            ("learning_rate", self.learning_rate),
+            ("learning_rate_decay", self.learning_rate_decay),
+            ("updates", self.updates),
+            ("epoch", self.epoch),
+        ))
+        self.save_model(d)
         save_json(self.filename + ".json", d)
 
-    def save_model(self):
+    def save_model(self, d):
         """
         Save all parameters to file
         """
-        return {}
+        pass
 
     def load(self):
         """
@@ -108,7 +110,7 @@ class Classifier(object):
         d = self.load_file(self.filename, clear=True)
         model_type = d.get("type")
         assert model_type is None or model_type == self.model_type, "Model type does not match: %s" % model_type
-        self.labels_t = d["labels"]  # Just a dict of (all, size) pairs, to be corrected by Model to Actions and Labels
+        self.labels_t = OrderedDict((a, l["labels"]) for a, l in d["axes"].items())  # labels to be corrected by Model
         self.is_frozen = d["is_frozen"]
         self.updates = d.get("updates", d.get("_update_index", 0))
         self.epoch = d.get("epoch", 0)

@@ -1,4 +1,4 @@
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 from itertools import repeat
 
 import numpy as np
@@ -161,11 +161,10 @@ class SparsePerceptron(Perceptron):
         ret.is_frozen = True
         return ret
 
-    def save_model(self):
+    def save_model(self, d):
+        super().save_model(d)
+        d["min_update"] = self.min_update
         save_dict(self.filename + ".data", self.copy_model())
-        d = OrderedDict(min_update=self.min_update)
-        d.update(super().save_model())
-        return d
 
     def load_model(self, d):
         self.model.clear()

@@ -1,5 +1,4 @@
 import time
-from collections import OrderedDict
 
 from tupa.classifiers.classifier import Classifier
 
@@ -59,10 +58,9 @@ class Perceptron(Classifier):
     def update_learning_rate(self):
         self.learning_rate = self.initial_learning_rate / (1.0 + self.epoch * self.learning_rate_decay)
 
-    def save_model(self):
-        d = OrderedDict(initial_learning_rate=self.initial_learning_rate)
-        d.update(super().save_model())
-        return d
+    def save_model(self, d):
+        super().save_model(d)
+        d["initial_learning_rate"] = self.initial_learning_rate
 
     def load_model(self, d):
         self.initial_learning_rate = d["initial_learning_rate"]
