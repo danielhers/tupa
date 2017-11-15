@@ -11,7 +11,7 @@ from scheme.convert import FROM_FORMAT
 from scheme.evaluate import Scores
 from scheme.util.amr import WIKIFIER
 from tupa.action import Actions
-from tupa.config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP, CLASSIFIERS
+from tupa.config import Config, SPARSE, MLP, BIRNN, NOOP, CLASSIFIERS
 from tupa.model import Model, ClassifierProperty
 from tupa.oracle import Oracle
 from tupa.parse import Parser
@@ -79,10 +79,10 @@ class ParserTests(unittest.TestCase):
         self.train_test(SPARSE)
 
     def test_parser_mlp(self):
-        self.train_test(MLP_NN, compare=False)
+        self.train_test(MLP, compare=False)
 
     def test_parser_bilstm(self):
-        self.train_test(BILSTM_NN, compare=False)
+        self.train_test(BIRNN, compare=False)
 
     def test_parser_noop(self):
         self.train_test(NOOP)

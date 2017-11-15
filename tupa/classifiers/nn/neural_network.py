@@ -12,7 +12,7 @@ from .constants import TRAINERS, TRAINER_LEARNING_RATE_PARAM_NAMES, TRAINER_KWAR
 from .mlp import MultilayerPerceptron
 from .sub_model import SubModel
 from ..classifier import Classifier
-from ...config import Config, BILSTM_NN
+from ...config import Config, BIRNN
 from ...features.feature_params import MISSING_VALUE
 
 
@@ -69,14 +69,14 @@ class NeuralNetwork(Classifier, SubModel):
                 trainer_kwargs[learning_rate_param_name] = self.learning_rate
             self.trainer = self.trainer_type()(self.model, **trainer_kwargs)
             self.birnn = BiRNN(Config().hyperparams.shared, self.model,
-                               save_path=("shared", "birnn"), with_birnn=self.model_type == BILSTM_NN)
+                               save_path=("shared", "birnn"), with_birnn=self.model_type == BIRNN)
             if init_params:
                 self.init_input_params()  # TODO call again per axis in case input params differ, separate input_dim
         if axis and init_params:
             axis_model = self.axes.get(axis)
             if axis_model is None:
                 axis_model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model,
-                                                         with_birnn=self.model_type == BILSTM_NN)
+                                                         with_birnn=self.model_type == BIRNN)
                 axis_model.init_params(self.input_dim, self.indexed_dim, self.indexed_num)
         if init:
             self.init_cg()
@@ -276,7 +276,7 @@ class NeuralNetwork(Classifier, SubModel):
         for axis, labels in self.labels_t.items():
             _, size = labels
             assert size, "Size limit for '%s' axis labels is %s" % (axis, size)
-            self.axes[axis] = AxisModel(axis, size, self.model, with_birnn=self.model_type == BILSTM_NN)
+            self.axes[axis] = AxisModel(axis, size, self.model, with_birnn=self.model_type == BIRNN)
         for model in self.sub_models():
             model.load_sub_model(d, *values)
             del values[:len(model.params)]  # Take next len(model.params) values

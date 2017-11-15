@@ -14,7 +14,7 @@ class Params(object):
     def __init__(self, params, **hyperparams):
         self.params = params
         self.hyperparams = hyperparams
-        if self.params["classifier"] != config.BILSTM_NN:
+        if self.params["classifier"] != config.BIRNN:
             for p in [self.params] + list(self.hyperparams.values()):
                 p["rnn"] = None
                 p["lstm_layer_dim"] = p["lstm_layers"] = p["embedding_layer_dim"] = p["embedding_layers"] = 0
@@ -72,7 +72,7 @@ def main():
     domains = (
         # Parameter name            Shared  Domain of possible values
         ("seed",                    False,  2147483647),  # max value for int
-        ("classifier",              False,  (config.MLP_NN, config.BILSTM_NN,)),
+        ("classifier",              False,  (config.MLP, config.BIRNN,)),
         ("learning_rate",           False,  np.logspace(-5, 0, 11)),
         ("learning_rate_decay",     False,  np.r_[0, np.logspace(-5, -1, 9)]),
         ("update_word_vectors",     False,  [True, False]),

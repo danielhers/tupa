@@ -13,11 +13,11 @@ from tupa.classifiers.nn.constants import *
 
 # Classifiers
 SPARSE = "sparse"
-MLP_NN = "mlp"
-BILSTM_NN = "bilstm"
+MLP = "mlp"
+BIRNN = "bilstm"
 NOOP = "noop"
-NN_CLASSIFIERS = (MLP_NN, BILSTM_NN)
-CLASSIFIERS = (SPARSE, MLP_NN, BILSTM_NN, NOOP)
+NN_CLASSIFIERS = (MLP, BIRNN)
+CLASSIFIERS = (SPARSE, MLP, BIRNN, NOOP)
 
 # Swap types
 REGULAR = "regular"

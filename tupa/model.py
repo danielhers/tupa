@@ -2,7 +2,7 @@ from enum import Enum
 
 from .action import Actions
 from .classifiers.classifier import Classifier
-from .config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP
+from .config import Config, SPARSE, MLP, BIRNN, NOOP
 from .features.enumerator import FeatureEnumerator
 from .features.feature_params import FeatureParameters
 from .features.indexer import FeatureIndexer
@@ -56,8 +56,8 @@ class ClassifierProperty(Enum):
 
 CLASSIFIER_PROPERTIES = {
     SPARSE: (ClassifierProperty.update_only_on_error,),
-    MLP_NN: (ClassifierProperty.trainable_after_saving,),
-    BILSTM_NN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
+    MLP: (ClassifierProperty.trainable_after_saving,),
+    BIRNN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
     NOOP: (),
 }
 
@@ -92,11 +92,11 @@ class Model(object):
             from .classifiers.noop import NoOp
             self.feature_extractor = EmptyFeatureExtractor()
             self.classifier = NoOp(self.filename, labels)
-        elif self.model_type in (MLP_NN, BILSTM_NN):
+        elif self.model_type in (MLP, BIRNN):
             from .features.dense_features import DenseFeatureExtractor
             from .classifiers.nn.neural_network import NeuralNetwork
             self.feature_extractor = FeatureEnumerator(DenseFeatureExtractor(), self.feature_params)
-            if self.model_type == BILSTM_NN:
+            if self.model_type == BIRNN:
                 self.feature_extractor = FeatureIndexer(self.feature_extractor)  # Pass positions in input, not identity
             self.classifier = NeuralNetwork(self.model_type, self.filename, labels)
         else:
