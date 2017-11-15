@@ -6,7 +6,7 @@ from .config import Config, SPARSE, MLP_NN, BILSTM_NN, NOOP
 from .features.enumerator import FeatureEnumerator
 from .features.feature_params import FeatureParameters
 from .features.indexer import FeatureIndexer
-from .model_util import UnknownDict
+from .model_util import UnknownDict, AutoIncrementDict
 
 
 class ParameterDefinition(object):
@@ -165,7 +165,7 @@ class Model(object):
                     self.feature_extractor.restore()
                 self._update_input_params()  # Must be before classifier.load() because it uses them to init the model
                 self.classifier.load()
-                self.load_labels()
+                self.load_labels(finalized)
                 for param in PARAM_DEFS:
                     param.load_to_config(self.feature_extractor.params)
             except FileNotFoundError:
@@ -191,9 +191,9 @@ class Model(object):
         self.classifier.labels_t = {a: l.save() for a, l in self.classifier.labels.items()}
         self.load_labels()
 
-    def load_labels(self):
+    def load_labels(self, finalized=True):
         """
-        Copy classifier's labels to create new Actions/UnknownDict objects
+        Copy classifier's labels to create new Actions/Labels objects
         Restoring from a model that was just loaded from file, or called by restore()
         """
         for axis, all_size in self.classifier.labels_t.items():  # all_size is a pair of (label list, size limit)
@@ -203,7 +203,7 @@ class Model(object):
                     del all_size
                     labels = node_labels.data
                 else:  # Not used as a feature, just get labels
-                    labels = UnknownDict()
+                    labels = UnknownDict() if finalized else AutoIncrementDict()
                     labels.load(all_size)
             else:  # Action labels for format determined by axis
                 labels = Actions(*all_size)
