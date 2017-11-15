@@ -8,12 +8,11 @@ import dynet as dy
 import numpy as np
 
 from .birnn import BiRNN
-from .constants import TRAINERS, TRAINER_LEARNING_RATE_PARAM_NAMES, TRAINER_KWARGS, \
-    CategoricalParameter
+from .constants import TRAINERS, TRAINER_LEARNING_RATE_PARAM_NAMES, TRAINER_KWARGS, CategoricalParameter
 from .mlp import MultilayerPerceptron
 from .sub_model import SubModel
 from ..classifier import Classifier
-from ...config import Config
+from ...config import Config, BILSTM_NN
 from ...features.feature_params import MISSING_VALUE
 
 
@@ -21,9 +20,9 @@ class AxisModel(object):
     """
     Format-specific parameters that are part of the network
     """
-    def __init__(self, axis, num_labels, model):
+    def __init__(self, axis, num_labels, model, with_birnn=True):
         args = Config().hyperparams.specific[axis]
-        self.birnn = BiRNN(args, model, save_path=("axes", axis, "birnn"))
+        self.birnn = BiRNN(args, model, save_path=("axes", axis, "birnn"), with_birnn=with_birnn)
         self.mlp = MultilayerPerceptron(args, model, num_labels=num_labels, save_path=("axes", axis, "mlp"))
 
     def init_params(self, input_dim, indexed_dim, indexed_num):
@@ -69,13 +68,15 @@ class NeuralNetwork(Classifier, SubModel):
             if learning_rate_param_name and self.learning_rate:
                 trainer_kwargs[learning_rate_param_name] = self.learning_rate
             self.trainer = self.trainer_type()(self.model, **trainer_kwargs)
-            self.birnn = BiRNN(Config().hyperparams.shared, self.model, save_path=("shared", "birnn"))
+            self.birnn = BiRNN(Config().hyperparams.shared, self.model,
+                               save_path=("shared", "birnn"), with_birnn=self.model_type == BILSTM_NN)
             if init_params:
                 self.init_input_params()  # TODO call again per axis in case input params differ, separate input_dim
         if axis and init_params:
             axis_model = self.axes.get(axis)
             if axis_model is None:
-                axis_model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model)
+                axis_model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model,
+                                                         with_birnn=self.model_type == BILSTM_NN)
                 axis_model.init_params(self.input_dim, self.indexed_dim, self.indexed_num)
         if init:
             self.init_cg()
@@ -276,7 +277,7 @@ class NeuralNetwork(Classifier, SubModel):
         for axis, labels in self.labels_t.items():
             _, size = labels
             assert size, "Size limit for '%s' axis labels is %s" % (axis, size)
-            self.axes[axis] = AxisModel(axis, size, self.model)
+            self.axes[axis] = AxisModel(axis, size, self.model, with_birnn=self.model_type == BILSTM_NN)
         for model in self.sub_models():
             param_keys = model.load_sub_model(d)
             model.params.clear()
