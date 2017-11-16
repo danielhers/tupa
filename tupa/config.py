@@ -1,8 +1,8 @@
-import sys
 from argparse import ArgumentParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
 from collections import defaultdict
 from functools import partial
 
+import dynet_config
 import numpy as np
 from logbook import Logger, FileHandler, StderrHandler
 from ucca import constructions
@@ -127,7 +127,7 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
     add(group, "--node-label-dropout", type=float, default=0.2, help="node label dropout parameter")
     add(group, "--dropout", type=float, default=0.4, help="dropout parameter between layers")
     add(group, "--max-length", type=int, default=120, help="maximum length of input sentence")
-    add(group, "--rnn", choices=RNNS, default=DEFAULT_RNN, help="type of recurrent neural network to use")
+    add(group, "--rnn", choices=["None"] + list(RNNS), default=DEFAULT_RNN, help="type of recurrent neural network")
     NN_ARG_NAMES.update(get_group_arg_names(group))
 
     return argparser
@@ -157,7 +157,7 @@ class HyperparamsInitializer(object):
         :param kwargs: parsed and initialized values
         """
         self.name = name
-        self.str_args = list(args) + ["--%s %s" % k for k in kwargs.items()]
+        self.str_args = list(args) + ["--%s %s" % (k.replace("_", "-"), v) for k, v in kwargs.items()]
         self.args = vars(add_param_arguments(arg_default=SUPPRESS).parse_args(args))
         self.args.update(kwargs)
 
@@ -216,9 +216,6 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--dynet-weight-decay", type=float, default=1e-5, help="weight decay for parameters")
         add_boolean_option(group, "dynet-gpu", "GPU for training")
         group.add_argument("--dynet-gpus", type=int, default=1, help="how many GPUs you want to use")
-        group.add_argument("--dynet-gpu-ids", help="the GPUs that you want to use by device ID")
-        group.add_argument("--dynet-devices")
-        add_boolean_option(group, "dynet-viz", "visualization of neural network structure")
         add_boolean_option(group, "dynet-autobatch", "auto-batching of training examples")
         DYNET_ARG_NAMES.update(get_group_arg_names(group))
 
@@ -280,23 +277,17 @@ class Config(object, metaclass=Singleton):
 
     def set_dynet_arguments(self):
         self.random.seed(self.args.seed)
-        sys.argv += ["--dynet-seed", str(self.args.seed)]
+        dynet_config.set(random_seed=self.args.seed)
         if self.args.dynet_mem:
-            sys.argv += ["--dynet-mem", str(self.args.dynet_mem)]
+            dynet_config.set(mem=self.args.dynet_mem)
         if self.args.dynet_weight_decay:
-            sys.argv += ["--dynet-weight-decay", str(self.args.dynet_weight_decay)]
+            dynet_config.set(weight_decay=self.args.dynet_weight_decay)
         if self.args.dynet_gpu:
-            sys.argv += ["--dynet-gpu"]
+            dynet_config.set_gpu()
         if self.args.dynet_gpus and self.args.dynet_gpus != 1:
-            sys.argv += ["--dynet-gpus", str(self.args.dynet_gpus)]
-        if self.args.dynet_gpu_ids:
-            sys.argv += ["--dynet-gpu-ids", str(self.args.dynet_gpu_ids)]
-        if self.args.dynet_devices:
-            sys.argv += ["--dynet-devices", str(self.args.dynet_devices)]
-        if self.args.dynet_viz:
-            sys.argv += ["--dynet-viz"]
+            dynet_config.set(requested_gpus=self.args.dynet_gpus)
         if self.args.dynet_autobatch:
-            sys.argv += ["--dynet-autobatch", "1"]
+            dynet_config.set(autobatch=True)
 
     def update(self, params=None):
         if params:

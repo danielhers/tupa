@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 from collections import OrderedDict
 from itertools import repeat
@@ -175,9 +174,6 @@ class NeuralNetwork(Classifier, SubModel):
         super().update(features, axis, pred, true, importance)
         self.losses += self.calc_loss(self.evaluate(features, axis, train=True), axis, true, importance or repeat(1))
         self.steps += 1
-        if self.args.dynet_viz:
-            dy.print_graphviz()
-            sys.exit(0)
 
     def calc_loss(self, scores, axis, true, importance):
         if self.loss == "softmax":
