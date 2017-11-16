@@ -6,10 +6,8 @@ from subprocess import run
 from setuptools import setup, find_packages
 from setuptools.command.install import install as _install
 
-install_requires = []
 with open("requirements.txt") as f:
-    install_requires += f.read().splitlines()
-install_requires.append("dynet>=2.0.1")
+    install_requires = f.read().splitlines()
 
 try:
     import pypandoc
