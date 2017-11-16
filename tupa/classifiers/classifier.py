@@ -93,6 +93,7 @@ class Classifier(object):
             ("learning_rate_decay", self.learning_rate_decay),
             ("updates", self.updates),
             ("epoch", self.epoch),
+            ("input_dim", self.input_dim),
         ))
         self.save_model(d)
         save_json(self.filename + ".json", d)
@@ -112,10 +113,11 @@ class Classifier(object):
         assert model_type is None or model_type == self.model_type, "Model type does not match: %s" % model_type
         self.labels_t = OrderedDict((a, l["labels"]) for a, l in d["axes"].items())  # labels to be corrected by Model
         self.is_frozen = d["is_frozen"]
-        self.updates = d.get("updates", d.get("_update_index", 0))
-        self.epoch = d.get("epoch", 0)
         self.args.learning_rate = self.learning_rate = d["learning_rate"]
         self.args.learning_rate_decay = self.learning_rate_decay = d["learning_rate_decay"]
+        self.updates = d["updates"]
+        self.epoch = d["epoch"]
+        self.input_dim = d["input_dim"]
         self.load_model(d)
 
     def load_model(self, d):

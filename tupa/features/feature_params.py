@@ -8,7 +8,7 @@ UNKNOWN_VALUE = 0
 
 class FeatureParameters(Labels):
     def __init__(self, suffix, dim, size, dropout=0, updated=True, num=1, init=None, data=None, indexed=False,
-                 copy_from=None, filename=None, min_count=1):
+                 copy_from=None, filename=None, min_count=1, enabled=True):
         """
         :param suffix: one-character title for feature
         :param dim: vector dimension or, filename to load vectors from, or Word2Vec object
@@ -22,6 +22,7 @@ class FeatureParameters(Labels):
         :param copy_from: suffix of other parameter to copy values from instead of extracting them directly
         :param filename: name of file to load data from
         :param min_count: minimum number of occurrences for a feature value before it is actually added
+        :param enabled: whether to actually use this parameter in feature extraction
         """
         self.suffix = suffix
         self.dim = dim
@@ -35,11 +36,12 @@ class FeatureParameters(Labels):
         self.copy_from = copy_from
         self.filename = filename
         self.min_count = min_count
+        self.enabled = enabled
 
     def __repr__(self):
         return type(self).__name__ + "(" + ", ".join(
             map(str, (self.suffix, self.dim, self.size, self.dropout, self.updated, self.num, self.init, self.data,
-                      self.indexed, self.copy_from, self.filename, self.min_count))) + ")"
+                      self.indexed, self.copy_from, self.filename, self.min_count, self.enabled))) + ")"
 
     def __eq__(self, other):
         return self.suffix == other.suffix and self.dim == other.dim and self.size == other.size and \

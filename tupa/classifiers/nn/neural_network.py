@@ -25,9 +25,6 @@ class AxisModel(object):
         self.birnn = BiRNN(args, model, save_path=("axes", axis, "birnn"), with_birnn=with_birnn)
         self.mlp = MultilayerPerceptron(args, model, num_labels=num_labels, save_path=("axes", axis, "mlp"))
 
-    def init_params(self, input_dim, indexed_dim, indexed_num):
-        self.mlp.init_params(input_dim + self.birnn.init_params(indexed_dim, indexed_num))
-
 
 class NeuralNetwork(Classifier, SubModel):
     """
@@ -50,7 +47,7 @@ class NeuralNetwork(Classifier, SubModel):
         self.axes = OrderedDict()  # string (axis) -> AxisModel
         self.losses = []
         self.steps = 0
-        self.indexed_num = self.indexed_dim = self.trainer = self.value = self.birnn = None
+        self.trainer = self.value = self.birnn = None
 
     def resize(self):
         for axis, labels in self.labels.items():
@@ -59,7 +56,7 @@ class NeuralNetwork(Classifier, SubModel):
                 assert num_labels <= labels.size, "Exceeded maximum number of labels at axis '%s': %d > %d:\n%s" % (
                     axis, num_labels, labels.size, "\n".join(map(str, labels.all)))
 
-    def init_model(self, axis=None, init_params=True):
+    def init_model(self, axis=None):
         init = self.model is None
         if init:
             self.model = dy.ParameterCollection()
@@ -70,42 +67,42 @@ class NeuralNetwork(Classifier, SubModel):
             self.trainer = self.trainer_type()(self.model, **trainer_kwargs)
             self.birnn = BiRNN(Config().hyperparams.shared, self.model,
                                save_path=("shared", "birnn"), with_birnn=self.model_type == BIRNN)
-            if init_params:
-                self.init_input_params()  # TODO call again per axis in case input params differ, separate input_dim
-        if axis and init_params:
-            axis_model = self.axes.get(axis)
-            if axis_model is None:
-                axis_model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model,
-                                                         with_birnn=self.model_type == BIRNN)
-                axis_model.init_params(self.input_dim, self.indexed_dim, self.indexed_num)
+
+        if axis:
+            self.init_axis_model(axis)
         if init:
             self.init_cg()
             self.finished_step()
 
-    def init_input_params(self):
-        """
-        Initialize lookup parameters, and calculate the number and dimension of indexed and non-indexed inputs
-        """
-        self.input_dim = self.indexed_dim = self.indexed_num = 0
+    def init_axis_model(self, axis):
+        model = self.axes.get(axis)
+        if model:
+            return
+        model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model,
+                                            with_birnn=self.model_type == BIRNN)
+        self.input_dim = indexed_dim = indexed_num = 0
         for suffix, param in sorted(self.input_params.items()):
-            if param.dim:
-                if not param.numeric:  # lookup feature
-                    p = self.model.add_lookup_parameters((param.size, param.dim))
-                    p.set_updated(param.updated)
-                    if param.init is not None and param.init.size:
-                        p.init_from_array(param.init)
-                    self.params[suffix] = p
-                if param.indexed:
-                    self.indexed_dim += param.dim  # add to the input dimensionality at each indexed time point
-                    self.indexed_num = max(self.indexed_num, param.num)  # indices to be looked up are collected
-                else:
-                    self.input_dim += param.num * param.dim
-        self.input_dim += self.birnn.init_params(self.indexed_dim, self.indexed_num)
+            if not param.enabled:
+                continue
+            if not param.numeric and suffix not in self.params:  # lookup feature
+                lookup = self.model.add_lookup_parameters((param.size, param.dim))
+                lookup.set_updated(param.updated)
+                if param.init is not None and param.init.size:
+                    lookup.init_from_array(param.init)
+                self.params[suffix] = lookup
+            if param.indexed:
+                indexed_dim += param.dim  # add to the input dimensionality at each indexed time point
+                indexed_num = max(indexed_num, param.num)  # indices to be looked up are collected
+            else:
+                self.input_dim += param.num * param.dim
+        for birnn in self.get_birnns(axis):
+            self.input_dim += birnn.init_params(indexed_dim, indexed_num)
+        model.mlp.init_params(self.input_dim)
 
     def init_cg(self):
         dy.renew_cg()
         for suffix, param in sorted(self.input_params.items()):
-            if not param.numeric and param.dim:  # lookup feature
+            if param.enabled and not param.numeric:  # lookup feature
                 self.empty_values[suffix] = dy.inputVector(np.zeros(param.dim, dtype=float))
 
     def init_features(self, features, axes, train=False):
@@ -119,21 +116,23 @@ class NeuralNetwork(Classifier, SubModel):
     def generate_inputs(self, features, axis):
         indices = []  # list, not set, in order to maintain consistent order
         for suffix, values in sorted(features.items()):
-            param = self.input_params.get(suffix)
-            if param is None:
-                pass  # feature missing from model, so just ignore it
-            elif param.numeric:
+            param = self.input_params[suffix]
+            if param.numeric:
                 yield dy.inputVector(values)
-            elif param.dim:
-                if param.indexed:  # collect indices to be looked up
-                    indices += values  # FeatureIndexer collapsed the features so there are no repetitions between them
-                else:
-                    yield dy.concatenate([self.empty_values[suffix] if x == MISSING_VALUE else self.params[suffix][x]
-                                          for x in values])
-        assert self.indexed_num is None or len(indices) == self.indexed_num, \
-            "Wrong number of index features: got %d, expected %d" % (len(indices), self.indexed_num)
+            elif param.indexed:  # collect indices to be looked up
+                indices += values  # FeatureIndexer collapsed the features so there are no repetitions between them
+            else:  # lookup feature
+                yield dy.concatenate([self.empty_values[suffix] if x == MISSING_VALUE else self.params[suffix][x]
+                                      for x in values])
         if indices:
-            yield dy.concatenate(self.birnn.evaluate(indices) + self.axes[axis].birnn.evaluate(indices))
+            values = []
+            for birnn in self.get_birnns(axis):
+                values += birnn.evaluate(indices)
+            yield dy.concatenate(values)
+
+    def get_birnns(self, axis):
+        """ Return shared + axis-specific BiRNNs """
+        return [m.birnn for m in (self, self.axes[axis])]
 
     def evaluate(self, features, axis, train=False):
         """
@@ -143,7 +142,7 @@ class NeuralNetwork(Classifier, SubModel):
         :param train: whether to apply dropout
         :return: expression corresponding to log softmax applied to MLP output
         """
-        self.init_model(axis=axis)
+        self.init_model(axis)
         value = self.value.get(axis)
         if value is None:
             self.value[axis] = value = self.axes[axis].mlp.evaluate(self.generate_inputs(features, axis), train=train)
@@ -235,17 +234,11 @@ class NeuralNetwork(Classifier, SubModel):
         SubModel.save_sub_model(
             self, d,
             ("loss", self.loss),
-            ("input_dim", self.input_dim),
-            ("indexed_dim", self.indexed_dim),
-            ("indexed_num", self.indexed_num),
         )
 
     def load_sub_model(self, d, *args):
         d = SubModel.load_sub_model(self, d, *args)
         self.args.loss = self.loss = d["loss"]
-        self.input_dim = d["input_dim"]
-        self.indexed_dim = d["indexed_dim"]
-        self.indexed_num = d["indexed_num"]
 
     def save_model(self, d):
         Classifier.save_model(self, d)
@@ -267,7 +260,7 @@ class NeuralNetwork(Classifier, SubModel):
 
     def load_model(self, d):
         self.model = None
-        self.init_model(init_params=False)
+        self.init_model()
         print("Loading model from '%s'... " % self.filename, end="", flush=True)
         started = time.time()
         values = dy.load(self.filename, self.model)  # All sub-model parameter values, concatenated

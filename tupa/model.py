@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from enum import Enum
 
 from .action import Actions
@@ -14,8 +15,9 @@ class ParameterDefinition(object):
         self.name = name
         self.param_attr_to_config_attr = param_attr_to_config_attr
 
-    def empty(self):
-        return not getattr(Config().args, self.param_attr_to_config_attr["dim"])
+    @property
+    def enabled(self):
+        return bool(getattr(Config().args, self.param_attr_to_config_attr["dim"]))
 
     def create_from_config(self):
         args = Config().args
@@ -67,15 +69,20 @@ class Model(object):
         self.args = Config().args
         self.model_type = model_type or SPARSE
         self.filename = filename
-        self.feature_extractor = self.classifier = self.feature_params = None
+        self.feature_extractor = self.classifier = None
+        self.feature_params = OrderedDict()
         if args or kwargs:
             self.restore(*args, **kwargs)
 
     def init_model(self, init_params=True):
         labels = self.classifier.labels if self.classifier else {}
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
-            if self.feature_params is None:  # TODO call again for each axis in case they need to be modified
-                self.feature_params = [p.create_from_config() for p in PARAM_DEFS if not p.empty()]
+            for param_def in PARAM_DEFS:
+                param = self.feature_params.get(param_def.name)
+                if param:
+                    param.enabled = param_def.enabled
+                elif param_def.enabled:
+                    self.feature_params[param_def.name] = param_def.create_from_config()
             if Config().format not in labels:
                 labels[Config().format] = self.init_actions()  # Uses config to determine actions
             if self.args.node_labels and NODE_LABEL_KEY not in labels:
@@ -95,7 +102,7 @@ class Model(object):
         elif self.model_type in (MLP, BIRNN):
             from .features.dense_features import DenseFeatureExtractor
             from .classifiers.nn.neural_network import NeuralNetwork
-            self.feature_extractor = FeatureEnumerator(DenseFeatureExtractor(), self.feature_params)
+            self.feature_extractor = FeatureEnumerator(DenseFeatureExtractor(), self.feature_params.values())
             if self.model_type == BIRNN:
                 self.feature_extractor = FeatureIndexer(self.feature_extractor)  # Pass positions in input, not identity
             self.classifier = NeuralNetwork(self.model_type, self.filename, labels)
@@ -107,11 +114,10 @@ class Model(object):
         return Actions(size=self.args.max_action_labels)
 
     def init_node_labels(self):
-        try:
-            node_labels = next(p for p in self.feature_params if p.suffix == NODE_LABEL_KEY)
-        except StopIteration:
+        node_labels = self.feature_params.get(NODE_LABEL_KEY)
+        if node_labels is None:
             node_labels = next(p for p in PARAM_DEFS if p.name == NODE_LABEL_KEY).create_from_config()
-            self.feature_params.append(node_labels)
+            self.feature_params[NODE_LABEL_KEY] = node_labels
         FeatureEnumerator.init_data(node_labels)
         return node_labels
 

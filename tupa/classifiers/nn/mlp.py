@@ -19,8 +19,10 @@ class MultilayerPerceptron(SubModel):
         self.num_labels = num_labels
         if self.num_labels:
             self.total_layers += 1
+        self.input_dim = None
 
     def init_params(self, input_dim):
+        self.input_dim = input_dim
         hidden_dim = (self.layers - 1) * [self.layer_dim]
         i_dim = [input_dim] + hidden_dim
         o_dim = hidden_dim + [self.output_dim]
@@ -33,6 +35,8 @@ class MultilayerPerceptron(SubModel):
 
     def evaluate(self, inputs, train=False):
         x = dy.concatenate(list(inputs))
+        dim = x.dim()[0][0]
+        assert dim == self.input_dim, "Input dim mismatch: %d != %d" % (dim, self.input_dim)
         for i in range(self.total_layers):
             try:
                 if train and self.dropout:
@@ -54,6 +58,7 @@ class MultilayerPerceptron(SubModel):
             ("init", str(self.init)),
             ("dropout", self.dropout),
             ("num_labels", self.num_labels),
+            ("input_dim", self.input_dim),
         )
 
     def load_sub_model(self, d, *args):
@@ -66,3 +71,4 @@ class MultilayerPerceptron(SubModel):
         self.args.init = self.init.string = d["init"]
         self.args.dropout = self.dropout = d["dropout"]
         self.num_labels = d["num_labels"]
+        self.input_dim = d["input_dim"]

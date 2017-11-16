@@ -102,7 +102,7 @@ class DenseFeatureExtractor(FeatureExtractor):
                 indexed = False
             else:
                 param = params.get(f.suffix)
-                if param is None:
+                if param is None or not param.enabled:
                     continue
                 indexed = param.indexed
             non_numeric_features[f.suffix] = self.calc_feature(

@@ -21,7 +21,7 @@ class BiRNN(SubModel):
         self.activation = CategoricalParameter(ACTIVATIONS, self.args.activation)
         self.init = CategoricalParameter(INITIALIZERS, self.args.init)
         self.rnn_builder = CategoricalParameter(RNNS, self.args.rnn)
-        self.input_reps = self.empty_rep = None
+        self.input_reps = self.empty_rep = self.indexed_dim = self.indexed_num = None
         self.mlp = MultilayerPerceptron(self.args, self.model, params=self.params, layers=self.embedding_layers,
                                         layer_dim=self.embedding_layer_dim, output_dim=self.lstm_layer_dim)
         self.save_path = save_path
@@ -33,10 +33,16 @@ class BiRNN(SubModel):
         :return: total output dimension of BiRNN
         """
         if self.with_birnn and self.lstm_layer_dim and self.lstm_layers:
-            self.mlp.init_params(indexed_dim)
-            self.params["birnn"] = dy.BiRNNBuilder(self.lstm_layers,
-                                                   self.lstm_layer_dim if self.embedding_layers else indexed_dim,
-                                                   self.lstm_layer_dim, self.model, self.rnn_builder())
+            if self.params:
+                assert self.indexed_dim == indexed_dim, "Input dim changed: %d != %d" % (self.indexed_dim, indexed_dim)
+                assert self.indexed_num == indexed_num, "Input num changed: %d != %d" % (self.indexed_num, indexed_num)
+            else:
+                self.indexed_dim = indexed_dim
+                self.indexed_num = indexed_num
+                self.mlp.init_params(indexed_dim)
+                self.params["birnn"] = dy.BiRNNBuilder(self.lstm_layers,
+                                                       self.lstm_layer_dim if self.embedding_layers else indexed_dim,
+                                                       self.lstm_layer_dim, self.model, self.rnn_builder())
             return indexed_num * self.lstm_layer_dim
         return 0
 
@@ -56,8 +62,11 @@ class BiRNN(SubModel):
         :param indices: indices of inputs
         :return: list of BiRNN outputs at given indices
         """
-        return [self.empty_rep if i == MISSING_VALUE else self.input_reps[min(i, self.max_length-1)] for i in indices] \
-            if self.params else []
+        if self.params:
+            assert len(indices) == self.indexed_num, "Input size mismatch: %d != %d" % (len(indices), self.indexed_num)
+            return [self.empty_rep if i == MISSING_VALUE else
+                    self.input_reps[min(i, self.max_length - 1)] for i in indices]
+        return []
 
     def save_sub_model(self, d, *args):
         if self.with_birnn:
@@ -72,6 +81,8 @@ class BiRNN(SubModel):
                 ("init", str(self.init)),
                 ("dropout", self.dropout),
                 ("rnn", str(self.rnn_builder)),
+                ("indexed_dim", self.indexed_dim),
+                ("indexed_num", self.indexed_num),
             )
 
     def load_sub_model(self, d, *args):
@@ -86,3 +97,5 @@ class BiRNN(SubModel):
             self.args.activation = self.activation.string = d["activation"]
             self.args.init = self.init.string = d["init"]
             self.args.dropout = self.dropout = d["dropout"]
+            self.indexed_dim = self.mlp.input_dim = d["indexed_dim"]
+            self.indexed_num = d["indexed_num"]
