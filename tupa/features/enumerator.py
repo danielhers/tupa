@@ -20,6 +20,8 @@ class FeatureEnumerator(FeatureExtractor):
         self.feature_extractor = feature_extractor
         self.feature_extractor.params = self.params = dict(params)
         self.indexed = indexed
+        if self.indexed:
+            self.collapse_features(INDEXED_FEATURES)
         for suffix, param in self.params.items():
             if param.numeric:
                 pass
@@ -31,8 +33,6 @@ class FeatureEnumerator(FeatureExtractor):
                     param.indexed = True
             else:
                 del self.params[param.suffix]
-        if self.indexed:
-            self.collapse_features(INDEXED_FEATURES)
         param = NumericFeatureParameters(feature_extractor.num_features_numeric())
         self.params[param.suffix] = param
 
