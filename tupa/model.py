@@ -168,8 +168,8 @@ class Model(object):
                 if not finalized:
                     self.feature_extractor.restore()
                 self._update_input_params()  # Must be before classifier.load() because it uses them to init the model
-                # self.classifier.load()
-                # self.load_labels(finalized)
+                self.classifier.load()
+                self.load_labels(finalized)
                 for param in PARAM_DEFS:
                     param.load_to_config(self.feature_extractor.params)
             except FileNotFoundError:
@@ -226,5 +226,5 @@ class Model(object):
             if values:
                 d[name] = values
         d.update(("input_" + s, p.data.all) for s, p in self.feature_extractor.params.items() if p.data)
-        # d.update(self.classifier.get_all_params())
+        d.update(self.classifier.get_all_params())
         return d
