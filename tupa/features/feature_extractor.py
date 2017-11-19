@@ -100,11 +100,10 @@ class FeatureExtractor(object):
         self.feature_extractor = feature_extractor
         self.params = {} if params is None else params
 
-    def extract_features(self, state, params):
+    def extract_features(self, state):
         """
         Calculate feature values according to current state
         :param state: current state of the parser
-        :param params: dict of FeatureParameters for each suffix
         """
         raise NotImplementedError()
 
@@ -175,6 +174,12 @@ class FeatureExtractor(object):
             return node_prop(node, prop, prev_node, prev_elem)
         except (AttributeError, StopIteration):
             return None
+
+    def get_all_features(self):
+        return []
+
+    def get_all_indexed_features(self):
+        return []
 
 
 def get_node(element, state):

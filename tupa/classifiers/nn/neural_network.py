@@ -273,7 +273,6 @@ class NeuralNetwork(Classifier, SubModel):
 
     def get_all_params(self):
         d = super().get_all_params()
-        d.update(("input_" + s, p.data.all) for s, p in self.input_params.items() if p.data)
         for model in self.sub_models():
             for key, value in model.params.items():
                 for name, param in [("%s%s%d%d%d" % (key, p, i, j, k), v) for i, (f, b) in

@@ -87,26 +87,17 @@ class DenseFeatureExtractor(FeatureExtractor):
     def init_features(self, state, suffix=None):
         return [self.get_prop(None, n, None, None, suffix, state) for n in state.terminals]
 
-    def extract_features(self, state, params=None):
+    def extract_features(self, state):
         """
         Calculate feature values according to current state
         :param state: current state of the parser
-        :param params: dict of FeatureParameters for each suffix
         :return pair: (list of values for all numeric features,
                        list of (suffix, value) pairs for all non-numeric features)
         """
         numeric_features = [1, state.node_ratio()] + self.calc_feature(self.numeric_features_template, state, default=0)
-        non_numeric_features = {}
-        for f in self.non_numeric_feature_templates:
-            if params is None:
-                indexed = False
-            else:
-                param = params.get(f.suffix)
-                if param is None or not param.enabled:
-                    continue
-                indexed = param.indexed
-            non_numeric_features[f.suffix] = self.calc_feature(
-                f, state, default=MISSING_VALUE if indexed else "", indexed=indexed)
+        non_numeric_features = {f.suffix: self.calc_feature(f, state, default, indexed)
+                                for (default, indexed) in (("", False), (MISSING_VALUE, True))
+                                for f in self.get_enabled_features(indexed)}
         # assert len(numeric_features) == self.num_features_numeric(), \
         #     "Invalid number of numeric features: %d != %d" % (
         #         len(numeric_features), self.num_features_numeric())
@@ -118,6 +109,21 @@ class DenseFeatureExtractor(FeatureExtractor):
         #         assert not isinstance(value, Number), \
         #             "Numeric value %s for non-numeric feature element %s" % (value, element)
         return numeric_features, non_numeric_features
+
+    def get_enabled_features(self, indexed=False):
+        if self.params is None:
+            yield from [] if indexed else self.non_numeric_feature_templates
+        for f in self.non_numeric_feature_templates:
+            param = self.params.get(f.suffix)
+            if param and param.enabled and indexed == param.indexed:
+                yield f
+
+    def get_all_features(self):
+        return ["bias", "ratio"] + [str(e) for t in [self.numeric_features_template] +
+                                    list(self.get_enabled_features()) for e in t.elements]
+
+    def get_all_indexed_features(self):
+        return [str(e) for t in self.get_enabled_features(indexed=True) for e in t.elements]
 
     def collapse_features(self, suffixes):
         if not suffixes:

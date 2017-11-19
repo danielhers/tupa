@@ -6,7 +6,6 @@ from .classifiers.classifier import Classifier
 from .config import Config, SPARSE, MLP, BIRNN, NOOP
 from .features.enumerator import FeatureEnumerator
 from .features.feature_params import FeatureParameters
-from .features.indexer import FeatureIndexer
 from .model_util import UnknownDict, AutoIncrementDict
 
 
@@ -102,9 +101,8 @@ class Model(object):
         elif self.model_type in (MLP, BIRNN):
             from .features.dense_features import DenseFeatureExtractor
             from .classifiers.nn.neural_network import NeuralNetwork
-            self.feature_extractor = FeatureEnumerator(DenseFeatureExtractor(), self.feature_params.values())
-            if self.model_type == BIRNN:
-                self.feature_extractor = FeatureIndexer(self.feature_extractor)  # Pass positions in input, not identity
+            self.feature_extractor = FeatureEnumerator(DenseFeatureExtractor(), self.feature_params,
+                                                       indexed=self.model_type == BIRNN)
             self.classifier = NeuralNetwork(self.model_type, self.filename, labels)
         else:
             raise ValueError("Invalid model type: '%s'" % self.model_type)
@@ -170,8 +168,8 @@ class Model(object):
                 if not finalized:
                     self.feature_extractor.restore()
                 self._update_input_params()  # Must be before classifier.load() because it uses them to init the model
-                self.classifier.load()
-                self.load_labels(finalized)
+                # self.classifier.load()
+                # self.load_labels(finalized)
                 for param in PARAM_DEFS:
                     param.load_to_config(self.feature_extractor.params)
             except FileNotFoundError:
@@ -220,3 +218,13 @@ class Model(object):
 
     def _update_input_params(self):
         self.classifier.input_params = self.feature_extractor.params
+
+    def get_all_params(self):
+        d = OrderedDict()
+        for name, values in (("features", self.feature_extractor.get_all_features()),
+                             ("indexed_features", self.feature_extractor.get_all_indexed_features())):
+            if values:
+                d[name] = values
+        d.update(("input_" + s, p.data.all) for s, p in self.feature_extractor.params.items() if p.data)
+        # d.update(self.classifier.get_all_params())
+        return d

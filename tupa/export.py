@@ -9,7 +9,7 @@ def export_model(filename):
     model = Model(model_type=None, filename=filename)
     model.load()
     out_file = filename + ".npz"
-    np.savez_compressed(out_file, **model.classifier.get_all_params())
+    np.savez_compressed(out_file, **model.get_all_params())
     print("Wrote '%s'" % out_file)
 
 
