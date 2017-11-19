@@ -29,7 +29,7 @@ class install(_install):
 
         # Install requirements
         self.announce("Installing dependencies...")
-        run(["pip", "install"] + install_requires, check=True)
+        run(["pip", "--no-cache-dir", "install"] + install_requires, check=True)
 
         # Install AMR resource
         for filename in ("have-org-role-91-roles-v1.06.txt", "have-rel-role-91-roles-v1.06.txt",
