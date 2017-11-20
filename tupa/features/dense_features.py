@@ -43,10 +43,8 @@ FEATURE_TEMPLATES = (
     "s0Ts1Ts2Ts3T"  # stack
     "b0Tb1Tb2Tb3T",  # buffer
     # numeric
-    "s0s1xs1s0xs0b0xb0s0x"
-    "s0xs1xs2xs3x"
-    "s0s1ds0b0d"
-    "s0hqyPCIRNs1hqyNs2hys3hyN"
+    "s0s1xds1s0xs0b0xdb0s0x"
+    "s0xhqyPCIRNs1xhqyNs2xhys3xhyN"
     "b0hPCIRN",
 )
 EXTRA_NUMERIC_FEATURES = 2  # bias, node ratio
