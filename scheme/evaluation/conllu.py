@@ -37,3 +37,7 @@ class ConlluScores(evaluation.Scores):
     @staticmethod
     def name():
         return "CoNLL-U"
+
+    @staticmethod
+    def format():
+        return "conllu"

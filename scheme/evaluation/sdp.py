@@ -44,3 +44,7 @@ class SdpScores(evaluation.Scores):
     @staticmethod
     def name():
         return "SDP"
+
+    @staticmethod
+    def format():
+        return "sdp"

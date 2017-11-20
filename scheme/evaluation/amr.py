@@ -46,8 +46,12 @@ class SmatchScores(object):
     def name():
         return "AMR"
 
+    @staticmethod
+    def format():
+        return "amr"
+
     def average_f1(self, *args, **kwargs):
-        del args, kwargs
+        del args, kwargs  # TODO unlabeled smatch (delete all rels) when mode=UNLABELED
         return self.f1
 
     @staticmethod

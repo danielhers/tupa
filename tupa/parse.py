@@ -10,6 +10,7 @@ from glob import glob
 from tqdm import tqdm
 from ucca import diffutil, ioutil, textutil, layer1, evaluation
 from ucca.convert import from_text, to_text
+from ucca.evaluation import LABELED, UNLABELED
 
 from scheme.convert import FROM_FORMAT, TO_FORMAT
 from scheme.evaluate import EVALUATORS, Scores
@@ -93,11 +94,11 @@ class Parser(object):
             print("Evaluating on dev passages")
             passage_scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev, evaluate=True)]
             scores = Scores(passage_scores)
-            average_score = scores.average_f1()
+            average_score = average_f1(scores)
             prefix = ".".join(map(str, [self.iteration] + ([self.eval_index] if self.args.save_every else [])))
             score_details = "" if len(scores.scores_by_format) < 2 else " (" + ", ".join(
-                "%.3f" % s.average_f1() for f, s in scores.scores_by_format) + ")"
-            print("Evaluation %s, average labeled F1 score on dev: %.3f%s" % (prefix, average_score, score_details))
+                "%.3f" % average_f1(s) for f, s in scores.scores_by_format) + ")"
+            print("Evaluation %s, average F1 score on dev: %.3f%s" % (prefix, average_score, score_details))
             print_scores(scores, self.args.devscores, prefix=prefix, prefix_title="iteration")
             if average_score >= self.best_score:
                 print("Better than previous best score (%.3f)" % self.best_score)
@@ -357,7 +358,7 @@ class Parser(object):
             guessed, ref, converter=get_output_converter(ref_format),
             verbose=guessed and self.args.verbose > 3, constructions=self.args.constructions)
         if self.args.verbose:
-            print("F1=%.3f" % score.average_f1(), flush=True)
+            print("F1=%.3f" % average_f1(score), flush=True)
         return score
 
     def verify_passage(self, guessed, ref):
@@ -405,7 +406,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
         if passage_scores:
             scores = Scores(passage_scores)
             if args.verbose <= 1 or len(passage_scores) > 1:
-                print("\nAverage labeled F1 score on test: %.3f" % scores.average_f1())
+                print("\nAverage F1 score on test: %.3f" % average_f1(scores))
                 print("Aggregated scores:")
                 scores.print()
             print_scores(scores, args.testscores)
@@ -435,6 +436,12 @@ def print_scores(scores, filename, prefix=None, prefix_title=None):
             if prefix is not None:
                 fields.insert(0, prefix)
             print(",".join(fields), file=f)
+
+
+def average_f1(scores):
+    return scores.average_f1(mode=UNLABELED if Config().is_unlabeled(scores.format() if hasattr(scores, "format")
+                                                                     else "ucca")
+                             else LABELED)
 
 
 def print_config():
@@ -478,8 +485,7 @@ def main_generator():
                 fold_scores.append(s[-1])
         if fold_scores:
             scores = Scores(fold_scores)
-            print("Average labeled test F1 score for each fold: " + ", ".join(
-                "%.3f" % s.average_f1() for s in fold_scores))
+            print("Average test F1 score for each fold: " + ", ".join("%.3f" % average_f1(s) for s in fold_scores))
             print("Aggregated scores across folds:\n")
             scores.print()
             yield scores
