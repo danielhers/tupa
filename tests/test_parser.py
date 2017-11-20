@@ -25,7 +25,7 @@ SETTINGS = (([], ["implicit"], ["linkage"], ["implicit", "linkage"])
 def update_settings(settings):
     print("-- settings: " + ", ".join(settings))
     Config().update({s: s in settings for s in ("implicit", "linkage")})
-    Config().update({"unlabeled": () if "unlabeled" in settings else None})
+    Config().update({"unlabeled": [] if "unlabeled" in settings else None})
 
 
 def settings_suffix(settings):
