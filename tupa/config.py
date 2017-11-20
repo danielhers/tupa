@@ -201,10 +201,11 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--devscores", help="output CSV file for dev scores (default: model filename + .dev.csv)")
         group.add_argument("--testscores", help="output CSV file for test scores (default: model filename + .test.csv)")
         group.add_argument("--action-stats", help="output CSV file for action statistics")
-        argparser.add_argument("-f", "--formats", nargs="*", choices=FORMATS,
+        argparser.add_argument("-f", "--formats", nargs="+", choices=FORMATS, default=(),
                                help="input formats for creating all parameters before training starts "
                                     "(otherwise created dynamically based on filename suffix), "
                                     "and output formats for written files (each will be written; default: UCCA XML)")
+        argparser.add_argument("-u", "--unlabeled", nargs="*", choices=FORMATS, help="to ignore labels in")
 
         group = argparser.add_argument_group(title="Sanity checks")
         add_boolean_option(group, "check-loops", "check for parser state loop")
@@ -271,9 +272,24 @@ class Config(object, metaclass=Singleton):
             self.args.node_label_dim = self.args.max_node_labels = \
                 self.args.node_category_dim = self.args.max_node_categories = 0
         required_edge_labels = EDGE_LABELS_NUM.get(self.format)
-        if required_edge_labels is not None:
+        if self.is_unlabeled():
+            self.args.max_edge_labels = self.args.edge_label_dim = 0
+            self.args.max_action_labels = self.max_actions_unlabeled()
+        elif required_edge_labels is not None:
             self.args.max_edge_labels = max(self.args.max_edge_labels, required_edge_labels)
             self.args.max_action_labels = max(self.args.max_action_labels, 6 * required_edge_labels)
+
+    def is_unlabeled(self, f=None):
+        # If just -u or --unlabeled is given then its value is [], and we want to treat that as "all formats"
+        # If not given at all it is None, and we want to treat that as "no format"
+        return self.args.unlabeled == [] or (f or self.format) in (self.args.unlabeled or ())
+
+    def max_actions_unlabeled(self):
+        return 6 + (  # Shift Node Reduce LeftEdge RightEdge Finish
+            3 if self.args.remote else 0) + (  # RemoteNode LeftRemote RightRemote
+            1 if self.args.swap == REGULAR else self.args.max_swap if self.args.swap == COMPOUND else 0) + (  # Swap
+            1 if self.args.implicit else 0) + (  # Implicit
+            2 if self.args.node_labels and not self.args.use_gold_node_labels else 0)  # Label x 2
 
     def set_dynet_arguments(self):
         self.random.seed(self.args.seed)

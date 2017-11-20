@@ -141,7 +141,7 @@ def is_int_in_range(label, s=None, e=None):
 
 
 def is_valid_arg(node, label, *tags, is_parent=True):
-    if label is None:
+    if label is None or (tags and not any(tags)):  # Not labeled yet, or doing unlabeled parsing
         return True
     label = resolve_label(node, label, conservative=True)
     concept = label[len(CONCEPT) + 1:-1] if label.startswith(CONCEPT) else None

@@ -1,5 +1,3 @@
-from operator import attrgetter
-
 from ucca import layer1
 
 from scheme.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
@@ -31,16 +29,17 @@ class Oracle(object):
     """
     def __init__(self, passage):
         self.args = Config().args
+        self.unlabeled = Config().is_unlabeled()
         l1 = passage.layer(layer1.LAYER_ID)
         self.nodes_remaining = {node.ID for node in l1.all
                                 if node is not l1.heads[0] and
                                 (self.args.linkage or node.tag != layer1.NodeTags.Linkage) and
-                                (self.args.implicit or not node.attrib.get("implicit"))}
+                                (self.args.implicit or not is_implicit_node(node))}
         self.edges_remaining = {edge for node in passage.nodes.values() for edge in node
                                 if (self.args.linkage or edge.tag not in (
                                     layer1.EdgeTags.LinkRelation, layer1.EdgeTags.LinkArgument)) and
-                                (self.args.implicit or not edge.child.attrib.get("implicit")) and
-                                (self.args.remote or not edge.attrib.get("remote"))}
+                                (self.args.implicit or not is_implicit_node(edge.child)) and
+                                (self.args.remote or not is_remote_edge(edge))}
         self.passage = passage
         self.found = False
         self.log = None
@@ -89,26 +88,26 @@ class Oracle(object):
                 yield self.action(Actions.Reduce)
             else:
                 # Check for node label action: if all terminals have already been connected
-                if self.need_label(s0) and not any(e.tag == layer1.EdgeTags.Terminal for e in outgoing):
+                if self.need_label(s0) and not any(is_terminal_edge(e) for e in outgoing):
                     yield self.action(s0, LABEL, 0)
 
                 # Check for actions to create new nodes
                 for edge in incoming:
-                    if edge.parent.ID in self.nodes_remaining and not edge.parent.attrib.get("implicit") and (
-                                not edge.attrib.get("remote") or
+                    if edge.parent.ID in self.nodes_remaining and not is_implicit_node(edge.parent) and (
+                                not is_remote_edge(edge) or
                                 # Allow remote parent if all its children are remote/implicit
-                                all(e.attrib.get("remote") or e.child.attrib.get("implicit") for e in edge.parent)):
+                                all(is_remote_edge(e) or is_implicit_node(e.child) for e in edge.parent)):
                         yield self.action(edge, NODE, PARENT)  # Node or RemoteNode
 
                 for edge in outgoing:
-                    if edge.child.ID in self.nodes_remaining and edge.child.attrib.get("implicit") and (
-                            not edge.attrib.get("remote")):  # Allow implicit child if it is not remote
+                    if edge.child.ID in self.nodes_remaining and is_implicit_node(edge.child) and (
+                            not is_remote_edge(edge)):  # Allow implicit child if it is not remote
                         yield self.action(edge, NODE, CHILD)  # Implicit
 
                 if len(state.stack) > 1:
                     s1 = state.stack[-2]
                     # Check for node label action: if all terminals have already been connected
-                    if self.need_label(s1) and not any(e.tag == layer1.EdgeTags.Terminal for e in
+                    if self.need_label(s1) and not any(is_terminal_edge(e) for e in
                                                        self.edges_remaining.intersection(s1.orig_node.outgoing)):
                         yield self.action(s1, LABEL, 1)
 
@@ -150,9 +149,9 @@ class Oracle(object):
             return edge  # Will be just an Action object in this case
         if kind == LABEL:
             return Actions.Label(direction, orig_node=edge.orig_node, oracle=self)
-        remote = edge.attrib.get("remote", False)
         node = (edge.parent, edge.child)[direction] if kind == NODE else None
-        return ACTIONS[kind][direction][remote](tag=edge.tag, orig_edge=edge, orig_node=node, oracle=self)
+        tag = "" if self.unlabeled else edge.tag
+        return ACTIONS[kind][direction][is_remote_edge(edge)](tag=tag, orig_edge=edge, orig_node=node, oracle=self)
 
     def remove(self, edge, node=None):
         self.edges_remaining.discard(edge)
@@ -181,3 +180,15 @@ class Oracle(object):
 
     def __str__(self):
         return str(" ")
+
+
+def is_terminal_edge(edge):
+    return edge.tag == layer1.EdgeTags.Terminal
+
+
+def is_remote_edge(edge):
+    return edge.attrib.get("remote", False)
+
+
+def is_implicit_node(node):
+    return node.attrib.get("implicit", False)

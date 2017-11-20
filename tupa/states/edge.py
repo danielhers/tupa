@@ -1,3 +1,5 @@
+from ucca.layer1 import EdgeTags
+
 from ..config import Config
 
 
@@ -8,11 +10,10 @@ class Edge(object):
     def __init__(self, parent, child, tag, remote=False):
         self.parent = parent  # Node object from which this edge comes
         self.child = child  # Node object to which this edge goes
-        self.tag = tag  # String tag
+        self.tag = EdgeTags.Terminal if self.child.text else tag  # String tag; in unlabeled parsing, keep a valid graph
         self.remote = remote  # True or False
 
     def add(self):
-        assert self.tag is not None, "No tag given for new edge %s -> %s" % (self.parent, self.child)
         assert self.parent is not self.child, "Trying to create self-loop edge on %s" % self.parent
         if Config().args.verify:
             assert self not in self.parent.outgoing, "Trying to create outgoing edge twice: %s" % self

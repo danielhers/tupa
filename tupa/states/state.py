@@ -85,19 +85,19 @@ class State(object):
 
         def _check_possible_parent(node):
             self.check(node.text is None, message and "Terminals may not have children: %s" % node.text, is_type=True)
-            if self.args.constraints:
+            if self.args.constraints and action.tag:
                 for rule in self.constraints.tag_rules:
                     violation = rule.violation(node, action.tag, Direction.outgoing, message=message)
                     self.check(violation is None, violation)
                 self.check(self.constraints.allow_parent(node, action.tag),
                            message and "%s may not be a '%s' parent (currently %s)" % (
                                node, action.tag, ", ".join(map(str, node.outgoing)) or "childless"))
-                self.check(not self.constraints.require_implicit_childless or not node.implicit,
-                           message and "Implicit nodes may not have children: %s" % s0, is_type=True)
+            self.check(not self.constraints.require_implicit_childless or not node.implicit,
+                       message and "Implicit nodes may not have children: %s" % s0, is_type=True)
 
         def _check_possible_child(node):
             self.check(node is not self.root, message and "Root may not have parents", is_type=True)
-            if self.args.constraints:
+            if self.args.constraints and action.tag:
                 self.check((node.text is not None) == (action.tag == EdgeTags.Terminal),
                            message and "Edge tag must be %s iff child is terminal, but node is %s and edge tag is %s" %
                            (EdgeTags.Terminal, node, action.tag))
@@ -108,16 +108,16 @@ class State(object):
                            message and "%s may not be a '%s' child (currently %s, %s)" % (
                                node, action.tag, ", ".join(map(str, node.incoming)) or "parentless",
                                ", ".join(map(str, node.outgoing)) or "childless"))
-                self.check(self.constraints.possible_multiple_incoming is None or
-                           action.remote or action.tag in self.constraints.possible_multiple_incoming or
-                           all(e.remote or e.tag in self.constraints.possible_multiple_incoming for e in node.incoming),
-                           message and "Multiple non-remote '%s' parents not allowed for %s" % (action.tag, node))
+            self.check(self.constraints.possible_multiple_incoming is None or
+                       action.remote or action.tag in self.constraints.possible_multiple_incoming or
+                       all(e.remote or e.tag in self.constraints.possible_multiple_incoming for e in node.incoming),
+                       message and "Multiple non-remote '%s' parents not allowed for %s" % (action.tag, node))
 
         def _check_possible_edge():
             parent, child = self.get_parent_child(action)
             _check_possible_parent(parent)
             _check_possible_child(child)
-            if self.args.constraints:
+            if self.args.constraints and action.tag:
                 if parent is self.root:
                     self.check(self.constraints.allow_root_terminal_children or child.text is None,
                                message and "Terminal child '%s' for root" % child, is_type=True)
@@ -132,6 +132,17 @@ class State(object):
                 self.check(self.constraints.allow_edge(edge), message and "Edge not allowed: %s" % edge)
             self.check(parent not in child.descendants,
                        message and "Detected cycle by edge: %s->%s" % (parent, child), is_type=True)
+
+        def _check_possible_label():
+            self.check(self.args.node_labels, message and "Node labels disabled", is_type=True)
+            try:
+                node = self.stack[-1 - (action.tag or 0)]
+            except IndexError:
+                node = None
+            self.check(node is not None, message and "Labeling invalid node %s when stack size is %d" % (
+                action.tag, len(self.stack)))
+            self.check(not node.labeled, message and "Labeling already-labeled node: %s" % node, is_type=True)
+            self.check(node.text is None, message and "Terminals do not have labels: %s" % node, is_type=True)
 
         if self.args.constraints:
             self.check(self.constraints.allow_action(action, self.actions),
@@ -162,15 +173,7 @@ class State(object):
                     _check_possible_parent(s0)
                     _check_possible_node()
                 elif action.is_type(Actions.Label):
-                    self.check(self.args.node_labels, message and "Node labels disabled", is_type=True)
-                    try:
-                        node = self.stack[-1 - (action.tag or 0)]
-                    except IndexError:
-                        node = None
-                    self.check(node is not None, message and "Labeling invalid node %s when stack size is %d" % (
-                        action.tag, len(self.stack)))
-                    self.check(not node.labeled, message and "Labeling already-labeled node: %s" % node, is_type=True)
-                    self.check(node.text is None, message and "Terminals do not have labels: %s" % node, is_type=True)
+                    _check_possible_label()
                 elif action.is_type(Actions.Reduce):
                     if s0 is self.root:
                         self.check(self.root.labeled or not self.args.node_labels,
@@ -289,10 +292,10 @@ class State(object):
         (because they have never been swapped before).
         """
         if self.buffer:
-            b = self.buffer[0]
-            if self.stack and (b.text is not None or b.swap_index <= len(self.nodes)):
-                s = self.stack[-1]
-                return (s.swap_index + b.swap_index) / 2
+            b0 = self.buffer[0]
+            if self.stack and (b0.text is not None or b0.swap_index <= len(self.nodes)):
+                s0 = self.stack[-1]
+                return (s0.swap_index + b0.swap_index) / 2
         return None
 
     def add_edge(self, edge):
@@ -306,8 +309,7 @@ class State(object):
             return self.stack[-1], self.stack[-2]
         elif action.is_type(Actions.RightEdge, Actions.RightRemote):
             return self.stack[-2], self.stack[-1]
-        else:
-            return None, None
+        return None, None
 
     def label_node(self, label):
         node = self.stack[self.need_label]

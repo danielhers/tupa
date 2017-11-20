@@ -18,13 +18,14 @@ from tupa.parse import Parser
 from tupa.states.state import State
 
 TOY_DATA = glob(os.environ.get("TOY_DATA", "test_files/*.xml"))
-SETTINGS = ([], ["implicit"], ["linkage"], ["implicit", "linkage"]) \
-        if TOY_DATA and TOY_DATA[0].endswith("xml") else (["implicit"],)
+SETTINGS = (([], ["implicit"], ["linkage"], ["implicit", "linkage"])
+            if TOY_DATA and TOY_DATA[0].endswith("xml") else (["implicit"],)) + (["unlabeled"],)
 
 
 def update_settings(settings):
     print("-- settings: " + ", ".join(settings))
     Config().update({s: s in settings for s in ("implicit", "linkage")})
+    Config().update({"unlabeled": () if "unlabeled" in settings else None})
 
 
 def settings_suffix(settings):
