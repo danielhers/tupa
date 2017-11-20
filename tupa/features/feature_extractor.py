@@ -137,40 +137,33 @@ class FeatureExtractor(object):
     @staticmethod
     def calc_feature(feature_template, state, default=None, indexed=False):
         values = []
-        prev_elem = None
-        prev_node = None
+        prev_elem = prev_node = None
         for element in feature_template.elements:
             node = get_node(element, state)
-            if not element.properties:
-                if prev_elem is not None:
-                    assert node is None or prev_node is None, "Property-less elements: %s%s" % (prev_elem, element)
-                    if default is None:
-                        return None
-                    values.append(default)
-                prev_elem = element
-                prev_node = node
-            else:
+            if element.properties:
                 for prop in ("i",) if indexed else element.properties:
                     value = FeatureExtractor.get_prop(element, node, prev_node, prev_elem, prop, state)
                     if value is None:
                         if default is None:
                             return None
-                        values.append(default)
-                    else:
-                        values.append(value)
-                prev_elem = None
-                prev_node = None
+                        value = default
+                    values.append(value)
+                prev_elem = prev_node = None
+            else:
+                assert prev_elem is None, "More than one consecutive empty element: %s%s" % (prev_elem, element)
+                prev_elem = element
+                prev_node = node
         return values
 
     @staticmethod
     def get_prop(element, node, prev_node, prev_elem, prop, state):
+        if node is None:
+            return None
         try:
             if element is not None and element.source == "a":
                 return action_prop(node, prop)
             elif prop in "pq":
                 return separator_prop(state.stack[-1:-3:-1], state.terminals, prop)
-            if node is None:
-                return None
             return node_prop(node, prop, prev_node, prev_elem)
         except (AttributeError, StopIteration):
             return None
@@ -180,32 +173,23 @@ class FeatureExtractor(object):
 
 
 def get_node(element, state):
-    if element.source == "s":
-        if len(state.stack) <= element.index:
-            return None
-        node = state.stack[-1 - element.index]
-    elif element.source == "b":
-        if len(state.buffer) <= element.index:
-            return None
-        node = state.buffer[element.index]
-    else:  # source == "a"
-        if len(state.actions) <= element.index:
-            return None
-        node = state.actions[-1 - element.index]
+    try:
+        if element.source == "s":
+            node = state.stack[-1 - element.index]
+        elif element.source == "b":
+            node = state.buffer[element.index]
+        else:  # source == "a"
+            node = state.actions[-1 - element.index]
+    except IndexError:
+        return None
     for relative in element.relatives:
         nodes = node.parents if relative.isupper() else node.children
-        lower = relative.lower()
         if not nodes:
             return None
-        elif len(nodes) == 1:
-            if lower == "u":
-                node = nodes[0]
-        elif lower == "l":
-            node = nodes[0]
-        elif lower == "r":
-            node = nodes[-1]
-        else:  # lower == "u" and len(nodes) > 1
+        lower = relative.lower()
+        if (len(nodes) == 1) != (lower == "u"):
             return None
+        node = nodes[-1 if lower == "r" else 0]
     return node
 
 
