@@ -47,7 +47,7 @@ FEATURE_TEMPLATES = (
     "s0xhqyPCIRNs1xhqyNs2xhys3xhyN"
     "b0hPCIRN",
 )
-EXTRA_NUMERIC_FEATURES = 2  # bias, node ratio
+EXTRA_NUMERIC_FEATURES = 1  # node ratio
 
 
 class DenseFeatureExtractor(FeatureExtractor):
@@ -91,7 +91,7 @@ class DenseFeatureExtractor(FeatureExtractor):
         :param state: current state of the parser
         :return pair: (list of values for all numeric features, dict of suffix->value for all non-numeric features)
         """
-        numeric_features = [1, state.node_ratio()] + self.calc_feature(self.numeric_features_template, state, default=0)
+        numeric_features = [state.node_ratio()] + self.calc_feature(self.numeric_features_template, state, default=0)
         non_numeric_features = {f.suffix: self.calc_feature(f, state, default, indexed)
                                 for (default, indexed) in (("", False), (MISSING_VALUE, True))
                                 for f in self.get_enabled_features(indexed)}
@@ -117,8 +117,8 @@ class DenseFeatureExtractor(FeatureExtractor):
 
     def get_all_features(self, indexed=False):
         return [str(e) for t in self.get_enabled_features(indexed=True) for e in t.elements] if indexed else \
-            ["bias", "ratio"] + [str(e) for t in [self.numeric_features_template] +
-                                 list(self.get_enabled_features()) for e in t.elements]
+            ["ratio"] + [str(e) for t in [self.numeric_features_template] +
+                         list(self.get_enabled_features()) for e in t.elements]
 
     def collapse_features(self, suffixes):
         if not suffixes:
