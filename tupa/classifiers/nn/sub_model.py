@@ -11,7 +11,7 @@ class SubModel(object):
 
     def load_sub_model(self, d, *args):
         d = self.get_sub_dict(d)
-        param_keys = d["param_keys"]
+        param_keys = d.get("param_keys", ())
         assert len(param_keys) <= len(args), "%s loaded values: expected %d, got %d" % ("/".join(self.save_path),
                                                                                         len(param_keys), len(args))
         self.params.clear()

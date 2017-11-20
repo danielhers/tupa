@@ -69,7 +69,7 @@ class BiRNN(SubModel):
         return []
 
     def save_sub_model(self, d, *args):
-        if self.with_birnn:
+        if self.with_birnn and self.lstm_layer_dim and self.lstm_layers:
             super().save_sub_model(
                 d,
                 ("lstm_layers", self.lstm_layers),
@@ -86,8 +86,8 @@ class BiRNN(SubModel):
             )
 
     def load_sub_model(self, d, *args):
-        if self.with_birnn:
-            d = super().load_sub_model(d, *args)
+        d = super().load_sub_model(d, *args)
+        if self.with_birnn and d:
             self.args.lstm_layers = self.lstm_layers = d["lstm_layers"]
             self.args.lstm_layer_dim = self.lstm_layer_dim = d["lstm_layer_dim"]
             self.args.embedding_layers = self.embedding_layers = d["embedding_layers"]
@@ -99,3 +99,5 @@ class BiRNN(SubModel):
             self.args.dropout = self.dropout = d["dropout"]
             self.indexed_dim = self.mlp.input_dim = d["indexed_dim"]
             self.indexed_num = d["indexed_num"]
+        else:
+            self.args.lstm_layers = self.lstm_layers = self.args.lstm_layer_dim = self.lstm_layer_dim = 0
