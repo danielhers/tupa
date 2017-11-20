@@ -118,7 +118,7 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
     add(group, "--max-edge-labels", type=int, default=15, help="max number of edge labels for embeddings", restore=True)
     add(group, "--max-puncts", type=int, default=5, help="max number of punctuations for embeddings")
     add(group, "--max-action-types", type=int, default=10, help="max number of action types for embeddings")
-    add(group, "--max-action-labels", type=int, default=100, help="max number of action labels to allow")
+    add(group, "--max-action-labels", type=int, default=100, help="max number of action labels to allow", restore=True)
     add(group, "--max-ner-types", type=int, default=18, help="max number of entity types to allow")
     add(group, "--word-dropout", type=float, default=0.2, help="word dropout parameter")
     add(group, "--word-dropout-external", type=float, default=0, help="word dropout for word vectors")
