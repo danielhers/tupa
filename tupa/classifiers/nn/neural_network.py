@@ -100,7 +100,7 @@ class NeuralNetwork(Classifier, SubModel):
 
     def init_cg(self):
         dy.renew_cg()
-        for suffix, param in sorted(self.input_params.items()):
+        for suffix, param in self.input_params.items():
             if param.enabled and not param.numeric:  # lookup feature
                 self.empty_values[suffix] = dy.inputVector(np.zeros(param.dim, dtype=float))
 
