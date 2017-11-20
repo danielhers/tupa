@@ -38,13 +38,13 @@ FEATURE_TEMPLATES = (
     "b0cb1cb2cb3c"  # buffer
     "s0lcs0rcs0ucs1lcs1rcs1uc",  # children
     # separators
-    "s0ps1p",
+    "s0p",
     # NER
     "s0Ts1Ts2Ts3T"  # stack
     "b0Tb1Tb2Tb3T",  # buffer
     # numeric
     "s0s1xds1s0xs0b0xdb0s0x"
-    "s0xhqyPCIRNs1xhqyNs2xhys3xhyN"
+    "s0xhqyPCIRNs1xhyNs2xhys3xhyN"
     "b0hPCIRN",
 )
 EXTRA_NUMERIC_FEATURES = 1  # node ratio
