@@ -105,9 +105,5 @@ class FeatureEnumerator(FeatureExtractor):
         if self.indexed:
             self.collapse_features(INDEXED_FEATURES)
 
-    @staticmethod
-    def get_all_features(self):
-        return self.feature_extractor.get_all_features()
-
-    def get_all_indexed_features(self):
-        return self.feature_extractor.get_all_indexed_features()
+    def get_all_features(self, indexed=False):
+        return self.feature_extractor.get_all_features(indexed)

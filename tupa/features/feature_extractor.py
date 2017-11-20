@@ -175,10 +175,7 @@ class FeatureExtractor(object):
         except (AttributeError, StopIteration):
             return None
 
-    def get_all_features(self):
-        return []
-
-    def get_all_indexed_features(self):
+    def get_all_features(self, indexed=False):
         return []
 
 

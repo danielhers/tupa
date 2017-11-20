@@ -118,12 +118,10 @@ class DenseFeatureExtractor(FeatureExtractor):
             if param and param.enabled and indexed == param.indexed:
                 yield f
 
-    def get_all_features(self):
-        return ["bias", "ratio"] + [str(e) for t in [self.numeric_features_template] +
-                                    list(self.get_enabled_features()) for e in t.elements]
-
-    def get_all_indexed_features(self):
-        return [str(e) for t in self.get_enabled_features(indexed=True) for e in t.elements]
+    def get_all_features(self, indexed=False):
+        return [str(e) for t in self.get_enabled_features(indexed=True) for e in t.elements] if indexed else \
+            ["bias", "ratio"] + [str(e) for t in [self.numeric_features_template] +
+                                 list(self.get_enabled_features()) for e in t.elements]
 
     def collapse_features(self, suffixes):
         if not suffixes:
