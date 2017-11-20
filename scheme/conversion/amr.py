@@ -274,7 +274,7 @@ class AmrConverter(convert.FormatConverter):
                         label = AmrConverter.strip(label)
                     head_dep.append(label)
                 if len(head_dep) > 1:
-                    rel = edge.tag
+                    rel = edge.tag or "label"
                     if rel in PREFIXED_RELATION_ENUM:
                         key = (rel, edge.parent.ID)
                         prefixed_relation_counter[key] += 1
