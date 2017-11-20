@@ -3,7 +3,7 @@ import re
 from ucca import layer0
 from ucca.layer1 import EdgeTags
 
-FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lruLRU]*)([wtdhencpqxyAPCIRNT]*)")
+FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([wtdhencpqxyAPCIRNT]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile(r"^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 
 
@@ -38,13 +38,11 @@ class FeatureTemplateElement(object):
                            a: past actions
         :param index: non-negative integer, the index of the element in the stack, buffer or list
                            of past actions (in the case of stack and actions, indexing from the end)
-        :param relatives: string in [lruLRU]*, to select a descendant/parent of the node instead:
+        :param relatives: string in [lrLR]*, to select a descendant/parent of the node instead:
                            l: leftmost child
                            r: rightmost child
-                           u: only child, if there is just one
                            L: leftmost parent
                            R: rightmost parent
-                           U: only parent, if there is just one
         :param properties: the actual values to choose, if available (else omit feature), out of:
                            w: node text
                            t: node POS tag
@@ -186,10 +184,12 @@ def get_node(element, state):
         nodes = node.parents if relative.isupper() else node.children
         if not nodes:
             return None
-        lower = relative.lower()
-        if (len(nodes) == 1) != (lower == "u"):
-            return None
-        node = nodes[-1 if lower == "r" else 0]
+        if relative.lower() == "r":
+            if len(nodes) == 1:
+                return None
+            node = nodes[-1]
+        else:
+            node = nodes[0]
     return node
 
 

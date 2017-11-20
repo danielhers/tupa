@@ -6,10 +6,10 @@ FEATURE_TEMPLATES = (
     # words
     "s0ws1ws2ws3w"  # stack
     "b0wb1wb2wb3w"  # buffer
-    "s0lws0rws0uws1lws1rws1uw"  # children
-    "s0llws0lrws0luws0rlws0rrws0ruws0ulws0urw"
-    "s0uuws1llws1lrws1luws1rlws1rrws1ruw"  # grandchildren
-    "s0Lws0Rws0Uws1Lws1Rws1Uwb0Lwb0Rwb0Uw",  # parents
+    "s0lws0rws1lws1rw"  # children
+    "s0llws0lrws0rlws0rrw"
+    "s1llws1lrws1rlws1rrw"  # grandchildren
+    "s0Lws0Rws1Lws1Rwb0Lwb0Rw",  # parents
     # POS tags
     "s0ts1ts2ts3t"  # stack
     "b0tb1tb2tb3t",  # buffer
@@ -18,10 +18,10 @@ FEATURE_TEMPLATES = (
     "b0db1db2db3d",  # buffer
     # edge tags
     "s0es1es2es3e"  # stack
-    "s0les0res0ues1les1res1ue"  # children
-    "s0lles0lres0lues0rles0rres0rues0ules0ure"
-    "s0uues1lles1lres1lues1rles1rres1rue"  # grandchildren
-    "s0Ues1Ueb0Ue"  # parents
+    "s0les0res1les1re"  # children
+    "s0lles0lres0rles0rre"
+    "s1lles1lres1rles1rre"  # grandchildren
+    "s0Les0Res1Les1Reb0Leb0Re"  # parents
     "s0b0eb0s0e"  # specific edges
     "a0ea1e",  # past actions edge tags
     # past action labels
@@ -29,14 +29,14 @@ FEATURE_TEMPLATES = (
     # node labels
     "s0ns1ns2ns3n"  # stack
     "b0nb1nb2nb3n"  # buffer
-    "s0lns0rns0uns1lns1rns1un"  # children
-    "s0llns0lrns0luns0rlns0rrns0runs0ulns0urn"
-    "s0uuns1llns1lrns1luns1rlns1rrns1run"  # grandchildren
-    "s0Lns0Rns0Uns1Lns1Rns1Unb0Lnb0Rnb0Un",  # parents
+    "s0lns0rns1lns1rn"  # children
+    "s0llns0lrns0rlns0rrn"
+    "s1llns1lrns1rlns1rrn"  # grandchildren
+    "s0Lns0Rns1Lns1Rnb0Lnb0Rn",  # parents
     # node label category suffix
     "s0cs1cs2cs3c"  # stack
     "b0cb1cb2cb3c"  # buffer
-    "s0lcs0rcs0ucs1lcs1rcs1uc",  # children
+    "s0lcs0rcs1lcs1rc",  # children
     # separators
     "s0p",
     # NER
