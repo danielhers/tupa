@@ -176,7 +176,7 @@ class FeatureExtractor(object):
             return None
 
     def get_all_features(self, indexed=False):
-        return []
+        return [str(e) for t in self.feature_templates for e in t.elements]
 
 
 def get_node(element, state):
