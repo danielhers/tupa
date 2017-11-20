@@ -91,8 +91,7 @@ class DenseFeatureExtractor(FeatureExtractor):
         """
         Calculate feature values according to current state
         :param state: current state of the parser
-        :return pair: (list of values for all numeric features,
-                       list of (suffix, value) pairs for all non-numeric features)
+        :return pair: (list of values for all numeric features, dict of suffix->value for all non-numeric features)
         """
         numeric_features = [1, state.node_ratio()] + self.calc_feature(self.numeric_features_template, state, default=0)
         non_numeric_features = {f.suffix: self.calc_feature(f, state, default, indexed)

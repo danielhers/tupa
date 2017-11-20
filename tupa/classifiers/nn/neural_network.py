@@ -119,7 +119,7 @@ class NeuralNetwork(Classifier, SubModel):
             if param.numeric:
                 yield dy.inputVector(values)
             elif param.indexed:  # collect indices to be looked up
-                indices += values  # FeatureIndexer collapsed the features so there are no repetitions between them
+                indices += values  # FeatureEnumerator collapsed the features so there are no repetitions between them
             else:  # lookup feature
                 yield dy.concatenate([self.empty_values[suffix] if x == MISSING_VALUE else self.params[suffix][x]
                                       for x in values])
