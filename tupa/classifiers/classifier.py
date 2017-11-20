@@ -15,18 +15,16 @@ class Classifier(object):
         :param input_params: dict of feature type name -> FeatureInformation
         """
         self.args = Config().args
-        self.model = None
         self.model_type = model_type
         self.filename = filename
         self.labels = labels
         self.input_params = input_params
-        self._num_labels = self.num_labels
-        self.input_dim = self.labels_t = None
-        self.is_frozen = False
-        self.updates = 0
-        self.epoch = 0
         self.learning_rate = self.args.learning_rate
         self.learning_rate_decay = self.args.learning_rate_decay
+        self._num_labels = self.num_labels
+        self.model = self.input_dim = self.labels_t = None
+        self.is_frozen = False
+        self.updates = self.epoch = self.best_score = 0
 
     @property
     def num_labels(self):
@@ -93,6 +91,7 @@ class Classifier(object):
             ("learning_rate_decay", self.learning_rate_decay),
             ("updates", self.updates),
             ("epoch", self.epoch),
+            ("best_score", self.best_score),
             ("input_dim", self.input_dim),
         ))
         self.save_model(d)
@@ -117,6 +116,7 @@ class Classifier(object):
         self.args.learning_rate_decay = self.learning_rate_decay = d["learning_rate_decay"]
         self.updates = d["updates"]
         self.epoch = d["epoch"]
+        self.best_score = d.get("best_score", 0)
         self.input_dim = d["input_dim"]
         self.load_model(d)
 

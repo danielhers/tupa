@@ -67,8 +67,8 @@ class Parser(object):
                 Config().set_format(f)
                 self.model.init_model()
             print_config()
-            self.best_score = 0
             self.dev = dev
+            self.best_score = self.model.classifier.best_score if self.model.classifier else 0
             start = self.model.classifier.epoch + 1 if self.model.classifier else 1
             total_iterations = iterations + start - 1
             for self.iteration in range(start, total_iterations + 1):
