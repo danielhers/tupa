@@ -193,7 +193,7 @@ class Parser(object):
                         print("%-30s" % accuracy_str, end=Config().line_end)
             if self.args.verbose:
                 if status is None:
-                    status = "%d tokens/s" % (num_tokens / duration)
+                    status = "%d tokens/s" % (num_tokens / (duration or 1))
                 print("%0.3fs%-15s%s" % (duration, " (" + status + ")", Config().line_end), end="")
                 if self.oracle:
                     print(Config().line_end, flush=True)
@@ -218,7 +218,7 @@ class Parser(object):
             if total_duration:
                 print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
                     total_duration, passage_word, total_duration / passage_index,
-                    total_tokens / total_duration), flush=True)
+                    total_tokens / (total_duration or 1)), flush=True)
 
     def parse_passage(self):
         """
