@@ -40,7 +40,7 @@ class ParserTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         Config("", "-m", "test")
-        Config().update({"timeout": 1,
+        Config().update({"verbose": 1, "timeout": 1,
                          "max_words_external": 100, "word_dim_external": 100, "word_dim": 10,
                          "max_words": 100, "max_node_labels": 20, "max_node_categories": 5,
                          "node_label_dim": 2, "node_category_dim": 2, "edge_label_dim": 2,
