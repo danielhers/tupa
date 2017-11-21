@@ -331,7 +331,7 @@ class Parser(object):
         :return: valid action/label with maximum probability according to classifier
         """
         indices = (values[i] for i in self.generate_descending(scores))
-        if unit and self.args.verbose > 2:
+        if unit and self.args.verbose > 3:
             print("Finding valid %s..." % unit)
             indices = tqdm(indices, total=len(scores), unit=" " + unit + "s", file=sys.stdout)
         return next(filter(is_valid, indices))
