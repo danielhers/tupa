@@ -5,7 +5,7 @@ from ..util.amr import *
 class AmrConstraints(Constraints):
     def __init__(self, args):
         super().__init__(args, multigraph=True, require_implicit_childless=False, allow_root_terminal_children=True,
-                         possible_multiple_incoming=TERMINAL_DEP, childless_incoming_trigger=WIKI,
+                         possible_multiple_incoming={TERMINAL_DEP}, childless_incoming_trigger=WIKI,
                          childless_outgoing_allowed=TERMINAL_TAGS)
 
     def allow_action(self, action, history):
