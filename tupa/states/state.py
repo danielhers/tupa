@@ -142,7 +142,7 @@ class State(object):
         def _check_possible_label():
             self.check(self.args.node_labels, message and "Node labels disabled", is_type=True)
             try:
-                node = self.stack[-1 - (action.tag or 0)]
+                node = self.stack[-action.tag]
             except IndexError:
                 node = None
             self.check(node is not None, message and "Labeling invalid node %s when stack size is %d" % (
@@ -250,7 +250,7 @@ class State(object):
             self.add_edge(Edge(self.stack[-1], action.node, action.tag))
             self.buffer.appendleft(action.node)
         elif action.is_type(Actions.Label):
-            self.need_label = -1 - (action.tag or 0)  # The parser is responsible to choose a label and set it
+            self.need_label = -action.tag  # The parser is responsible to choose a label and set it
         elif action.is_type(Actions.Reduce):  # Pop stack (no more edges to create with this node)
             self.stack.pop()
         elif action.is_type(Actions.LeftEdge, Actions.LeftRemote, Actions.RightEdge, Actions.RightRemote):

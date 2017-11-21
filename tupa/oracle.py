@@ -89,7 +89,7 @@ class Oracle(object):
             else:
                 # Check for node label action: if all terminals have already been connected
                 if self.need_label(s0) and not any(is_terminal_edge(e) for e in outgoing):
-                    yield self.action(s0, LABEL, 0)
+                    yield self.action(s0, LABEL, 1)
 
                 # Check for actions to create new nodes
                 for edge in incoming:
@@ -109,7 +109,7 @@ class Oracle(object):
                     # Check for node label action: if all terminals have already been connected
                     if self.need_label(s1) and not any(is_terminal_edge(e) for e in
                                                        self.edges_remaining.intersection(s1.orig_node.outgoing)):
-                        yield self.action(s1, LABEL, 1)
+                        yield self.action(s1, LABEL, 2)
 
                     # Check for actions to create binary edges
                     for edge in incoming:
