@@ -1,11 +1,11 @@
 IMPLICIT
-LABEL Concept(report-01)
+LABEL-1 Concept(report-01)
 SHIFT
 IMPLICIT
-LABEL Concept(person)
+LABEL-1 Concept(person)
 REDUCE
 SHIFT
-LABEL Concept(research-01)
+LABEL-1 Concept(research-01)
 REDUCE
 SHIFT
 REDUCE
@@ -13,32 +13,32 @@ SHIFT
 NODE
 REDUCE
 SHIFT
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 NODE
 REDUCE
 SHIFT
 NODE
 REMOTE-NODE
 SHIFT
-LABEL Concept(expose-01)
+LABEL-1 Concept(expose-01)
 NODE
 REDUCE
 SHIFT
 IMPLICIT
-LABEL Concept(person)
+LABEL-1 Concept(person)
 NODE
 REDUCE
 SHIFT
-LABEL Concept(include-91)
+LABEL-1 Concept(include-91)
 NODE
 SHIFT
 NODE
 SHIFT
 SHIFT
-LABEL Concept(work-01)
+LABEL-1 Concept(work-01)
 REDUCE
 SHIFT
-LABEL Concept(cause-01)
+LABEL-1 Concept(cause-01)
 LEFT-EDGE
 SWAP
 SWAP
@@ -59,7 +59,7 @@ SWAP
 SWAP
 RIGHT-EDGE
 REDUCE
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 SHIFT
 SHIFT
 SHIFT
@@ -67,11 +67,11 @@ SHIFT
 NODE
 REDUCE
 SHIFT
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 NODE
 REDUCE
 SHIFT
-LABEL Concept(use-01)
+LABEL-1 Concept(use-01)
 SHIFT
 REDUCE
 SHIFT
@@ -80,20 +80,20 @@ SHIFT
 NODE
 REDUCE
 SHIFT
-LABEL Concept(<l>-01)
+LABEL-1 Concept(<l>-01)
 RIGHT-EDGE
 SHIFT
 NODE
 REDUCE
 SHIFT
-LABEL "<t>"
+LABEL-1 "<t>"
 NODE
 REDUCE
 SHIFT
 NODE
 SHIFT
 IMPLICIT
-LABEL Concept(product)
+LABEL-1 Concept(product)
 SWAP
 RIGHT-EDGE
 REDUCE
@@ -109,12 +109,12 @@ SHIFT
 SHIFT
 SHIFT
 SHIFT
-LABEL Concept(filter-02)
+LABEL-1 Concept(filter-02)
 REDUCE
 SHIFT
 RIGHT-EDGE
 REDUCE
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 REDUCE
 SHIFT
 REDUCE
@@ -127,12 +127,12 @@ REDUCE
 SHIFT
 RIGHT-EDGE
 REDUCE
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 REDUCE
 SHIFT
 RIGHT-EDGE
 REDUCE
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 REDUCE
 SHIFT
 REDUCE
@@ -140,19 +140,19 @@ SHIFT
 NODE
 REDUCE
 SHIFT
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 NODE
 REDUCE
 SHIFT
-LABEL Concept(cause-01)
+LABEL-1 Concept(cause-01)
 NODE
 REDUCE
 SHIFT
-LABEL Concept(die-01)
+LABEL-1 Concept(die-01)
 NODE
 REDUCE
 SHIFT
-LABEL Concept(person)
+LABEL-1 Concept(person)
 RIGHT-EDGE
 REDUCE
 REDUCE

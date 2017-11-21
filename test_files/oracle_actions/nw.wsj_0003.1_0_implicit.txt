@@ -1,11 +1,11 @@
 IMPLICIT-ARG0
-LABEL Concept(report-01)
+LABEL-1 Concept(report-01)
 SHIFT
 IMPLICIT-ARG0-of
-LABEL Concept(person)
+LABEL-1 Concept(person)
 REDUCE
 SHIFT
-LABEL Concept(research-01)
+LABEL-1 Concept(research-01)
 REDUCE
 SHIFT
 REDUCE
@@ -13,32 +13,32 @@ SHIFT
 NODE-Terminal
 REDUCE
 SHIFT
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 NODE-mod
 REDUCE
 SHIFT
 NODE-ARG0
 REMOTE-NODE-ARG2
 SHIFT
-LABEL Concept(expose-01)
+LABEL-1 Concept(expose-01)
 NODE-ARG1-of
 REDUCE
 SHIFT
 IMPLICIT-ARG0-of
-LABEL Concept(person)
+LABEL-1 Concept(person)
 NODE-ARG2
 REDUCE
 SHIFT
-LABEL Concept(include-91)
+LABEL-1 Concept(include-91)
 NODE-ARG3-of
 SHIFT
 NODE-domain
 SHIFT
 SHIFT
-LABEL Concept(work-01)
+LABEL-1 Concept(work-01)
 REDUCE
 SHIFT
-LABEL Concept(cause-01)
+LABEL-1 Concept(cause-01)
 LEFT-EDGE-ARG1
 SWAP
 SWAP
@@ -59,7 +59,7 @@ SWAP
 SWAP
 RIGHT-EDGE-Terminal
 REDUCE
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 SHIFT
 SHIFT
 SHIFT
@@ -67,11 +67,11 @@ SHIFT
 NODE-Terminal
 REDUCE
 SHIFT
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 NODE-time
 REDUCE
 SHIFT
-LABEL Concept(use-01)
+LABEL-1 Concept(use-01)
 SHIFT
 REDUCE
 SHIFT
@@ -80,20 +80,20 @@ SHIFT
 NODE-Terminal
 REDUCE
 SHIFT
-LABEL Concept(<l>-01)
+LABEL-1 Concept(<l>-01)
 RIGHT-EDGE-ARG2
 SHIFT
 NODE-Terminal
 REDUCE
 SHIFT
-LABEL "<t>"
+LABEL-1 "<t>"
 NODE-name
 REDUCE
 SHIFT
 NODE-mod
 SHIFT
 IMPLICIT-ARG0-of
-LABEL Concept(product)
+LABEL-1 Concept(product)
 SWAP
 RIGHT-EDGE-ARG1
 REDUCE
@@ -109,12 +109,12 @@ SHIFT
 SHIFT
 SHIFT
 SHIFT
-LABEL Concept(filter-02)
+LABEL-1 Concept(filter-02)
 REDUCE
 SHIFT
 RIGHT-EDGE-Terminal
 REDUCE
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 REDUCE
 SHIFT
 REDUCE
@@ -127,12 +127,12 @@ REDUCE
 SHIFT
 RIGHT-EDGE-Terminal
 REDUCE
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 REDUCE
 SHIFT
 RIGHT-EDGE-Terminal
 REDUCE
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 REDUCE
 SHIFT
 REDUCE
@@ -140,19 +140,19 @@ SHIFT
 NODE-Terminal
 REDUCE
 SHIFT
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 NODE-ARG0
 REDUCE
 SHIFT
-LABEL Concept(cause-01)
+LABEL-1 Concept(cause-01)
 NODE-ARG1-of
 REDUCE
 SHIFT
-LABEL Concept(die-01)
+LABEL-1 Concept(die-01)
 NODE-ARG1-of
 REDUCE
 SHIFT
-LABEL Concept(person)
+LABEL-1 Concept(person)
 RIGHT-EDGE-ARG1
 REDUCE
 REDUCE
