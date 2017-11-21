@@ -119,8 +119,6 @@ class State(object):
             _check_possible_child(child)
             if self.args.constraints and action.tag:
                 if parent is self.root:
-                    self.check(self.constraints.allow_root_terminal_children or child.text is None,
-                               message and "Terminal child '%s' for root" % child, is_type=True)
                     self.check(self.constraints.top_level_allowed is None or
                                action.tag in self.constraints.top_level_allowed,
                                message and "Root may not have %s edges" % action.tag)
@@ -128,8 +126,17 @@ class State(object):
                     self.check(self.constraints.top_level_only is None or
                                action.tag not in self.constraints.top_level_only,
                                message and "Only root may have %s edges" % action.tag)
+            if parent is self.root:
+                self.check(self.constraints.allow_root_terminal_children or child.text is None,
+                           message and "Terminal child '%s' for root" % child, is_type=True)
+            if self.constraints.multigraph:  # Nodes may be connected by more than one edge
                 edge = Edge(parent, child, action.tag, remote=action.remote)
-                self.check(self.constraints.allow_edge(edge), message and "Edge not allowed: %s" % edge)
+                self.check(self.constraints.allow_edge(edge),
+                           message and "Edge not allowed: %s (currently: %s)" % (
+                               edge, ", ".join(map(str, parent.outgoing)) or "childless"))
+            else:  # Simple graph, i.e., no more than one edge between the same pair of nodes
+                self.check(child not in parent.children,
+                           message and "%s is already %s's child" % (child, parent), is_type=True)
             self.check(parent not in child.descendants,
                        message and "Detected cycle by edge: %s->%s" % (parent, child), is_type=True)
 

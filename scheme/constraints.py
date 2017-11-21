@@ -72,11 +72,12 @@ class Valid:
 
 # Generic class to define constraints on parser actions
 class Constraints(object):
-    def __init__(self, args, require_implicit_childless=True, allow_root_terminal_children=False,
+    def __init__(self, args, multigraph=False, require_implicit_childless=True, allow_root_terminal_children=False,
                  top_level_allowed=None, top_level_only=None, possible_multiple_incoming=(),
                  childless_incoming_trigger=(), childless_outgoing_allowed=(), unique_incoming=(), unique_outgoing=(),
                  mutually_exclusive_incoming=(), mutually_exclusive_outgoing=(), exclusive_outgoing=()):
         self.args = args
+        self.multigraph = multigraph
         self.require_implicit_childless = require_implicit_childless
         self.allow_root_terminal_children = allow_root_terminal_children
         self.top_level_allowed = top_level_allowed
@@ -98,11 +99,7 @@ class Constraints(object):
         return self.args.implicit or history or action.tag is None  # First action must not create nodes/edges
 
     def allow_edge(self, edge):
-        return self.allow_parent(edge.parent, edge.tag) and self.allow_child(edge.child, edge.tag) and \
-               self._allow_edge(edge)
-
-    def _allow_edge(self, edge):
-        return edge.child not in edge.parent.children  # Prevent multiple edges between the same pair of nodes
+        return True
 
     def allow_parent(self, node, tag):
         return True
@@ -121,15 +118,15 @@ class UccaConstraints(Constraints):
     def __init__(self, args):
         super().__init__(args, require_implicit_childless=True, allow_root_terminal_children=False,
                          top_level_allowed={EdgeTags.ParallelScene, EdgeTags.Linker,
-                                                                 EdgeTags.Function, EdgeTags.Ground,
-                                                                 EdgeTags.Punctuation},
+                                            EdgeTags.Function, EdgeTags.Ground,
+                                            EdgeTags.Punctuation},
                          possible_multiple_incoming=LINKAGE_TAGS,
                          childless_incoming_trigger=EdgeTags.Function,
                          childless_outgoing_allowed={EdgeTags.Terminal, EdgeTags.Punctuation},
                          unique_incoming={EdgeTags.Function, EdgeTags.Ground,
-                                                               EdgeTags.ParallelScene, EdgeTags.Linker,
-                                                               EdgeTags.LinkRelation, EdgeTags.Connector,
-                                                               EdgeTags.Punctuation, EdgeTags.Terminal},
+                                          EdgeTags.ParallelScene, EdgeTags.Linker,
+                                          EdgeTags.LinkRelation, EdgeTags.Connector,
+                                          EdgeTags.Punctuation, EdgeTags.Terminal},
                          unique_outgoing={EdgeTags.LinkRelation, EdgeTags.Process, EdgeTags.State},
                          mutually_exclusive_outgoing={EdgeTags.Process, EdgeTags.State},
                          exclusive_outgoing=LINKAGE_TAGS)

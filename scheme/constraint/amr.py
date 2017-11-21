@@ -4,14 +4,14 @@ from ..util.amr import *
 
 class AmrConstraints(Constraints):
     def __init__(self, args):
-        super().__init__(args, require_implicit_childless=False, allow_root_terminal_children=True,
+        super().__init__(args, multigraph=True, require_implicit_childless=False, allow_root_terminal_children=True,
                          possible_multiple_incoming=TERMINAL_DEP, childless_incoming_trigger=WIKI,
                          childless_outgoing_allowed=TERMINAL_TAGS)
 
     def allow_action(self, action, history):
         return True
 
-    def _allow_edge(self, edge):  # Prevent multiple identical edges between the same pair of nodes
+    def allow_edge(self, edge):  # Prevent multiple identical edges between the same pair of nodes
         return edge.tag in PREFIXED_RELATION_ENUM or edge not in edge.parent.outgoing
 
     def allow_parent(self, node, tag):
