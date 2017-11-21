@@ -98,15 +98,15 @@ class ParserTests(unittest.TestCase):
                 model_filename = model_type + settings_suffix(settings)
                 p = Parser(model_file="test_files/models/%s" % model_filename, model_type=model_type)
                 list(p.train(passages if mode == "train" else None, iterations=2))
-                results, s = zip(*p.parse(passages, evaluate=True))
-                score = Scores(s)
+                results = p.parse(passages, evaluate=True)
+                score = Scores(tuple(zip(*results))[1])
                 scores.append(score.average_f1())
                 print("Converting to text and parsing...")
                 text_results = list(p.parse([p3 for p1 in passages for p2 in convert.to_text(p1, sentences=False) for p3
                                              in convert.from_text(p2, p1.ID, extra_format=p1.extra.get("format"))]))
                 self.assertEqual(len(results), len(text_results))
-                for t, r in zip(text_results, results):
-                    print("  %s F1=%.3f" % (r.ID, p.evaluate_passage(t, r).average_f1()))
+                for t, (r, s) in zip(text_results, results):
+                    print("  %s F1=%.3f, text F1=%.3f" % (r.ID, s.average_f1(), p.evaluate_passage(t, r).average_f1()))
                 self.assertFalse(list(p.parse(())))  # parsing nothing returns nothing
                 print()
             print("-- average labeled f1: %.3f, %.3f\n" % tuple(scores))
