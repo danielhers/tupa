@@ -255,9 +255,9 @@ class Parser(object):
                     print("  action: %-15s %s" % (action, self.state))
                 if need_label:
                     if self.oracle and not self.args.use_gold_node_labels:
-                        print("  predicted label: %-15s true label: %-15s" % (predicted_label, true_label))
+                        print("  predicted label: %-9s true label: %s" % (predicted_label, true_label))
                     else:
-                        print("  label: %-15s" % label)
+                        print("  label: %s" % label)
                 for line in self.state.log:
                     print("    " + line)
             if self.state.finished:
