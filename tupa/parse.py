@@ -238,7 +238,8 @@ class Parser(object):
             except AssertionError as e:
                 raise ParserException("Invalid transition: %s %s" % (action, self.state)) from e
             true_label = label = predicted_label = None
-            if self.state.need_label:  # Label action that requires a choice of label
+            need_label = self.state.need_label  # Label action that requires a choice of label
+            if need_label:
                 true_label, raw_true_label = self.get_true_label(action)
                 label, predicted_label = self.choose_label(features, true_label)
                 self.state.label_node(raw_true_label if label == true_label else label)
@@ -252,7 +253,7 @@ class Parser(object):
                         predicted_action, "|".join(map(str, true_actions.values())), action, self.state))
                 else:
                     print("  action: %-15s %s" % (action, self.state))
-                if true_label or label or predicted_label:
+                if need_label:
                     if self.oracle and not self.args.use_gold_node_labels:
                         print("  predicted label: %-15s true label: %-15s" % (predicted_label, true_label))
                     else:
