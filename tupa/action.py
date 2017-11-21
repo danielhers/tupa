@@ -82,8 +82,7 @@ class Actions(Labels):
         args = Config().args
         self.all = [Actions.Reduce, Actions.Shift, Actions.Finish] + \
             (list(map(Actions.Swap, range(1, args.max_swap))) if args.swap == COMPOUND else
-             [Actions.Swap] if args.swap else []) + \
-            ([Actions.Label] if args.node_labels else [])
+             [Actions.Swap] if args.swap else [])
 
     @property
     def all(self):
