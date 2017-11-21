@@ -5,8 +5,7 @@ from ucca import core, layer0, layer1, textutil
 from ucca.layer1 import EdgeTags
 
 from scheme.constrain import CONSTRAINTS
-from scheme.constraints import Constraints
-from scheme.constraints import Direction
+from scheme.constraints import Constraints, Direction
 from scheme.util.amr import LABEL_ATTRIB
 from .edge import Edge
 from .node import Node
