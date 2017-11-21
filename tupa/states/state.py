@@ -126,9 +126,8 @@ class State(object):
                     self.check(self.constraints.top_level_only is None or
                                action.tag not in self.constraints.top_level_only,
                                message and "Only root may have %s edges" % action.tag)
-            if parent is self.root:
-                self.check(self.constraints.allow_root_terminal_children or child.text is None,
-                           message and "Terminal child '%s' for root" % child, is_type=True)
+            self.check(self.constraints.allow_root_terminal_children or parent is not self.root or child.text is None,
+                       message and "Terminal child '%s' for root" % child, is_type=True)
             if self.constraints.multigraph:  # Nodes may be connected by more than one edge
                 edge = Edge(parent, child, action.tag, remote=action.remote)
                 self.check(self.constraints.allow_edge(edge),
