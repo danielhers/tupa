@@ -98,7 +98,7 @@ class ParserTests(unittest.TestCase):
                 model_filename = model_type + settings_suffix(settings)
                 p = Parser(model_file="test_files/models/%s" % model_filename, model_type=model_type)
                 list(p.train(passages if mode == "train" else None, iterations=2))
-                results = p.parse(passages, evaluate=True)
+                results = list(p.parse(passages, evaluate=True))
                 score = Scores(tuple(zip(*results))[1])
                 scores.append(score.average_f1())
                 print("Converting to text and parsing...")
