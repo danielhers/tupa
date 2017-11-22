@@ -39,13 +39,12 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
     def add_argument(a, *args, **kwargs):
         return a.add_argument(*args, **kwargs)
     
-    def add(a, *args, default=None, restore=False, func=add_argument, **kwargs):
+    def add(a, *args, default=None, func=add_argument, **kwargs):
         arg = func(a, *args, default=default if arg_default is None else arg_default, **kwargs)
-        if restore:
-            try:
-                RESTORED_ARGS.add(arg.dest)
-            except AttributeError:
-                RESTORED_ARGS.update(get_group_arg_names(arg))
+        try:
+            RESTORED_ARGS.add(arg.dest)
+        except AttributeError:
+            RESTORED_ARGS.update(get_group_arg_names(arg))
     
     def add_boolean(a, *args, **kwargs):
         add(a, *args, func=add_boolean_option, **kwargs)
@@ -54,21 +53,21 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
         argparser = ArgumentParser()
     
     group = argparser.add_argument_group(title="Node labels")
-    add(group, "--max-node-labels", type=int, default=0, help="max number of node labels to allow", restore=True)
-    add(group, "--max-node-categories", type=int, default=0, help="max node categories to allow", restore=True)
+    add(group, "--max-node-labels", type=int, default=0, help="max number of node labels to allow")
+    add(group, "--max-node-categories", type=int, default=0, help="max node categories to allow")
     add(group, "--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
     add_boolean(group, "use-gold-node-labels", "gold node labels when parsing")
     add_boolean(group, "wikification", "use Spotlight to wikify any named node")
-    add_boolean(group, "node-labels", "prediction of node labels, if supported by format", default=True, restore=True)
+    add_boolean(group, "node-labels", "prediction of node labels, if supported by format", default=True)
 
     group = argparser.add_argument_group(title="Structural constraints")
     add_boolean(group, "linkage", "linkage nodes and edges")
-    add_boolean(group, "implicit", "implicit nodes and edges", restore=True)
+    add_boolean(group, "implicit", "implicit nodes and edges")
     add_boolean(group, "remote", "remote edges", default=True)
     add_boolean(group, "constraints", "scheme-specific rules", default=True)
     add_boolean(group, "require-connected", "constraint that output graph must be connected")
     add(group, "--orphan-label", default="orphan", help="edge label to use for nodes without parents")
-    add(group, "--max-action-ratio", type=float, default=100, help="max action/terminal ratio", restore=True)
+    add(group, "--max-action-ratio", type=float, default=100, help="max action/terminal ratio")
     add(group, "--max-node-ratio", type=float, default=10, help="max node/terminal ratio")
     add(group, "--max-height", type=int, default=20, help="max graph height")
 
@@ -94,8 +93,8 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
     add(group, "--tag-dim", type=int, default=20, help="dimension for POS tag embeddings")
     add(group, "--dep-dim", type=int, default=10, help="dimension for dependency relation embeddings")
     add(group, "--edge-label-dim", type=int, default=20, help="dimension for edge label embeddings")
-    add(group, "--node-label-dim", type=int, default=0, help="dimension for node label embeddings", restore=True)
-    add(group, "--node-category-dim", type=int, default=0, help="dimension for node category embeddings", restore=True)
+    add(group, "--node-label-dim", type=int, default=0, help="dimension for node label embeddings")
+    add(group, "--node-category-dim", type=int, default=0, help="dimension for node category embeddings")
     add(group, "--punct-dim", type=int, default=1, help="dimension for separator punctuation embeddings")
     add(group, "--action-dim", type=int, default=3, help="dimension for input action type embeddings")
     add(group, "--ner-dim", type=int, default=5, help="dimension for input entity type embeddings")
@@ -115,10 +114,10 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
     add(group, "--max-words", type=int, default=10000, help="max number of words to keep embeddings for")
     add(group, "--max-tags", type=int, default=100, help="max number of POS tags to keep embeddings for")
     add(group, "--max-deps", type=int, default=100, help="max number of dep labels to keep embeddings for")
-    add(group, "--max-edge-labels", type=int, default=15, help="max number of edge labels for embeddings", restore=True)
+    add(group, "--max-edge-labels", type=int, default=15, help="max number of edge labels for embeddings")
     add(group, "--max-puncts", type=int, default=5, help="max number of punctuations for embeddings")
     add(group, "--max-action-types", type=int, default=10, help="max number of action types for embeddings")
-    add(group, "--max-action-labels", type=int, default=100, help="max number of action labels to allow", restore=True)
+    add(group, "--max-action-labels", type=int, default=100, help="max number of action labels to allow")
     add(group, "--max-ner-types", type=int, default=18, help="max number of entity types to allow")
     add(group, "--word-dropout", type=float, default=0.2, help="word dropout parameter")
     add(group, "--word-dropout-external", type=float, default=0, help="word dropout for word vectors")
@@ -246,17 +245,18 @@ class Config(object, metaclass=Singleton):
                 for attr in RESTORED_ARGS if args is None or attr in args}
 
     def set_format(self, f=None):
-        if self.format != f:
-            format_values = dict(self.original_values)
-            format_values.update({k: v for k, v in vars(self.hyperparams.specific[self.format]).items()
-                                  if not k.startswith("_")})
-            for attr, value in format_values.items():
-                setattr(self.args, attr, value)
-        if f in (None, "text"):
-            if not self.format:
-                self.format = "ucca"
-        else:
-            self.format = f
+        if f in (None, "text"):  # Parsing UCCA (with no extra["format"]) or plain text
+            if self.format:  # Already set
+                return
+            f = "ucca"  # Default output format is UCCA
+        if self.format == f:
+            return
+        self.format = f
+        format_values = dict(self.original_values)
+        format_values.update({k: v for k, v in vars(self.hyperparams.specific[self.format]).items()
+                              if not k.startswith("_")})
+        for attr, value in format_values.items():
+            setattr(self.args, attr, value)
         if self.format == "amr":
             self.args.implicit = True
             if not self.args.node_label_dim:
