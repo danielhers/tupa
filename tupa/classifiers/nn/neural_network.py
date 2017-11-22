@@ -242,6 +242,7 @@ class NeuralNetwork(Classifier, SubModel):
         self.finalize()
         values = []
         for model in self.sub_models():
+            print(list(model.params.keys()))
             values += model.save_sub_model(d)
         started = time.time()
         try:
@@ -270,6 +271,7 @@ class NeuralNetwork(Classifier, SubModel):
             self.axes[axis] = AxisModel(axis, size, self.model, with_birnn=self.model_type == BIRNN)
         for model in self.sub_models():
             model.load_sub_model(d, *values)
+            print(list(model.params.keys()))
             del values[:len(model.params)]  # Take next len(model.params) values
         assert not values, "Loaded values: %d more than expected" % len(values)
 
