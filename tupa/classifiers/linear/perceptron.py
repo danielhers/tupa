@@ -60,8 +60,12 @@ class Perceptron(Classifier):
 
     def save_model(self, d):
         super().save_model(d)
-        d["initial_learning_rate"] = self.initial_learning_rate
+        d.update((
+            ("initial_learning_rate", self.initial_learning_rate),
+            ("input_dim", self.input_dim),
+        ))
 
     def load_model(self, d):
         self.initial_learning_rate = d["initial_learning_rate"]
+        self.input_dim = d["input_dim"]
         super().load_model(d)

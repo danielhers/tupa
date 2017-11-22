@@ -92,7 +92,6 @@ class Classifier(object):
             ("updates", self.updates),
             ("epoch", self.epoch),
             ("best_score", self.best_score),
-            ("input_dim", self.input_dim),
         ))
         self.save_model(d)
         save_json(self.filename + ".json", d)
@@ -117,7 +116,6 @@ class Classifier(object):
         self.updates = d["updates"]
         self.epoch = d["epoch"]
         self.best_score = d.get("best_score", 0)
-        self.input_dim = d["input_dim"]
         self.load_model(d)
 
     def load_model(self, d):
