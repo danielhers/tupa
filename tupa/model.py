@@ -75,12 +75,13 @@ class Model(object):
 
     def init_model(self, init_params=True):
         labels = self.classifier.labels if self.classifier else {}
+        feature_params_required = self.model_type in (MLP, BIRNN)
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
             for param_def in PARAM_DEFS:
                 param = self.feature_params.get(param_def.name)
                 if param:
                     param.enabled = param_def.enabled
-                elif param_def.enabled:
+                elif feature_params_required and param_def.enabled:
                     self.feature_params[param_def.name] = param_def.create_from_config()
             if Config().format not in labels:
                 labels[Config().format] = self.init_actions()  # Uses config to determine actions
@@ -98,7 +99,7 @@ class Model(object):
             from .classifiers.noop import NoOp
             self.feature_extractor = EmptyFeatureExtractor()
             self.classifier = NoOp(self.filename, labels)
-        elif self.model_type in (MLP, BIRNN):
+        elif feature_params_required:
             from .features.dense_features import DenseFeatureExtractor
             from .classifiers.nn.neural_network import NeuralNetwork
             self.feature_extractor = FeatureEnumerator(DenseFeatureExtractor(), self.feature_params,
