@@ -190,7 +190,6 @@ class Model(object):
         self.filename = model.filename
         self.feature_extractor = feature_extractor or model.feature_extractor
         self.classifier = classifier or model.classifier
-        self.feature_params = self.feature_extractor.params
         self._update_input_params()
         self.classifier.labels_t = {a: l.save() for a, l in self.classifier.labels.items()}
         self.load_labels()
@@ -217,7 +216,7 @@ class Model(object):
         return CLASSIFIER_PROPERTIES[self.model_type]
 
     def _update_input_params(self):
-        self.classifier.input_params = self.feature_extractor.params
+        self.feature_params = self.classifier.input_params = self.feature_extractor.params
 
     def get_all_params(self):
         d = OrderedDict()
