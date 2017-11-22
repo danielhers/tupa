@@ -224,10 +224,11 @@ class NeuralNetwork(Classifier, SubModel):
             
     def sub_models(self):
         """ :return: ordered list of SubModels """
-        return [self] + [m.mlp for m in self.axes.values()] + [m.birnn for m in list(self.axes.values()) + [self]]
+        axes = [self.axes[l] for l in self.labels]
+        return [self] + [m.mlp for m in axes] + [m.birnn for m in axes + [self]]
     
     def save_sub_model(self, d, *args):
-        SubModel.save_sub_model(
+        return SubModel.save_sub_model(
             self, d,
             ("loss", self.loss),
         )
@@ -239,8 +240,9 @@ class NeuralNetwork(Classifier, SubModel):
     def save_model(self, d):
         Classifier.save_model(self, d)
         self.finalize()
+        values = []
         for model in self.sub_models():
-            model.save_sub_model(d)
+            values += model.save_sub_model(d)
         started = time.time()
         try:
             os.remove(self.filename)
@@ -249,7 +251,7 @@ class NeuralNetwork(Classifier, SubModel):
             pass
         print("Saving model to '%s'... " % self.filename, end="", flush=True)
         try:
-            dy.save(self.filename, [p for m in self.sub_models() for p in m.params.values()])
+            dy.save(self.filename, values)
             print("Done (%.3fs)." % (time.time() - started))
         except ValueError as e:
             print("Failed saving model: %s" % e)

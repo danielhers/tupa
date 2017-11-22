@@ -70,7 +70,7 @@ class BiRNN(SubModel):
 
     def save_sub_model(self, d, *args):
         if self.with_birnn and self.lstm_layer_dim and self.lstm_layers:
-            super().save_sub_model(
+            return super().save_sub_model(
                 d,
                 ("lstm_layers", self.lstm_layers),
                 ("lstm_layer_dim", self.lstm_layer_dim),
@@ -84,6 +84,7 @@ class BiRNN(SubModel):
                 ("indexed_dim", self.indexed_dim),
                 ("indexed_num", self.indexed_num),
             )
+        return []
 
     def load_sub_model(self, d, *args):
         d = super().load_sub_model(d, *args)

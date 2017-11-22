@@ -8,6 +8,7 @@ class SubModel(object):
 
     def save_sub_model(self, d, *args):
         self.get_sub_dict(d).update(args + (("param_keys", list(self.params.keys())),))
+        return list(self.params.values())
 
     def load_sub_model(self, d, *args):
         d = self.get_sub_dict(d)

@@ -50,7 +50,7 @@ class MultilayerPerceptron(SubModel):
 
     def save_sub_model(self, d, *args):
         self.verify_dimensions()
-        super().save_sub_model(
+        return super().save_sub_model(
             d,
             ("layers", self.layers),
             ("total_layers", self.total_layers),
