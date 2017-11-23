@@ -1,3 +1,4 @@
+from ucca.layer0 import NodeTags
 from ucca.layer1 import EdgeTags
 
 from ..config import Config
@@ -10,7 +11,9 @@ class Edge(object):
     def __init__(self, parent, child, tag, remote=False):
         self.parent = parent  # Node object from which this edge comes
         self.child = child  # Node object to which this edge goes
-        self.tag = EdgeTags.Terminal if self.child.text else tag  # String tag; in unlabeled parsing, keep a valid graph
+        self.tag = EdgeTags.Terminal if self.child.text else \
+            EdgeTags.Punctuation if all(c.tag == NodeTags.Punct for c in self.child.children) else \
+            tag  # String tag; in unlabeled parsing, keep a valid graph
         self.remote = remote  # True or False
 
     def add(self):
