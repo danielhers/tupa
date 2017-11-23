@@ -45,13 +45,13 @@ class State(object):
         self.buffer = deque()
         self.nodes = []
         self.heads = set()
+        self.need_label = None  # If we are waiting for label_node() to be called, which node is to be labeled by it
         self.root = self.add_node(orig_node=l1.heads[0], is_root=True)  # Root is not in the buffer
         self.stack.append(self.root)
         self.buffer += self.terminals
         self.nodes += self.terminals
         self.actions = []  # History of applied actions
         self.type_validity_cache = {}
-        self.need_label = None  # If we are waiting for label_node() to be called, which node is to be labeled by it
 
     def is_valid_action(self, action):
         """
