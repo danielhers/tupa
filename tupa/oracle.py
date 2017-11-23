@@ -31,15 +31,16 @@ class Oracle(object):
         self.args = Config().args
         self.unlabeled = Config().is_unlabeled()
         l1 = passage.layer(layer1.LAYER_ID)
-        self.nodes_remaining = {node.ID for node in l1.all
-                                if node is not l1.heads[0] and
-                                (self.args.linkage or node.tag != layer1.NodeTags.Linkage) and
-                                (self.args.implicit or not is_implicit_node(node))}
-        self.edges_remaining = {edge for node in passage.nodes.values() for edge in node
-                                if (self.args.linkage or edge.tag not in (
-                                    layer1.EdgeTags.LinkRelation, layer1.EdgeTags.LinkArgument)) and
-                                (self.args.implicit or not is_implicit_node(edge.child)) and
-                                (self.args.remote or not is_remote_edge(edge))}
+        self.nodes_remaining = {n.ID for n in l1.all if n is not l1.heads[0] and
+                                (self.args.linkage or n.tag != layer1.NodeTags.Linkage) and
+                                (self.args.implicit or not is_implicit_node(n))}
+        self.edges_remaining = {e for n in passage.nodes.values() for e in n if (self.args.linkage or e.tag not in (
+                                layer1.EdgeTags.LinkRelation, layer1.EdgeTags.LinkArgument)) and
+                                (self.args.implicit or not is_implicit_node(e.child)) and
+                                (self.args.remote or not is_remote_edge(e))}
+        if self.unlabeled:  # Keep only one edge between each pair of nodes, since we cannot distinguish between them
+            unique_edges = {(e.parent.ID, e.child.ID, is_remote_edge(e)): e for e in self.edges_remaining}
+            self.edges_remaining = set(unique_edges.values())
         self.passage = passage
         self.found = False
         self.log = None
