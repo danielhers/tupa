@@ -52,7 +52,7 @@ def config():
 
 @pytest.mark.parametrize("setting", SETTINGS, ids=",".join)
 @pytest.mark.parametrize("passage", load_passages(), ids=attrgetter("ID"))
-def test_oracle(config, setting, passage):
+def test_oracle(config, setting, passage, write_oracle_actions):
     update_setting(config, setting)
     config.set_format(passage.extra.get("format"))
     oracle = Oracle(passage)
@@ -71,8 +71,9 @@ def test_oracle(config, setting, passage):
         if state.finished:
             break
     compare_file = "test_files/oracle_actions/%s%s.txt" % (passage.ID, setting_suffix(setting))
-    # with open(compare_file, "w") as f:
-    #     f.writelines(actions_taken)
+    if write_oracle_actions:
+        with open(compare_file, "w") as f:
+            f.writelines(actions_taken)
     with open(compare_file) as f:
         assert f.readlines() == actions_taken, compare_file
 
