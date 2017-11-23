@@ -230,9 +230,8 @@ class Parser(object):
         while True:
             if self.args.check_loops:
                 self.check_loop()
-            features = self.model.feature_extractor.extract_features(self.state)
             true_actions = self.get_true_actions()
-            action, predicted_action = self.choose_action(features, true_actions)
+            action, predicted_action = self.choose_action(true_actions)
             try:
                 self.state.transition(action)
             except AssertionError as e:
@@ -241,9 +240,8 @@ class Parser(object):
             need_label = self.state.need_label  # Label action that requires a choice of label
             if need_label:
                 true_label, raw_true_label = self.get_true_label(action)
-                label, predicted_label = self.choose_label(features, true_label)
+                label, predicted_label = self.choose_label(true_label)
                 self.state.label_node(raw_true_label if label == true_label else label)
-            self.model.classifier.finished_step(self.training)
             if self.args.action_stats:
                 with open(self.args.action_stats, "a") as f:
                     print(",".join(map(str, [predicted_action, action] + list(true_actions.values()))), file=f)
@@ -273,7 +271,8 @@ class Parser(object):
                     raise ParserException("Error in getting action from oracle during training") from e
         return true_actions
 
-    def choose_action(self, features, true_actions):
+    def choose_action(self, true_actions):
+        features = self.model.feature_extractor.extract_features(self.state)
         scores = self.model.classifier.score(features, axis=Config().format)  # Returns NumPy array
         if self.args.verbose > 3:
             print("  action scores: " + ",".join(("%s: %g" % x for x in zip(self.model.actions.all, scores))))
@@ -295,6 +294,7 @@ class Parser(object):
         if self.training and not is_correct and self.args.early_update:
             self.state.finished = True
         self.action_count += 1
+        self.model.classifier.finished_step(self.training)
         return action, predicted_action
 
     def get_true_label(self, action):
@@ -305,10 +305,11 @@ class Parser(object):
                 raise ParserException("Error in getting label from oracle during training") from e
             return None, None
 
-    def choose_label(self, features, true_label):
+    def choose_label(self, true_label):
         true = (self.model.labels[true_label],) if self.oracle else ()  # Needs to happen before score()
         if self.args.use_gold_node_labels:
             return true_label, true_label
+        features = self.model.feature_extractor.extract_features(self.state)
         scores = self.model.classifier.score(features, axis=NODE_LABEL_KEY)
         if self.args.verbose > 3:
             print("  label scores: " + ",".join(("%s: %g" % x for x in zip(self.model.labels.all, scores))))
@@ -322,6 +323,7 @@ class Parser(object):
                 self.model.classifier.update(features, axis=NODE_LABEL_KEY, pred=self.model.labels[label], true=true)
                 label = true_label
         self.label_count += 1
+        self.model.classifier.finished_step(self.training)
         return label, predicted_label
 
     def predict(self, scores, values, is_valid=None, unit=None):
