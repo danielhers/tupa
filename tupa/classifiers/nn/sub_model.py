@@ -23,3 +23,6 @@ class SubModel(object):
         for element in self.save_path:
             d = d.setdefault(element, OrderedDict())
         return d
+
+    def __str__(self):
+        return "/".join(self.save_path) + (": " if self.save_path else "") + ", ".join(self.params.keys())

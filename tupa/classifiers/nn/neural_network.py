@@ -48,6 +48,10 @@ class NeuralNetwork(Classifier, SubModel):
         self.steps = 0
         self.trainer = self.value = self.birnn = None
 
+    @property
+    def input_dim(self):
+        return {a: m.mlp.input_dim for a, m in self.axes.items()}
+
     def resize(self):
         for axis, labels in self.labels.items():
             if labels.size is not None:
@@ -79,7 +83,7 @@ class NeuralNetwork(Classifier, SubModel):
             return
         model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model,
                                             with_birnn=self.model_type == BIRNN)
-        self.input_dim = indexed_dim = indexed_num = 0
+        input_dim = indexed_dim = indexed_num = 0
         for suffix, param in sorted(self.input_params.items()):
             if not param.enabled:
                 continue
@@ -93,10 +97,10 @@ class NeuralNetwork(Classifier, SubModel):
                 indexed_dim += param.dim  # add to the input dimensionality at each indexed time point
                 indexed_num = max(indexed_num, param.num)  # indices to be looked up are collected
             else:
-                self.input_dim += param.num * param.dim
+                input_dim += param.num * param.dim
         for birnn in self.get_birnns(axis):
-            self.input_dim += birnn.init_params(indexed_dim, indexed_num)
-        model.mlp.init_params(self.input_dim)
+            input_dim += birnn.init_params(indexed_dim, indexed_num)
+        model.mlp.init_params(input_dim)
 
     def init_cg(self):
         dy.renew_cg()
@@ -242,7 +246,7 @@ class NeuralNetwork(Classifier, SubModel):
         self.finalize()
         values = []
         for model in self.sub_models():
-            print(list(model.params.keys()))
+            print(model)
             values += model.save_sub_model(d)
         started = time.time()
         try:
@@ -271,7 +275,7 @@ class NeuralNetwork(Classifier, SubModel):
             self.axes[axis] = AxisModel(axis, size, self.model, with_birnn=self.model_type == BIRNN)
         for model in self.sub_models():
             model.load_sub_model(d, *values)
-            print(list(model.params.keys()))
+            print(model)
             del values[:len(model.params)]  # Take next len(model.params) values
         assert not values, "Loaded values: %d more than expected" % len(values)
 

@@ -48,8 +48,7 @@ class Perceptron(Classifier):
         finalized = self._finalize_model(finished_epoch, average)
         if average:
             print("Done (%.3fs)." % (time.time() - started))
-        print("Labels: %s" % (next(iter(self.num_labels.values())) if len(self.num_labels) == 1 else self.num_labels))
-        print("Features: %d" % self.input_dim)
+        print(self)
         return finalized
 
     def _finalize_model(self, finished_epoch, average):
@@ -62,10 +61,8 @@ class Perceptron(Classifier):
         super().save_model(d)
         d.update((
             ("initial_learning_rate", self.initial_learning_rate),
-            ("input_dim", self.input_dim),
         ))
 
     def load_model(self, d):
         self.initial_learning_rate = d["initial_learning_rate"]
-        self.input_dim = d["input_dim"]
         super().load_model(d)

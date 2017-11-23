@@ -22,13 +22,17 @@ class Classifier(object):
         self.learning_rate = self.args.learning_rate
         self.learning_rate_decay = self.args.learning_rate_decay
         self._num_labels = self.num_labels
-        self.model = self.input_dim = self.labels_t = None
+        self.model = self.labels_t = None
         self.is_frozen = False
         self.updates = self.epoch = self.best_score = 0
 
     @property
     def num_labels(self):
         return {a: len(l.all) for a, l in self.labels.items()}
+    
+    @property
+    def input_dim(self):
+        raise NotImplementedError()
 
     def score(self, features, axis):
         if not self.is_frozen:
@@ -141,5 +145,8 @@ class Classifier(object):
         return OrderedDict((k, v.all) for k, v in self.labels.items())
 
     def __str__(self):
-        return "Labels: %s, %d features" % (next(iter(self.num_labels.values())) if len(self.num_labels) == 1 else
-                                            self.num_labels, self.input_dim)
+        return "Labels: %s, features: %s" % tuple(map(dict_value, (self.num_labels, self.input_dim)))
+
+
+def dict_value(d):
+    return next(iter(d.values())) if len(d) == 1 else d

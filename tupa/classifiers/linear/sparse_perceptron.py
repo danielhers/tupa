@@ -83,9 +83,12 @@ class SparsePerceptron(Perceptron):
             for axis, feature_weights in self.model.items():
                 model[axis].update(feature_weights)
         self.model = model
-        self.input_dim = len(self.model)
         self.min_update = self.args.min_update  # Minimum number of updates for a feature to be used in scoring
         self.dropped = set()  # Features that did not get min_updates after a full epoch
+
+    @property
+    def input_dim(self):
+        return {a: len(m) for a, m in self.model.items()}
 
     def create_axis_weights(self, axis):
         return defaultdict(FeatureWeightsCreator(self, axis).create)
@@ -96,7 +99,6 @@ class SparsePerceptron(Perceptron):
     def update_model(self, model):
         for axis, feature_weights in model.items():
             self.model[axis].update(feature_weights)
-        self.input_dim = len(self.model)
 
     def score(self, features, axis):
         """
@@ -135,7 +137,6 @@ class SparsePerceptron(Perceptron):
             for t, i in zip(true, importance or repeat(1)):
                 weights.update(t, i * self.learning_rate * value, self.updates)
             weights.update(pred, -self.learning_rate * value, self.updates)
-        self.input_dim = len(self.model)
 
     def resize(self):
         for axis, model in self.model.items():
