@@ -228,7 +228,7 @@ class NeuralNetwork(Classifier, SubModel):
             
     def sub_models(self):
         """ :return: ordered list of SubModels """
-        axes = [self.axes[l] for l in self.labels]
+        axes = list(self.axes.values())
         return [self] + [m.mlp for m in axes] + [m.birnn for m in axes + [self]]
     
     def save_sub_model(self, d, *args):
@@ -246,8 +246,9 @@ class NeuralNetwork(Classifier, SubModel):
         self.finalize()
         values = []
         for model in self.sub_models():
-            print(model)
             values += model.save_sub_model(d)
+            print(model.params_str())
+        print(self)
         started = time.time()
         try:
             os.remove(self.filename)
@@ -275,8 +276,9 @@ class NeuralNetwork(Classifier, SubModel):
             self.axes[axis] = AxisModel(axis, size, self.model, with_birnn=self.model_type == BIRNN)
         for model in self.sub_models():
             model.load_sub_model(d, *values)
-            print(model)
             del values[:len(model.params)]  # Take next len(model.params) values
+            print(model.params_str())
+        print(self)
         assert not values, "Loaded values: %d more than expected" % len(values)
 
     def get_all_params(self):

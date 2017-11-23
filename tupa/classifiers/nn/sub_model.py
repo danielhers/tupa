@@ -24,5 +24,5 @@ class SubModel(object):
             d = d.setdefault(element, OrderedDict())
         return d
 
-    def __str__(self):
+    def params_str(self):
         return "/".join(self.save_path) + (": " if self.save_path else "") + ", ".join(self.params.keys())
