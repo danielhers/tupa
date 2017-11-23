@@ -28,7 +28,8 @@ class Classifier(object):
 
     @property
     def num_labels(self):
-        return {a: len(l.all) for a, l in self.labels.items()}
+        return {a: len(l.all) for a, l in self.labels.items()} if self.labels \
+            else {a: s for a, (_, s) in self.labels_t.items()}
     
     @property
     def input_dim(self):
