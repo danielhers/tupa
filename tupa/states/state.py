@@ -376,16 +376,17 @@ class State(object):
                 link_relation = None
                 link_args = []
                 for edge in node.outgoing:
-                    assert edge.child.node is not None, "Linkage edge to nonexistent node"
+                    assert edge.child.node, "Linkage edge to nonexistent node"
                     if edge.tag == EdgeTags.LinkRelation:
-                        assert link_relation is None, \
-                            "Multiple link relations: %s, %s" % (link_relation, edge.child.node)
+                        assert not link_relation, "Multiple link relations: %s, %s" % (link_relation, edge.child.node)
                         link_relation = edge.child.node
                     elif edge.tag == EdgeTags.LinkArgument:
                         link_args.append(edge.child.node)
+                    else:
+                        Config().log("Ignored non-linkage edge %s from linkage node %s" % (edge, node))
                 assert link_relation is not None, "No link relations: %s" % node
                 # if len(link_args) < 2:
-                #     print("Less than two link arguments for linkage %s" % node, file=sys.stderr)
+                #     Config().log("Less than two link arguments for linkage node %s" % node)
                 node.node = l1.add_linkage(link_relation, *link_args)
                 if node.node_id:  # We are in training and we have a gold passage
                     node.node.extra["remarks"] = node.node_id  # For reference

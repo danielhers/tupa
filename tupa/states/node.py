@@ -112,7 +112,7 @@ class Node(object):
         """
         Is this a LKG type node? (During parsing there are no node types)
         """
-        return self.outgoing_tags and self.outgoing_tags.issubset((EdgeTags.LinkRelation, EdgeTags.LinkArgument))
+        return self.outgoing_tags and self.outgoing_tags.intersection((EdgeTags.LinkRelation, EdgeTags.LinkArgument))
 
     @property
     def descendants(self):
