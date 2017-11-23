@@ -232,10 +232,7 @@ class Parser(object):
                 self.check_loop()
             true_actions = self.get_true_actions()
             action, predicted_action = self.choose_action(true_actions)
-            try:
-                self.state.transition(action)
-            except AssertionError as e:
-                raise ParserException("Invalid transition: %s %s" % (action, self.state)) from e
+            self.state.transition(action)
             true_label = label = predicted_label = None
             need_label = self.state.need_label  # Label action that requires a choice of label
             if need_label:
