@@ -51,7 +51,7 @@ class State(object):
         self.nodes += self.terminals
         self.actions = []  # History of applied actions
         self.type_validity_cache = {}
-        self.need_label = False  # Whether we are waiting for label_node() to be called
+        self.need_label = None  # If we are waiting for label_node() to be called, which node is to be labeled by it
 
     def is_valid_action(self, action):
         """
@@ -222,8 +222,8 @@ class State(object):
 
     def check_valid_label(self, label, message=False):
         if self.args.constraints and label is not None:
-            valid = self.constraints.allow_label(self.stack[self.need_label], label)
-            self.check(valid, message and "May not label %s as %s: %s" % (self.stack[self.need_label], label, valid))
+            valid = self.constraints.allow_label(self.need_label, label)
+            self.check(valid, message and "May not label %s as %s: %s" % (self.need_label, label, valid))
 
     @staticmethod
     def check(condition, *args, **kwargs):
@@ -249,7 +249,7 @@ class State(object):
             self.add_edge(Edge(self.stack[-1], action.node, action.tag))
             self.buffer.appendleft(action.node)
         elif action.is_type(Actions.Label):
-            self.need_label = -action.tag  # The parser is responsible to choose a label and set it
+            self.need_label = self.stack[-action.tag]  # The parser is responsible to choose a label and set it
         elif action.is_type(Actions.Reduce):  # Pop stack (no more edges to create with this node)
             self.stack.pop()
         elif action.is_type(Actions.LeftEdge, Actions.LeftRemote, Actions.RightEdge, Actions.RightRemote):
@@ -283,6 +283,8 @@ class State(object):
         self.nodes.append(node)
         self.heads.add(node)
         self.log.append("node: %s (swap_index: %g)" % (node, node.swap_index))
+        if self.args.use_gold_node_labels:
+            self.need_label = node  # Labeled the node as soon as it is created rather than applying a LABEL action
         return node
 
     def calculate_swap_index(self):
@@ -317,12 +319,11 @@ class State(object):
         return None, None
 
     def label_node(self, label):
-        node = self.stack[self.need_label]
-        node.label = label
-        node.labeled = True
-        self.log.append("label: %s" % node)
+        self.need_label.label = label
+        self.need_label.labeled = True
+        self.log.append("label: %s" % self.need_label)
         self.type_validity_cache = {}
-        self.need_label = False
+        self.need_label = None
 
     def create_passage(self, verify=True):
         """

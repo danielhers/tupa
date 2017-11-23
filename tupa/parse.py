@@ -230,15 +230,11 @@ class Parser(object):
         while True:
             if self.args.check_loops:
                 self.check_loop()
+            self.label_node()  # In case root node needs labeling
             true_actions = self.get_true_actions()
             action, predicted_action = self.choose_action(true_actions)
             self.state.transition(action)
-            true_label = label = predicted_label = None
-            need_label = self.state.need_label  # Label action that requires a choice of label
-            if need_label:
-                true_label, raw_true_label = self.get_true_label(action)
-                label, predicted_label = self.choose_label(true_label)
-                self.state.label_node(raw_true_label if label == true_label else label)
+            need_label, label, predicted_label, true_label = self.label_node(action)
             if self.args.action_stats:
                 with open(self.args.action_stats, "a") as f:
                     print(",".join(map(str, [predicted_action, action] + list(true_actions.values()))), file=f)
@@ -294,9 +290,18 @@ class Parser(object):
         self.model.classifier.finished_step(self.training)
         return action, predicted_action
 
-    def get_true_label(self, action):
+    def label_node(self, action=None):
+        true_label = label = predicted_label = None
+        need_label = self.state.need_label  # Label action that requires a choice of label
+        if need_label:
+            true_label, raw_true_label = self.get_true_label(action or need_label)
+            label, predicted_label = self.choose_label(true_label)
+            self.state.label_node(raw_true_label if label == true_label else label)
+        return need_label, label, predicted_label, true_label
+
+    def get_true_label(self, node):
         try:
-            return self.oracle.get_label(self.state, action) if self.oracle else (None, None)
+            return self.oracle.get_label(self.state, node) if self.oracle else (None, None)
         except AssertionError as e:
             if self.training:
                 raise ParserException("Error in getting label from oracle during training") from e

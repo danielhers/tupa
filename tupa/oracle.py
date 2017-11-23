@@ -159,13 +159,14 @@ class Oracle(object):
             self.nodes_remaining.discard(node.ID)
 
     def need_label(self, node):
-        return self.args.node_labels and not node.labeled and node.orig_node.attrib.get(LABEL_ATTRIB)
+        return self.args.node_labels and not self.args.use_gold_node_labels \
+               and not node.labeled and node.orig_node.attrib.get(LABEL_ATTRIB)
 
     @staticmethod
-    def get_label(state, action):
+    def get_label(state, node):
         true_label = raw_true_label = None
-        if action.orig_node is not None:
-            raw_true_label = action.orig_node.attrib.get(LABEL_ATTRIB)
+        if node.orig_node is not None:
+            raw_true_label = node.orig_node.attrib.get(LABEL_ATTRIB)
         if raw_true_label is not None:
             true_label, _, _ = raw_true_label.partition(LABEL_SEPARATOR)
             try:
