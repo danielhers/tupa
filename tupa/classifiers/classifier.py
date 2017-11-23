@@ -21,15 +21,15 @@ class Classifier(object):
         self.input_params = input_params
         self.learning_rate = self.args.learning_rate
         self.learning_rate_decay = self.args.learning_rate_decay
-        self._num_labels = self.num_labels
         self.model = self.labels_t = None
         self.is_frozen = False
         self.updates = self.epoch = self.best_score = 0
+        self._num_labels = self.num_labels
 
     @property
     def num_labels(self):
-        return {a: len(l.all) for a, l in self.labels.items()} if self.labels \
-            else {a: s for a, (_, s) in self.labels_t.items()}
+        return OrderedDict((a, len(l.all)) for a, l in self.labels.items()) if self.labels \
+            else OrderedDict((a, s) for a, (_, s) in self.labels_t.items()) if self.labels_t else {}
     
     @property
     def input_dim(self):
@@ -89,7 +89,8 @@ class Classifier(object):
         d = OrderedDict((
             ("type", self.model_type),
             ("axes", OrderedDict(
-                (a, OrderedDict(labels=l.save(skip=a in skip_labels))) for a, l in self.labels.items()  # (all, size)
+                (a, OrderedDict((("index", i), ("labels", l.save(skip=a in skip_labels)))))  # (all, size)
+                for i, (a, l) in enumerate(self.labels.items())
             )),
             ("is_frozen", self.is_frozen),
             ("learning_rate", self.learning_rate),
@@ -114,7 +115,7 @@ class Classifier(object):
         d = self.load_file(self.filename, clear=True)
         model_type = d.get("type")
         assert model_type is None or model_type == self.model_type, "Model type does not match: %s" % model_type
-        self.labels_t = OrderedDict((a, l["labels"]) for a, l in d["axes"].items())  # labels to be corrected by Model
+        self.labels_t = OrderedDict((a, l["labels"]) for a, l in sorted(d["axes"].items(), key=lambda x: x[1]["index"]))
         self.is_frozen = d["is_frozen"]
         self.args.learning_rate = self.learning_rate = d["learning_rate"]
         self.args.learning_rate_decay = self.learning_rate_decay = d["learning_rate_decay"]
@@ -150,4 +151,4 @@ class Classifier(object):
 
 
 def dict_value(d):
-    return next(iter(d.values())) if len(d) == 1 else d
+    return next(iter(d.values())) if len(d) == 1 else ", ".join("%s: %d" % i for i in d.items())

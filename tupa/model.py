@@ -81,7 +81,7 @@ class Model(object):
             self.restore(*args, **kwargs)
 
     def init_model(self, init_params=True):
-        labels = self.classifier.labels if self.classifier else {}
+        labels = self.classifier.labels if self.classifier else OrderedDict()
         feature_params_required = self.model_type in (MLP, BIRNN)
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
             for param_def in PARAM_DEFS:
@@ -199,7 +199,7 @@ class Model(object):
         self.feature_extractor = feature_extractor or model.feature_extractor
         self.classifier = classifier or model.classifier
         self._update_input_params()
-        self.classifier.labels_t = {a: l.save() for a, l in self.classifier.labels.items()}
+        self.classifier.labels_t = OrderedDict((a, l.save()) for a, l in self.classifier.labels.items())
         self.load_labels()
 
     def load_labels(self, finalized=True):

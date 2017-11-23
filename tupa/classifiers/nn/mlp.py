@@ -32,7 +32,7 @@ class MultilayerPerceptron(SubModel):
         self.params.update((prefix + str(i), self.model.add_parameters(dims[i], init=self.init()()))
                            for prefix, dims in (("W", list(zip(o_dim, i_dim))), ("b", o_dim))
                            for i, dim in enumerate(dims))
-        self.verify_dimensions()
+        self.verify_dims()
 
     def evaluate(self, inputs, train=False):
         x = dy.concatenate(list(inputs))
@@ -49,7 +49,7 @@ class MultilayerPerceptron(SubModel):
         return x
 
     def save_sub_model(self, d, *args):
-        self.verify_dimensions()
+        self.verify_dims()
         return super().save_sub_model(
             d,
             ("layers", self.layers),
@@ -74,10 +74,14 @@ class MultilayerPerceptron(SubModel):
         self.args.dropout = self.dropout = d["dropout"]
         self.num_labels = d["num_labels"]
         self.input_dim = d["input_dim"]
-        self.verify_dimensions()
+        self.verify_dims()
 
-    def verify_dimensions(self):
-        assert self.params["W0"].as_array().shape[1] == self.input_dim
-        assert self.params["W" + str(self.layers - 1)].as_array().shape[0] == self.output_dim
+    def verify_dims(self):
+        self.verify_dim("input_dim", self.params["W0"].as_array().shape[1])
+        self.verify_dim("output_dim", self.params["W" + str(self.layers - 1)].as_array().shape[0])
         if self.num_labels:
-            assert self.params["W" + str(self.layers)].as_array().shape[0] == self.num_labels
+            self.verify_dim("num_labels", self.params["W" + str(self.layers)].as_array().shape[0])
+    
+    def verify_dim(self, attr, val):
+        expected = getattr(self, attr)
+        assert val == expected, "%s %s: %d, expected: %d" % ("/".join(self.save_path), attr, val, expected)
