@@ -30,6 +30,13 @@ class ParameterDefinition(object):
             Config().update({v: getattr(param, k) for k, v in self.param_attr_to_config_attr.items()
                              if hasattr(args, v)})
 
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return "%s(%s, %s)" % (type(self).__name__, self.name,
+                               ", ".join("%s='%s'" % i for i in self.param_attr_to_config_attr.items()))
+
 
 NODE_LABEL_KEY = "n"
 
@@ -163,7 +170,7 @@ class Model(object):
         """
         if self.filename is not None:
             try:
-                self.model_type = Classifier.get_model_type(self.filename)
+                self.args.classifier = self.model_type = Classifier.get_model_type(self.filename)
                 self.init_model(init_params=False)
                 self.feature_extractor.load(self.filename)
                 if not finalized:

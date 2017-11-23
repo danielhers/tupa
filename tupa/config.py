@@ -244,40 +244,37 @@ class Config(object, metaclass=Singleton):
         return {attr: getattr(self.args, attr) if args is None else args[attr]
                 for attr in RESTORED_ARGS if args is None or attr in args}
 
-    def set_format(self, f=None):
-        if f in (None, "text"):  # Parsing UCCA (with no extra["format"]) or plain text
-            if self.format:  # Already set
-                return
+    def set_format(self, f=None, update=False):
+        if f in (None, "text") and not self.format:  # In update or parsing UCCA (with no extra["format"]) or plain text
             f = "ucca"  # Default output format is UCCA
-        if self.format == f:
-            return
-        self.format = f
-        format_values = dict(self.original_values)
-        format_values.update({k: v for k, v in vars(self.hyperparams.specific[self.format]).items()
-                              if not k.startswith("_")})
-        for attr, value in format_values.items():
-            setattr(self.args, attr, value)
-        if self.format == "amr":
-            self.args.implicit = True
-            if not self.args.node_label_dim:
-                self.args.node_label_dim = 20
-            if not self.args.max_node_labels:
-                self.args.max_node_labels = 1000
-            if not self.args.node_category_dim:
-                self.args.node_category_dim = 5
-            if not self.args.max_node_categories:
-                self.args.max_node_categories = 25
-        else:  # All other formats do not use node labels
-            self.args.node_labels = False
-            self.args.node_label_dim = self.args.max_node_labels = \
-                self.args.node_category_dim = self.args.max_node_categories = 0
-        required_edge_labels = EDGE_LABELS_NUM.get(self.format)
-        if self.is_unlabeled():
-            self.args.max_edge_labels = self.args.edge_label_dim = 0
-            self.args.max_action_labels = self.max_actions_unlabeled()
-        elif required_edge_labels is not None:
-            self.args.max_edge_labels = max(self.args.max_edge_labels, required_edge_labels)
-            self.args.max_action_labels = max(self.args.max_action_labels, 6 * required_edge_labels)
+        if update or self.format != f:
+            self.format = f
+            format_values = dict(self.original_values)
+            format_values.update({k: v for k, v in vars(self.hyperparams.specific[self.format]).items()
+                                  if not k.startswith("_")})
+            for attr, value in format_values.items():
+                setattr(self.args, attr, value)
+            if self.format == "amr":
+                self.args.implicit = True
+                if not self.args.node_label_dim:
+                    self.args.node_label_dim = 20
+                if not self.args.max_node_labels:
+                    self.args.max_node_labels = 1000
+                if not self.args.node_category_dim:
+                    self.args.node_category_dim = 5
+                if not self.args.max_node_categories:
+                    self.args.max_node_categories = 25
+            else:  # All other formats do not use node labels
+                self.args.node_labels = False
+                self.args.node_label_dim = self.args.max_node_labels = \
+                    self.args.node_category_dim = self.args.max_node_categories = 0
+            required_edge_labels = EDGE_LABELS_NUM.get(self.format)
+            if self.is_unlabeled():
+                self.args.max_edge_labels = self.args.edge_label_dim = 0
+                self.args.max_action_labels = self.max_actions_unlabeled()
+            elif required_edge_labels is not None:
+                self.args.max_edge_labels = max(self.args.max_edge_labels, required_edge_labels)
+                self.args.max_action_labels = max(self.args.max_action_labels, 6 * required_edge_labels)
 
     def is_unlabeled(self, f=None):
         # If just -u or --unlabeled is given then its value is [], and we want to treat that as "all formats"
@@ -311,7 +308,7 @@ class Config(object, metaclass=Singleton):
                 setattr(self.args, name, value)
         self.original_values.update(self.create_original_values(params))
         self.hyperparams = self.create_hyperparams()
-        self.set_format()
+        self.set_format(update=True)
         self.set_dynet_arguments()
 
     def create_hyperparams(self):
