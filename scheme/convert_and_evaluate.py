@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse
+import configargparse
 import glob
 import os
 import sys
@@ -16,7 +16,7 @@ desc = """Convert files to UCCA standard format, convert back to the original fo
 
 
 def main():
-    argparser = argparse.ArgumentParser(description=desc)
+    argparser = configargparse.ArgParser(description=desc)
     argparser.add_argument("filenames", nargs="+", help="file names to convert and evaluate")
     add_verbose_argument(argparser, help="detailed evaluation output")
     add_boolean_option(argparser, "wikification", "use Spotlight to wikify any named node")

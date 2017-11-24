@@ -1,4 +1,4 @@
-from argparse import ArgumentParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
+from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
 from collections import defaultdict
 from functools import partial
 
@@ -50,7 +50,7 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
         add(a, *args, func=add_boolean_option, **kwargs)
 
     if not argparser:
-        argparser = ArgumentParser()
+        argparser = ArgParser()
     
     group = argparser.add_argument_group(title="Node labels")
     add(group, "--max-node-labels", type=int, default=0, help="max number of node labels to allow")
@@ -170,9 +170,10 @@ def hyperparams_action(args):
 
 class Config(object, metaclass=Singleton):
     def __init__(self, *args):
-        argparser = ArgumentParser(description="Transition-based parser for UCCA.",
+        argparser = ArgParser(description="Transition-based parser for UCCA.",
                                    formatter_class=ArgumentDefaultsHelpFormatter)
         argparser.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
+        argparser.add_argument("-C", "--config", is_config_file=True, help="configuration file to get arguments from")
         argparser.add_argument("-m", "--model", help="model file basename to load/save (default: <format>_<model_type>")
         argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=SPARSE, help="model type")
         argparser.add_argument("-B", "--beam", type=int, choices=(1,), default=1, help="beam size for beam search")

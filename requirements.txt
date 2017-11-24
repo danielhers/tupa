@@ -11,3 +11,4 @@ pyspotlight>=0.7.1
 requests>=2.8.14
 logbook>=1.1.0
 tqdm>=4.19.4
+configargparse>=0.12.0

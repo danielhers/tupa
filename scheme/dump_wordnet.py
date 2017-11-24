@@ -1,4 +1,4 @@
-import argparse
+import configargparse
 import csv
 import sys
 
@@ -28,7 +28,7 @@ def related_forms(w):  # list of all derivationally related forms and their part
 
 
 if __name__ == '__main__':
-    argparser = argparse.ArgumentParser()
+    argparser = configargparse.ArgParser()
     argparser.add_argument("rolesets_file", nargs="?", default="util/resources/rolesets.txt", help="rolesets to read")
     argparser.add_argument("out_file", nargs="?", default="util/resources/wordnet.txt", help="file name to write to")
     main(argparser.parse_args())

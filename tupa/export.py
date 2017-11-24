@@ -1,4 +1,4 @@
-from argparse import ArgumentParser
+from configargparse import ArgParser
 
 import numpy as np
 
@@ -14,7 +14,7 @@ def export_model(filename):
 
 
 def main():
-    argparser = ArgumentParser(description="Load TUPA model and export as .npz file.")
+    argparser = ArgParser(description="Load TUPA model and export as .npz file.")
     argparser.add_argument("model", help="model file basename to load")
     args = argparser.parse_args()
     export_model(args.model)

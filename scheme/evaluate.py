@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse
+import configargparse
 import os
 from itertools import groupby
 
@@ -60,7 +60,7 @@ def name(t):
 
 
 def main():
-    argparser = argparse.ArgumentParser(description=desc)
+    argparser = configargparse.ArgParser(description=desc)
     argparser.add_argument("guessed", help="file name for the guessed annotation")
     argparser.add_argument("ref", help="file name for the reference annotation")
     add_verbose_argument(argparser, help="detailed evaluation output")

@@ -1,4 +1,4 @@
-import argparse
+import configargparse
 
 
 class Singleton(type):
@@ -13,7 +13,7 @@ class Singleton(type):
         cls.instance = None
 
 
-class VAction(argparse.Action):
+class VAction(configargparse.Action):
     def __call__(self, parser, args, values, option_string=None):
         if values is None:
             values = "1"

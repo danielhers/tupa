@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse
+import configargparse
 import glob
 import os
 import re
@@ -52,7 +52,7 @@ def write_file(outdir, passage_id, ext, lines, quiet=False):
 
 
 if __name__ == '__main__':
-    argparser = argparse.ArgumentParser(description=desc)
+    argparser = configargparse.ArgParser(description=desc)
     argparser.add_argument("filename", help="file name to split")
     argparser.add_argument("outdir", help="output directory")
     argparser.add_argument("-q", "--quiet", action="store_true", help="less output")

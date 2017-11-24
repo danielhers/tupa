@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse
+import configargparse
 import glob
 import os
 import re
@@ -68,7 +68,7 @@ def write_passage(passage, args):
 
 
 if __name__ == '__main__':
-    argparser = argparse.ArgumentParser(description=desc)
+    argparser = configargparse.ArgParser(description=desc)
     argparser.add_argument("filenames", nargs="+", help="file names to convert")
     argparser.add_argument("-i", "--input-format", choices=CONVERTERS, help="input file format (detected by extension)")
     argparser.add_argument("-f", "--output-format", choices=CONVERTERS, help="output file format (default: UCCA)")
