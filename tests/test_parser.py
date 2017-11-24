@@ -33,6 +33,7 @@ def setting_suffix(setting):
 
 
 def load_passages():
+    WIKIFIER.enabled = False
     return ioutil.read_files_and_dirs(TOY_DATA, converters=FROM_FORMAT)
 
 
@@ -46,7 +47,6 @@ def config():
                    "tag_dim": 2, "dep_dim": 2, "optimizer": "sgd", "output_dim": 10,
                    "layer_dim": 15, "layers": 1, "lstm_layer_dim": 10, "lstm_layers": 1})
     config.update_hyperparams(shared={"lstm_layer_dim": 100, "lstm_layers": 1}, ucca={"word_dim": 300})
-    WIKIFIER.enabled = False
     return config
 
 
