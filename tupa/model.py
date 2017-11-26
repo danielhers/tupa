@@ -94,7 +94,7 @@ class Model(object):
             if Config().format not in labels:
                 labels[Config().format] = self.init_actions()  # Uses config to determine actions
             if self.args.node_labels and NODE_LABEL_KEY not in labels:
-                labels[NODE_LABEL_KEY] = self.init_node_labels().data  # Uses self.feature_params
+                labels[NODE_LABEL_KEY] = self.init_node_labels()  # Uses self.feature_params
         if self.classifier:  # Already initialized
             pass
         elif self.model_type == SPARSE:
@@ -132,7 +132,7 @@ class Model(object):
             self.feature_params[NODE_LABEL_KEY] = node_labels = NODE_LABEL_PARAM_DEF.create_from_config()
         if not self.init_param(node_labels):
             FeatureEnumerator.init_data(node_labels)
-        return node_labels
+        return node_labels.data
 
     @property
     def actions(self):

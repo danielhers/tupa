@@ -22,10 +22,18 @@ class FeatureEnumerator(FeatureExtractor):
         self.indexed = indexed
         if self.indexed:
             self.collapse_features(INDEXED_FEATURES)
-        self.feature_extractor.params = self.params = {p.suffix: p for p in
-                                                       [self.init_param(p) for p in self.params.values()
-                                                        if p.effective_suffix in self.feature_extractor] +
-                                                       [NumericFeatureParameters(self.feature_extractor.numeric_num())]}
+        self.params = {p.suffix: p for p in [self.init_param(p) for p in self.params.values()
+                                             if p.effective_suffix in self.feature_extractor] +
+                       [NumericFeatureParameters(self.feature_extractor.numeric_num())]}
+
+    @property
+    def params(self):
+        return self.feature_extractor.params if self.feature_extractor else None
+
+    @params.setter
+    def params(self, p):
+        if self.feature_extractor:
+            self.feature_extractor.params = p
 
     def collapse_features(self, suffixes):
         self.feature_extractor.collapse_features({p.copy_from if p.external else s for s, p in self.params.items()
@@ -100,7 +108,7 @@ class FeatureEnumerator(FeatureExtractor):
         save_dict(filename + FILENAME_SUFFIX, copy_params(self.params))
 
     def load(self, filename):
-        self.feature_extractor.params = self.params = copy_params(load_dict(filename + FILENAME_SUFFIX), UnknownDict)
+        self.params = copy_params(load_dict(filename + FILENAME_SUFFIX), UnknownDict)
         if self.indexed:
             self.collapse_features(INDEXED_FEATURES)
 

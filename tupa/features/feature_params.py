@@ -63,7 +63,7 @@ class FeatureParameters(Labels):
 
     @property
     def effective_suffix(self):
-        return self.suffix if self.copy_from is None else self.copy_from
+        return self.copy_from or self.suffix
 
     @property
     def external(self):
