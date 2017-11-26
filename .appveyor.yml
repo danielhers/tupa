@@ -27,4 +27,4 @@ install:
 build: off
 
 test_script:
-  - pytest tests -v
+  - pytest --durations=0 -v tests
