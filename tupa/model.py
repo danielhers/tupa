@@ -39,10 +39,10 @@ class ParameterDefinition(object):
 
 
 NODE_LABEL_KEY = "n"
-
+NODE_LABEL_PARAM_DEF = ParameterDefinition(NODE_LABEL_KEY, dim="node_label_dim", size="max_node_labels",
+                                           min_count="min_node_label_count", dropout="node_label_dropout")
 PARAM_DEFS = (
-    ParameterDefinition(NODE_LABEL_KEY, dim="node_label_dim", size="max_node_labels", min_count="min_node_label_count",
-                        dropout="node_label_dropout"),
+    NODE_LABEL_PARAM_DEF,
     ParameterDefinition("c", dim="node_category_dim", size="max_node_categories"),
     ParameterDefinition("W", dim="word_dim_external", size="max_words_external", dropout="word_dropout_external",
                         updated="update_word_vectors", filename="word_vectors",  copy_from="w"),
@@ -89,7 +89,8 @@ class Model(object):
                 if param:
                     param.enabled = param_def.enabled
                 elif feature_params_required and param_def.enabled:
-                    self.feature_params[param_def.name] = param_def.create_from_config()
+                    self.feature_params[param_def.name] = param = param_def.create_from_config()
+                    self.init_param(param)
             if Config().format not in labels:
                 labels[Config().format] = self.init_actions()  # Uses config to determine actions
             if self.args.node_labels and NODE_LABEL_KEY not in labels:
@@ -119,12 +120,18 @@ class Model(object):
     def init_actions(self):
         return Actions(size=self.args.max_action_labels)
 
+    def init_param(self, param):
+        if self.feature_extractor and isinstance(self.feature_extractor, FeatureEnumerator):
+            self.feature_extractor.init_param(param)
+            return True
+        return False
+
     def init_node_labels(self):
         node_labels = self.feature_params.get(NODE_LABEL_KEY)
         if node_labels is None:
-            node_labels = next(p for p in PARAM_DEFS if p.name == NODE_LABEL_KEY).create_from_config()
-            self.feature_params[NODE_LABEL_KEY] = node_labels
-        FeatureEnumerator.init_data(node_labels)
+            self.feature_params[NODE_LABEL_KEY] = node_labels = NODE_LABEL_PARAM_DEF.create_from_config()
+        if not self.init_param(node_labels):
+            FeatureEnumerator.init_data(node_labels)
         return node_labels
 
     @property

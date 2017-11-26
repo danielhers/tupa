@@ -95,9 +95,9 @@ class DenseFeatureExtractor(FeatureExtractor):
         non_numeric_features = {f.suffix: self.calc_feature(f, state, default, indexed)
                                 for (default, indexed) in (("", False), (MISSING_VALUE, True))
                                 for f in self.get_enabled_features(indexed)}
-        # assert len(numeric_features) == self.num_features_numeric(), \
+        # assert len(numeric_features) == self.numeric_num(), \
         #     "Invalid number of numeric features: %d != %d" % (
-        #         len(numeric_features), self.num_features_numeric())
+        #         len(numeric_features), self.numeric_num())
         # for value, element in zip(numeric_features, self.numeric_features_template.elements):
         #     assert isinstance(value, Number), \
         #         "Non-numeric value %s for numeric feature element %s" % (value, element)
@@ -131,15 +131,14 @@ class DenseFeatureExtractor(FeatureExtractor):
                 if template is not None:
                     template.elements = [e for e in template.elements if e not in longest.elements]
 
-    def num_features_numeric(self):
+    def numeric_num(self):
         assert self.numeric_features_template is not None, "Missing numeric features template"
         return sum(len(e.properties) for e in self.numeric_features_template.elements) + EXTRA_NUMERIC_FEATURES
 
-    def num_features_non_numeric(self, suffix):
+    def non_numeric_num(self, suffix):
         feature_template = self.non_numeric_by_suffix.get(suffix)
         assert feature_template is not None, "Missing feature template for suffix '%s'" % suffix
         return sum(len(e.properties) for e in feature_template.elements)
 
-    def features_exist(self, suffix):
-        template = self.numeric_features_template if suffix == "numeric" else self.non_numeric_by_suffix.get(suffix)
-        return template is not None
+    def __contains__(self, suffix):
+        return suffix in self.non_numeric_by_suffix

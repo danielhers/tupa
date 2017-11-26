@@ -18,36 +18,35 @@ class FeatureEnumerator(FeatureExtractor):
     def __init__(self, feature_extractor, params, indexed):
         super().__init__()
         self.feature_extractor = feature_extractor
-        self.feature_extractor.params = self.params = dict(params)
+        self.params = params
         self.indexed = indexed
         if self.indexed:
             self.collapse_features(INDEXED_FEATURES)
-        for suffix, param in self.params.items():
-            if param.numeric:
-                pass
-            elif feature_extractor.features_exist(param.effective_suffix):
-                param.num = feature_extractor.num_features_non_numeric(param.effective_suffix)
-                if param.data is None:
-                    self.init_data(param)
-                if self.indexed and suffix in INDEXED_FEATURES:
-                    param.indexed = True
-            else:
-                del self.params[param.suffix]
-        param = NumericFeatureParameters(feature_extractor.num_features_numeric())
-        self.params[param.suffix] = param
+        self.feature_extractor.params = self.params = {p.suffix: p for p in
+                                                       [self.init_param(p) for p in self.params.values()
+                                                        if p.effective_suffix in self.feature_extractor] +
+                                                       [NumericFeatureParameters(self.feature_extractor.numeric_num())]}
 
     def collapse_features(self, suffixes):
         self.feature_extractor.collapse_features({p.copy_from if p.external else s for s, p in self.params.items()
                                                   if p.dim and s in suffixes})
 
+    def init_param(self, param):
+        param.num = self.feature_extractor.non_numeric_num(param.effective_suffix)
+        self.init_data(param)
+        if self.indexed and param.suffix in INDEXED_FEATURES:
+            param.indexed = True
+        return param
+
     @staticmethod
     def init_data(param):
-        keys = ()
-        if param.dim and param.external:
-            vectors = FeatureEnumerator.get_word_vectors(param)
-            keys = vectors.keys()
-            param.init = np.array(list(vectors.values()))
-        param.data = DropoutDict(size=param.size, keys=keys, dropout=param.dropout, min_count=param.min_count)
+        if param.data is None:
+            keys = ()
+            if param.dim and param.external:
+                vectors = FeatureEnumerator.get_word_vectors(param)
+                keys = vectors.keys()
+                param.init = np.array(list(vectors.values()))
+            param.data = DropoutDict(size=param.size, keys=keys, dropout=param.dropout, min_count=param.min_count)
 
     @staticmethod
     def get_word_vectors(param):

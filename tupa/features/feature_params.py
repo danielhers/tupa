@@ -24,6 +24,7 @@ class FeatureParameters(Labels):
         :param min_count: minimum number of occurrences for a feature value before it is actually added
         :param enabled: whether to actually use this parameter in feature extraction
         """
+        super().__init__(size)
         self.suffix = suffix
         self.dim = dim
         self.size = size
