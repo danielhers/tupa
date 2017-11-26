@@ -36,23 +36,23 @@ RESTORED_ARGS = set()
 
 
 def add_param_arguments(argparser=None, arg_default=None):  # arguments with possible format-specific parameter values
-    
+
     def add_argument(a, *args, **kwargs):
         return a.add_argument(*args, **kwargs)
-    
+
     def add(a, *args, default=None, func=add_argument, **kwargs):
         arg = func(a, *args, default=default if arg_default is None else arg_default, **kwargs)
         try:
             RESTORED_ARGS.add(arg.dest)
         except AttributeError:
             RESTORED_ARGS.update(get_group_arg_names(arg))
-    
+
     def add_boolean(a, *args, **kwargs):
         add(a, *args, func=add_boolean_option, **kwargs)
 
     if not argparser:
         argparser = ArgParser()
-    
+
     group = argparser.add_argument_group(title="Node labels")
     add(group, "--max-node-labels", type=int, default=0, help="max number of node labels to allow")
     add(group, "--max-node-categories", type=int, default=0, help="max node categories to allow")
@@ -172,7 +172,7 @@ def hyperparams_action(args):
 class Config(object, metaclass=Singleton):
     def __init__(self, *args):
         argparser = ArgParser(description="Transition-based parser for UCCA.",
-                                   formatter_class=ArgumentDefaultsHelpFormatter)
+                              formatter_class=ArgumentDefaultsHelpFormatter)
         argparser.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
         argparser.add_argument("-C", "--config", is_config_file=True, help="configuration file to get arguments from")
         argparser.add_argument("-m", "--model", help="model file basename to load/save (default: <format>_<model_type>")
@@ -286,9 +286,9 @@ class Config(object, metaclass=Singleton):
     def max_actions_unlabeled(self):
         return 6 + (  # Shift Node Reduce LeftEdge RightEdge Finish
             3 if self.args.remote else 0) + (  # RemoteNode LeftRemote RightRemote
-            1 if self.args.swap == REGULAR else (self.args.max_swap if self.args.swap == COMPOUND else 0)) + (  # Swap
-            1 if self.args.implicit else 0) + (  # Implicit
-            2 if self.args.node_labels and not self.args.use_gold_node_labels else 0)  # Label x 2
+                   1 if self.args.swap == REGULAR else (self.args.max_swap if self.args.swap == COMPOUND else 0)) + (  # Swap
+                   1 if self.args.implicit else 0) + (  # Implicit
+                   2 if self.args.node_labels and not self.args.use_gold_node_labels else 0)  # Label x 2
 
     def set_dynet_arguments(self):
         self.random.seed(self.args.seed)
