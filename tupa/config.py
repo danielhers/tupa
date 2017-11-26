@@ -1,9 +1,9 @@
-from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
 from collections import defaultdict
 from functools import partial
 
 import dynet_config
 import numpy as np
+from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
 from logbook import Logger, FileHandler, StderrHandler
 from ucca import constructions
 
@@ -24,7 +24,8 @@ REGULAR = "regular"
 COMPOUND = "compound"
 
 # Input/output formats
-FORMATS = [e.lstrip(".") for e in UCCA_EXT] + ["ucca"] + list(CONVERTERS)
+FORMATS = ["ucca"] + list(CONVERTERS)
+FILE_FORMATS = [e.lstrip(".") for e in UCCA_EXT] + FORMATS
 
 # Required number of edge labels per format
 EDGE_LABELS_NUM = {"amr": 110, "sdp": 70, "conllu": 60}
@@ -201,7 +202,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--devscores", help="output CSV file for dev scores (default: model filename + .dev.csv)")
         group.add_argument("--testscores", help="output CSV file for test scores (default: model filename + .test.csv)")
         group.add_argument("--action-stats", help="output CSV file for action statistics")
-        argparser.add_argument("-f", "--formats", nargs="+", choices=FORMATS, default=(),
+        argparser.add_argument("-f", "--formats", nargs="+", choices=FILE_FORMATS, default=(),
                                help="input formats for creating all parameters before training starts "
                                     "(otherwise created dynamically based on filename suffix), "
                                     "and output formats for written files (each will be written; default: UCCA XML)")
