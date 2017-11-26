@@ -40,8 +40,8 @@ fi
 export TOY_DATA="test_files/*.$SUFFIX"
 
 case "$TEST_SUITE" in
-unit-*)  # unit tests
-    pytest --durations=0 -v tests/test_"$FORMAT".py tests/test_parser.py || exit 1
+unit)  # unit tests
+    pytest --durations=0 -v tests || exit 1
     ;;
 toy-*)  # basic parser tests
     for m in "" --sentences --paragraphs; do

@@ -4,12 +4,12 @@ REDUCE
 SHIFT
 NODE-name
 SHIFT
-LABEL Concept(person)
+LABEL-1 Concept(person)
 SHIFT
 SWAP
 RIGHT-EDGE-Terminal
 REDUCE
-LABEL "<T>"
+LABEL-1 "<T>"
 REDUCE
 SHIFT
 RIGHT-EDGE-ARG0
@@ -19,7 +19,7 @@ SHIFT
 SWAP
 RIGHT-EDGE-Terminal
 REDUCE
-LABEL Concept(<l>-01)
+LABEL-1 Concept(<l>-01)
 SHIFT
 SHIFT
 REDUCE
@@ -27,7 +27,7 @@ SHIFT
 NODE-Terminal
 REDUCE
 SHIFT
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 SHIFT
 REDUCE
 SHIFT
@@ -37,12 +37,12 @@ NODE-Terminal
 NODE-Terminal
 REDUCE
 SHIFT
-LABEL Concept(<n>)
+LABEL-1 Concept(<n>)
 NODE-mod
 SHIFT
 NODE-ARG2
 SHIFT
-LABEL Concept(have-org-role-91)
+LABEL-1 Concept(have-org-role-91)
 SWAP
 SWAP
 RIGHT-EDGE-ARG1-of
@@ -57,7 +57,7 @@ REDUCE
 SHIFT
 SHIFT
 SHIFT
-LABEL Const(-)
+LABEL-1 Const(-)
 SWAP
 RIGHT-EDGE-polarity
 REDUCE
@@ -66,7 +66,7 @@ SHIFT
 SHIFT
 RIGHT-EDGE-Terminal
 REDUCE
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 REDUCE
 SHIFT
 REDUCE

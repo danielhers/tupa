@@ -1,8 +1,7 @@
 """Testing code for the tupa package, unit-testing only."""
 
-import os
 from glob import glob
-from operator import attrgetter
+from itertools import combinations
 
 import pytest
 from ucca import convert, ioutil, textutil
@@ -17,24 +16,45 @@ from tupa.oracle import Oracle
 from tupa.parse import Parser
 from tupa.states.state import State
 
-TOY_DATA = glob(os.environ.get("TOY_DATA", "test_files/*.xml"))
-SETTINGS = (([], ["implicit"], ["linkage"], ["implicit", "linkage"])
-            if TOY_DATA and TOY_DATA[0].endswith("xml") else (["implicit"],)) + (["unlabeled"],)
+FORMATS = ("ucca", "amr", "conllu", "sdp")
 
 
-def update_setting(config, setting):
-    print("-- setting: " + ", ".join(setting))
-    config.update({s: s in setting for s in ("implicit", "linkage")})
-    config.update({"unlabeled": [] if "unlabeled" in setting else None})
+# noinspection PyUnresolvedReferences
+class Settings:
+    SETTINGS = ("implicit", "linkage", "unlabeled")
+    VALUES = {"unlabeled": (None, [])}
+    INCOMPATIBLE = (("linkage", "unlabeled"),)
+
+    def __init__(self, *args):
+        for attr in self.SETTINGS:
+            setattr(self, attr, attr in args)
+
+    @classmethod
+    def all(cls):
+        return [Settings(*c) for n in range(len(cls.SETTINGS) + 1) for c in combinations(cls.SETTINGS, n)
+                if not any(all(s in c for s in i) for i in cls.INCOMPATIBLE)]
+
+    def dict(self):
+        return {attr: self.VALUES.get(attr, (False, True))[getattr(self, attr)] for attr in self.SETTINGS}
+
+    def list(self):
+        return [attr for attr in self.SETTINGS if getattr(self, attr)]
+
+    def suffix(self):
+        return "_".join([""] + self.list())
+
+    def __str__(self):
+        return "-".join(self.list()) or "default"
 
 
-def setting_suffix(setting):
-    return "_".join([""] + setting)
-
-
-def load_passages():
+def load_passages(passage_format=None):
     WIKIFIER.enabled = False
-    return ioutil.read_files_and_dirs(TOY_DATA, converters=FROM_FORMAT)
+    return ioutil.read_files_and_dirs(
+        glob("test_files/*." + {None: "*", "ucca": "xml"}.get(passage_format, passage_format)), converters=FROM_FORMAT)
+
+
+def passage_id(passage):
+    return passage.extra.get("format", "ucca")
 
 
 @pytest.fixture
@@ -50,10 +70,10 @@ def config():
     return config
 
 
-@pytest.mark.parametrize("setting", SETTINGS, ids=",".join)
-@pytest.mark.parametrize("passage", load_passages(), ids=attrgetter("ID"))
+@pytest.mark.parametrize("setting", Settings.all(), ids=str)
+@pytest.mark.parametrize("passage", load_passages(), ids=passage_id)
 def test_oracle(config, setting, passage, write_oracle_actions):
-    update_setting(config, setting)
+    config.update(setting.dict())
     config.set_format(passage.extra.get("format"))
     oracle = Oracle(passage)
     state = State(passage)
@@ -70,7 +90,7 @@ def test_oracle(config, setting, passage, write_oracle_actions):
         actions_taken.append(s + "\n")
         if state.finished:
             break
-    compare_file = "test_files/oracle_actions/%s%s.txt" % (passage.ID, setting_suffix(setting))
+    compare_file = "test_files/oracle_actions/%s%s.txt" % (passage.ID, setting.suffix())
     if write_oracle_actions:
         with open(compare_file, "w") as f:
             f.writelines(actions_taken)
@@ -78,16 +98,17 @@ def test_oracle(config, setting, passage, write_oracle_actions):
         assert f.readlines() == actions_taken, compare_file
 
 
-@pytest.mark.parametrize("setting", SETTINGS, ids="-".join)
+@pytest.mark.parametrize("setting", Settings.all(), ids=str)
 @pytest.mark.parametrize("model_type", CLASSIFIERS)
-def test_parser(config, setting, model_type, compare=True):
-    update_setting(config, setting)
+@pytest.mark.parametrize("passage_format", FORMATS)
+def test_parser(config, setting, model_type, passage_format):
+    config.update(setting.dict())
     scores = []
-    passages = load_passages()
+    passages = load_passages(passage_format)
     for mode in "train", "load":
         print("-- %sing %s" % (mode, model_type))
-        model_filename = model_type + setting_suffix(setting)
-        p = Parser(model_file="test_files/models/%s" % model_filename, model_type=model_type)
+        p = Parser(model_file="test_files/models/%s_%s%s" % (passage_format, model_type, setting.suffix()),
+                   model_type=model_type)
         list(p.train(passages if mode == "train" else None, iterations=2))
         results = list(p.parse(passages, evaluate=True))
         score = Scores(tuple(zip(*results))[1])
@@ -101,8 +122,7 @@ def test_parser(config, setting, model_type, compare=True):
         assert not list(p.parse(()))  # parsing nothing returns nothing
         print()
     print("-- average labeled f1: %.3f, %.3f\n" % tuple(scores))
-    if compare:
-        assert scores[0] == pytest.approx(scores[1], 0.1)
+    assert scores[0] == pytest.approx(scores[1], 0.1)
 
 
 @pytest.fixture
@@ -141,7 +161,7 @@ def test_boolean_params(test_config):
 
 
 @pytest.mark.parametrize("model_type", CLASSIFIERS)
-@pytest.mark.parametrize("passage", load_passages(), ids=attrgetter("ID"))
+@pytest.mark.parametrize("passage", load_passages(), ids=passage_id)
 def test_model(model_type, passage):
     filename = "test_files/models/test_%s_%s" % (model_type, passage.ID)
     axis = "test"

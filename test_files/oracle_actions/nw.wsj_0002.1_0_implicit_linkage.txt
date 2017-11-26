@@ -1,23 +1,23 @@
-LABEL Concept(name-03)
+LABEL-1 Concept(name-03)
 SHIFT
 NODE-Terminal
 REDUCE
 SHIFT
 NODE-name
 SHIFT
-LABEL Concept(person)
+LABEL-1 Concept(person)
 REMOTE-NODE-ARG0
 SHIFT
-LABEL Concept(have-org-role-91)
+LABEL-1 Concept(have-org-role-91)
 NODE-ARG2-of
 SHIFT
 IMPLICIT-mod
 SHIFT
 IMPLICIT-polarity
-LABEL Concept(executive)
+LABEL-1 Concept(executive)
 REDUCE
 SHIFT
-LABEL Const(-)
+LABEL-1 Const(-)
 REDUCE
 SHIFT
 SWAP
@@ -25,7 +25,7 @@ SWAP
 SWAP
 RIGHT-EDGE-Terminal
 REDUCE
-LABEL "<T>"
+LABEL-1 "<T>"
 REDUCE
 SHIFT
 RIGHT-EDGE-ARG1
@@ -37,16 +37,16 @@ SHIFT
 NODE-Terminal
 REDUCE
 SHIFT
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 NODE-time
 REDUCE
 SHIFT
-LABEL Concept(have-org-role-91)
+LABEL-1 Concept(have-org-role-91)
 SHIFT
 NODE-Terminal
 REDUCE
 SHIFT
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 RIGHT-EDGE-ARG2
 REDUCE
 SHIFT
@@ -61,13 +61,13 @@ IMPLICIT-mod
 IMPLICIT-mod
 SHIFT
 IMPLICIT-name
-LABEL Concept(country)
+LABEL-1 Concept(country)
 REDUCE
 SHIFT
-LABEL "Britain"
+LABEL-1 "Britain"
 REDUCE
 SHIFT
-LABEL Concept(industry)
+LABEL-1 Concept(industry)
 REDUCE
 SHIFT
 SWAP
@@ -83,7 +83,7 @@ SHIFT
 SWAP
 RIGHT-EDGE-Terminal
 REDUCE
-LABEL "<T>"
+LABEL-1 "<T>"
 REDUCE
 SHIFT
 RIGHT-EDGE-ARG1
@@ -102,7 +102,7 @@ SWAP
 SWAP
 RIGHT-EDGE-Terminal
 REDUCE
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 SWAP
 SWAP
 RIGHT-EDGE-ARG2
@@ -129,7 +129,7 @@ REDUCE
 SHIFT
 RIGHT-EDGE-Terminal
 REDUCE
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 REDUCE
 REDUCE
 SHIFT

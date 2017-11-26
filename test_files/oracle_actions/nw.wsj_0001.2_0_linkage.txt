@@ -1,11 +1,11 @@
-LABEL Concept(have-org-role-91)
+LABEL-1 Concept(have-org-role-91)
 SHIFT
 NODE-Terminal
 REDUCE
 SHIFT
 NODE-name
 SHIFT
-LABEL Concept(person)
+LABEL-1 Concept(person)
 SWAP
 RIGHT-EDGE-ARG0
 REDUCE
@@ -13,7 +13,7 @@ SHIFT
 SHIFT
 RIGHT-EDGE-Terminal
 REDUCE
-LABEL "<t>_<t>"
+LABEL-1 "<t>_<t>"
 REDUCE
 SHIFT
 REDUCE
@@ -21,7 +21,7 @@ SHIFT
 NODE-Terminal
 REDUCE
 SHIFT
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 RIGHT-EDGE-ARG2
 REDUCE
 SHIFT
@@ -36,7 +36,7 @@ SHIFT
 SWAP
 RIGHT-EDGE-Terminal
 REDUCE
-LABEL "<T>"
+LABEL-1 "<T>"
 REDUCE
 SHIFT
 RIGHT-EDGE-ARG1
@@ -48,24 +48,24 @@ SHIFT
 NODE-Terminal
 REDUCE
 SHIFT
-LABEL "Netherlands"
+LABEL-1 "Netherlands"
 NODE-name
 REDUCE
 SHIFT
-LABEL Concept(country)
+LABEL-1 Concept(country)
 RIGHT-EDGE-mod
 REDUCE
 SHIFT
 NODE-Terminal
 REDUCE
 SHIFT
-LABEL Concept(publish-01)
+LABEL-1 Concept(<l>-01)
 RIGHT-EDGE-ARG0-of
 REDUCE
 SHIFT
 RIGHT-EDGE-Terminal
 REDUCE
-LABEL Concept(<l>)
+LABEL-1 Concept(<l>)
 REDUCE
 REDUCE
 SHIFT
