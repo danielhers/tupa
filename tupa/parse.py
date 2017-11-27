@@ -38,15 +38,15 @@ class Parser(object):
     """
     def __init__(self, model_file=None, model_type=None, beam=1):
         self.args = Config().args
-        self.state = self.oracle = None  # State and Oracle objects created at each parse
+        # State and Oracle objects are created at each parse
+        self.state = self.oracle = self.state_hash_history = self.best_score = self.dev = self.iteration = \
+            self.eval_index = self.seen_per_format = None
         self.action_count = self.correct_action_count = self.total_actions = self.total_correct_actions = 0
         self.label_count = self.correct_label_count = self.total_labels = self.total_correct_labels = 0
         self.model = Model(model_type, model_file)
         self.beam = beam  # Currently unused
-        self.state_hash_history = None  # For loop checking
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
         self.ignore_node = None if self.args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
-        self.best_score = self.dev = self.iteration = self.eval_index = None
         self.training = self.trained = False
 
     def train(self, passages=None, dev=None, test=None, iterations=1):
@@ -130,6 +130,7 @@ class Parser(object):
         if not self.training and not self.trained:
             list(self.train())  # Try to load model from file
         passage_word = "sentence" if self.args.sentences else "paragraph" if self.args.paragraphs else "passage"
+        self.seen_per_format = defaultdict(int)
         self.total_actions = 0
         self.total_correct_actions = 0
         total_duration = 0
@@ -145,12 +146,18 @@ class Parser(object):
                                                 for n in passage.layer(layer1.LAYER_ID).all]))
             # Passage is considered labeled if there are any edges or node labels in it
             passage_format = passage.extra.get("format") or "ucca"
-            lang = passage.attrib.get("lang", "en")
             if self.args.verbose:
                 print("%-6s %s %-7s" % (passage_format, passage_word, passage.ID), end=Config().line_end, flush=True)
+            self.seen_per_format[passage_format] += 1
+            if self.training and self.args.max_training_per_format and \
+                    self.seen_per_format[passage_format] > self.args.max_training_per_format:
+                if self.args.verbose:
+                    print("skipped")
+                continue
             assert not (self.training and passage_format == "text"), "Cannot train on unannotated plain text"
             started = time.time()
             self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = 0
+            lang = passage.attrib.get("lang", "en")
             textutil.annotate(passage, lang=lang, verbose=self.args.verbose > 2)  # tag POS and parse dependencies
             Config().set_format(passage_format)
             WIKIFIER.enabled = self.args.wikification
