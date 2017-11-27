@@ -145,12 +145,13 @@ class Parser(object):
                                                 for n in passage.layer(layer1.LAYER_ID).all]))
             # Passage is considered labeled if there are any edges or node labels in it
             passage_format = passage.extra.get("format") or "ucca"
+            lang = passage.attrib.get("lang", "en")
             if self.args.verbose:
                 print("%-6s %s %-7s" % (passage_format, passage_word, passage.ID), end=Config().line_end, flush=True)
             assert not (self.training and passage_format == "text"), "Cannot train on unannotated plain text"
             started = time.time()
             self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = 0
-            textutil.annotate(passage, verbose=self.args.verbose > 2)  # tag POS and parse dependencies
+            textutil.annotate(passage, lang=lang, verbose=self.args.verbose > 2)  # tag POS and parse dependencies
             Config().set_format(passage_format)
             WIKIFIER.enabled = self.args.wikification
             self.state = State(passage)
