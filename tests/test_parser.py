@@ -105,24 +105,25 @@ def test_parser(config, setting, model_type, passage_format):
     config.update(setting.dict())
     scores = []
     passages = load_passages(passage_format)
+    evaluate = passage_format != "amr"
     for mode in "train", "load":
         print("-- %sing %s" % (mode, model_type))
         p = Parser(model_file="test_files/models/%s_%s%s" % (passage_format, model_type, setting.suffix()),
                    model_type=model_type)
         list(p.train(passages if mode == "train" else None, iterations=2))
-        results = list(p.parse(passages, evaluate=True))
-        score = Scores(tuple(zip(*results))[1])
-        scores.append(score.average_f1())
+        results = list(p.parse(passages, evaluate=evaluate))
         print("Converting to text and parsing...")
         text_results = list(p.parse([p3 for p1 in passages for p2 in convert.to_text(p1, sentences=False) for p3
                                      in convert.from_text(p2, p1.ID, extra_format=p1.extra.get("format"))]))
         assert len(results) == len(text_results)
-        for t, (r, s) in zip(text_results, results):
-            print("  %s F1=%.3f, text F1=%.3f" % (r.ID, s.average_f1(), p.evaluate_passage(t, r).average_f1()))
+        if evaluate:
+            scores.append(Scores(tuple(zip(*results))[1]).average_f1())
+            for t, (r, s) in zip(text_results, results):
+                print("  %s F1=%.3f, text F1=%.3f" % (r.ID, s.average_f1(), p.evaluate_passage(t, r).average_f1()))
         assert not list(p.parse(()))  # parsing nothing returns nothing
         print()
-    print("-- average labeled f1: %.3f, %.3f\n" % tuple(scores))
-    if passage_format != "amr":
+    if evaluate:
+        print("-- average f1: %.3f, %.3f\n" % tuple(scores))
         assert scores[0] == pytest.approx(scores[1], 0.1)
 
 
