@@ -122,7 +122,8 @@ def test_parser(config, setting, model_type, passage_format):
         assert not list(p.parse(()))  # parsing nothing returns nothing
         print()
     print("-- average labeled f1: %.3f, %.3f\n" % tuple(scores))
-    assert scores[0] == pytest.approx(scores[1], 0.1)
+    if passage_format != "amr":
+        assert scores[0] == pytest.approx(scores[1], 0.1)
 
 
 @pytest.fixture
