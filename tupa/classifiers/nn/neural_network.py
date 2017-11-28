@@ -12,7 +12,7 @@ from .mlp import MultilayerPerceptron
 from .sub_model import SubModel
 from ..classifier import Classifier
 from ...config import Config, BIRNN
-from ...features.feature_params import MISSING_VALUE
+from ...model_util import MISSING_VALUE
 
 
 class AxisModel(object):

@@ -239,6 +239,7 @@ class Config(object, metaclass=Singleton):
         elif not self.args.log:
             self.args.log = "parse.log"
         self._logger = self.format = self.hyperparams = None
+        self.lang = "en"
         self.original_values = {}
         self.random = np.random
         self.update()

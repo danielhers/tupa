@@ -1,9 +1,6 @@
-import numpy as np
-from ucca.textutil import get_word_vectors
-
 from .feature_extractor import FeatureExtractor
-from .feature_params import MISSING_VALUE, NumericFeatureParameters, copy_params
-from ..model_util import load_dict, save_dict, UnknownDict, DropoutDict
+from .feature_params import FeatureParameters, NumericFeatureParameters
+from ..model_util import load_dict, save_dict, UnknownDict, MISSING_VALUE
 
 INDEXED_FEATURES = "W", "w", "t", "d", "T"  # external + learned word embeddings, POS tags, dep rels, entity type
 FILENAME_SUFFIX = ".enum"
@@ -41,30 +38,9 @@ class FeatureEnumerator(FeatureExtractor):
 
     def init_param(self, param):
         param.num = self.feature_extractor.non_numeric_num(param.effective_suffix)
-        self.init_data(param)
         if self.indexed and param.suffix in INDEXED_FEATURES:
             param.indexed = True
         return param
-
-    @staticmethod
-    def init_data(param):
-        if param.data is None:
-            keys = ()
-            if param.dim and param.external:
-                vectors = FeatureEnumerator.get_word_vectors(param)
-                keys = vectors.keys()
-                param.init = np.array(list(vectors.values()))
-            param.data = DropoutDict(size=param.size, keys=keys, dropout=param.dropout, min_count=param.min_count)
-
-    @staticmethod
-    def get_word_vectors(param):
-        vectors, param.dim = get_word_vectors(param.dim, param.size, param.filename)
-        if param.size is not None:
-            assert len(vectors) <= param.size, "Loaded more vectors than requested: %d>%d" % (len(vectors), param.size)
-        assert vectors, "Cannot load word vectors. Install them using `python -m spacy download en` or choose a file " \
-                        "using the --word-vectors option."
-        param.size = len(vectors)
-        return vectors
 
     def init_features(self, state, suffix=None):
         features = {}
@@ -95,20 +71,20 @@ class FeatureEnumerator(FeatureExtractor):
         return features
 
     def finalize(self):
-        return FeatureEnumerator(self.feature_extractor, copy_params(self.params, UnknownDict), self.indexed)
+        return FeatureEnumerator(self.feature_extractor, FeatureParameters.copy(self.params, UnknownDict), self.indexed)
 
     def restore(self):
         """
         Opposite of finalize(): replace each feature parameter's data dict with a DropoutDict again, to keep training
         """
         for param in self.params.values():
-            param.data = DropoutDict(param.data, size=param.size, dropout=param.dropout, min_count=param.min_count)
+            param.restore()
 
     def save(self, filename):
-        save_dict(filename + FILENAME_SUFFIX, copy_params(self.params))
+        save_dict(filename + FILENAME_SUFFIX, FeatureParameters.copy(self.params))
 
     def load(self, filename):
-        self.params = copy_params(load_dict(filename + FILENAME_SUFFIX), UnknownDict)
+        self.params = FeatureParameters.copy(load_dict(filename + FILENAME_SUFFIX), UnknownDict)
         if self.indexed:
             self.collapse_features(INDEXED_FEATURES)
 

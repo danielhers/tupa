@@ -123,15 +123,12 @@ class Model(object):
     def init_param(self, param):
         if self.feature_extractor and isinstance(self.feature_extractor, FeatureEnumerator):
             self.feature_extractor.init_param(param)
-            return True
-        return False
 
     def init_node_labels(self):
         node_labels = self.feature_params.get(NODE_LABEL_KEY)
         if node_labels is None:
             self.feature_params[NODE_LABEL_KEY] = node_labels = NODE_LABEL_PARAM_DEF.create_from_config()
-        if not self.init_param(node_labels):
-            FeatureEnumerator.init_data(node_labels)
+        self.init_param(node_labels)
         return node_labels.data
 
     @property

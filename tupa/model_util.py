@@ -8,8 +8,10 @@ from collections import OrderedDict, Counter, defaultdict
 
 import numpy as np
 
-from .features.feature_params import UNKNOWN_VALUE
 from .labels import Labels
+
+MISSING_VALUE = -1
+UNKNOWN_VALUE = 0
 
 
 class DefaultOrderedDict(OrderedDict, Labels):

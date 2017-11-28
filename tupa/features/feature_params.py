@@ -1,9 +1,11 @@
 from copy import copy
 
-from ..labels import Labels
+import numpy as np
+from ucca.textutil import get_word_vectors
 
-MISSING_VALUE = -1
-UNKNOWN_VALUE = 0
+from ..config import Config
+from ..labels import Labels
+from ..model_util import DropoutDict
 
 
 class FeatureParameters(Labels):
@@ -31,8 +33,8 @@ class FeatureParameters(Labels):
         self.dropout = dropout
         self.updated = updated
         self.num = num
-        self.init = init
-        self.data = data
+        self._init = init
+        self._data = data
         self.indexed = indexed
         self.copy_from = copy_from
         self.filename = filename
@@ -48,6 +50,33 @@ class FeatureParameters(Labels):
         return self.suffix == other.suffix and self.dim == other.dim and self.size == other.size and \
                self.dropout == other.dropout and self.updated == other.updated and self.num == other.num and \
                self.indexed == other.indexed and self.min_count == other.min_count and self.numeric == other.numeric
+
+    @property
+    def data(self):
+        if self._data is None:
+            keys = ()
+            if self.dim and self.external:
+                vectors = self.get_word_vectors()
+                keys = vectors.keys()
+                self._init = np.array(list(vectors.values()))
+            self._data = DropoutDict(size=self.size, keys=keys, dropout=self.dropout, min_count=self.min_count)
+        return self._data
+
+    @property
+    def init(self):
+        if self._init is None:
+            _ = self.data  # initialize
+        return self._init
+
+    def get_word_vectors(self):
+        lang = Config().lang
+        vectors, self.dim = get_word_vectors(self.dim, self.size, self.filename, lang=lang)
+        if self.size is not None:
+            assert len(vectors) <= self.size, "Loaded more vectors than requested: %d>%d" % (len(vectors), self.size)
+        assert vectors, "Cannot load word vectors. Install them using `python -m spacy download %s` or choose a file " \
+                        "using the --word-vectors option." % lang
+        self.size = len(vectors)
+        return vectors
 
     @property
     def all(self):
@@ -69,6 +98,21 @@ class FeatureParameters(Labels):
     def external(self):
         return self.copy_from is not None
 
+    @staticmethod
+    def copy(params, copy_dict=dict):
+        return {suffix: param.copy_with_data(copy_dict=copy_dict) for suffix, param in params.items()}
+
+    def copy_with_data(self, copy_dict):
+        new = copy(self)
+        if self._data is not None:
+            new._data = copy_dict(self._data)
+            if hasattr(new._data, "size"):  # It may be an UnknownDict but we still want it to know its size
+                new._data.size = self.size
+        return new
+
+    def restore(self):
+        self._data = DropoutDict(self.data, size=self.size, dropout=self.dropout, min_count=self.min_count)
+
 
 class NumericFeatureParameters(FeatureParameters):
     SUFFIX = "numeric"
@@ -81,17 +125,13 @@ class NumericFeatureParameters(FeatureParameters):
             type(self).__name__, self.num)
 
     @property
+    def data(self):
+        return None
+
+    @property
+    def init(self):
+        return None
+
+    @property
     def numeric(self):
         return True
-
-
-def copy_params(params, copy_dict=dict):
-    params_copy = {}
-    for suffix, param in params.items():
-        param_copy = copy(param)
-        if param.data is not None:
-            param_copy.data = copy_dict(param.data)
-            if hasattr(param_copy.data, "size"):  # It may be an UnknownDict but we still want it to know its size
-                param_copy.data.size = param.size
-        params_copy[suffix] = param_copy
-    return params_copy

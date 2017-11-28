@@ -4,7 +4,7 @@ import numpy as np
 from .constants import ACTIVATIONS, INITIALIZERS, RNNS, CategoricalParameter
 from .mlp import MultilayerPerceptron
 from .sub_model import SubModel
-from ...features.feature_params import MISSING_VALUE
+from ...model_util import MISSING_VALUE
 
 
 class BiRNN(SubModel):
