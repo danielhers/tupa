@@ -69,7 +69,7 @@ class FeatureParameters(Labels):
         return self._init
 
     def get_word_vectors(self):
-        lang = Config().lang
+        lang = Config().args.lang
         vectors, self.dim = get_word_vectors(self.dim, self.size, self.filename, lang=lang)
         if self.size is not None:
             assert len(vectors) <= self.size, "Loaded more vectors than requested: %d>%d" % (len(vectors), self.size)

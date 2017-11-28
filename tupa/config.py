@@ -208,6 +208,7 @@ class Config(object, metaclass=Singleton):
                                     "(otherwise created dynamically based on filename suffix), "
                                     "and output formats for written files (each will be written; default: UCCA XML)")
         argparser.add_argument("-u", "--unlabeled", nargs="*", choices=FORMATS, help="to ignore labels in")
+        argparser.add_argument("--lang", default="en", help="two-letter language code to use as the default language")
 
         group = argparser.add_argument_group(title="Sanity checks")
         add_boolean_option(group, "check-loops", "check for parser state loop")
@@ -239,7 +240,6 @@ class Config(object, metaclass=Singleton):
         elif not self.args.log:
             self.args.log = "parse.log"
         self._logger = self.format = self.hyperparams = None
-        self.lang = "en"
         self.original_values = {}
         self.random = np.random
         self.update()

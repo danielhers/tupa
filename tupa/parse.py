@@ -157,8 +157,8 @@ class Parser(object):
             assert not (self.training and passage_format == "text"), "Cannot train on unannotated plain text"
             started = time.time()
             self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = 0
-            Config().lang = passage.attrib.get("lang", "en")
-            textutil.annotate(passage, lang=Config().lang, verbose=self.args.verbose > 2)  # for POS, dep and NER
+            self.args.lang = passage.attrib.get("lang", self.args.lang)
+            textutil.annotate(passage, lang=self.args.lang, verbose=self.args.verbose > 2)  # for POS, dep and NER
             Config().set_format(passage_format)
             WIKIFIER.enabled = self.args.wikification
             self.state = State(passage)
