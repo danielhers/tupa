@@ -228,7 +228,7 @@ class NeuralNetwork(Classifier, SubModel):
             
     def sub_models(self):
         """ :return: ordered list of SubModels """
-        axes = list(self.axes.values())
+        axes = [self.axes[a] for a in self.labels or self.labels_t]
         return [self] + [m.mlp for m in axes] + [m.birnn for m in axes + [self]]
     
     def save_sub_model(self, d, *args):
