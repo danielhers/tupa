@@ -289,9 +289,9 @@ class Config(object, metaclass=Singleton):
     def max_actions_unlabeled(self):
         return 6 + (  # Shift Node Reduce LeftEdge RightEdge Finish
             3 if self.args.remote else 0) + (  # RemoteNode LeftRemote RightRemote
-                   1 if self.args.swap == REGULAR else (self.args.max_swap if self.args.swap == COMPOUND else 0)) + (  # Swap
-                   1 if self.args.implicit else 0) + (  # Implicit
-                   2 if self.args.node_labels and not self.args.use_gold_node_labels else 0)  # Label x 2
+            1 if self.args.swap == REGULAR else (self.args.max_swap if self.args.swap == COMPOUND else 0)) + (  # Swap
+            1 if self.args.implicit else 0) + (  # Implicit
+            2 if self.args.node_labels and not self.args.use_gold_node_labels else 0)  # Label x 2
 
     def set_dynet_arguments(self):
         self.random.seed(self.args.seed)
