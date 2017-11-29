@@ -53,7 +53,7 @@ class FeatureParameters(Labels):
 
     @property
     def data(self):
-        if self._data is None:
+        if getattr(self, "_data", None) is None:
             keys = ()
             if self.dim and self.external:
                 vectors = self.get_word_vectors()
@@ -104,8 +104,9 @@ class FeatureParameters(Labels):
 
     def copy_with_data(self, copy_dict):
         new = copy(self)
-        if self._data is not None:
-            new._data = copy_dict(self._data)
+        data = self._data if hasattr(self, "_data") else self.data
+        if data is not None:
+            new._data = copy_dict(data)
             if hasattr(new._data, "size"):  # It may be an UnknownDict but we still want it to know its size
                 new._data.size = self.size
         return new
