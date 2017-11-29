@@ -1,3 +1,4 @@
+import shlex
 from collections import defaultdict
 from functools import partial
 
@@ -336,6 +337,24 @@ class Config(object, metaclass=Singleton):
             self._logger.warn(message)
         except OSError:
             pass
+
+    def save(self, filename):
+        out_file = filename + ".yml"
+        with open(out_file, "w") as f:
+            name = None
+            values = []
+            for arg in shlex.split(str(self), "--") + ["--"]:
+                if arg.startswith("--"):
+                    if name and name not in ("train", "dev"):
+                        if len(values) > 1:
+                            values[0] = "[" + values[0]
+                            values[-1] += "]"
+                        print("%s: %s" % (name, ", ".join(values) or "true"), file=f)
+                    name = arg[2:]
+                    values = []
+                else:
+                    values.append(arg)
+        print("Saved configuration to '%s'." % out_file)
 
     def __str__(self):
         return " ".join(list(self.args.passages) + [""]) + \

@@ -15,8 +15,12 @@ class ParameterDefinition(object):
         self.param_attr_to_config_attr = param_attr_to_config_attr
 
     @property
+    def dim_arg(self):
+        return self.param_attr_to_config_attr["dim"]
+
+    @property
     def enabled(self):
-        return bool(getattr(Config().args, self.param_attr_to_config_attr["dim"]))
+        return bool(getattr(Config().args, self.dim_arg))
 
     def create_from_config(self):
         args = Config().args
@@ -25,10 +29,8 @@ class ParameterDefinition(object):
 
     def load_to_config(self, params):
         param = params.get(self.name)
-        if param is not None:
-            args = Config().args
-            Config().update({v: getattr(param, k) for k, v in self.param_attr_to_config_attr.items()
-                             if hasattr(args, v)})
+        Config().update({self.dim_arg: 0} if param is None else
+                        {v: getattr(param, k) for k, v in self.param_attr_to_config_attr.items() if hasattr(Config().args, v)})
 
     def __str__(self):
         return self.name
@@ -164,6 +166,7 @@ class Model(object):
                 self.feature_extractor.save(self.filename)
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
                 self.classifier.save(skip_labels=(NODE_LABEL_KEY,) if node_labels and node_labels.size else ())
+                Config().save(self.filename)
             except Exception as e:
                 raise IOError("Failed saving model to '%s'" % self.filename) from e
 
