@@ -10,13 +10,13 @@ from .model_util import UnknownDict, AutoIncrementDict
 
 
 class ParameterDefinition(object):
-    def __init__(self, name, **param_attr_to_config_attr):
+    def __init__(self, name, **param_attr_to_arg):
         self.name = name
-        self.param_attr_to_config_attr = param_attr_to_config_attr
+        self.param_attr_to_arg = param_attr_to_arg
 
     @property
     def dim_arg(self):
-        return self.param_attr_to_config_attr["dim"]
+        return self.param_attr_to_arg["dim"]
 
     @property
     def enabled(self):
@@ -25,19 +25,19 @@ class ParameterDefinition(object):
     def create_from_config(self):
         args = Config().args
         return FeatureParameters(self.name, **{k: getattr(args, v) if hasattr(args, v) else v
-                                               for k, v in self.param_attr_to_config_attr.items()})
+                                               for k, v in self.param_attr_to_arg.items()})
 
     def load_to_config(self, params):
         param = params.get(self.name)
         Config().update({self.dim_arg: 0} if param is None else
-                        {v: getattr(param, k) for k, v in self.param_attr_to_config_attr.items() if hasattr(Config().args, v)})
+                        {v: getattr(param, k) for k, v in self.param_attr_to_arg.items() if hasattr(Config().args, v)})
 
     def __str__(self):
         return self.name
 
     def __repr__(self):
         return "%s(%s, %s)" % (type(self).__name__, self.name,
-                               ", ".join("%s='%s'" % i for i in self.param_attr_to_config_attr.items()))
+                               ", ".join("%s='%s'" % i for i in self.param_attr_to_arg.items()))
 
 
 NODE_LABEL_KEY = "n"
