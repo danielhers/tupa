@@ -102,6 +102,7 @@ class Parser(object):
             print_scores(scores, self.args.devscores, prefix=prefix, prefix_title="iteration")
             if average_score >= self.best_score:
                 print("Better than previous best score (%.3f)" % self.best_score)
+                self.model.classifier.best_score = average_score
                 if self.best_score:
                     self.model.save()
                 self.best_score = average_score
