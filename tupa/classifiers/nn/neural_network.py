@@ -90,6 +90,7 @@ class NeuralNetwork(Classifier, SubModel):
             if not param.numeric and suffix not in self.params:  # lookup feature
                 lookup = self.model.add_lookup_parameters((param.size, param.dim))
                 lookup.set_updated(param.updated)
+                param.init_data()
                 if param.init is not None and param.init.size:
                     lookup.init_from_array(param.init)
                 self.params[suffix] = lookup

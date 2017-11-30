@@ -48,6 +48,7 @@ class FeatureEnumerator(FeatureExtractor):
             if param.indexed and param.enabled:
                 values = self.feature_extractor.init_features(state, param.effective_suffix)
                 assert MISSING_VALUE not in values, "Missing value occurred in feature initialization: '%s'" % suffix
+                param.init_data()
                 features[suffix] = [param.data[v] for v in values]
         return features
 
@@ -64,6 +65,7 @@ class FeatureEnumerator(FeatureExtractor):
             if param.dim and (param.copy_from is None or not self.params[param.copy_from].dim or not param.indexed):
                 values = non_numeric_features.get(param.effective_suffix)
                 if values is not None:
+                    param.init_data()
                     features[suffix] = values if param.indexed else \
                         [v if v == MISSING_VALUE else param.data[v] for v in values]
                     # assert all(isinstance(f, int) for f in features[suffix]),\

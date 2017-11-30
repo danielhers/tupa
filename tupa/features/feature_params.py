@@ -1,5 +1,3 @@
-from copy import copy
-
 import numpy as np
 from ucca.textutil import get_word_vectors
 
@@ -33,8 +31,8 @@ class FeatureParameters(Labels):
         self.dropout = dropout
         self.updated = updated
         self.num = num
-        self._init = init
-        self._data = data
+        self.init = init
+        self.data = data
         self.indexed = indexed
         self.copy_from = copy_from
         self.filename = filename
@@ -51,22 +49,14 @@ class FeatureParameters(Labels):
                self.dropout == other.dropout and self.updated == other.updated and self.num == other.num and \
                self.indexed == other.indexed and self.min_count == other.min_count and self.numeric == other.numeric
 
-    @property
-    def data(self):
-        if getattr(self, "_data", None) is None:
+    def init_data(self):
+        if self.data is None:
             keys = ()
             if self.dim and self.external:
                 vectors = self.get_word_vectors()
                 keys = vectors.keys()
-                self._init = np.array(list(vectors.values()))
-            self._data = DropoutDict(size=self.size, keys=keys, dropout=self.dropout, min_count=self.min_count)
-        return self._data
-
-    @property
-    def init(self):
-        if getattr(self, "_init", None) is None:
-            _ = self.data  # initialize
-        return self._init
+                self.init = np.array(list(vectors.values()))
+            self.data = DropoutDict(size=self.size, keys=keys, dropout=self.dropout, min_count=self.min_count)
 
     def get_word_vectors(self):
         lang = Config().args.lang
@@ -103,16 +93,16 @@ class FeatureParameters(Labels):
         return {suffix: param.copy_with_data(copy_dict=copy_dict) for suffix, param in params.items()}
 
     def copy_with_data(self, copy_dict):
-        new = copy(self)
-        data = self._data if hasattr(self, "_data") else self.data
-        if data is not None:
-            new._data = copy_dict(data)
-            if hasattr(new._data, "size"):  # It may be an UnknownDict but we still want it to know its size
-                new._data.size = self.size
-        return new
+        data = None if self.data is None else copy_dict(self.data)
+        if hasattr(data, "size"):  # It may be an UnknownDict but we still want it to know its size
+            data.size = self.size
+        return FeatureParameters(suffix=self.suffix, dim=self.dim, size=self.size, dropout=self.dropout,
+                                 updated=self.updated, num=self.num, init=self.init, data=data,
+                                 indexed=self.indexed, copy_from=self.copy_from, filename=self.filename,
+                                 min_count=self.min_count, enabled=self.enabled)
 
     def restore(self):
-        self._data = DropoutDict(self.data, size=self.size, dropout=self.dropout, min_count=self.min_count)
+        self.data = DropoutDict(self.data, size=self.size, dropout=self.dropout, min_count=self.min_count)
 
 
 class NumericFeatureParameters(FeatureParameters):
@@ -126,13 +116,8 @@ class NumericFeatureParameters(FeatureParameters):
             type(self).__name__, self.num)
 
     @property
-    def data(self):
-        return None
-
-    @property
-    def init(self):
-        return None
-
-    @property
     def numeric(self):
         return True
+
+    def copy_with_data(self, copy_dict):
+        return NumericFeatureParameters(self.num)
