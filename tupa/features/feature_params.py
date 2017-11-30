@@ -64,7 +64,7 @@ class FeatureParameters(Labels):
 
     @property
     def init(self):
-        if self._init is None:
+        if getattr(self, "_init", None) is None:
             _ = self.data  # initialize
         return self._init
 
