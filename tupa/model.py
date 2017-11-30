@@ -185,6 +185,8 @@ class Model(object):
                 self._update_input_params()  # Must be before classifier.load() because it uses them to init the model
                 self.classifier.load()
                 self.load_labels(finalized)
+                if self.args.verbose:
+                    print("\n".join("%s: %s" % i for i in self.feature_params.items()))
                 for param in PARAM_DEFS:
                     param.load_to_config(self.feature_extractor.params)
             except FileNotFoundError:
