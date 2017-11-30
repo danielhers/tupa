@@ -66,6 +66,7 @@ noop-amr)
     python -m tupa -vv -c "$ACTION" -We "$TOY_DATA" -t "alignment-release-training-bio/*10.amr" --max-node-labels=250
     ;;
 *)
-    python -m tupa -vv -c "$ACTION" -We "$DEV_DATA" -t "$TRAIN_DATA" --max-words-external=5000 --word-dim=100 --lstm-layer-dim=100 --embedding-layer-dim=100
+    python -m tupa -vv -c "$ACTION" -We "$DEV_DATA" -t "$TRAIN_DATA" --max-words-external=5000 --word-dim=100 --lstm-layer-dim=100 --embedding-layer-dim=100 || exit 1
+    python -m tupa -vv -m "$ACTION" -We "$DEV_DATA"
     ;;
 esac
