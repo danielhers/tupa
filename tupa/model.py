@@ -131,6 +131,7 @@ class Model(object):
         if node_labels is None:
             self.feature_params[NODE_LABEL_KEY] = node_labels = NODE_LABEL_PARAM_DEF.create_from_config()
         self.init_param(node_labels)
+        node_labels.init_data()
         return node_labels.data
 
     @property
