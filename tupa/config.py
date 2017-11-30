@@ -349,6 +349,9 @@ class Config(object, metaclass=Singleton):
                         if len(values) > 1:
                             values[0] = "[" + values[0]
                             values[-1] += "]"
+                        elif name.startswith("no-"):
+                            name = name[3:]
+                            values = ["false"]
                         print("%s: %s" % (name, ", ".join(values) or "true"), file=f)
                     name = arg[2:]
                     values = []
