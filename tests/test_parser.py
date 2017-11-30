@@ -61,9 +61,10 @@ def passage_id(passage):
 def config():
     config = Config("", "-m", "test")
     config.update({"verbose": 1, "timeout": 1, "embedding_layer_dim": 2, "ner_dim": 1, "action_dim": 1,
-                   "max_words_external": 100, "word_dim_external": 100, "word_dim": 2,
-                   "max_words": 100, "max_node_labels": 20, "max_node_categories": 5,
-                   "node_label_dim": 1, "node_category_dim": 1, "edge_label_dim": 1,
+                   "max_words_external": 3, "word_dim_external": 5, "word_dim": 2,
+                   "max_words": 3, "max_node_labels": 3, "max_node_categories": 3,
+                   "max_tags": 3, "max_deps": 3, "max_edge_labels": 3, "max_puncts": 3, "max_action_types": 3,
+                   "max_ner_types": 3, "node_label_dim": 1, "node_category_dim": 1, "edge_label_dim": 1,
                    "tag_dim": 1, "dep_dim": 1, "optimizer": "sgd", "output_dim": 5,
                    "layer_dim": 6, "layers": 1, "lstm_layer_dim": 4, "lstm_layers": 1})
     config.update_hyperparams(shared={"lstm_layer_dim": 8, "lstm_layers": 1}, ucca={"word_dim": 3})
@@ -101,7 +102,7 @@ def test_oracle(config, setting, passage, write_oracle_actions):
 @pytest.mark.parametrize("setting", Settings.all(), ids=str)
 @pytest.mark.parametrize("model_type", CLASSIFIERS)
 @pytest.mark.parametrize("passage_format", FORMATS)
-def test_parser(config, setting, model_type, passage_format):
+def test_parser(config, setting, model_type, passage_format, text=True):
     config.update(setting.dict())
     scores = []
     passages = load_passages(passage_format)
@@ -111,15 +112,17 @@ def test_parser(config, setting, model_type, passage_format):
         p = Parser(model_file="test_files/models/%s_%s%s" % (passage_format, model_type, setting.suffix()),
                    model_type=model_type)
         list(p.train(passages if mode == "train" else None, iterations=2))
-        results = list(p.parse(passages, evaluate=evaluate))
-        print("Converting to text and parsing...")
-        text_results = list(p.parse([p3 for p1 in passages for p2 in convert.to_text(p1, sentences=False) for p3
-                                     in convert.from_text(p2, p1.ID, extra_format=p1.extra.get("format"))]))
-        assert len(results) == len(text_results)
+        text_results = results = list(p.parse(passages, evaluate=evaluate))
+        if text:
+            print("Converting to text and parsing...")
+            text_results = list(p.parse([p3 for p1 in passages for p2 in convert.to_text(p1, sentences=False) for p3
+                                         in convert.from_text(p2, p1.ID, extra_format=p1.extra.get("format"))]))
+            assert len(results) == len(text_results)
         if evaluate:
             scores.append(Scores(tuple(zip(*results))[1]).average_f1())
-            for t, (r, s) in zip(text_results, results):
-                print("  %s F1=%.3f, text F1=%.3f" % (r.ID, s.average_f1(), p.evaluate_passage(t, r).average_f1()))
+            if text:
+                for t, (r, s) in zip(text_results, results):
+                    print("  %s F1=%.3f, text F1=%.3f" % (r.ID, s.average_f1(), p.evaluate_passage(t, r).average_f1()))
         assert not list(p.parse(()))  # parsing nothing returns nothing
         print()
     if evaluate:
