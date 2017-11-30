@@ -93,6 +93,15 @@ class AutoIncrementDict(DefaultOrderedDict):
             return ret
         return self.unknown
 
+    def first_items(self, n=3):
+        return ", ".join(map(str, sorted(self, key=self.get)[:n])) + (", ..." if len(self) > n else "")
+
+    def __str__(self):
+        return "{%s}" % self.first_items()
+
+    def __repr__(self):
+        return "%s(size=%s, keys=[%s], unknown=%s)" % (type(self).__name__, self.size, self.first_items(), self.unknown)
+
 
 class UnknownDict(AutoIncrementDict):
     """
