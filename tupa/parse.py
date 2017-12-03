@@ -317,9 +317,9 @@ class Parser(object):
             return None, None
 
     def choose_label(self, true_label):
-        true = (self.model.labels[true_label],) if self.oracle else ()  # Needs to happen before score()
         if self.args.use_gold_node_labels:
             return true_label, true_label
+        true = (self.model.labels[true_label],) if self.oracle else ()  # Needs to happen before score()
         features = self.model.feature_extractor.extract_features(self.state)
         scores = self.model.classifier.score(features, axis=NODE_LABEL_KEY)
         if self.args.verbose > 3:
