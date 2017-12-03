@@ -58,14 +58,14 @@ def passage_id(passage):
 @pytest.fixture
 def config():
     config = Config("", "-m", "test")
-    config.update({"verbose": 1, "timeout": 1, "embedding_layer_dim": 2, "ner_dim": 1, "action_dim": 1,
-                   "max_words_external": 3, "word_dim_external": 5, "word_dim": 2,
+    config.update({"verbose": 1, "timeout": 1, "embedding_layer_dim": 1, "ner_dim": 1, "action_dim": 1,
+                   "max_words_external": 3, "word_dim_external": 1, "word_dim": 1,
                    "max_words": 3, "max_node_labels": 3, "max_node_categories": 3,
                    "max_tags": 3, "max_deps": 3, "max_edge_labels": 3, "max_puncts": 3, "max_action_types": 3,
                    "max_ner_types": 3, "node_label_dim": 1, "node_category_dim": 1, "edge_label_dim": 1,
-                   "tag_dim": 1, "dep_dim": 1, "optimizer": "sgd", "output_dim": 5,
-                   "layer_dim": 6, "layers": 1, "lstm_layer_dim": 4, "lstm_layers": 1})
-    config.update_hyperparams(shared={"lstm_layer_dim": 8, "lstm_layers": 1}, ucca={"word_dim": 3})
+                   "tag_dim": 1, "dep_dim": 1, "optimizer": "sgd", "output_dim": 1,
+                   "layer_dim": 1, "layers": 1, "lstm_layer_dim": 2, "lstm_layers": 1})
+    config.update_hyperparams(shared={"lstm_layer_dim": 2, "lstm_layers": 1}, ucca={"word_dim": 2})
     return config
 
 
