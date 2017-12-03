@@ -178,10 +178,9 @@ def test_model(model_type, formats, test_passage):
         if ClassifierProperty.require_init_features in model.get_classifier_properties():
             model.init_features(state, (axis,), train=True)
         features = model.feature_extractor.extract_features(state)
-        pred = model.classifier.score(features, axis).argmax()
-        model.classifier.update(features, axis, pred=pred, true=[0])
+        model.classifier.update(features, axis, pred=0, true=[0])
         if axis == "amr":
-            model.classifier.update(features, axis=NODE_LABEL_KEY, pred=pred, true=[0])
+            model.classifier.update(features, axis=NODE_LABEL_KEY, pred=0, true=[0])
     model.finalize(finished_epoch=True).save()
     loaded = Model(model_type, filename)
     loaded.load(finalized=False)
