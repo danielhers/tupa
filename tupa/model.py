@@ -31,7 +31,6 @@ class ParameterDefinition(object):
         if value:
             raise ValueError("Can only disable parameter configuration by setting 'enabled' to False")
         setattr(Config().args, self.dim_arg, 0)
-        setattr(Config().args, self.size_arg, 0)
 
     def create_from_config(self):
         args = Config().args
@@ -141,11 +140,11 @@ class Model(object):
             self.feature_extractor.init_param(param)
 
     def init_node_labels(self):
-        if not self.is_neural_network:
-            NODE_LABEL_PARAM_DEF.enabled = False
         node_labels = self.feature_params.get(NODE_LABEL_KEY)
         if node_labels is None:
-            self.feature_params[NODE_LABEL_KEY] = node_labels = NODE_LABEL_PARAM_DEF.create_from_config()
+            node_labels = NODE_LABEL_PARAM_DEF.create_from_config()
+            if self.is_neural_network:
+                self.feature_params[NODE_LABEL_KEY] = node_labels
         self.init_param(node_labels)
         node_labels.init_data()
         return node_labels.data
@@ -182,7 +181,7 @@ class Model(object):
             try:
                 self.feature_extractor.save(self.filename)
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
-                self.classifier.save(skip_labels=(NODE_LABEL_KEY,) if node_labels and node_labels.enabled else ())
+                self.classifier.save(skip_labels=(NODE_LABEL_KEY,) if node_labels and node_labels.size else ())
                 Config().save(self.filename)
             except Exception as e:
                 raise IOError("Failed saving model to '%s'" % self.filename) from e
