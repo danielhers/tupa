@@ -19,8 +19,19 @@ class ParameterDefinition(object):
         return self.param_attr_to_arg["dim"]
 
     @property
+    def size_arg(self):
+        return self.param_attr_to_arg["size"]
+
+    @property
     def enabled(self):
-        return bool(getattr(Config().args, self.dim_arg))
+        return bool(getattr(Config().args, self.dim_arg)) and bool(getattr(Config().args, self.size_arg))
+    
+    @enabled.setter
+    def enabled(self, value):
+        if value:
+            raise ValueError("Can only disable parameter configuration by setting 'enabled' to False")
+        setattr(Config().args, self.dim_arg, 0)
+        setattr(Config().args, self.size_arg, 0)
 
     def create_from_config(self):
         args = Config().args
@@ -29,7 +40,7 @@ class ParameterDefinition(object):
 
     def load_to_config(self, params):
         param = params.get(self.name)
-        Config().update({self.dim_arg: 0} if param is None else
+        Config().update({self.dim_arg: 0, self.size_arg: 0} if param is None else
                         {v: getattr(param, k) for k, v in self.param_attr_to_arg.items() if hasattr(Config().args, v)})
 
     def __str__(self):
@@ -84,13 +95,12 @@ class Model(object):
 
     def init_model(self, init_params=True):
         labels = self.classifier.labels if self.classifier else OrderedDict()
-        feature_params_required = self.model_type in (MLP, BIRNN)
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
             for param_def in PARAM_DEFS:
                 param = self.feature_params.get(param_def.name)
                 if param:
                     param.enabled = param_def.enabled
-                elif feature_params_required and param_def.enabled:
+                elif self.is_neural_network and param_def.enabled:
                     self.feature_params[param_def.name] = param = param_def.create_from_config()
                     self.init_param(param)
             if Config().format not in labels:
@@ -109,7 +119,7 @@ class Model(object):
             from .classifiers.noop import NoOp
             self.feature_extractor = EmptyFeatureExtractor()
             self.classifier = NoOp(self.filename, labels)
-        elif feature_params_required:
+        elif self.is_neural_network:
             from .features.dense_features import DenseFeatureExtractor
             from .classifiers.nn.neural_network import NeuralNetwork
             self.feature_extractor = FeatureEnumerator(DenseFeatureExtractor(), self.feature_params,
@@ -118,6 +128,10 @@ class Model(object):
         else:
             raise ValueError("Invalid model type: '%s'" % self.model_type)
         self._update_input_params()
+    
+    @property
+    def is_neural_network(self):
+        return self.model_type in (MLP, BIRNN)
 
     def init_actions(self):
         return Actions(size=self.args.max_action_labels)
@@ -127,6 +141,8 @@ class Model(object):
             self.feature_extractor.init_param(param)
 
     def init_node_labels(self):
+        if not self.is_neural_network:
+            NODE_LABEL_PARAM_DEF.enabled = False
         node_labels = self.feature_params.get(NODE_LABEL_KEY)
         if node_labels is None:
             self.feature_params[NODE_LABEL_KEY] = node_labels = NODE_LABEL_PARAM_DEF.create_from_config()
@@ -166,7 +182,7 @@ class Model(object):
             try:
                 self.feature_extractor.save(self.filename)
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
-                self.classifier.save(skip_labels=(NODE_LABEL_KEY,) if node_labels and node_labels.size else ())
+                self.classifier.save(skip_labels=(NODE_LABEL_KEY,) if node_labels and node_labels.enabled else ())
                 Config().save(self.filename)
             except Exception as e:
                 raise IOError("Failed saving model to '%s'" % self.filename) from e
