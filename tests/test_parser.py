@@ -4,14 +4,14 @@ from glob import glob
 from itertools import combinations
 
 import pytest
-from ucca import convert, ioutil, textutil
+from ucca import convert, ioutil
 
 from scheme.convert import FROM_FORMAT
 from scheme.evaluate import Scores
 from scheme.util.amr import WIKIFIER
 from tupa.action import Actions
 from tupa.config import Config, CLASSIFIERS
-from tupa.model import Model, ClassifierProperty
+from tupa.model import Model, ClassifierProperty, NODE_LABEL_KEY
 from tupa.oracle import Oracle
 from tupa.parse import Parser
 from tupa.states.state import State
@@ -162,21 +162,26 @@ def test_boolean_params(test_config):
     assert not test_config.args.verify
 
 
+@pytest.fixture
+def test_passage():
+    return next(iter(ioutil.read_files_and_dirs(("test_files/120.xml",))))
+
+
 @pytest.mark.parametrize("model_type", CLASSIFIERS)
-@pytest.mark.parametrize("passage", load_passages(), ids=passage_id)
-def test_model(model_type, passage):
-    filename = "test_files/models/test_%s_%s" % (model_type, passage.ID)
-    axis = "test"
-    Config().set_format(axis)
-    textutil.annotate(passage)
+def test_model(model_type, formats, test_passage):
+    filename = "test_files/models/test_%s_%s" % (model_type, "_".join(formats))
     model = Model(model_type, filename)
-    model.init_model()
-    state = State(passage)
-    if ClassifierProperty.require_init_features in model.get_classifier_properties():
-        model.init_features(state, (axis,), train=True)
-    features = model.feature_extractor.extract_features(state)
-    pred = model.classifier.score(features, axis).argmax()
-    model.classifier.update(features, axis, pred=pred, true=[0])
+    for axis in formats:
+        Config().set_format(axis)
+        model.init_model()
+        state = State(test_passage)
+        if ClassifierProperty.require_init_features in model.get_classifier_properties():
+            model.init_features(state, (axis,), train=True)
+        features = model.feature_extractor.extract_features(state)
+        pred = model.classifier.score(features, axis).argmax()
+        model.classifier.update(features, axis, pred=pred, true=[0])
+        if axis == "amr":
+            model.classifier.update(features, axis=NODE_LABEL_KEY, pred=pred, true=[0])
     model.finalize(finished_epoch=True).save()
     loaded = Model(model_type, filename)
     loaded.load(finalized=False)
