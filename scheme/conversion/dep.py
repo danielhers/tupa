@@ -44,7 +44,7 @@ class DependencyConverter(convert.DependencyConverter):
         return unit
 
     def find_top_headed_edges(self, unit):
-        if not unit.outgoing and unit.incoming:  # go to pre-terminal
+        while unit.incoming and (not unit.outgoing or unit.incoming[0].tag == "head"):  # go to pre-terminal
             unit = unit.parents[0]
         return [e for e in unit.incoming if e.tag not in (self.ROOT, self.TOP)]
 
