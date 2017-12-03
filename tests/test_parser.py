@@ -16,8 +16,6 @@ from tupa.oracle import Oracle
 from tupa.parse import Parser
 from tupa.states.state import State
 
-FORMATS = ("ucca", "amr", "conllu", "sdp")
-
 
 # noinspection PyUnresolvedReferences
 class Settings:
@@ -47,10 +45,10 @@ class Settings:
         return "-".join(self.list()) or "default"
 
 
-def load_passages(passage_format=None):
+def load_passages(*formats):
     WIKIFIER.enabled = False
-    return ioutil.read_files_and_dirs(
-        glob("test_files/*." + {None: "*", "ucca": "xml"}.get(passage_format, passage_format)), converters=FROM_FORMAT)
+    files = [f for fo in formats or ["*"] for f in glob("test_files/*." + ("xml" if fo == "ucca" else fo))]
+    return ioutil.read_files_and_dirs(files, converters=FROM_FORMAT)
 
 
 def passage_id(passage):
@@ -101,15 +99,14 @@ def test_oracle(config, setting, passage, write_oracle_actions):
 
 @pytest.mark.parametrize("setting", Settings.all(), ids=str)
 @pytest.mark.parametrize("model_type", CLASSIFIERS)
-@pytest.mark.parametrize("passage_format", FORMATS)
-def test_parser(config, setting, model_type, passage_format, text=True):
+def test_parser(config, setting, model_type, formats, text=True):
     config.update(setting.dict())
     scores = []
-    passages = load_passages(passage_format)
-    evaluate = passage_format != "amr"
+    passages = load_passages(*formats)
+    evaluate = ("amr" not in formats)
     for mode in "train", "load":
         print("-- %sing %s" % (mode, model_type))
-        p = Parser(model_file="test_files/models/%s_%s%s" % (passage_format, model_type, setting.suffix()),
+        p = Parser(model_file="test_files/models/%s_%s%s" % ("_".join(formats), model_type, setting.suffix()),
                    model_type=model_type)
         list(p.train(passages if mode == "train" else None, iterations=2))
         text_results = results = list(p.parse(passages, evaluate=evaluate))
