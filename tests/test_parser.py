@@ -97,16 +97,20 @@ def test_oracle(config, setting, passage, write_oracle_actions):
         assert f.readlines() == actions_taken, compare_file
 
 
-@pytest.mark.parametrize("setting", Settings.all(), ids=str)
+@pytest.fixture
+def default_setting():
+    return Settings()
+
+
 @pytest.mark.parametrize("model_type", CLASSIFIERS)
-def test_parser(config, setting, model_type, formats, text=True):
-    config.update(setting.dict())
+def test_parser(config, model_type, formats, default_setting, text=True):
+    config.update(default_setting.dict())
     scores = []
     passages = load_passages(*formats)
     evaluate = ("amr" not in formats)
     for mode in "train", "load":
         print("-- %sing %s" % (mode, model_type))
-        p = Parser(model_file="test_files/models/%s_%s%s" % ("_".join(formats), model_type, setting.suffix()),
+        p = Parser(model_file="test_files/models/%s_%s%s" % ("_".join(formats), model_type, default_setting.suffix()),
                    model_type=model_type)
         list(p.train(passages if mode == "train" else None, iterations=2))
         text_results = results = list(p.parse(passages, evaluate=evaluate))
