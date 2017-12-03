@@ -113,6 +113,9 @@ class FeatureExtractor(object):
         """
         pass
 
+    def init_param(self, param):
+        return param
+
     def collapse_features(self, suffixes):
         """
         For each set of features referring to the same node, with the given properties,

@@ -136,7 +136,7 @@ class Model(object):
         return Actions(size=self.args.max_action_labels)
 
     def init_param(self, param):
-        if self.feature_extractor and isinstance(self.feature_extractor, FeatureEnumerator):
+        if self.feature_extractor:
             self.feature_extractor.init_param(param)
 
     def init_node_labels(self):
