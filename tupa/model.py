@@ -104,7 +104,7 @@ class Model(object):
                     self.init_param(param)
             if Config().format not in labels:
                 labels[Config().format] = self.init_actions()  # Uses config to determine actions
-            if self.args.node_labels and NODE_LABEL_KEY not in labels:
+            if self.args.node_labels and not self.args.use_gold_node_labels and NODE_LABEL_KEY not in labels:
                 labels[NODE_LABEL_KEY] = self.init_node_labels()  # Uses self.feature_params
         if self.classifier:  # Already initialized
             pass
