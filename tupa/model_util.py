@@ -5,6 +5,7 @@ import pprint as pp
 import sys
 import time
 from collections import OrderedDict, Counter, defaultdict
+from operator import itemgetter
 
 import numpy as np
 
@@ -81,7 +82,7 @@ class AutoIncrementDict(DefaultOrderedDict):
         :param d: dictionary to initialize from
         :param unknown: value to return for missing keys
         """
-        super().__init__(None, d or {}, size=size)
+        super().__init__(None, sorted(d.items(), key=itemgetter(1)) if d else {}, size=size)
         self.finalized = (size is None)
         self.unknown = self.setdefault(None, unknown)
         for key in keys:
