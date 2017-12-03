@@ -106,11 +106,13 @@ class NeuralNetwork(Classifier, SubModel):
 
     def init_cg(self):
         dy.renew_cg()
-        self.init_empty_values(force=True)
+        self.init_empty_values(clear=True)
 
-    def init_empty_values(self, force=False):
+    def init_empty_values(self, clear=False):
+        if clear:
+            self.empty_values.clear()
         for suffix, param in self.input_params.items():
-            if param.enabled and not param.numeric and (force or suffix not in self.empty_values):  # lookup feature
+            if param.enabled and not param.numeric and suffix not in self.empty_values:  # lookup feature
                 self.empty_values[suffix] = dy.inputVector(np.zeros(param.dim, dtype=float))
 
     def init_features(self, features, axes, train=False):
