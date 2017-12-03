@@ -58,7 +58,7 @@ jobs:
         - conda update -q conda
         - conda create -q -n env python=3.6 numpy cython
         - source activate env
-        - export $TEST_OPTIONS=--multitask
+        - export TEST_OPTIONS=--multitask
 script:
   - ci/test.sh
 deploy:
