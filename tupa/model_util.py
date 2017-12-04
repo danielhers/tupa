@@ -195,11 +195,9 @@ def save_json(filename, d):
     :param filename: file to write to
     :param d: dictionary to save
     """
-    print("Saving to '%s'... " % filename, end="", flush=True)
-    started = time.time()
+    print("Saving to '%s'." % filename)
     with open(filename, "w") as h:
         json.dump(d, h)
-    print("Done (%.3fs)." % (time.time() - started))
 
 
 def load_json(filename):
@@ -207,9 +205,7 @@ def load_json(filename):
     Load dictionary from JSON file
     :param filename: file to read from
     """
-    print("Loading from '%s'... " % filename, end="", flush=True)
-    started = time.time()
+    print("Loading from '%s'." % filename)
     with open(filename, "r") as h:
         d = json.load(h)
-    print("Done (%.3fs)." % (time.time() - started))
     return d

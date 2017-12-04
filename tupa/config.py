@@ -231,6 +231,9 @@ class Config(object, metaclass=Singleton):
 
         self.args = argparser.parse_args(args if args else None)
 
+        if self.args.config:
+            print("Loading configuration from '%s'." % self.args.config)
+
         if self.args.model:
             if not self.args.log:
                 self.args.log = self.args.model + ".log"
@@ -340,6 +343,7 @@ class Config(object, metaclass=Singleton):
 
     def save(self, filename):
         out_file = filename + ".yml"
+        print("Saving configuration to '%s'." % out_file)
         with open(out_file, "w") as f:
             name = None
             values = []
@@ -357,7 +361,6 @@ class Config(object, metaclass=Singleton):
                     values = []
                 else:
                     values.append(arg)
-        print("Saved configuration to '%s'." % out_file)
 
     def __str__(self):
         return " ".join(list(self.args.passages) + [""]) + \
