@@ -11,14 +11,6 @@ SHIFT
 LABEL-1 Concept(have-org-role-91)
 NODE-ARG2-of
 SHIFT
-IMPLICIT-mod
-SHIFT
-IMPLICIT-polarity
-LABEL-1 Concept(executive)
-REDUCE
-SHIFT
-LABEL-1 Const(-)
-REDUCE
 SHIFT
 SWAP
 SWAP
@@ -57,18 +49,6 @@ REDUCE
 SHIFT
 NODE-name
 SHIFT
-IMPLICIT-mod
-IMPLICIT-mod
-SHIFT
-IMPLICIT-name
-LABEL-1 Concept(country)
-REDUCE
-SHIFT
-LABEL-1 "Britain"
-REDUCE
-SHIFT
-LABEL-1 Concept(industry)
-REDUCE
 SHIFT
 SWAP
 RIGHT-EDGE-Terminal

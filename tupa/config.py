@@ -263,7 +263,6 @@ class Config(object, metaclass=Singleton):
             for attr, value in format_values.items():
                 setattr(self.args, attr, value)
             if self.format == "amr":
-                self.args.implicit = True
                 if not self.args.node_label_dim:
                     self.args.node_label_dim = 20
                 if not self.args.max_node_labels:
