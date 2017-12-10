@@ -18,6 +18,7 @@ Each passage is written to the file: <outdir>/<prefix><passage_id>.<extension> "
 
 CONVERTERS = dict(convert.CONVERTERS)
 CONVERTERS.update({
+    None:     (None,        None),
     "sdp":    (from_sdp,    to_sdp),
     "conllu": (from_conllu, to_conllu),
     "amr":    (from_amr,    to_amr),
