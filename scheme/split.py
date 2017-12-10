@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-import configargparse
 import glob
 import os
 import re
 import sys
+
+import configargparse
 
 from scheme.util import amr
 
@@ -17,7 +18,7 @@ def main(args):
     except FileExistsError:
         pass
     lines = []
-    passage_id = None
+    passage_id = 0
     filenames = glob.glob(args.filename)
     if not filenames:
         raise IOError("Not found: " + args.filename)
@@ -34,6 +35,10 @@ def main(args):
                         passage_id = m.group(1)
                 if not clean and any(map(str.strip, lines)):
                     write_file(args.outdir, passage_id, ext, lines, quiet=args.quiet)
+                    if isinstance(passage_id, str):
+                        passage_id = None
+                    else:
+                        passage_id += 1
             if lines:
                 write_file(args.outdir, passage_id, ext, lines, quiet=args.quiet)
     if not args.quiet:
@@ -43,7 +48,7 @@ def main(args):
 def write_file(outdir, passage_id, ext, lines, quiet=False):
     if passage_id is None:
         raise ValueError("Could not determine passage ID")
-    filename = outdir + os.sep + passage_id + ext
+    filename = os.path.join(outdir, str(passage_id) + ext)
     with open(filename, "w", encoding="utf-8") as f:
         f.writelines(lines)
     lines.clear()
