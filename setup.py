@@ -1,15 +1,23 @@
 #!/usr/bin/env python
 import os
+import sys
 import urllib
 from subprocess import run
 
 from setuptools import setup, find_packages
 from setuptools.command.install import install as _install
 
+try:
+    this_file = __file__
+except NameError:
+    this_file = sys.argv[0]
+os.chdir(os.path.dirname(os.path.abspath(this_file)))
+
 with open("requirements.txt") as f:
     install_requires = f.read().splitlines()
 
 try:
+    # noinspection PyPackageRequirements
     import pypandoc
     try:
         pypandoc.convert_file("README.md", "rst", outputfile="README.rst")
