@@ -7,11 +7,20 @@ class DependencyConverter(convert.DependencyConverter):
     structure, just copy the exact structure from the dependency graph, with all edges being between terminals (+root)
     """
     TOP = "TOP"
+    HEAD = "head"
 
-    def __init__(self, *args, constituency=False, **kwargs):
+    def __init__(self, *args, constituency=False, tree=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.constituency = constituency
+        self.tree = tree
         self.lines_read = []
+
+    def read_line_and_append(self, read_line, line, previous_node):
+        self.lines_read.append(line)
+        try:
+            return read_line(line, previous_node)
+        except ValueError as e:
+            raise ValueError("Failed reading line:\n" + line) from e
 
     def split_line(self, line):
         return line.split("\t")
@@ -29,7 +38,10 @@ class DependencyConverter(convert.DependencyConverter):
                 top_edge.head = dep_nodes[0]
                 incoming[:0] = [top_edge]
             primary_edge, *remote_edges = incoming
-            dep_node.node = dep_node.preterminal = l1.add_fnode(primary_edge.head.node, primary_edge.rel)
+            dep_node.node = dep_node.preterminal = None if primary_edge.rel.upper() == self.ROOT else \
+                l1.add_fnode(primary_edge.head.node, primary_edge.rel)
+            if dep_node.outgoing:
+                dep_node.preterminal = l1.add_fnode(dep_node.preterminal, self.HEAD)
             for edge in remote_edges:
                 l1.add_remote(edge.head.node, edge.rel, dep_node.node)
 
@@ -50,8 +62,11 @@ class DependencyConverter(convert.DependencyConverter):
 
     def break_cycles(self, dep_nodes):
         for dep_node in dep_nodes:
-            for edge in dep_node.incoming:
-                edge.remote = False
+            if dep_node.incoming:
+                for edge in dep_node.incoming:
+                    edge.remote = False
+            elif self.tree:
+                dep_node.incoming = [(self.Edge(head_index=-1, rel="root", remote=False))]
 
     def is_top(self, unit):
         if not unit.outgoing and unit.incoming:  # go to pre-terminal

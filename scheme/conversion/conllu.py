@@ -5,35 +5,13 @@ from .dep import DependencyConverter
 
 class ConlluConverter(DependencyConverter, convert.ConllConverter):
     def __init__(self, *args, constituency=True, **kwargs):
-        super().__init__(*args, constituency=constituency, **kwargs)
+        super().__init__(*args, constituency=constituency, tree=True, **kwargs)
 
     def modify_passage(self, passage):
         passage.extra["format"] = "conllu"
 
-    def read_line(self, line, previous_node):
-        self.lines_read.append(line)
-        try:
-            return super().read_line(line, previous_node)
-        except ValueError as e:
-            raise ValueError("Failed reading line:\n" + line) from e
-
-    def create_non_terminals(self, dep_nodes, l1):
-        if not self.constituency:
-            DependencyConverter.create_non_terminals(self, dep_nodes, l1)
-        for dep_node in self._topological_sort(dep_nodes):
-            primary_edge, *remote_edges = dep_node.incoming
-            dep_node.node = dep_node.preterminal = None if primary_edge.rel == "root" else \
-                l1.add_fnode(primary_edge.head.node, primary_edge.rel)
-            if dep_node.outgoing:
-                dep_node.preterminal = l1.add_fnode(dep_node.preterminal, "head")
-            for edge in remote_edges:
-                l1.add_remote(edge.head.node, edge.rel, dep_node.node)
-
-    def break_cycles(self, dep_nodes):
-        super().break_cycles(dep_nodes)
-        for dep_node in dep_nodes:
-            if not dep_node.incoming:
-                dep_node.incoming = [(self.Edge(head_index=-1, rel="root", remote=False))]
+    def read_line(self, *args, **kwargs):
+        return self.read_line_and_append(super().read_line, *args, **kwargs)
 
 
 def from_conllu(lines, passage_id, split=True, return_original=False, *args, **kwargs):

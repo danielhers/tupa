@@ -10,15 +10,11 @@ class SdpConverter(DependencyConverter, convert.SdpConverter):
     def modify_passage(self, passage):
         passage.extra["format"] = "sdp"
 
+    def read_line(self, *args, **kwargs):
+        return self.read_line_and_append(super().read_line, *args, **kwargs)
+
     def edges_for_orphan(self, top):
         return [self.Edge(0, self.TOP, False)] if top else []
-
-    def read_line(self, line, previous_node):
-        self.lines_read.append(line)
-        try:
-            return super().read_line(line, previous_node)
-        except ValueError as e:
-            raise ValueError("Failed reading line:\n" + line) from e
 
 
 def from_sdp(lines, passage_id, split=True, mark_aux=False, return_original=False, *args, **kwargs):
