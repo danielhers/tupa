@@ -53,13 +53,12 @@ class DependencyConverter(convert.DependencyConverter):
 
     def find_head_terminal(self, unit):
         while unit.outgoing:  # still non-terminal
-            unit = unit.children[0]
+            heads = [e.child for e in unit.outgoing if e.tag == self.HEAD]
+            unit = heads[0] if heads else unit.children[0]
         return unit
 
     def find_top_headed_edges(self, unit):
-        while unit.incoming and (not unit.outgoing or unit.incoming[0].tag == "head"):  # go to pre-terminal
-            unit = unit.parents[0]
-        return [e for e in unit.incoming if e.tag not in (self.ROOT, self.TOP)]
+        return [e for e in self.find_headed_unit(unit).incoming if e.tag not in (self.ROOT, self.TOP)]
 
     def break_cycles(self, dep_nodes):
         for dep_node in dep_nodes:
@@ -67,9 +66,12 @@ class DependencyConverter(convert.DependencyConverter):
                 for edge in dep_node.incoming:
                     edge.remote = False
             elif self.tree:
-                dep_node.incoming = [(self.Edge(head_index=-1, rel="root", remote=False))]
+                dep_node.incoming = [(self.Edge(head_index=-1, rel=self.ROOT.lower(), remote=False))]
 
     def is_top(self, unit):
-        if not unit.outgoing and unit.incoming:  # go to pre-terminal
+        return any(e.tag == self.TOP for e in self.find_headed_unit(unit).incoming)
+
+    def find_headed_unit(self, unit):
+        while unit.incoming and (not unit.outgoing or unit.incoming[0].tag == self.HEAD):
             unit = unit.parents[0]
-        return any(e.tag == self.TOP for e in unit.incoming)
+        return unit
