@@ -5,9 +5,15 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 
+np.seterr("raise")
+
 
 def smooth(x, s=100):
-    return [np.mean(x[i*s:(i+1)*s]) for i in range(int(np.ceil(len(x)/s)))]
+    if len(x) < s:
+        return x
+    t = int(np.ceil(len(x) / s))
+    s = int(len(x) / t)
+    return [np.mean(x[i*t:(i+1)*t]) for i in range(s)]
 
 
 def main(args):
