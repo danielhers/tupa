@@ -28,9 +28,10 @@ class DependencyConverter(convert.DependencyConverter):
     def create_non_terminals(self, dep_nodes, l1):
         if self.constituency:
             super().create_non_terminals(dep_nodes, l1)
-        for dep_node in dep_nodes:  # Create top nodes
-            if dep_node.position != 0 and not dep_node.incoming and dep_node.outgoing:
-                dep_node.node = dep_node.preterminal = l1.add_fnode(None, self.TOP if dep_node.is_top else self.ROOT)
+        if not self.tree:
+            for dep_node in dep_nodes:  # Create top nodes
+                if dep_node.position != 0 and not dep_node.incoming and dep_node.outgoing:
+                    dep_node.node = dep_node.preterminal = l1.add_fnode(None, (self.ROOT, self.TOP)[dep_node.is_top])
         for dep_node in self._topological_sort(dep_nodes):  # Create all other nodes
             incoming = list(dep_node.incoming)
             if dep_node.is_top and incoming[0].head_index != 0:

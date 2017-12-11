@@ -4,8 +4,8 @@ from .dep import DependencyConverter
 
 
 class ConlluConverter(DependencyConverter, convert.ConllConverter):
-    def __init__(self, *args, constituency=True, **kwargs):
-        super().__init__(*args, constituency=constituency, tree=True, **kwargs)
+    def __init__(self, *args, **kwargs):
+        DependencyConverter.__init__(self, *args, tree=True, **kwargs)
 
     def modify_passage(self, passage):
         passage.extra["format"] = "conllu"
