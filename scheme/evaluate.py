@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+import csv
 import os
+import re
 from itertools import groupby
 
 import configargparse
@@ -59,39 +61,68 @@ def name(t):
     return t.name() if hasattr(t, "name") else "UCCA"
 
 
-def read_passages(filename, default_format=None):
-    basename, converted_format = passage_format(filename)
-    in_converter, out_converter = CONVERTERS.get(converted_format, CONVERTERS[default_format])
-    if in_converter:
-        with open(filename, encoding="utf-8") as f:
-            for _, passage, passage_id in in_converter(f, passage_id=basename, return_original=True):
-                yield passage, passage_id, converted_format, in_converter, out_converter
-    else:
-        passage = ioutil.file2passage(filename)
-        yield passage, passage.ID, converted_format, in_converter, out_converter
-
-
 def passage_format(filename):
     basename, ext = os.path.splitext(os.path.basename(filename))
     return basename, None if ext in UCCA_EXT else ext.lstrip(".")
 
 
-def main(args):
-    evaluate = EVALUATORS.get(passage_format(args.ref)[1], EVALUATORS[args.format]).evaluate
-    for (guessed_passage, _, guessed_format, guessed_converter, _), \
-        (ref_passage, passage_id, ref_format, _, ref_converter) in zip(*[read_passages(filename, args.format)
-                                                                         for filename in (args.guessed, args.ref)]):
-        print(passage_id)
+def read_files(files, default_format=None):
+    for filename in sorted(files, key=lambda x: tuple(map(int, re.findall("\d+", x))) or x):
+        basename, converted_format = passage_format(filename)
+        in_converter, out_converter = CONVERTERS.get(converted_format, CONVERTERS[default_format])
+        if in_converter:
+            with open(filename, encoding="utf-8") as f:
+                for _, passage, passage_id in in_converter(f, passage_id=basename, return_original=True):
+                    yield passage, passage_id, converted_format, in_converter, out_converter
+        else:
+            passage = ioutil.file2passage(filename)
+            yield passage, passage.ID, converted_format, in_converter, out_converter
+
+
+def evaluate_all(args, evaluate, files):
+    for ((guessed_passage, _, guessed_format, guessed_converter, _),
+         (ref_passage, passage_id, ref_format, _, ref_converter)) in zip(*[read_files(f, args.format) for f in files]):
+        if not args.quiet:
+            print(passage_id)
         if guessed_format != ref_format:
             guessed_passage = next(iter(guessed_converter(guessed_passage + [""], passage_id=passage_id))) if \
                 ref_converter is None else ref_converter(guessed_passage)
-        evaluate(guessed_passage, ref_passage, verbose=args.verbose > 1).print()
+        result = evaluate(guessed_passage, ref_passage, verbose=args.verbose > 1)
+        if args.verbose:
+            result.print()
+        yield result
+
+
+def main(args):
+    files = [[os.path.join(d, f) for f in os.listdir(d)] if os.path.isdir(d) else [d] for d in (args.guessed, args.ref)]
+    evaluate = EVALUATORS.get(passage_format(files[1][0])[1], EVALUATORS[args.format]).evaluate
+    results = list(evaluate_all(args, evaluate, files))
+    summary = Scores(results)
+    if len(results) > 1:
+        if args.verbose:
+            print("Aggregated scores:")
+        else:
+            print(end="\r")
+            if not args.quiet:
+                summary.print()
+        if not args.quiet:
+            print("Average F1: %.3f" % summary.average_f1())
+    if args.out_file:
+        with open(args.out_file, "w", encoding="utf-8", newline="") as f:
+            csv.writer(f).writerows([summary.titles()] + [result.fields() for result in results])
+    if args.summary_file:
+        with open(args.summary_file, "w", encoding="utf-8", newline="") as f:
+            csv.writer(f).writerows([summary.titles(), summary.fields()])
 
 
 if __name__ == '__main__':
     argparser = configargparse.ArgParser(description=desc)
-    argparser.add_argument("guessed", help="file name for the guessed annotation")
-    argparser.add_argument("ref", help="file name for the reference annotation")
+    argparser.add_argument("guessed", help="filename/directory for the guessed annotation(s)")
+    argparser.add_argument("ref", help="filename/directory for the reference annotation(s)")
     argparser.add_argument("-f", "--format", default="amr", help="default format (if cannot determine by suffix)")
-    add_verbose_argument(argparser, help="detailed evaluation output")
+    argparser.add_argument("--out-file", help="file to write results for each evaluated passage to, in CSV format")
+    argparser.add_argument("--summary-file", help="file to write aggregated results to, in CSV format")
+    group = argparser.add_mutually_exclusive_group()
+    add_verbose_argument(group, help="detailed evaluation output")
+    group.add_argument("-q", "--quiet", action="store_true", help="do not print anything")
     main(argparser.parse_args())
