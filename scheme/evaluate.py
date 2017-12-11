@@ -3,6 +3,7 @@
 import csv
 import os
 import re
+import sys
 from itertools import groupby
 
 import configargparse
@@ -83,14 +84,22 @@ def evaluate_all(args, evaluate, files):
     for ((guessed_passage, _, guessed_format, guessed_converter, _),
          (ref_passage, passage_id, ref_format, _, ref_converter)) in zip(*[read_files(f, args.format) for f in files]):
         if not args.quiet:
-            print(passage_id)
+            print(passage_id, end=" ")
         if guessed_format != ref_format:
             guessed_passage = next(iter(guessed_converter(guessed_passage + [""], passage_id=passage_id))) if \
                 ref_converter is None else ref_converter(guessed_passage)
         result = evaluate(guessed_passage, ref_passage, verbose=args.verbose > 1)
+        if not args.quiet:
+            print("F1: %.3f" % result.average_f1())
         if args.verbose:
             result.print()
         yield result
+
+
+def write_csv(filename, rows):
+    if filename:
+        with sys.stdout if filename == "-" else open(filename, "w", encoding="utf-8", newline="") as f:
+            csv.writer(f).writerows(rows)
 
 
 def main(args):
@@ -101,18 +110,13 @@ def main(args):
     if len(results) > 1:
         if args.verbose:
             print("Aggregated scores:")
-        else:
-            print(end="\r")
-            if not args.quiet:
-                summary.print()
         if not args.quiet:
-            print("Average F1: %.3f" % summary.average_f1())
-    if args.out_file:
-        with open(args.out_file, "w", encoding="utf-8", newline="") as f:
-            csv.writer(f).writerows([summary.titles()] + [result.fields() for result in results])
-    if args.summary_file:
-        with open(args.summary_file, "w", encoding="utf-8", newline="") as f:
-            csv.writer(f).writerows([summary.titles(), summary.fields()])
+            print("F1: %.3f" % summary.average_f1())
+            summary.print()
+    elif not args.verbose:
+        summary.print()
+    write_csv(args.out_file,     [summary.titles()] + [result.fields() for result in results])
+    write_csv(args.summary_file, [summary.titles(), summary.fields()])
 
 
 if __name__ == '__main__':
@@ -120,8 +124,8 @@ if __name__ == '__main__':
     argparser.add_argument("guessed", help="filename/directory for the guessed annotation(s)")
     argparser.add_argument("ref", help="filename/directory for the reference annotation(s)")
     argparser.add_argument("-f", "--format", default="amr", help="default format (if cannot determine by suffix)")
-    argparser.add_argument("--out-file", help="file to write results for each evaluated passage to, in CSV format")
-    argparser.add_argument("--summary-file", help="file to write aggregated results to, in CSV format")
+    argparser.add_argument("-o", "--out-file", help="file to write results for each evaluated passage to, in CSV format")
+    argparser.add_argument("-s", "--summary-file", help="file to write aggregated results to, in CSV format")
     group = argparser.add_mutually_exclusive_group()
     add_verbose_argument(group, help="detailed evaluation output")
     group.add_argument("-q", "--quiet", action="store_true", help="do not print anything")
