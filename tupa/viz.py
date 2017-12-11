@@ -6,6 +6,10 @@ import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 
 
+def smooth(x, s=100):
+    return [np.mean(x[i*s:(i+1)*s]) for i in range(int(np.ceil(len(x)/s)))]
+
+
 def main(args):
     _, axes = plt.subplots(len(args.data), figsize=(19, 10))
     for i, filename in enumerate(args.data):
@@ -22,7 +26,7 @@ def main(args):
                     name = line
                     print(name.strip())
                 else:
-                    values = np.fromstring(line, sep=" ")
+                    values = smooth(np.fromstring(line, sep=" "), s=args.smoothing)
                     start = end
                     end += len(values)
                     ticks.append((start + end) / 2)
@@ -38,6 +42,5 @@ if __name__ == "__main__":
     argparser = ArgumentParser()
     argparser.add_argument("data", nargs="+")
     argparser.add_argument("-o", "--output-file", default="viz.png")
-    args = argparser.parse_args()
-    main(args)
-
+    argparser.add_argument("-s", "--smoothing", type=int, default=100)
+    main(argparser.parse_args())
