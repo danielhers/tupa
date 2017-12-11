@@ -27,7 +27,7 @@ class ConversionTests(unittest.TestCase):
     def convert_and_evaluate(self, passage, ref):
         converted = to_sdp(passage)
         scores = evaluate(converted, ref)
-        self.assertAlmostEqual(scores.average_f1(), 1, msg="\n".join(converted))
+        self.assertAlmostEqual(scores.average_f1(), 1, msg="\n" + "\n".join(converted))
 
 
 class EvaluationTests(unittest.TestCase):
