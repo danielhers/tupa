@@ -13,7 +13,8 @@ np.seterr("raise")
 
 
 def smooth(x, s=100):
-    x = x.reshape((x.shape[0], -1))
+    if len(x.shape) == 1:
+        x = x.reshape((-1, x.shape[0]))
     return imresize(x, size=(min(x.shape[0], s), min(x.shape[1], s)))
 
 
