@@ -166,9 +166,24 @@ class HyperparamsInitializer(object):
     def __str__(self):
         return '"%s"' % " ".join([self.name] + list(self.str_args))
 
+    def __bool__(self):
+        return bool(self.str_args)
+    
+    @classmethod
+    def action(cls, args):
+        return cls(*args.replace("=", " ").split())
 
-def hyperparams_action(args):
-    return HyperparamsInitializer(*args.replace("=", " ").split())
+
+class Iterations(object):
+    def __init__(self, args):
+        try:
+            i, *hyperparams = args.replace("=", " ").split()
+        except (AttributeError, ValueError):
+            i, *hyperparams = args,
+        self.i, self.hyperparams = int(i), HyperparamsInitializer(str(i), *hyperparams)
+
+    def __str__(self):
+        return str(self.hyperparams or self.i)
 
 
 class Config(object, metaclass=Singleton):
@@ -190,7 +205,8 @@ class Config(object, metaclass=Singleton):
         group = argparser.add_argument_group(title="Training parameters")
         group.add_argument("-t", "--train", nargs="+", default=(), help="passage files/directories to train on")
         group.add_argument("-d", "--dev", nargs="+", default=(), help="passage files/directories to tune on")
-        group.add_argument("-I", "--iterations", type=int, default=1, help="number of training iterations")
+        group.add_argument("-I", "--iterations", nargs="+", type=Iterations, default=(Iterations(1),),
+                           help="number of training iterations along with optional hyperparameters per part")
         group.add_argument("--folds", type=int, choices=(3, 5, 10), help="#folds for cross validation")
         group.add_argument("--seed", type=int, default=1, help="random number generator seed")
         add_boolean_option(group, "early-update", "early update procedure (finish example on first error)")
@@ -224,10 +240,10 @@ class Config(object, metaclass=Singleton):
         add_boolean_option(group, "dynet-autobatch", "auto-batching of training examples")
         DYNET_ARG_NAMES.update(get_group_arg_names(group))
 
-        argparser.add_argument("-H", "--hyperparams", type=hyperparams_action, nargs="*",
+        argparser.add_argument("-H", "--hyperparams", type=HyperparamsInitializer.action, nargs="*",
                                help="shared hyperparameters or hyperparameters for specific formats, "
                                     'e.g., "shared --lstm-layer-dim=100 --lstm-layers=1" "ucca --word-dim=300"',
-                               default=[hyperparams_action("shared --lstm-layers 2")])
+                               default=[HyperparamsInitializer.action("shared --lstm-layers 2")])
 
         self.args = argparser.parse_args(args if args else None)
 
@@ -243,7 +259,7 @@ class Config(object, metaclass=Singleton):
                 self.args.testscores = self.args.model + ".test.csv"
         elif not self.args.log:
             self.args.log = "parse.log"
-        self._logger = self.format = self.hyperparams = None
+        self._logger = self.format = self.hyperparams = self.iteration_hyperparams = None
         self.original_values = {}
         self.random = np.random
         self.update()
@@ -257,31 +273,7 @@ class Config(object, metaclass=Singleton):
             f = "ucca"  # Default output format is UCCA
         if update or self.format != f:
             self.format = f
-            format_values = dict(self.original_values)
-            format_values.update({k: v for k, v in vars(self.hyperparams.specific[self.format]).items()
-                                  if not k.startswith("_")})
-            for attr, value in format_values.items():
-                setattr(self.args, attr, value)
-            if self.format == "amr":
-                if not self.args.node_label_dim:
-                    self.args.node_label_dim = 20
-                if not self.args.max_node_labels:
-                    self.args.max_node_labels = 1000
-                if not self.args.node_category_dim:
-                    self.args.node_category_dim = 5
-                if not self.args.max_node_categories:
-                    self.args.max_node_categories = 25
-            else:  # All other formats do not use node labels
-                self.args.node_labels = False
-                self.args.node_label_dim = self.args.max_node_labels = \
-                    self.args.node_category_dim = self.args.max_node_categories = 0
-            required_edge_labels = EDGE_LABELS_NUM.get(self.format)
-            if self.is_unlabeled():
-                self.args.max_edge_labels = self.args.edge_label_dim = 0
-                self.args.max_action_labels = self.max_actions_unlabeled()
-            elif required_edge_labels is not None:
-                self.args.max_edge_labels = max(self.args.max_edge_labels, required_edge_labels)
-                self.args.max_action_labels = max(self.args.max_action_labels, 6 * required_edge_labels)
+            self.update_by_hyperparams()
 
     def is_unlabeled(self, f=None):
         # If just -u or --unlabeled is given then its value is [], and we want to treat that as "all formats"
@@ -323,6 +315,40 @@ class Config(object, metaclass=Singleton):
 
     def update_hyperparams(self, **kwargs):
         self.update({"hyperparams": [HyperparamsInitializer(k, **v) for k, v in kwargs.items()]})
+
+    def update_iteration(self, iteration):
+        if iteration.hyperparams:
+            print("Updating: %s" % iteration.hyperparams)
+            self.iteration_hyperparams = iteration.hyperparams
+            self.update_by_hyperparams()
+
+    def update_by_hyperparams(self):
+        format_values = dict(self.original_values)
+        for hyperparams in (self.iteration_hyperparams, self.hyperparams.specific[self.format]):
+            if hyperparams:
+                format_values.update({k: v for k, v in vars(hyperparams).items() if not k.startswith("_")})
+        for attr, value in format_values.items():
+            setattr(self.args, attr, value)
+        if self.format == "amr":
+            if not self.args.node_label_dim:
+                self.args.node_label_dim = 20
+            if not self.args.max_node_labels:
+                self.args.max_node_labels = 1000
+            if not self.args.node_category_dim:
+                self.args.node_category_dim = 5
+            if not self.args.max_node_categories:
+                self.args.max_node_categories = 25
+        else:  # All other formats do not use node labels
+            self.args.node_labels = False
+            self.args.node_label_dim = self.args.max_node_labels = \
+                self.args.node_category_dim = self.args.max_node_categories = 0
+        required_edge_labels = EDGE_LABELS_NUM.get(self.format)
+        if self.is_unlabeled():
+            self.args.max_edge_labels = self.args.edge_label_dim = 0
+            self.args.max_action_labels = self.max_actions_unlabeled()
+        elif required_edge_labels is not None:
+            self.args.max_edge_labels = max(self.args.max_edge_labels, required_edge_labels)
+            self.args.max_action_labels = max(self.args.max_action_labels, 6 * required_edge_labels)
 
     @property
     def line_end(self):

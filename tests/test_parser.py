@@ -10,7 +10,7 @@ from scheme.convert import FROM_FORMAT
 from scheme.evaluate import Scores
 from scheme.util.amr import WIKIFIER
 from tupa.action import Actions
-from tupa.config import Config, CLASSIFIERS
+from tupa.config import Config, CLASSIFIERS, Iterations
 from tupa.model import Model, ClassifierProperty, NODE_LABEL_KEY
 from tupa.oracle import Oracle
 from tupa.parse import Parser
@@ -113,7 +113,7 @@ def test_parser(config, model_type, formats, default_setting, text=True):
         print("-- %sing %s" % (mode, model_type))
         p = Parser(model_file="test_files/models/%s_%s%s" % ("_".join(formats), model_type, default_setting.suffix()),
                    model_type=model_type)
-        list(p.train(passages if mode == "train" else None, iterations=2))
+        list(p.train(passages if mode == "train" else None, iterations=(Iterations(2),)))
         text_results = results = list(p.parse(passages, evaluate=evaluate))
         if text:
             print("Converting to text and parsing...")

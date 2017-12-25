@@ -15,7 +15,7 @@ from ucca.evaluation import LABELED, UNLABELED
 from scheme.convert import FROM_FORMAT, TO_FORMAT
 from scheme.evaluate import EVALUATORS, Scores
 from scheme.util.amr import LABEL_ATTRIB, WIKIFIER
-from tupa.config import Config
+from tupa.config import Config, Iterations
 from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
 from tupa.oracle import Oracle
 from tupa.states.state import State
@@ -49,13 +49,13 @@ class Parser(object):
         self.ignore_node = None if self.args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
         self.training = self.trained = False
 
-    def train(self, passages=None, dev=None, test=None, iterations=1):
+    def train(self, passages=None, dev=None, test=None, iterations=(Iterations(1),)):
         """
         Train parser on given passages
         :param passages: iterable of passages to train on
         :param dev: iterable of passages to tune on
         :param test: iterable of passages that would be tested on after train finished
-        :param iterations: number of iterations to perform
+        :param iterations: iterable of Iterations objects whose i attributes are the number of iterations to perform
         """
         self.trained = True
         if passages:
@@ -70,15 +70,18 @@ class Parser(object):
             print_config()
             self.dev = dev
             self.best_score = self.model.classifier.best_score if self.model.classifier else 0
-            start = self.model.classifier.epoch + 1 if self.model.classifier else 1
-            total_iterations = iterations + start - 1
-            for self.iteration in range(start, total_iterations + 1):
-                self.eval_index = 0
-                print("Training iteration %d of %d: " % (self.iteration, total_iterations))
-                Config().random.shuffle(passages)
-                list(self.parse(passages, mode=ParseMode.train))
-                yield self.eval_and_save(self.iteration == total_iterations, finished_epoch=True)
-            print("Trained %d iterations" % total_iterations)
+            start_iter = self.model.classifier.epoch + 1 if self.model.classifier else 1
+            total_iter = start_iter - 1 + sum(i.i for i in iterations)
+            for i in iterations:
+                Config().update_iteration(i)
+                for self.iteration in range(start_iter, start_iter + i.i):
+                    self.eval_index = 0
+                    print("Training iteration %d of %d: " % (self.iteration, total_iter))
+                    Config().random.shuffle(passages)
+                    list(self.parse(passages, mode=ParseMode.train))
+                    yield self.eval_and_save(self.iteration == total_iter, finished_epoch=True)
+                start_iter = self.iteration + 1
+            print("Trained %d iterations" % total_iter)
         if dev and test or not passages:
             self.model.load()  # Load best model (on dev) to prepare for test
             if not passages:
