@@ -71,6 +71,8 @@ class Parser(object):
             self.dev = dev
             self.best_score = self.model.classifier.best_score if self.model.classifier else 0
             start_iter = self.model.classifier.epoch + 1 if self.model.classifier else 1
+            if not hasattr(iterations, "__iter__"):
+                iterations = (iterations,)
             total_iter = start_iter - 1 + sum(i.i for i in iterations)
             for i in iterations:
                 Config().update_iteration(i)
