@@ -19,11 +19,12 @@ def save_model(model, filename):
 
 def main():
     argparser = ArgParser(description="Load TUPA model and export as .npz file.")
-    argparser.add_argument("model", help="model file basename to load")
+    argparser.add_argument("models", nargs="+", help="model file basename(s) to load")
     args = argparser.parse_args()
-    model = load_model(args.model)
-    save_model(model, args.model)
-    Config().save(args.model)
+    for filename in args.models:
+        model = load_model(filename)
+        save_model(model, filename)
+        Config().save(filename)
 
 
 if __name__ == "__main__":
