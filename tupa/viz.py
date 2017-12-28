@@ -20,13 +20,13 @@ REPLACEMENTS = (
 )
 
 
-def smooth(x, s):
+def smooth(x, s=100000):
     if len(x.shape) == 1:
         x = x.reshape((x.shape[0], -1))
     return imresize(x, size=(min(x.shape[0], s), min(x.shape[1], s)))
 
 
-def visualize(model, filename, smoothing):
+def visualize(model, filename):
     values = model.get_all_params()
     cols = OrderedDict()
     for key, value in values.items():
@@ -42,7 +42,7 @@ def visualize(model, filename, smoothing):
             else:
                 plt.sca(axis)
                 key, value = col[i]
-                plt.colorbar(plt.pcolormesh(smooth(value, smoothing)))
+                plt.colorbar(plt.pcolormesh(smooth(value)))
                 for pattern, repl in REPLACEMENTS:  # TODO map 0123->ifoc
                     key = re.sub(pattern, repl, key)
                 plt.title(key)
@@ -57,11 +57,10 @@ def visualize(model, filename, smoothing):
 def main():
     argparser = ArgParser(description="Load TUPA model and visualize, saving to .png file.")
     argparser.add_argument("models", nargs="+", help="model file basename(s) to load")
-    argparser.add_argument("-s", "--smoothing", type=int, default=100)
     args = argparser.parse_args()
     for filename in args.models:
         model = load_model(filename)
-        visualize(model, filename, args.smoothing)
+        visualize(model, filename)
 
 
 if __name__ == "__main__":
