@@ -135,7 +135,7 @@ class Parser(object):
         total_duration = 0
         total_tokens = 0
         passage_index = 0
-        for passage_index, passage in self.passage_generator(passages):
+        for passage_index, passage in enumerate(self.passage_generator(passages), start=1):
             started = time.time()
             self.init_parse_passage(passage)
             status = self.parse_passage_with_timeout(passage)
@@ -166,10 +166,10 @@ class Parser(object):
     def passage_generator(self, passages):
         if not hasattr(passages, "__iter__"):  # Single passage given
             passages = (passages,)
-        passages_iter = enumerate(passages, start=1)
-        for passage_index, passage in passages_iter if self.args.verbose else tqdm(
-                passages_iter, unit=Config().passage_word, total=len(passages) if hasattr(passages, "__len__")
-                else None, file=sys.stdout):
+        annotated = textutil.annotate_all(passages, lang=self.args.lang, verbose=self.args.verbose > 2)
+        for passage in annotated if self.args.verbose else tqdm(
+                annotated, unit=Config().passage_word, total=len(passages) if hasattr(passages, "__len__") else None,
+                file=sys.stdout):
             passage_format = passage.extra.get("format") or "ucca"
             if self.args.verbose:
                 print("%-6s %s %-7s" % (passage_format, Config().passage_word, passage.ID), end=Config().line_end)
@@ -181,12 +181,11 @@ class Parser(object):
                 continue
             assert not (self.training and passage_format == "text"), "Cannot train on unannotated plain text"
             Config().set_format(passage_format)
-            yield passage_index, passage
+            yield passage
 
     def init_parse_passage(self, passage):
         self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = 0
         self.args.lang = passage.attrib.get("lang", self.args.lang)
-        textutil.annotate(passage, lang=self.args.lang, verbose=self.args.verbose > 2)  # for POS, dep and NER
         WIKIFIER.enabled = self.args.wikification
         self.state = State(passage)
         self.state_hash_history = set()
