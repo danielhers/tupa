@@ -354,6 +354,10 @@ class Config(object, metaclass=Singleton):
     def line_end(self):
         return "\n" if self.args.verbose > 2 else " "  # show all in one line unless verbose
 
+    @property
+    def passage_word(self):
+        return "sentence" if self.args.sentences else "paragraph" if self.args.paragraphs else "passage"
+
     def log(self, message):
         try:
             if self._logger is None:
