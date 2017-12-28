@@ -1,4 +1,5 @@
 from collections import namedtuple, OrderedDict
+from itertools import tee
 
 import penman
 from ucca import layer0, convert
@@ -19,7 +20,10 @@ class AmrConverter(convert.FormatConverter):
         self.remove_cycles = remove_cycles
         self.extensions = [l for l in EXTENSIONS if kwargs.get(l)]
         self.excluded = {i for l, r in EXTENSIONS.items() if l not in self.extensions for i in r}
-        for passage, amr, amr_id in self._init_passages(self._amr_generator(lines)):
+        gen1, gen2 = tee(self._init_passages(self._amr_generator(lines)))
+        passages = (passage for passage, _, _ in gen1)
+        amrs = ((amr, amr_id) for _, amr, amr_id in gen2)
+        for passage, (amr, amr_id) in zip(textutil.annotate_all(passages), amrs):
             yield self._build_passage(passage, amr, amr_id)
 
     @staticmethod
@@ -53,7 +57,6 @@ class AmrConverter(convert.FormatConverter):
             amr_id = amr_id or self.passage_id
             passage = next(convert.from_text(tokens, amr_id, tokenized=True))
             passage.extra["format"] = "amr"
-            textutil.annotate(passage)
             yield passage, amr, amr_id
 
     def _build_passage(self, passage, amr, amr_id):
@@ -230,8 +233,6 @@ class AmrConverter(convert.FormatConverter):
             node.attrib[LABEL_ATTRIB] = label
 
     def to_format(self, passage, metadata=True, wikification=True, verbose=False):
-        if verbose:
-            print("Annotating passage..")
         textutil.annotate(passage)
         lines = ["# ::id " + passage.ID,
                  "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all)] if metadata else []
