@@ -19,11 +19,11 @@ class AmrConverter(convert.FormatConverter):
         self.remove_cycles = remove_cycles
         self.extensions = [l for l in EXTENSIONS if kwargs.get(l)]
         self.excluded = {i for l, r in EXTENSIONS.items() if l not in self.extensions for i in r}
-        for amr, amr_id, tokens in self.amr_generator(lines):
-            yield self._build_passage(amr, amr_id, tokens)
+        for passage, amr, amr_id in self._init_passages(self._amr_generator(lines)):
+            yield self._build_passage(passage, amr, amr_id)
 
     @staticmethod
-    def amr_generator(lines):
+    def _amr_generator(lines):
         amr_lines = []
         amr_id = tokens = None
         for line in lines:
@@ -46,13 +46,17 @@ class AmrConverter(convert.FormatConverter):
         if amr_lines:
             yield amr_lines, amr_id, tokens
 
-    def _build_passage(self, lines, amr_id, tokens):
-        assert tokens is not None, "Cannot convert AMR without input tokens"
-        amr = parse(" ".join(lines), tokens=tokens)
-        amr_id = amr_id or self.passage_id
-        passage = next(convert.from_text(tokens, amr_id, tokenized=True))
-        passage.extra["format"] = "amr"
-        textutil.annotate(passage)
+    def _init_passages(self, amrs):
+        for lines, amr_id, tokens in amrs:
+            assert tokens is not None, "Cannot convert AMR without input tokens"
+            amr = parse(" ".join(lines), tokens=tokens)
+            amr_id = amr_id or self.passage_id
+            passage = next(convert.from_text(tokens, amr_id, tokenized=True))
+            passage.extra["format"] = "amr"
+            textutil.annotate(passage)
+            yield passage, amr, amr_id
+
+    def _build_passage(self, passage, amr, amr_id):
         l0 = passage.layer(layer0.LAYER_ID)
         l1 = passage.layer(layer1.LAYER_ID)
         self._build_layer1(amr, l1)
