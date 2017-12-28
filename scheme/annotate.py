@@ -25,7 +25,7 @@ def main(args):
             raise IOError("Not found: " + pattern)
         passages = read_files_and_dirs(filenames, converters=FROM_FORMAT)
         for passage in annotate_all(passages if args.verbose else
-                                    tqdm(passages, unit=" passages", desc="Annotating " + os.path.basename(pattern)),
+                                    tqdm(passages, unit=" passages", desc="Annotating " + out_dir),
                                     verbose=args.verbose, replace=True, lang=lang):
             write_passage(passage, outdir=out_dir, verbose=args.verbose, binary=args.binary)
 
