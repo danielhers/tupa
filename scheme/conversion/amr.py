@@ -10,8 +10,8 @@ DELETE_PATTERN = re.compile("\\\\|(?<=(?<!<)<)[^<>]+(?=>(?!>))")  # Delete text 
 
 class AmrConverter(convert.FormatConverter):
     def __init__(self):
-        self.passage_id = self.amr_id = self.lines = self.tokens = self.nodes = self.return_original = \
-            self.remove_cycles = self.extensions = self.excluded = None
+        self.passage_id = self.nodes = self.return_original = self.remove_cycles = self.extensions = self.excluded = \
+            None
 
     def from_format(self, lines, passage_id, return_original=False, remove_cycles=True, **kwargs):
         self.passage_id = passage_id
@@ -19,34 +19,39 @@ class AmrConverter(convert.FormatConverter):
         self.remove_cycles = remove_cycles
         self.extensions = [l for l in EXTENSIONS if kwargs.get(l)]
         self.excluded = {i for l, r in EXTENSIONS.items() if l not in self.extensions for i in r}
-        self.lines = []
-        self.amr_id = self.tokens = None
+        for amr, amr_id, tokens in self.amr_generator(lines):
+            yield self._build_passage(amr, amr_id, tokens)
+
+    @staticmethod
+    def amr_generator(lines):
+        amr_lines = []
+        amr_id = tokens = None
         for line in lines:
             line = line.lstrip()
             if line:
                 if line[0] != COMMENT_PREFIX:
-                    self.lines.append(line)
+                    amr_lines.append(line)
                     continue
                 m = ID_PATTERN.match(line)
                 if m:
-                    self.amr_id = m.group(1)
+                    amr_id = m.group(1)
                 else:
                     m = TOK_PATTERN.match(line)
                     if m:
-                        self.tokens = [t.strip("@") or "@" for t in DELETE_PATTERN.sub("", m.group(1)).split()]
-            if self.lines:
-                yield self._build_passage()
-        if self.lines:
-            yield self._build_passage()
+                        tokens = [t.strip("@") or "@" for t in DELETE_PATTERN.sub("", m.group(1)).split()]
+            if amr_lines:
+                yield amr_lines, amr_id, tokens
+                amr_lines = []
+                amr_id = tokens = None
+        if amr_lines:
+            yield amr_lines, amr_id, tokens
 
-    def _build_passage(self):
-        assert self.tokens is not None, "Cannot convert AMR without input tokens"
-        amr = parse(" ".join(self.lines), tokens=self.tokens)
-        amr_id = self.amr_id or self.passage_id
-        passage = next(convert.from_text(self.tokens, amr_id, tokenized=True))
+    def _build_passage(self, lines, amr_id, tokens):
+        assert tokens is not None, "Cannot convert AMR without input tokens"
+        amr = parse(" ".join(lines), tokens=tokens)
+        amr_id = amr_id or self.passage_id
+        passage = next(convert.from_text(tokens, amr_id, tokenized=True))
         passage.extra["format"] = "amr"
-        self.lines = []
-        self.amr_id = self.tokens = None
         textutil.annotate(passage)
         l0 = passage.layer(layer0.LAYER_ID)
         l1 = passage.layer(layer1.LAYER_ID)
