@@ -23,7 +23,7 @@ def main(args):
         passages = read_files_and_dirs(filenames, converters=FROM_FORMAT)
         for passage in annotate_all(passages if args.verbose else
                                     tqdm(passages, unit=" passages", desc="Annotating " + pattern),
-                                    verbose=args.verbose, replace=True):
+                                    verbose=args.verbose, replace=True, lang=args.lang):
             write_passage(passage, outdir=args.out_dir, verbose=args.verbose, binary=args.binary)
 
 
@@ -32,5 +32,6 @@ if __name__ == '__main__':
     argparser.add_argument("filenames", nargs="+", help="passage file names to annotate")
     argparser.add_argument("-o", "--out-dir", default=".", help="directory to write annotated files to")
     argparser.add_argument("-b", "--binary", action="store_true", help="write in binary format (.%s)" % UCCA_EXT[1])
+    argparser.add_argument("-l", "--lang", help="small two-letter language code to use for NLP model")
     argparser.add_argument("-v", "--verbose", action="store_true", help="print tagged text for each passage")
     main(argparser.parse_args())
