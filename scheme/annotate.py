@@ -36,6 +36,6 @@ if __name__ == '__main__':
     argparser.add_argument("-f", "--list-file", help="file whose rows are <PATTERN> <OUT-DIR> <LANGUAGE>")
     argparser.add_argument("-o", "--out-dir", default=".", help="directory to write annotated files to")
     argparser.add_argument("-b", "--binary", action="store_true", help="write in binary format (.%s)" % UCCA_EXT[1])
-    argparser.add_argument("-l", "--lang", help="small two-letter language code to use for NLP model")
+    argparser.add_argument("-l", "--lang", default="en", help="small two-letter language code to use for NLP model")
     argparser.add_argument("-v", "--verbose", action="store_true", help="print tagged text for each passage")
     main(argparser.parse_args())
