@@ -13,10 +13,9 @@ if ! [[ "$ACTION" =~ ^(toy|unit)$ ]]; then
     case "$FORMAT" in
     ucca)
         mkdir pickle
-        curl -L http://www.cs.huji.ac.il/~danielh/ucca/ucca_corpus_pickle.tgz | tar xz -C pickle || curl -L https://www.dropbox.com/s/q4ycn45zlmhuf9k/ucca_corpus_pickle.tgz | tar xz -C pickle
-        python -m scripts.split_corpus -q pickle -t 4282 -d 454 -l
-        TRAIN_DATA="pickle/train/*0.pickle"
-        DEV_DATA="pickle/dev/*0.pickle"
+        curl -L http://www.cs.huji.ac.il/~danielh/ucca/ucca-sample.tar.gz | tar xz -C pickle
+        TRAIN_DATA="pickle/train/*"
+        DEV_DATA="pickle/dev/*"
         ;;
     amr)
         curl --remote-name-all https://amr.isi.edu/download/2016-03-14/alignment-release-{training,dev,test}-bio.txt
