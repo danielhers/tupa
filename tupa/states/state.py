@@ -187,7 +187,7 @@ class State(object):
                         self.check(not self.args.require_connected or s0.is_linkage or s0.incoming,
                                    message and "Reducing parentless non-terminal %s" % s0, is_type=True)
                         self.check(not self.constraints.required_outgoing or
-                                   s0.outgoing_tags.intersection((EdgeTags.Terminal, EdgeTags.Punctuation)) or
+                                   s0.outgoing_tags.intersection((EdgeTags.Terminal, EdgeTags.Punctuation, "")) or
                                    s0.outgoing_tags.issuperset(self.constraints.required_outgoing),
                                    message and "Reducing non-terminal %s without %s edge" % (
                                        s0, self.constraints.required_outgoing), is_type=True)
