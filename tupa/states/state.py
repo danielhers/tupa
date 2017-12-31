@@ -183,9 +183,14 @@ class State(object):
                     if s0 is self.root:
                         self.check(self.root.labeled or not self.args.node_labels,
                                    message and "Reducing root without label", is_type=True)
-                    else:
-                        self.check(not self.args.require_connected or s0.is_linkage or s0.text or s0.incoming,
+                    elif not s0.text:
+                        self.check(not self.args.require_connected or s0.is_linkage or s0.incoming,
                                    message and "Reducing parentless non-terminal %s" % s0, is_type=True)
+                        self.check(not self.constraints.required_outgoing or
+                                   s0.outgoing_tags.intersection((EdgeTags.Terminal, EdgeTags.Punctuation)) or
+                                   s0.outgoing_tags.issuperset(self.constraints.required_outgoing),
+                                   message and "Reducing non-terminal %s without %s edge" % (
+                                       s0, self.constraints.required_outgoing), is_type=True)
                     self.check(not self.args.node_labels or s0.text or s0.labeled,
                                message and "Reducing non-terminal %s without label" % s0, is_type=True)
                 else:  # Binary actions

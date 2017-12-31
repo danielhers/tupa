@@ -75,7 +75,8 @@ class Constraints(object):
     def __init__(self, args, multigraph=False, require_implicit_childless=True, allow_root_terminal_children=False,
                  top_level_allowed=None, top_level_only=None, possible_multiple_incoming=(),
                  childless_incoming_trigger=(), childless_outgoing_allowed=(), unique_incoming=(), unique_outgoing=(),
-                 mutually_exclusive_incoming=(), mutually_exclusive_outgoing=(), exclusive_outgoing=()):
+                 mutually_exclusive_incoming=(), mutually_exclusive_outgoing=(), exclusive_outgoing=(),
+                 required_outgoing=()):
         self.args = args
         self.multigraph = multigraph
         self.require_implicit_childless = require_implicit_childless
@@ -83,6 +84,7 @@ class Constraints(object):
         self.top_level_allowed = top_level_allowed
         self.top_level_only = top_level_only
         self.possible_multiple_incoming = possible_multiple_incoming
+        self.required_outgoing = required_outgoing
         self.tag_rules = \
             [TagRule(trigger={Direction.incoming: childless_incoming_trigger},
                      allowed={Direction.outgoing: childless_outgoing_allowed}),
