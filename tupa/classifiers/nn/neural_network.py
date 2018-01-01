@@ -168,7 +168,8 @@ class NeuralNetwork(Classifier, SubModel):
         super().score(features, axis)
         num_labels = self.num_labels[axis]
         if self.updates > 0 and num_labels > 1:
-            return self.evaluate(features, axis).npvalue()[:num_labels]
+            value = dy.log_softmax(self.evaluate(features, axis), restrict=list(range(num_labels))).npvalue()
+            return value[:num_labels]
         if self.args.verbose > 3:
             print("  no updates done yet, returning zero vector.")
         return np.zeros(num_labels)
