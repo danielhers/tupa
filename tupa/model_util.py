@@ -189,6 +189,13 @@ def load_dict(filename):
     return d
 
 
+def jsonify(o):
+    try:
+        return o.__dict__
+    except AttributeError:
+        return o.tolist()
+
+
 def save_json(filename, d):
     """
     Save dictionary to JSON file
@@ -197,7 +204,7 @@ def save_json(filename, d):
     """
     print("Saving to '%s'." % filename)
     with open(filename, "w") as h:
-        json.dump(d, h)
+        json.dump(d, h, default=jsonify)
 
 
 def load_json(filename):
