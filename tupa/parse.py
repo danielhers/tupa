@@ -170,12 +170,14 @@ class Parser(object):
         if not hasattr(passages, "__iter__"):  # Single passage given
             passages = (passages,)
         annotated = textutil.annotate_all(passages, lang=self.args.lang, verbose=self.args.verbose > 2)
-        for passage in annotated if self.args.verbose else tqdm(
-                annotated, unit=Config().passage_word, total=len(passages) if hasattr(passages, "__len__") else None,
-                file=sys.stdout):
+        t = tqdm(annotated, unit=Config().passage_word, total=len(passages) if hasattr(passages, "__len__") else None,
+                 file=sys.stdout, desc="Initializing")
+        for passage in annotated if self.args.verbose else t:
             passage_format = passage.extra.get("format") or "ucca"
             if self.args.verbose:
                 print("%-6s %s %-7s" % (passage_format, Config().passage_word, passage.ID), end=Config().line_end)
+            else:
+                t.set_description("%s %s" % (passage_format, passage.ID))
             self.seen_per_format[passage_format] += 1
             if self.training and self.args.max_training_per_format and \
                     self.seen_per_format[passage_format] > self.args.max_training_per_format:
