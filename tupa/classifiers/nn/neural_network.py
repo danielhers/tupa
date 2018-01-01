@@ -183,7 +183,10 @@ class NeuralNetwork(Classifier, SubModel):
         :param importance: how much to scale the update for the weight update for each true label
         """
         super().update(features, axis, pred, true, importance)
-        self.losses += self.calc_loss(self.evaluate(features, axis, train=True), axis, true, importance or repeat(1))
+        losses = self.calc_loss(self.evaluate(features, axis, train=True), axis, true, importance or repeat(1))
+        if self.args.verbose > 3:
+            print("  loss=" + ", ".join("%g" % l.value() for l in losses))
+        self.losses += losses
         self.steps += 1
 
     def calc_loss(self, scores, axis, true, importance):
