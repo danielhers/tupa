@@ -35,6 +35,9 @@ class Parser(object):
 
     """
     Main class to implement transition-based UCCA parser
+    TODO refactor to extract PassageParser for a single passage and BatchParser for a single iteration,
+    TODO to avoid getting all the counts mixed between training and intermittent dev runs,
+    TODO and to prepare for parallel execution across passages
     """
     def __init__(self, model_file=None, model_type=None, beam=1):
         self.args = Config().args
