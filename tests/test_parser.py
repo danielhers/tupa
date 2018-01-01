@@ -124,7 +124,7 @@ def test_parser(config, model_type, formats, default_setting, text=True):
             scores.append(Scores(tuple(zip(*results))[1]).average_f1())
             if text:
                 for t, (r, s) in zip(text_results, results):
-                    print("  %s F1=%.3f, text F1=%.3f" % (r.ID, s.average_f1(), p.evaluate_passage(t, r).average_f1()))
+                    print("  %s F1=%.3f" % (r.ID, s.average_f1()))
         assert not list(p.parse(()))  # parsing nothing returns nothing
         print()
     if evaluate:
