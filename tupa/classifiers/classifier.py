@@ -16,7 +16,7 @@ class Classifier(object):
         """
         self.args = Config().args
         self.model_type = model_type
-        self.filename = filename
+        self.filename = filename  # TODO remove this attribute, get from Model in save() and load() instead
         self.labels = labels
         self.input_params = input_params
         self.learning_rate = self.args.learning_rate
