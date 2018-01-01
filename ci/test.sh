@@ -56,7 +56,7 @@ tune-*)
     column -t -s, params.csv
     ;;
 convert-*)
-    python -m scheme.convert_and_evaluate "$CONVERT_DATA" -v
+    python -m scheme.scripts.convert_and_evaluate "$CONVERT_DATA" -v
     ;;
 noop-amr)
     python -m tupa -vv -c noop --implicit -We -t "$TRAIN_DATA" "$DEV_DATA"
