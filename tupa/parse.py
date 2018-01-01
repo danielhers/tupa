@@ -303,7 +303,7 @@ class Parser(object):
         features = self.model.feature_extractor.extract_features(self.state)
         scores = self.model.classifier.score(features, axis=Config().format)  # Returns NumPy array
         if self.args.verbose > 3:
-            print("  action scores: " + ",".join(("%s: %g" % x for x in zip(self.model.actions.all, scores))))
+            print("  action scores: " + ",".join(("%s=%g" % x for x in zip(self.model.actions.all, scores))))
         try:
             predicted_action = self.predict(scores, self.model.actions.all, self.state.is_valid_action, unit="action")
         except StopIteration as e:
@@ -349,7 +349,7 @@ class Parser(object):
         features = self.model.feature_extractor.extract_features(self.state)
         scores = self.model.classifier.score(features, axis=NODE_LABEL_KEY)
         if self.args.verbose > 3:
-            print("  label scores: " + ",".join(("%s: %g" % x for x in zip(self.model.labels.all, scores))))
+            print("  label scores: " + ",".join(("%s=%g" % x for x in zip(self.model.labels.all, scores))))
         label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label, unit="label")
         if self.oracle:
             is_correct = (label == true_label)
