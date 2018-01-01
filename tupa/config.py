@@ -289,17 +289,18 @@ class Config(object, metaclass=Singleton):
 
     def set_dynet_arguments(self):
         self.random.seed(self.args.seed)
-        dynet_config.set(random_seed=self.args.seed)
+        kwargs = dict(random_seed=self.args.seed)
         if self.args.dynet_mem:
-            dynet_config.set(mem=self.args.dynet_mem)
+            kwargs.update(mem=self.args.dynet_mem)
         if self.args.dynet_weight_decay:
-            dynet_config.set(weight_decay=self.args.dynet_weight_decay)
+            kwargs.update(weight_decay=self.args.dynet_weight_decay)
+        if self.args.dynet_gpus and self.args.dynet_gpus != 1:
+            kwargs.update(requested_gpus=self.args.dynet_gpus)
+        if self.args.dynet_autobatch:
+            kwargs.update(autobatch=True)
+        dynet_config.set(**kwargs)
         if self.args.dynet_gpu:
             dynet_config.set_gpu()
-        if self.args.dynet_gpus and self.args.dynet_gpus != 1:
-            dynet_config.set(requested_gpus=self.args.dynet_gpus)
-        if self.args.dynet_autobatch:
-            dynet_config.set(autobatch=True)
 
     def update(self, params=None):
         if params:
