@@ -1,7 +1,7 @@
-import configargparse
 import csv
 import sys
 
+import configargparse
 from nltk.corpus import wordnet as wn
 
 

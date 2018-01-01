@@ -1,9 +1,9 @@
-import configargparse
 import csv
 import os
 import sys
 from shutil import rmtree, move
 
+import configargparse
 import nltk
 
 EXTRA_ROLESETS = (  # fix for roles missing in PropBank

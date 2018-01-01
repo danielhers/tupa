@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import configargparse
 import glob
 import os
 import sys
 
+import configargparse
 from ucca import ioutil
 
 from scheme.cfgutil import add_verbose_argument, add_boolean_option
