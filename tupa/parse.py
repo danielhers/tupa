@@ -177,7 +177,8 @@ class Parser(object):
             if self.args.verbose:
                 print("%-6s %s %-7s" % (passage_format, Config().passage_word, passage.ID), end=Config().line_end)
             else:
-                t.set_description("%s %s" % (passage_format, passage.ID))
+                t.set_description()
+                t.set_postfix(**{passage_format: passage.ID})
             self.seen_per_format[passage_format] += 1
             if self.training and self.args.max_training_per_format and \
                     self.seen_per_format[passage_format] > self.args.max_training_per_format:
