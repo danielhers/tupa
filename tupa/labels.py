@@ -1,4 +1,4 @@
-class Labels(object):
+class Labels:
     def __init__(self, size):
         self.size = size  # Maximum number of labels, NOT enforced here but by the user
 

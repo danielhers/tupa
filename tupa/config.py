@@ -144,14 +144,14 @@ class FallbackNamespace(Namespace):
         return getattr(super(), item, getattr(self._fallback, item))
 
 
-class Hyperparams(object):
+class Hyperparams:
     def __init__(self, parent, shared=None, **kwargs):
         self.shared = FallbackNamespace(parent, shared)
         self.specific = defaultdict(partial(FallbackNamespace, parent),
                                     **{k: FallbackNamespace(parent, v) for k, v in kwargs.items()})
 
 
-class HyperparamsInitializer(object):
+class HyperparamsInitializer:
     def __init__(self, name=None, *args, **kwargs):
         """
         :param name: name of hyperparams subset
@@ -174,7 +174,7 @@ class HyperparamsInitializer(object):
         return cls(*args.replace("=", " ").split())
 
 
-class Iterations(object):
+class Iterations:
     def __init__(self, args):
         try:
             i, *hyperparams = args.replace("=", " ").split()

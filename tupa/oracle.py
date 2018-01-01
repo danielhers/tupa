@@ -21,7 +21,7 @@ ACTIONS = (  # index by [NODE/EDGE][PARENT/CHILD or RIGHT/LEFT][True/False (remo
 )
 
 
-class Oracle(object):
+class Oracle:
     """
     Oracle to produce gold transition parses given UCCA passages
     To be used for creating training data for a transition-based UCCA parser

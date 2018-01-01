@@ -9,7 +9,7 @@ from .features.feature_params import FeatureParameters
 from .model_util import UnknownDict, AutoIncrementDict
 
 
-class ParameterDefinition(object):
+class ParameterDefinition:
     def __init__(self, name, **param_attr_to_arg):
         self.name = name
         self.param_attr_to_arg = param_attr_to_arg
@@ -82,7 +82,7 @@ CLASSIFIER_PROPERTIES = {
 }
 
 
-class Model(object):
+class Model:
     def __init__(self, model_type, filename, *args, **kwargs):
         self.args = Config().args
         self.model_type = model_type or SPARSE

@@ -7,7 +7,7 @@ FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([wtdhencpqxyAPCIRNT]
 FEATURE_TEMPLATE_PATTERN = re.compile(r"^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 
 
-class FeatureTemplate(object):
+class FeatureTemplate:
     """
     A feature template in parsed form, ready to be used for value calculation
     """
@@ -25,7 +25,7 @@ class FeatureTemplate(object):
         return self.name
 
 
-class FeatureTemplateElement(object):
+class FeatureTemplateElement:
     """
     One element in the values of a feature, e.g. from one node
     """
@@ -81,7 +81,7 @@ class FeatureTemplateElement(object):
         return self.source == other.source and self.index == other.index and self.relatives == other.relatives
 
 
-class FeatureExtractor(object):
+class FeatureExtractor:
     """
     Object to extract features from the parser state to be used in action classification
     """

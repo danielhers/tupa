@@ -31,7 +31,7 @@ class ParseMode(Enum):
     test = 3
 
 
-class Parser(object):
+class Parser:
 
     """
     Main class to implement transition-based UCCA parser

@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 
-class SubModel(object):
+class SubModel:
     def __init__(self, params=None, save_path=()):
         self.params = OrderedDict() if params is None else params  # string (param identifier) -> parameter
         self.save_path = save_path

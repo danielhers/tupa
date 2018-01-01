@@ -24,7 +24,7 @@ EVALUATORS = {
 }
 
 
-class Scores(object):
+class Scores:
     """
     Keeps score objects from multiple formats
     """

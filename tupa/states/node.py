@@ -8,7 +8,7 @@ from scheme.util.amr import LABEL_ATTRIB, UNKNOWN_LABEL, LABEL_SEPARATOR
 from ..config import Config
 
 
-class Node(object):
+class Node:
     """
     Temporary representation for core.Node with only relevant information for parsing
     """

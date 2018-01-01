@@ -8,7 +8,7 @@ from tupa.model_util import KeyBasedDefaultDict, save_dict, load_dict
 from .perceptron import Perceptron
 
 
-class FeatureWeights(object):
+class FeatureWeights:
     """
     The weights for one feature, for all labels
     """
@@ -53,7 +53,7 @@ class FeatureWeights(object):
         self._last_update.resize(num_labels, refcheck=False)
 
 
-class FeatureWeightsCreator(object):
+class FeatureWeightsCreator:
     def __init__(self, perceptron, axis):
         self.perceptron = perceptron
         self.axis = axis

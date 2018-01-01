@@ -4,7 +4,7 @@ from ucca.layer1 import EdgeTags
 from ..config import Config
 
 
-class Edge(object):
+class Edge:
     """
     Temporary representation for core.Edge with only relevant information for parsing
     """

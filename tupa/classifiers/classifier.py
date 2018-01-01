@@ -4,7 +4,7 @@ from ..config import Config
 from ..model_util import load_json, save_json
 
 
-class Classifier(object):
+class Classifier:
     """
     Interface for classifier used by the parser.
     """

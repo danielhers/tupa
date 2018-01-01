@@ -19,7 +19,7 @@ class InvalidActionError(AssertionError):
         self.is_type = is_type
 
 
-class State(object):
+class State:
     """
     The parser's state, responsible for applying actions and creating the final Passage
     :param passage: a Passage object to get the tokens from, and everything else if training

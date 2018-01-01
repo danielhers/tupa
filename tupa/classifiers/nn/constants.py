@@ -41,7 +41,7 @@ RNNS = {
 DEFAULT_RNN = "lstm"
 
 
-class CategoricalParameter(object):
+class CategoricalParameter:
     def __init__(self, values, string):
         self._value = self._string = None
         self.values = values

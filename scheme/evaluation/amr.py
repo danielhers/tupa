@@ -37,7 +37,7 @@ def evaluate(guessed, ref, converter=None, verbose=False, amr_id=None, **kwargs)
     return SmatchScores(counts)
 
 
-class SmatchScores(object):
+class SmatchScores:
     def __init__(self, counts):
         self.counts = counts
         self.precision, self.recall, self.f1 = smatch.compute_f(*counts)

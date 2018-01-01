@@ -11,7 +11,7 @@ MODELS_DIR = "models"
 MAX_ITERATIONS = int(os.environ.get("MAX_ITERATIONS", 50))
 
 
-class Params(object):
+class Params:
     def __init__(self, params, **hyperparams):
         self.params = params
         self.hyperparams = hyperparams

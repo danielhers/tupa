@@ -15,7 +15,7 @@ from ...config import Config, BIRNN
 from ...model_util import MISSING_VALUE
 
 
-class AxisModel(object):
+class AxisModel:
     """
     Format-specific parameters that are part of the network
     """

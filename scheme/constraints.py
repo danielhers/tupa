@@ -71,7 +71,7 @@ class Valid:
 
 
 # Generic class to define constraints on parser actions
-class Constraints(object):
+class Constraints:
     def __init__(self, args, multigraph=False, require_implicit_childless=True, allow_root_terminal_children=False,
                  top_level_allowed=None, top_level_only=None, possible_multiple_incoming=(),
                  childless_incoming_trigger=(), childless_outgoing_allowed=(), unique_incoming=(), unique_outgoing=(),
