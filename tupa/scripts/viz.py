@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from configargparse import ArgParser
 from scipy.misc import imresize
 from matplotlib.ticker import MaxNLocator
-from tupa.export import load_model
+from tupa.scripts.export import load_model
 from tqdm import tqdm
 import re
 
