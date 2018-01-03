@@ -129,9 +129,9 @@ class PassageParser(AbstractParser):
             if self.status is None and self.args.verify:
                 self.verify(self.out, self.passage)
             if self.action_count:
-                accuracy_str = percents_str(self.correct_action_count, self.action_count)
+                accuracy_str = "a=" + percents_str(self.correct_action_count, self.action_count)
                 if self.label_count:
-                    accuracy_str += " " + percents_str(self.correct_label_count, self.label_count)
+                    accuracy_str += " l=" + percents_str(self.correct_label_count, self.label_count)
                 if self.args.verbose:
                     print("%-30s" % accuracy_str, end=Config().line_end)
         if self.args.verbose:
