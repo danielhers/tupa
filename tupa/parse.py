@@ -64,7 +64,7 @@ class PassageParser(AbstractParser):
             self.model.init_features(self.state, axes, self.training)
         self.out = self.passage
         self.status = None
-        self.duration = 0
+        self.duration = self.f1 = 0
 
     def parse_and_create(self):
         started = time.time()
@@ -238,8 +238,9 @@ class PassageParser(AbstractParser):
         score = EVALUATORS.get(ref_format, evaluation).evaluate(
             self.out, self.passage, converter=get_output_converter(ref_format),
             verbose=self.out and self.args.verbose > 3, constructions=self.args.constructions)
+        self.f1 = average_f1(score)
         if self.args.verbose:
-            print("F1=%.3f" % average_f1(score), flush=True)
+            print("F1=%.3f" % self.f1, flush=True)
         return score
 
     def check_loop(self):
@@ -270,39 +271,21 @@ class BatchParser(AbstractParser):
     def __init__(self, args, model, training):
         super().__init__(args, model, training)
         self.seen_per_format = defaultdict(int)
-        self.duration = self.num_tokens = self.num_passages = 0
+        self.duration = self.num_tokens = self.num_passages = self.f1_sum = 0
 
     def parse(self, passages, evaluate):
-        for passage in self.passage_generator(passages):
-            parser = PassageParser(self.args, self.model, self.training, passage)
-            parser.parse_and_create()
-            parser.finish()
-            self.correct_action_count += parser.correct_action_count
-            self.action_count += parser.action_count
-            self.correct_label_count += parser.correct_label_count
-            self.label_count += parser.label_count
-            self.duration += parser.duration
-            self.num_tokens += parser.num_tokens
-            self.num_passages += 1
-            yield (parser.out, parser.evaluate()) if evaluate else parser.out
-        if passages:
-            self.finish()
-
-    def passage_generator(self, passages):
-        if not hasattr(passages, "__iter__"):  # Single passage given
-            passages = (passages,)
-        total = len(passages) if hasattr(passages, "__len__") else None
-        passages = textutil.annotate_all(passages, lang=self.args.lang, verbose=self.args.verbose > 2)
-        if not self.args.verbose:
-            passages = tqdm(passages, unit=Config().passage_word, total=total, file=sys.stdout, desc="Initializing")
+        passages, total = self.passage_generator(passages)
         for i, passage in enumerate(passages, start=1):
             pformat = passage.extra.get("format") or "ucca"
             if self.args.verbose:
                 progress = "%d%% %*d/%d" % (i / total * 100, len(str(total)), i, total) if total else "%d" % i
                 print("%s %-6s %s %-7s" % (progress, pformat, Config().passage_word, passage.ID), end=Config().line_end)
             else:
-                passages.set_description()  # TODO tokens/s, accuracy (transition, label), F1
-                passages.set_postfix(**{pformat: passage.ID})
+                passages.set_description()  # TODO tokens/s, accuracy (transition, label)
+                postfix = {pformat: passage.ID}
+                if evaluate and self.num_passages:
+                    postfix["|F1|"] = self.f1_sum / self.num_passages
+                passages.set_postfix(**postfix)
             self.seen_per_format[pformat] += 1
             if self.training and self.args.max_training_per_format and \
                     self.seen_per_format[pformat] > self.args.max_training_per_format:
@@ -311,19 +294,47 @@ class BatchParser(AbstractParser):
                 continue
             assert not (self.training and pformat == "text"), "Cannot train on unannotated plain text"
             Config().set_format(pformat)
-            yield passage
+            parser = PassageParser(self.args, self.model, self.training, passage)
+            parser.parse_and_create()
+            parser.finish()
+            ret = (parser.out,)
+            if evaluate:
+                ret += (parser.evaluate(),)
+            self.update_counts(parser)
+            yield ret
+        self.summary()
 
-    def finish(self):
-        print("Parsed %d %ss" % (self.num_passages, Config().passage_word))
-        if self.correct_action_count:
-            accuracy_str = percents_str(self.correct_action_count, self.action_count, "correct actions ")
-            if self.label_count:
-                accuracy_str += ", " + percents_str(self.correct_label_count, self.label_count, "correct labels ")
-            print("Overall %s" % accuracy_str)
-        if self.duration:
-            print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
-                self.duration, Config().passage_word, self.duration / self.num_passages,
-                self.num_tokens / (self.duration or 1)), flush=True)
+    def passage_generator(self, passages):
+        if not hasattr(passages, "__iter__"):  # Single passage given
+            passages = (passages,)
+        total = len(passages) if hasattr(passages, "__len__") else None
+        passages = textutil.annotate_all(passages, lang=self.args.lang, verbose=self.args.verbose > 2)
+        if not self.args.verbose:
+            passages = tqdm(passages, unit=Config().passage_word, total=total, file=sys.stdout, desc="Initializing")
+        return passages, total
+
+    def update_counts(self, parser):
+        self.correct_action_count += parser.correct_action_count
+        self.action_count += parser.action_count
+        self.correct_label_count += parser.correct_label_count
+        self.label_count += parser.label_count
+        self.duration += parser.duration
+        self.num_tokens += parser.num_tokens
+        self.num_passages += 1
+        self.f1_sum += parser.f1
+
+    def summary(self):
+        if self.num_passages:
+            print("Parsed %d %ss" % (self.num_passages, Config().passage_word))
+            if self.correct_action_count:
+                accuracy_str = percents_str(self.correct_action_count, self.action_count, "correct actions ")
+                if self.label_count:
+                    accuracy_str += ", " + percents_str(self.correct_label_count, self.label_count, "correct labels ")
+                print("Overall %s" % accuracy_str)
+            if self.duration:
+                print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
+                    self.duration, Config().passage_word, self.duration / self.num_passages,
+                    self.num_tokens / (self.duration or 1)), flush=True)
 
 
 class Parser:
