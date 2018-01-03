@@ -112,7 +112,7 @@ class BiRNN(SubModel):
 
     def __str__(self):
         return "%s lstm_layers: %d, lstm_layer_dim: %d, embedding_layers: %d, embedding_layer_dim: %d, " \
-               "max_length: %d, rnn: %s, activation: %s, init: %s, dropout: %f, indexed_dim: %d, indexed_num: %d, "\
+               "max_length: %d, rnn: %s, activation: %s, init: %s, dropout: %f, indexed_dim: %s, indexed_num: %s, "\
                "params: %s" % (
                 "/".join(self.save_path), self.lstm_layers, self.lstm_layer_dim, self.embedding_layers,
                 self.embedding_layer_dim, self.max_length, self.rnn_builder, self.activation, self.init, self.dropout,
