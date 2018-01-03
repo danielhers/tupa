@@ -91,9 +91,9 @@ class FeatureExtractor:
             "Features do not match pattern: " + ", ".join(
                 f for f in feature_templates if not FEATURE_TEMPLATE_PATTERN.match(f))
         # convert the list of features textual descriptions to the actual fields
-        self.feature_templates = [FeatureTemplate(
-            feature_name, tuple(FeatureTemplateElement(*m.group(1, 2, 3, 4))
-                                for m in re.finditer(FEATURE_ELEMENT_PATTERN, feature_name)))
+        self.feature_templates = [
+            FeatureTemplate(feature_name, tuple(FeatureTemplateElement(*m.group(1, 2, 3, 4))
+                                                for m in re.finditer(FEATURE_ELEMENT_PATTERN, feature_name)))
             for feature_name in feature_templates]
         self.params = {} if params is None else params
 
@@ -114,13 +114,6 @@ class FeatureExtractor:
 
     def init_param(self, param):
         return param
-
-    def collapse_features(self, suffixes):
-        """
-        For each set of features referring to the same node, with the given properties,
-         leave only one of them.
-        """
-        pass
 
     def finalize(self):
         return self
