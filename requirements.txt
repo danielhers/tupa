@@ -1,6 +1,6 @@
 numpy
 cython
-ucca==1.0.28
+ucca==1.0.30
 spacy==2.0.3
 dynet==2.0.2
 penman==0.6.2
