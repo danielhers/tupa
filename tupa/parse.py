@@ -36,7 +36,11 @@ class AbstractParser:
         self.args = args
         self.model = model
         self.training = training
-        self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = 0
+        self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = \
+            self.num_tokens = self.duration = self.f1 = 0
+
+    def tokens_per_second(self):
+        return self.num_tokens / (self.duration or 1.0)
 
 
 class PassageParser(AbstractParser):
@@ -64,7 +68,6 @@ class PassageParser(AbstractParser):
             self.model.init_features(self.state, axes, self.training)
         self.out = self.passage
         self.status = None
-        self.duration = self.f1 = 0
 
     def parse_and_create(self):
         started = time.time()
@@ -265,13 +268,17 @@ class PassageParser(AbstractParser):
     def num_tokens(self):
         return len(set(self.state.terminals).difference(self.state.buffer))  # To count even incomplete parses
 
+    @num_tokens.setter
+    def num_tokens(self, _):
+        pass
+
 
 class BatchParser(AbstractParser):
     """ Parser for a single training iteration or single pass over dev/test passages """
     def __init__(self, args, model, training):
         super().__init__(args, model, training)
         self.seen_per_format = defaultdict(int)
-        self.duration = self.num_tokens = self.num_passages = self.f1_sum = 0
+        self.num_passages = 0
 
     def parse(self, passages, evaluate):
         passages, total = self.passage_generator(passages)
@@ -281,10 +288,14 @@ class BatchParser(AbstractParser):
                 progress = "%d%% %*d/%d" % (i / total * 100, len(str(total)), i, total) if total else "%d" % i
                 print("%s %-6s %s %-7s" % (progress, pformat, Config().passage_word, passage.ID), end=Config().line_end)
             else:
-                passages.set_description()  # TODO tokens/s, accuracy (transition, label)
-                postfix = {pformat: passage.ID}
+                passages.set_description()
+                postfix = {pformat: passage.ID, "|t/s|": self.tokens_per_second()}
+                if self.action_count:
+                    postfix["|a|"] = percents_str(self.correct_action_count, self.action_count)
+                if self.label_count:
+                    postfix["|l|"] = percents_str(self.correct_label_count, self.label_count)
                 if evaluate and self.num_passages:
-                    postfix["|F1|"] = self.f1_sum / self.num_passages
+                    postfix["|F1|"] = self.f1 / self.num_passages
                 passages.set_postfix(**postfix)
             self.seen_per_format[pformat] += 1
             if self.training and self.args.max_training_per_format and \
@@ -321,7 +332,7 @@ class BatchParser(AbstractParser):
         self.duration += parser.duration
         self.num_tokens += parser.num_tokens
         self.num_passages += 1
-        self.f1_sum += parser.f1
+        self.f1 += parser.f1
 
     def summary(self):
         if self.num_passages:
@@ -333,8 +344,11 @@ class BatchParser(AbstractParser):
                 print("Overall %s" % accuracy_str)
             if self.duration:
                 print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
-                    self.duration, Config().passage_word, self.duration / self.num_passages,
-                    self.num_tokens / (self.duration or 1)), flush=True)
+                    self.duration, Config().passage_word, self.time_per_passage(),
+                    self.tokens_per_second()), flush=True)
+
+    def time_per_passage(self):
+        return self.duration / self.num_passages
 
 
 class Parser:
