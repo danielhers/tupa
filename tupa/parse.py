@@ -291,9 +291,9 @@ class BatchParser(AbstractParser):
                 passages.set_description()
                 postfix = {pformat: passage.ID, "|t/s|": self.tokens_per_second()}
                 if self.action_count:
-                    postfix["|a|"] = percents_str(self.correct_action_count, self.action_count)
+                    postfix["|a|"] = percents_str(self.correct_action_count, self.action_count, fraction=False)
                 if self.label_count:
-                    postfix["|l|"] = percents_str(self.correct_label_count, self.label_count)
+                    postfix["|l|"] = percents_str(self.correct_label_count, self.label_count, fraction=False)
                 if evaluate and self.num_passages:
                     postfix["|F1|"] = self.f1 / self.num_passages
                 passages.set_postfix(**postfix)
@@ -502,8 +502,11 @@ def get_output_converter(out_format, default=None):
                    verbose=Config().args.verbose > 2) if converter else default
 
 
-def percents_str(part, total, infix=""):
-    return "%d%% %s(%d/%d)" % (100 * part / total, infix, part, total)
+def percents_str(part, total, infix="", fraction=True):
+    ret = "%d%%" % (100 * part / total)
+    if fraction:
+        ret += " %s(%d/%d)" % (infix, part, total)
+    return ret
 
 
 def print_scores(scores, filename, prefix=None, prefix_title=None):
