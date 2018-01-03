@@ -295,21 +295,22 @@ class BatchParser(AbstractParser):
         passages = textutil.annotate_all(passages, lang=self.args.lang, verbose=self.args.verbose > 2)
         if not self.args.verbose:
             passages = tqdm(passages, unit=Config().passage_word, total=total, file=sys.stdout, desc="Initializing")
-        for passage in passages:
-            passage_format = passage.extra.get("format") or "ucca"
+        for i, passage in enumerate(passages, start=1):
+            pformat = passage.extra.get("format") or "ucca"
             if self.args.verbose:
-                print("%-6s %s %-7s" % (passage_format, Config().passage_word, passage.ID), end=Config().line_end)
+                progress = "%d%% %*d/%d" % (i / total * 100, len(str(total)), i, total) if total else "%d" % i
+                print("%s %-6s %s %-7s" % (progress, pformat, Config().passage_word, passage.ID), end=Config().line_end)
             else:
                 passages.set_description()  # TODO tokens/s, accuracy (transition, label), F1
-                passages.set_postfix(**{passage_format: passage.ID})
-            self.seen_per_format[passage_format] += 1
+                passages.set_postfix(**{pformat: passage.ID})
+            self.seen_per_format[pformat] += 1
             if self.training and self.args.max_training_per_format and \
-                    self.seen_per_format[passage_format] > self.args.max_training_per_format:
+                    self.seen_per_format[pformat] > self.args.max_training_per_format:
                 if self.args.verbose:
                     print("skipped")
                 continue
-            assert not (self.training and passage_format == "text"), "Cannot train on unannotated plain text"
-            Config().set_format(passage_format)
+            assert not (self.training and pformat == "text"), "Cannot train on unannotated plain text"
+            Config().set_format(pformat)
             yield passage
 
     def finish(self):
