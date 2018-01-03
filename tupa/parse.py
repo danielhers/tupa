@@ -291,16 +291,17 @@ class BatchParser(AbstractParser):
     def passage_generator(self, passages):
         if not hasattr(passages, "__iter__"):  # Single passage given
             passages = (passages,)
-        annotated = textutil.annotate_all(passages, lang=self.args.lang, verbose=self.args.verbose > 2)
-        t = tqdm(annotated, unit=Config().passage_word, total=len(passages) if hasattr(passages, "__len__") else None,
-                 file=sys.stdout, desc="Initializing")
-        for passage in annotated if self.args.verbose else t:
+        total = len(passages) if hasattr(passages, "__len__") else None
+        passages = textutil.annotate_all(passages, lang=self.args.lang, verbose=self.args.verbose > 2)
+        if not self.args.verbose:
+            passages = tqdm(passages, unit=Config().passage_word, total=total, file=sys.stdout, desc="Initializing")
+        for passage in passages:
             passage_format = passage.extra.get("format") or "ucca"
             if self.args.verbose:
                 print("%-6s %s %-7s" % (passage_format, Config().passage_word, passage.ID), end=Config().line_end)
             else:
-                t.set_description()  # TODO tokens/s, accuracy (transition, label), F1
-                t.set_postfix(**{passage_format: passage.ID})
+                passages.set_description()  # TODO tokens/s, accuracy (transition, label), F1
+                passages.set_postfix(**{passage_format: passage.ID})
             self.seen_per_format[passage_format] += 1
             if self.training and self.args.max_training_per_format and \
                     self.seen_per_format[passage_format] > self.args.max_training_per_format:
