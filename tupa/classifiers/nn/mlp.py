@@ -33,6 +33,8 @@ class MultilayerPerceptron(SubModel):
                            for prefix, dims in (("W", list(zip(o_dim, i_dim))), ("b", o_dim))
                            for i, dim in enumerate(dims))
         self.verify_dims()
+        if self.args.verbose > 3:
+            print("Initializing MLP: %s" % self)
 
     def evaluate(self, inputs, train=False):
         x = dy.concatenate(list(inputs))
@@ -50,7 +52,7 @@ class MultilayerPerceptron(SubModel):
 
     def save_sub_model(self, d, *args):
         self.verify_dims()
-        return super().save_sub_model(
+        values = super().save_sub_model(
             d,
             ("layers", self.layers),
             ("total_layers", self.total_layers),
@@ -62,6 +64,9 @@ class MultilayerPerceptron(SubModel):
             ("num_labels", self.num_labels),
             ("input_dim", self.input_dim),
         )
+        if self.args.verbose > 3:
+            print("Saving MLP: %s" % self)
+        return values
 
     def load_sub_model(self, d, *args):
         d = super().load_sub_model(d, *args)
@@ -75,6 +80,8 @@ class MultilayerPerceptron(SubModel):
         self.num_labels = d["num_labels"]
         self.input_dim = d["input_dim"]
         self.verify_dims()
+        if self.args.verbose > 3:
+            print("Loading MLP: %s" % self)
 
     def verify_dims(self):
         self.verify_dim("input_dim", self.params["W0"].as_array().shape[1])
@@ -85,3 +92,9 @@ class MultilayerPerceptron(SubModel):
     def verify_dim(self, attr, val):
         expected = getattr(self, attr)
         assert val == expected, "%s %s: %d, expected: %d" % ("/".join(self.save_path), attr, val, expected)
+
+    def __str__(self):
+        return "%s layers: %d, total_layers: %d, layer_dim: %d, output_dim: %d, activation: %s, init: %s, " \
+               "dropout: %f, num_labels: %s, input_dim: %d, params: %s" % (
+                "/".join(self.save_path), self.layers, self.total_layers, self.layer_dim, self.output_dim,
+                self.activation, self.init, self.dropout, self.num_labels, self.input_dim, self.params.keys())

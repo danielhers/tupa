@@ -67,6 +67,9 @@ class NeuralNetwork(Classifier, SubModel):
             learning_rate_param_name = TRAINER_LEARNING_RATE_PARAM_NAMES.get(str(self.trainer_type))
             if learning_rate_param_name and self.learning_rate:
                 trainer_kwargs[learning_rate_param_name] = self.learning_rate
+            if self.args.verbose > 3:
+                print("Initializing model with trainer=%s(%s)" % (
+                    self.trainer_type, ", ".join("%s=%s" % (k, v) for k, v in trainer_kwargs.items())))
             self.trainer = self.trainer_type()(self.model, **trainer_kwargs)
             self.birnn = BiRNN(Config().hyperparams.shared, self.model,
                                save_path=("shared", "birnn"), with_birnn=self.model_type == BIRNN)
@@ -84,10 +87,14 @@ class NeuralNetwork(Classifier, SubModel):
             return
         model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model,
                                             with_birnn=self.model_type == BIRNN)
+        if self.args.verbose > 3:
+            print("Initializing %s model with %d labels" % (axis, self.labels[axis].size))
         input_dim = indexed_dim = indexed_num = 0
         for suffix, param in sorted(self.input_params.items()):
             if not param.enabled:
                 continue
+            if self.args.verbose > 3:
+                print("Initializing input parameter: %s" % param)
             if not param.numeric and suffix not in self.params:  # lookup feature
                 lookup = self.model.add_lookup_parameters((param.size, param.dim))
                 lookup.set_updated(param.updated)
@@ -119,6 +126,8 @@ class NeuralNetwork(Classifier, SubModel):
         for axis in axes:
             self.init_model(axis)
         embeddings = [[self.params[s][k] for k in ks] for s, ks in sorted(features.items())]  # lists of vectors
+        if self.args.verbose > 3:
+            print("Initializing %s BiRNN features for %d elements" % (", ".join(axes), len(embeddings)))
         self.birnn.init_features(embeddings, train)
         for axis in axes:
             self.axes[axis].birnn.init_features(embeddings, train)

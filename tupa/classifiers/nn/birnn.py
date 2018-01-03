@@ -43,12 +43,16 @@ class BiRNN(SubModel):
                 self.params["birnn"] = dy.BiRNNBuilder(self.lstm_layers,
                                                        self.lstm_layer_dim if self.embedding_layers else indexed_dim,
                                                        self.lstm_layer_dim, self.model, self.rnn_builder())
+                if self.args.verbose > 3:
+                    print("Initializing BiRNN: %s" % self)
             return indexed_num * self.lstm_layer_dim
         return 0
 
     def init_features(self, embeddings, train=False):
         if self.params:
             inputs = [self.mlp.evaluate(e, train=train) for e in zip(*embeddings)]  # join each time step to a vector
+            if self.args.verbose > 3:
+                print("Transducing %d inputs with dropout %s" % (len(inputs), self.dropout if train else "disabled"))
             birnn = self.params["birnn"]
             if train:
                 birnn.set_dropout(self.dropout)
@@ -69,22 +73,23 @@ class BiRNN(SubModel):
         return []
 
     def save_sub_model(self, d, *args):
-        if self.with_birnn and self.lstm_layer_dim and self.lstm_layers:
-            return super().save_sub_model(
-                d,
-                ("lstm_layers", self.lstm_layers),
-                ("lstm_layer_dim", self.lstm_layer_dim),
-                ("embedding_layers", self.embedding_layers),
-                ("embedding_layer_dim", self.embedding_layer_dim),
-                ("max_length", self.max_length),
-                ("activation", str(self.activation)),
-                ("init", str(self.init)),
-                ("dropout", self.dropout),
-                ("rnn", str(self.rnn_builder)),
-                ("indexed_dim", self.indexed_dim),
-                ("indexed_num", self.indexed_num),
-            )
-        return []
+        values = super().save_sub_model(
+            d,
+            ("lstm_layers", self.lstm_layers),
+            ("lstm_layer_dim", self.lstm_layer_dim),
+            ("embedding_layers", self.embedding_layers),
+            ("embedding_layer_dim", self.embedding_layer_dim),
+            ("max_length", self.max_length),
+            ("activation", str(self.activation)),
+            ("init", str(self.init)),
+            ("dropout", self.dropout),
+            ("rnn", str(self.rnn_builder)),
+            ("indexed_dim", self.indexed_dim),
+            ("indexed_num", self.indexed_num),
+        ) if self.with_birnn and self.lstm_layer_dim and self.lstm_layers else []
+        if self.args.verbose > 3:
+            print("Saving BiRNN: %s" % self)
+        return values
 
     def load_sub_model(self, d, *args):
         d = super().load_sub_model(d, *args)
@@ -102,3 +107,13 @@ class BiRNN(SubModel):
             self.indexed_num = d["indexed_num"]
         else:
             self.args.lstm_layers = self.lstm_layers = self.args.lstm_layer_dim = self.lstm_layer_dim = 0
+        if self.args.verbose > 3:
+            print("Loading BiRNN: %s" % self)
+
+    def __str__(self):
+        return "%s lstm_layers: %d, lstm_layer_dim: %d, embedding_layers: %d, embedding_layer_dim: %d, " \
+               "max_length: %d, rnn: %s, activation: %s, init: %s, dropout: %f, indexed_dim: %d, indexed_num: %d, "\
+               "params: %s" % (
+                "/".join(self.save_path), self.lstm_layers, self.lstm_layer_dim, self.embedding_layers,
+                self.embedding_layer_dim, self.max_length, self.rnn_builder, self.activation, self.init, self.dropout,
+                self.indexed_dim, self.indexed_num, self.params.keys())
