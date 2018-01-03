@@ -4,7 +4,6 @@ from enum import Enum
 from .action import Actions
 from .classifiers.classifier import Classifier
 from .config import Config, SPARSE, MLP, BIRNN, NOOP
-from .features.enumerator import FeatureEnumerator
 from .features.feature_params import FeatureParameters
 from .model_util import UnknownDict, AutoIncrementDict
 
@@ -121,8 +120,7 @@ class Model:
         elif self.is_neural_network:
             from .features.dense_features import DenseFeatureExtractor
             from .classifiers.nn.neural_network import NeuralNetwork
-            self.feature_extractor = FeatureEnumerator(DenseFeatureExtractor(), self.feature_params,
-                                                       indexed=self.model_type == BIRNN)
+            self.feature_extractor = DenseFeatureExtractor(self.feature_params, indexed=self.model_type == BIRNN)
             self.classifier = NeuralNetwork(self.model_type, self.filename, labels)
         else:
             raise ValueError("Invalid model type: '%s'" % self.model_type)

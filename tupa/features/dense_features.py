@@ -1,5 +1,6 @@
 from .feature_extractor import FeatureExtractor
-from ..model_util import MISSING_VALUE
+from .feature_params import FeatureParameters, NumericFeatureParameters
+from ..model_util import MISSING_VALUE, UnknownDict, save_dict, load_dict
 
 NON_NUMERIC_FEATURE_SUFFIXES = "wtdencpAT"
 FEATURE_TEMPLATES = (
@@ -48,15 +49,16 @@ FEATURE_TEMPLATES = (
     "b0hPCIRN",
 )
 EXTRA_NUMERIC_FEATURES = 1  # node ratio
+INDEXED_FEATURES = "WwtdT"  # external + learned word embeddings, POS tags, dep rels, entity type
+FILENAME_SUFFIX = ".enum"
 
 
 class DenseFeatureExtractor(FeatureExtractor):
     """
     Object to extract features from the parser state to be used in action classification
-    Requires wrapping by FeatureEnumerator.
     To be used with a NeuralNetwork classifier.
     """
-    def __init__(self, feature_templates=FEATURE_TEMPLATES):
+    def __init__(self, params, indexed, feature_templates=FEATURE_TEMPLATES):
         super().__init__(feature_templates=feature_templates)
         self.numeric_features_template = None
         self.non_numeric_feature_templates = []
@@ -81,15 +83,36 @@ class DenseFeatureExtractor(FeatureExtractor):
                     feature_template.suffix, self.non_numeric_by_suffix[feature_template.suffix],
                     feature_template)
             self.non_numeric_by_suffix[feature_template.suffix] = feature_template
+        self.params = params
+        self.indexed = indexed
+        if self.indexed:
+            self.collapse_features(INDEXED_FEATURES)
+        self.params = {p.suffix: p for p in [self.init_param(p) for p in self.params.values()
+                                             if p.effective_suffix in self] +
+                       [NumericFeatureParameters(self.numeric_num())]}
+
+    def init_param(self, param):
+        param.num = self.non_numeric_num(param.effective_suffix)
+        if self.indexed and param.suffix in INDEXED_FEATURES:
+            param.indexed = True
+        return param
 
     def init_features(self, state, suffix=None):
-        return [self.get_prop(None, n, None, None, suffix, state) for n in state.terminals]
+        features = {}
+        for suffix, param in self.params.items():
+            if param.indexed and param.enabled:
+                values = [self.get_prop(None, n, None, None, param.effective_suffix, state) for n in state.terminals]
+                assert MISSING_VALUE not in values, "Missing value occurred in feature initialization: '%s'" % suffix
+                param.init_data()
+                features[suffix] = [param.data[v] for v in values]
+        return features
 
-    def extract_features(self, state):
+    def extract_features(self, state, params=None):
         """
         Calculate feature values according to current state
         :param state: current state of the parser
-        :return pair: (list of values for all numeric features, dict of suffix->value for all non-numeric features)
+        :param params: ignored
+        :return dict of feature name -> numeric value
         """
         numeric_features = [state.node_ratio()] + self.calc_feature(self.numeric_features_template, state, default=0)
         non_numeric_features = {f.suffix: self.calc_feature(f, state, MISSING_VALUE, indexed)
@@ -104,7 +127,17 @@ class DenseFeatureExtractor(FeatureExtractor):
         #     for value, element in zip(values, template.elements):
         #         assert not isinstance(value, Number), \
         #             "Numeric value %s for non-numeric feature element %s" % (value, element)
-        return numeric_features, non_numeric_features
+        features = {NumericFeatureParameters.SUFFIX: numeric_features}
+        for suffix, param in self.params.items():
+            if param.dim and (param.copy_from is None or not self.params[param.copy_from].dim or not param.indexed):
+                values = non_numeric_features.get(param.effective_suffix)
+                if values is not None:
+                    param.init_data()
+                    features[suffix] = values if param.indexed else \
+                        [v if v == MISSING_VALUE else param.data[v] for v in values]
+                    # assert all(isinstance(f, int) for f in features[suffix]),\
+                    #     "Invalid feature numbers for '%s': %s" % (suffix, features[suffix])
+        return features
 
     def get_enabled_features(self, indexed=False):
         if self.params is None:
@@ -120,6 +153,7 @@ class DenseFeatureExtractor(FeatureExtractor):
                          list(self.get_enabled_features()) for e in t.elements]
 
     def collapse_features(self, suffixes):
+        suffixes = {p.copy_from if p.external else s for s, p in self.params.items() if p.dim and s in suffixes}
         if not suffixes:
             return
         longest_suffix = max(suffixes, key=lambda s: len(self.non_numeric_by_suffix[s].elements))
@@ -141,3 +175,21 @@ class DenseFeatureExtractor(FeatureExtractor):
 
     def __contains__(self, suffix):
         return suffix in self.non_numeric_by_suffix
+
+    def finalize(self):
+        return type(self)(FeatureParameters.copy(self.params, UnknownDict), self.indexed)
+
+    def restore(self):
+        """
+        Opposite of finalize(): replace each feature parameter's data dict with a DropoutDict again, to keep training
+        """
+        for param in self.params.values():
+            param.restore()
+
+    def save(self, filename):
+        save_dict(filename + FILENAME_SUFFIX, FeatureParameters.copy(self.params))
+
+    def load(self, filename):
+        self.params = FeatureParameters.copy(load_dict(filename + FILENAME_SUFFIX), UnknownDict)
+        if self.indexed:
+            self.collapse_features(INDEXED_FEATURES)

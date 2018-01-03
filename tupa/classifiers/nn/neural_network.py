@@ -30,7 +30,7 @@ class NeuralNetwork(Classifier, SubModel):
     Neural network to be used by the parser for action classification. Uses dense features.
     Keeps weights in constant-size matrices. Does not allow adding new features on-the-fly.
     Allows adding new labels on-the-fly, but requires pre-setting maximum number of labels.
-    Expects features from FeatureEnumerator.
+    Expects features from DenseFeatureExtractor.
     """
 
     def __init__(self, *args, **kwargs):
@@ -139,7 +139,7 @@ class NeuralNetwork(Classifier, SubModel):
             if param.numeric:
                 yield dy.inputVector(values)
             elif param.indexed:  # collect indices to be looked up
-                indices += values  # FeatureEnumerator collapsed the features so there are no repetitions between them
+                indices += values  # DenseFeatureExtractor collapsed features so there are no repetitions between them
             else:  # lookup feature
                 yield dy.concatenate([self.empty_values[suffix] if x == MISSING_VALUE else self.params[suffix][x]
                                       for x in values])
