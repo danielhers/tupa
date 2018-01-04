@@ -290,9 +290,9 @@ class BatchParser(AbstractParser):
             else:
                 passages.set_description()
                 postfix = {pformat: passage.ID, "|t/s|": self.tokens_per_second()}
-                if self.action_count:
+                if self.correct_action_count:
                     postfix["|a|"] = percents_str(self.correct_action_count, self.action_count, fraction=False)
-                if self.label_count:
+                if self.correct_label_count:
                     postfix["|l|"] = percents_str(self.correct_label_count, self.label_count, fraction=False)
                 if evaluate and self.num_passages:
                     postfix["|F1|"] = self.f1 / self.num_passages
