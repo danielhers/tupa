@@ -359,6 +359,10 @@ class Config(object, metaclass=Singleton):
     def passage_word(self):
         return "sentence" if self.args.sentences else "paragraph" if self.args.paragraphs else "passage"
 
+    @property
+    def passages_word(self):
+        return " %ss" % self.passage_word
+
     def log(self, message):
         try:
             if self._logger is None:

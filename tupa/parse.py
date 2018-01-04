@@ -321,7 +321,7 @@ class BatchParser(AbstractParser):
         total = len(passages) if hasattr(passages, "__len__") else None
         passages = textutil.annotate_all(passages, lang=self.args.lang, verbose=self.args.verbose > 2)
         if not self.args.verbose:
-            passages = tqdm(passages, unit=Config().passage_word, total=total, file=sys.stdout, desc="Initializing")
+            passages = tqdm(passages, unit=Config().passages_word, total=total, file=sys.stdout, desc="Initializing")
         return passages, total
 
     def update_counts(self, parser):
@@ -336,7 +336,7 @@ class BatchParser(AbstractParser):
 
     def summary(self):
         if self.num_passages:
-            print("Parsed %d %ss" % (self.num_passages, Config().passage_word))
+            print("Parsed %d%s" % (self.num_passages, Config().passages_word))
             if self.correct_action_count:
                 accuracy_str = percents_str(self.correct_action_count, self.action_count, "correct actions ")
                 if self.label_count:
