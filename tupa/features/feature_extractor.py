@@ -121,7 +121,7 @@ class FeatureExtractor:
     def restore(self):
         pass
 
-    def save(self, filename):
+    def save(self, filename, save_init=True):
         pass
 
     def load(self, filename):

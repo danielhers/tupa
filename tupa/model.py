@@ -177,7 +177,7 @@ class Model:
         if self.filename is not None:
             self.init_model()
             try:
-                self.feature_extractor.save(self.filename)
+                self.feature_extractor.save(self.filename, save_init=False)
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
                 self.classifier.save(skip_labels=(NODE_LABEL_KEY,) if node_labels and node_labels.size else ())
                 Config().save(self.filename)

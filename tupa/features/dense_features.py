@@ -165,8 +165,8 @@ class DenseFeatureExtractor(FeatureExtractor):
         for param in self.params.values():
             param.restore()
 
-    def save(self, filename):
-        save_dict(filename + FILENAME_SUFFIX, FeatureParameters.copy(self.params))
+    def save(self, filename, save_init=True):
+        save_dict(filename + FILENAME_SUFFIX, FeatureParameters.copy(self.params, copy_init=save_init))
 
     def load(self, filename):
         self.params = FeatureParameters.copy(load_dict(filename + FILENAME_SUFFIX), UnknownDict)

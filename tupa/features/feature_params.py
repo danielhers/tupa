@@ -101,15 +101,15 @@ class FeatureParameters(Labels):
         return self.copy_from is not None
 
     @staticmethod
-    def copy(params, copy_dict=dict):
-        return {suffix: param.copy_with_data(copy_dict=copy_dict) for suffix, param in params.items()}
+    def copy(params, copy_dict=dict, copy_init=True):
+        return {suffix: param.copy_with_data(copy_dict, copy_init) for suffix, param in params.items()}
 
-    def copy_with_data(self, copy_dict):
+    def copy_with_data(self, copy_dict, copy_init):
         data = None if self.data is None else copy_dict(self.data)
         if hasattr(data, "size"):  # It may be an UnknownDict but we still want it to know its size
             data.size = self.size
         return FeatureParameters(suffix=self.suffix, dim=self.dim, size=self.size, dropout=self.dropout,
-                                 updated=self.updated, num=self.num, init=self.init, data=data,
+                                 updated=self.updated, num=self.num, init=self.init if copy_init else None, data=data,
                                  indexed=self.indexed, copy_from=self.copy_from, filename=self.filename,
                                  min_count=self.min_count, enabled=self.enabled)
 
@@ -131,5 +131,5 @@ class NumericFeatureParameters(FeatureParameters):
     def numeric(self):
         return True
 
-    def copy_with_data(self, copy_dict):
+    def copy_with_data(self, copy_dict, copy_init):
         return NumericFeatureParameters(self.num)
