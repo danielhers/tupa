@@ -69,6 +69,7 @@ class FeatureParameters(Labels):
             nr_row, nr_dim = next(it)
             vectors = OrderedDict(islice(tqdm(it, desc="Loading '%s'" % self.filename, postfix=dict(dim=nr_dim),
                                               file=sys.stdout, total=nr_row, unit=" vectors"), nr_row))
+            self.dim = nr_dim
         else:
             lang = Config().args.lang
             vectors, self.dim = get_word_vectors(self.dim, self.size, self.filename, lang=lang)
