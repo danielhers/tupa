@@ -1,5 +1,10 @@
+import sys
+from collections import OrderedDict
+from itertools import islice
+
 import numpy as np
-from ucca.textutil import get_word_vectors
+from tqdm import tqdm
+from ucca.textutil import get_word_vectors, read_word_vectors
 
 from ..config import Config
 from ..labels import Labels
@@ -59,12 +64,18 @@ class FeatureParameters(Labels):
             self.data = DropoutDict(size=self.size, keys=keys, dropout=self.dropout, min_count=self.min_count)
 
     def get_word_vectors(self):
-        lang = Config().args.lang
-        vectors, self.dim = get_word_vectors(self.dim, self.size, self.filename, lang=lang)
-        if self.size is not None:
-            assert len(vectors) <= self.size, "Loaded more vectors than requested: %d>%d" % (len(vectors), self.size)
-        assert vectors, "Cannot load word vectors. Install them using `python -m spacy download %s` or choose a file " \
-                        "using the --word-vectors option." % lang
+        if self.filename:
+            it = read_word_vectors(self.dim, self.size, self.filename)
+            nr_row, nr_dim = next(it)
+            vectors = OrderedDict(islice(tqdm(it, desc="Loading '%s'" % self.filename, postfix=dict(dim=nr_dim),
+                                              file=sys.stdout, total=nr_row, unit=" vectors"), nr_row))
+        else:
+            lang = Config().args.lang
+            vectors, self.dim = get_word_vectors(self.dim, self.size, self.filename, lang=lang)
+            if self.size is not None:
+                assert len(vectors) <= self.size, "Wrong number of loaded vectors: %d > %d" % (len(vectors), self.size)
+            assert vectors, "Cannot load word vectors. Install using `python -m spacy download %s` or choose a file " \
+                            "using the --word-vectors option." % lang
         self.size = len(vectors)
         return vectors
 
