@@ -157,21 +157,21 @@ class SparsePerceptron(Perceptron):
         print("%d features occurred at least %d times, dropped %d rare features" % (
             num_features, self.min_update, len(dropped)))
         finalized = {a: {f: w.finalize(self.updates, average=average) for f, w in m.items()} for a, m in model.items()}
-        ret = SparsePerceptron(self.filename, self.labels, epoch=self.epoch)
+        ret = SparsePerceptron(self.labels, epoch=self.epoch)
         ret.update_model(finalized)
         ret.is_frozen = True
         return ret
 
-    def save_model(self, d):
-        super().save_model(d)
+    def save_model(self, filename, d):
+        super().save_model(filename, d)
         d["min_update"] = self.min_update
-        save_dict(self.filename + ".data", self.copy_model())
+        save_dict(filename + ".data", self.copy_model())
 
-    def load_model(self, d):
+    def load_model(self, filename, d):
         self.model.clear()
-        self.update_model(load_dict(self.filename + ".data"))
+        self.update_model(load_dict(filename + ".data"))
         self.args.min_update = self.min_update = d["min_update"]
-        super().load_model(d)
+        super().load_model(filename, d)
 
     def get_all_params(self):
         d = super().get_all_params()

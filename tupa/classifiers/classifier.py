@@ -9,14 +9,13 @@ class Classifier:
     Interface for classifier used by the parser.
     """
 
-    def __init__(self, model_type, filename, labels, input_params=None):
+    def __init__(self, model_type, labels, input_params=None):
         """
         :param labels: dict of axis (string) -> Labels object, can be updated later to add new axes and labels
         :param input_params: dict of feature type name -> FeatureInformation
         """
         self.args = Config().args
         self.model_type = model_type
-        self.filename = filename  # TODO remove this attribute, get from Model in save() and load() instead
         self.labels = labels
         self.input_params = input_params
         self.learning_rate = self.args.learning_rate
@@ -82,7 +81,7 @@ class Classifier:
         """
         pass
 
-    def save(self, skip_labels=()):
+    def save(self, filename, skip_labels=()):
         """
         Save all parameters to file
         """
@@ -99,20 +98,20 @@ class Classifier:
             ("epoch", self.epoch),
             ("best_score", self.best_score),
         ))
-        self.save_model(d)
-        save_json(self.filename + ".json", d)
+        self.save_model(filename, d)
+        save_json(filename + ".json", d)
 
-    def save_model(self, d):
+    def save_model(self, filename, d):
         """
         Save all parameters to file
         """
         pass
 
-    def load(self):
+    def load(self, filename):
         """
         Load all parameters from file
         """
-        d = self.load_file(self.filename, clear=True)
+        d = self.load_file(filename, clear=True)
         model_type = d.get("type")
         assert model_type is None or model_type == self.model_type, "Model type does not match: %s" % model_type
         self.labels_t = OrderedDict((a, l["labels"]) for a, l in sorted(d["axes"].items(), key=lambda x: x[1]["index"]))
@@ -122,9 +121,9 @@ class Classifier:
         self.updates = d["updates"]
         self.epoch = d["epoch"]
         self.best_score = d.get("best_score", 0)
-        self.load_model(d)
+        self.load_model(filename, d)
 
-    def load_model(self, d):
+    def load_model(self, filename, d):
         pass
 
     @classmethod

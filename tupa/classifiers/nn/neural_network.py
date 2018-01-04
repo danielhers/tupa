@@ -261,8 +261,8 @@ class NeuralNetwork(Classifier, SubModel):
         d = SubModel.load_sub_model(self, d, *args)
         self.args.loss = self.loss = d["loss"]
 
-    def save_model(self, d):
-        Classifier.save_model(self, d)
+    def save_model(self, filename, d):
+        Classifier.save_model(self, filename, d)
         self.finalize()
         values = []
         for model in self.sub_models():
@@ -273,23 +273,23 @@ class NeuralNetwork(Classifier, SubModel):
             print(self)
         started = time.time()
         try:
-            os.remove(self.filename)
-            print("Removed existing '%s'." % self.filename)
+            os.remove(filename)
+            print("Removed existing '%s'." % filename)
         except OSError:
             pass
-        print("Saving model to '%s'... " % self.filename, end="", flush=True)
+        print("Saving model to '%s'... " % filename, end="", flush=True)
         try:
-            dy.save(self.filename, values)
+            dy.save(filename, values)
             print("Done (%.3fs)." % (time.time() - started))
         except ValueError as e:
             print("Failed saving model: %s" % e)
 
-    def load_model(self, d):
+    def load_model(self, filename, d):
         self.model = None
         self.init_model()
-        print("Loading model from '%s'... " % self.filename, end="", flush=True)
+        print("Loading model from '%s'... " % filename, end="", flush=True)
         started = time.time()
-        values = dy.load(self.filename, self.model)  # All sub-model parameter values, concatenated
+        values = dy.load(filename, self.model)  # All sub-model parameter values, concatenated
         print("Done (%.3fs)." % (time.time() - started))
         self.axes = OrderedDict()
         for axis, labels in self.labels_t.items():

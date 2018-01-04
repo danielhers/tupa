@@ -111,17 +111,17 @@ class Model:
             from .features.sparse_features import SparseFeatureExtractor
             from .classifiers.linear.sparse_perceptron import SparsePerceptron
             self.feature_extractor = SparseFeatureExtractor()
-            self.classifier = SparsePerceptron(self.filename, labels)
+            self.classifier = SparsePerceptron(labels)
         elif self.model_type == NOOP:
             from .features.empty_features import EmptyFeatureExtractor
             from .classifiers.noop import NoOp
             self.feature_extractor = EmptyFeatureExtractor()
-            self.classifier = NoOp(self.filename, labels)
+            self.classifier = NoOp(labels)
         elif self.is_neural_network:
             from .features.dense_features import DenseFeatureExtractor
             from .classifiers.nn.neural_network import NeuralNetwork
             self.feature_extractor = DenseFeatureExtractor(self.feature_params, indexed=self.model_type == BIRNN)
-            self.classifier = NeuralNetwork(self.model_type, self.filename, labels)
+            self.classifier = NeuralNetwork(self.model_type, labels)
         else:
             raise ValueError("Invalid model type: '%s'" % self.model_type)
         self._update_input_params()
@@ -179,7 +179,8 @@ class Model:
             try:
                 self.feature_extractor.save(self.filename, save_init=False)
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
-                self.classifier.save(skip_labels=(NODE_LABEL_KEY,) if node_labels and node_labels.size else ())
+                skip_labels = (NODE_LABEL_KEY,) if node_labels and node_labels.size else ()
+                self.classifier.save(self.filename, skip_labels=skip_labels)
                 Config().save(self.filename)
             except Exception as e:
                 raise IOError("Failed saving model to '%s'" % self.filename) from e
@@ -197,7 +198,7 @@ class Model:
                 if not finalized:
                     self.feature_extractor.restore()
                 self._update_input_params()  # Must be before classifier.load() because it uses them to init the model
-                self.classifier.load()
+                self.classifier.load(self.filename)
                 self.load_labels(finalized)
                 if self.args.verbose:
                     print("\n".join("%s: %s" % i for i in self.feature_params.items()))
