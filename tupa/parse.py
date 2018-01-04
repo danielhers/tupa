@@ -285,7 +285,7 @@ class BatchParser(AbstractParser):
         for i, passage in enumerate(passages, start=1):
             pformat = passage.extra.get("format") or "ucca"
             if self.args.verbose:
-                progress = "%d%% %*d/%d" % (i / total * 100, len(str(total)), i, total) if total else "%d" % i
+                progress = "%3d%% %*d/%d" % (i / total * 100, len(str(total)), i, total) if total else "%d" % i
                 print("%s %-6s %s %-7s" % (progress, pformat, Config().passage_word, passage.ID), end=Config().line_end)
             else:
                 passages.set_description()
