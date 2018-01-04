@@ -67,34 +67,13 @@ class PassageParser(AbstractParser):
                 axes.append(NODE_LABEL_KEY)
             self.model.init_features(self.state, axes, self.training)
         self.out = self.passage
-        self.status = None
-
-    def parse_and_create(self):
-        started = time.time()
-        self.status = self.parse_with_timeout()
-        if not self.training or self.args.verify:
-            self.out = self.state.create_passage(verify=self.args.verify)
-        self.duration = time.time() - started
-
-    def parse_with_timeout(self):
-        try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                executor.submit(self.parse).result(self.args.timeout)  # This does the actual parsing
-        except ParserException as e:
-            if self.training:
-                raise
-            Config().log("%s %s: %s" % (Config().passage_word, self.passage.ID, e))
-            return "failed"
-        except concurrent.futures.TimeoutError:
-            Config().log("%s %s: timeout (%fs)" % (Config().passage_word, self.passage.ID, self.args.timeout))
-            return "timeout"
-        return None
 
     def parse(self):
         """
         Internal method to parse a single passage.
         If training, use oracle to train on given passages. Otherwise just parse with classifier.
         """
+        started = time.time()
         if self.args.verbose > 2:
             print("  initial state: %s" % self.state)
         while True:
@@ -122,25 +101,18 @@ class PassageParser(AbstractParser):
                 for line in self.state.log:
                     print("    " + line)
             if self.state.finished:
-                return  # action is Finish (or early update is triggered)
-
-    def finish(self):
-        if self.oracle:  # We have an oracle to verify by
-            if self.status is None and self.args.verify:
-                self.verify(self.out, self.passage)
-            if self.action_count:
-                accuracy_str = "a=" + percents_str(self.correct_action_count, self.action_count)
-                if self.label_count:
-                    accuracy_str += " l=" + percents_str(self.correct_label_count, self.label_count)
-                if self.args.verbose:
-                    print("%-30s" % accuracy_str, end=Config().line_end)
-        if self.args.verbose:
-            if self.status is None:
-                self.status = "%d tokens/s" % (self.num_tokens / (self.duration or 1))
-            print("%0.3fs%-15s%s" % (self.duration, " (" + self.status + ")", Config().line_end), end="")
-            if self.oracle:
-                print(Config().line_end, flush=True)
+                break  # action is Finish (or early update is triggered)
         self.model.classifier.finished_item(self.training)
+        if not self.training or self.args.verify:
+            self.out = self.state.create_passage(verify=self.args.verify)
+        if self.oracle and self.args.verify:
+            self.verify(self.out, self.passage)
+        self.duration = time.time() - started
+        if self.args.verbose and self.oracle and self.action_count:
+            accuracy_str = "a=" + percents_str(self.correct_action_count, self.action_count)
+            if self.label_count:
+                accuracy_str += " l=" + percents_str(self.correct_label_count, self.label_count)
+            print("%-30s" % accuracy_str, end=Config().line_end)
 
     def get_true_actions(self):
         true_actions = {}
@@ -305,14 +277,7 @@ class BatchParser(AbstractParser):
                 continue
             assert not (self.training and pformat == "text"), "Cannot train on unannotated plain text"
             Config().set_format(pformat)
-            parser = PassageParser(self.args, self.model, self.training, passage)
-            parser.parse_and_create()
-            parser.finish()
-            ret = (parser.out,)
-            if evaluate:
-                ret += (parser.evaluate(),)
-            self.update_counts(parser)
-            yield ret
+            yield self.parse_with_timeout(passage, evaluate)
         self.summary()
 
     def passage_generator(self, passages):
@@ -323,6 +288,28 @@ class BatchParser(AbstractParser):
         if not self.args.verbose:
             passages = tqdm(passages, unit=Config().passages_word, total=total, file=sys.stdout, desc="Initializing")
         return passages, total
+
+    def parse_with_timeout(self, passage, evaluate):
+        parser = PassageParser(self.args, self.model, self.training, passage)
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                executor.submit(parser.parse).result(self.args.timeout)
+            status = "(%3d tokens/s)" % parser.tokens_per_second()
+        except ParserException as e:
+            if self.training:
+                raise
+            Config().log("%s %s: %s" % (Config().passage_word, passage.ID, e))
+            status = "(failed)"
+        except concurrent.futures.TimeoutError:
+            Config().log("%s %s: timeout (%fs)" % (Config().passage_word, passage.ID, self.args.timeout))
+            status = "(timeout)"
+        if self.args.verbose:
+            print("%0.3fs %-12s" % (self.duration, status))
+        ret = (parser.out,)
+        if evaluate:
+            ret += (parser.evaluate(),)
+        self.update_counts(parser)
+        return ret
 
     def update_counts(self, parser):
         self.correct_action_count += parser.correct_action_count
