@@ -23,7 +23,7 @@ class ParameterDefinition:
 
     @property
     def enabled(self):
-        return bool(getattr(Config().args, self.dim_arg)) and bool(getattr(Config().args, self.size_arg))
+        return bool(getattr(Config().args, self.dim_arg))
     
     @enabled.setter
     def enabled(self, value):
