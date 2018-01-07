@@ -223,8 +223,6 @@ class PassageParser(AbstractParser):
             self.out, self.passage, converter=get_output_converter(ref_format),
             verbose=self.out and self.args.verbose > 3, constructions=self.args.constructions)
         self.f1 = average_f1(score)
-        if self.args.verbose:
-            print("F1=%.3f" % self.f1, flush=True)
         return score
 
     def check_loop(self):
@@ -303,7 +301,7 @@ class BatchParser(AbstractParser):
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 executor.submit(parser.parse).result(self.args.timeout)
-            status = "(%3d tokens/s)" % parser.tokens_per_second()
+            status = "(%d tokens/s)" % parser.tokens_per_second()
         except ParserException as e:
             if self.training:
                 raise
@@ -312,11 +310,12 @@ class BatchParser(AbstractParser):
         except concurrent.futures.TimeoutError:
             Config().log("%s %s: timeout (%fs)" % (Config().passage_word, passage.ID, self.args.timeout))
             status = "(timeout)"
-        if self.args.verbose:
-            print("%0.3fs %-12s" % (parser.duration, status))
         ret = (parser.out,)
         if evaluate:
             ret += (parser.evaluate(),)
+            status = "%-14s F1=%.3f" % (status, self.f1)
+        if self.args.verbose:
+            print("%.3fs %s" % (parser.duration, status))
         self.update_counts(parser)
         return ret
 
