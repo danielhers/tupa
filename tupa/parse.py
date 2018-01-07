@@ -69,11 +69,31 @@ class PassageParser(AbstractParser):
         self.out = self.passage
 
     def parse(self):
+        started = time.time()
+        exception = None
+        try:
+            self.parse_transitions()
+        except (ParserException, concurrent.futures.TimeoutError) as e:
+            exception = e
+        self.model.classifier.finished_item(self.training)
+        if not self.training or self.args.verify:
+            self.out = self.state.create_passage(verify=self.args.verify)
+        self.duration = time.time() - started
+        if self.oracle and self.args.verify:
+            self.verify(self.out, self.passage)
+        if self.args.verbose and self.oracle and self.action_count:
+            accuracy_str = "a=" + percents_str(self.correct_action_count, self.action_count)
+            if self.label_count:
+                accuracy_str += " l=" + percents_str(self.correct_label_count, self.label_count)
+            print("%-30s" % accuracy_str, end=Config().line_end)
+        if exception:
+            raise exception
+
+    def parse_transitions(self):
         """
         Internal method to parse a single passage.
         If training, use oracle to train on given passages. Otherwise just parse with classifier.
         """
-        started = time.time()
         if self.args.verbose > 2:
             print("  initial state: %s" % self.state)
         while True:
@@ -101,18 +121,7 @@ class PassageParser(AbstractParser):
                 for line in self.state.log:
                     print("    " + line)
             if self.state.finished:
-                break  # action is Finish (or early update is triggered)
-        self.model.classifier.finished_item(self.training)
-        if not self.training or self.args.verify:
-            self.out = self.state.create_passage(verify=self.args.verify)
-        if self.oracle and self.args.verify:
-            self.verify(self.out, self.passage)
-        self.duration = time.time() - started
-        if self.args.verbose and self.oracle and self.action_count:
-            accuracy_str = "a=" + percents_str(self.correct_action_count, self.action_count)
-            if self.label_count:
-                accuracy_str += " l=" + percents_str(self.correct_label_count, self.label_count)
-            print("%-30s" % accuracy_str, end=Config().line_end)
+                return  # action is Finish (or early update is triggered)
 
     def get_true_actions(self):
         true_actions = {}
