@@ -470,13 +470,8 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
         passage_scores = []
         evaluate = args.evaluate or train_passages
         for result in p.parse(test_passages, evaluate=evaluate):
-            if evaluate:
-                guessed_passage, score = result
-                passage_scores.append(score)
-            else:
-                guessed_passage = result
-                if args.verbose:
-                    print()
+            guessed_passage, *score = result
+            passage_scores += score
             if guessed_passage is not None and args.write:
                 passage_format = guessed_passage.extra.get("format")
                 for out_format in args.formats or ("ucca",) if passage_format in (None, "text") else (passage_format,):
@@ -540,7 +535,7 @@ class TextReader:  # Marks input passages as text so that we don't accidentally 
 
 def read_passages(args, files):
     expanded = [f for pattern in files for f in glob(pattern) or (pattern,)]
-    return ioutil.read_files_and_dirs(expanded, args.sentences, args.paragraphs, defaultdict(TextReader, FROM_FORMAT))
+    return ioutil.read_files_and_dirs(expanded, args.sentences, args.paragraphs, defaultdict(TextReader, **FROM_FORMAT))
 
 
 # noinspection PyTypeChecker,PyStringFormat
