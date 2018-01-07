@@ -304,7 +304,7 @@ class BatchParser(AbstractParser):
             Config().log("%s %s: timeout (%fs)" % (Config().passage_word, passage.ID, self.args.timeout))
             status = "(timeout)"
         if self.args.verbose:
-            print("%0.3fs %-12s" % (self.duration, status))
+            print("%0.3fs %-12s" % (parser.duration, status))
         ret = (parser.out,)
         if evaluate:
             ret += (parser.evaluate(),)
