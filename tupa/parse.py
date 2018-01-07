@@ -37,10 +37,15 @@ class AbstractParser:
         self.model = model
         self.training = training
         self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = \
-            self.num_tokens = self.duration = self.f1 = 0
+            self.num_tokens = self.f1 = 0
+        self.started = time.time()
+
+    @property
+    def duration(self):
+        return (time.time() - self.started) or 1.0
 
     def tokens_per_second(self):
-        return self.num_tokens / (self.duration or 1.0)
+        return self.num_tokens / self.duration
 
 
 class PassageParser(AbstractParser):
@@ -69,27 +74,6 @@ class PassageParser(AbstractParser):
         self.out = self.passage
 
     def parse(self):
-        started = time.time()
-        exception = None
-        try:
-            self.parse_transitions()
-        except (ParserException, concurrent.futures.TimeoutError) as e:
-            exception = e
-        self.model.classifier.finished_item(self.training)
-        if not self.training or self.args.verify:
-            self.out = self.state.create_passage(verify=self.args.verify)
-        self.duration = time.time() - started
-        if self.oracle and self.args.verify:
-            self.verify(self.out, self.passage)
-        if self.args.verbose and self.oracle and self.action_count:
-            accuracy_str = "a=%-14s" % percents_str(self.correct_action_count, self.action_count)
-            if self.label_count:
-                accuracy_str += " l=%-14s" % percents_str(self.correct_label_count, self.label_count)
-            print("%-33s" % accuracy_str, end=Config().line_end)
-        if exception:
-            raise exception
-
-    def parse_transitions(self):
         """
         Internal method to parse a single passage.
         If training, use oracle to train on given passages. Otherwise just parse with classifier.
@@ -215,6 +199,29 @@ class PassageParser(AbstractParser):
         yield scores.argmax()
         yield from scores.argsort()[::-1]  # Contains the max, but otherwise items might be missed (different order)
 
+    def finish(self, evaluate, status):
+        self.model.classifier.finished_item(self.training)
+        if not self.training or self.args.verify:
+            self.out = self.state.create_passage(verify=self.args.verify)
+        if self.oracle and self.args.verify:
+            self.verify(self.out, self.passage)
+        ret = (self.out,)
+        if evaluate:
+            ret += (self.evaluate(),)
+            status = "%-14s F1=%.3f" % (status, self.f1)
+        if self.args.verbose:
+            print("%s%.3fs %s" % (self.accuracy_str, self.duration, status))
+        return ret
+
+    @property
+    def accuracy_str(self):
+        if self.oracle and self.action_count:
+            accuracy_str = "a=%-14s" % percents_str(self.correct_action_count, self.action_count)
+            if self.label_count:
+                accuracy_str += " l=%-14s" % percents_str(self.correct_label_count, self.label_count)
+            return "%-33s" % accuracy_str
+        return ""
+
     def evaluate(self):
         ref_format = self.passage.extra.get("format")
         if self.args.verbose > 2 and ref_format:
@@ -267,7 +274,7 @@ class BatchParser(AbstractParser):
             if self.args.verbose:
                 progress = "%3d%% %*d/%d" % (i / total * 100, len(str(total)), i, total) if total else "%d" % i
                 id_width = max(id_width, len(str(passage.ID)))
-                print("%s %-6s %s %*s" % (progress, pformat, Config().passage_word, id_width, passage.ID),
+                print("%s %-6s %s %-*s" % (progress, pformat, Config().passage_word, id_width, passage.ID),
                       end=Config().line_end)
             else:
                 passages.set_description()
@@ -313,21 +320,14 @@ class BatchParser(AbstractParser):
         except concurrent.futures.TimeoutError:
             Config().log("%s %s: timeout (%fs)" % (Config().passage_word, passage.ID, self.args.timeout))
             status = "(timeout)"
-        ret = (parser.out,)
-        if evaluate:
-            ret += (parser.evaluate(),)
-            status = "%-14s F1=%.3f" % (status, self.f1)
-        if self.args.verbose:
-            print("%.3fs %s" % (parser.duration, status))
         self.update_counts(parser)
-        return ret
+        return parser.finish(evaluate, status)
 
     def update_counts(self, parser):
         self.correct_action_count += parser.correct_action_count
         self.action_count += parser.action_count
         self.correct_label_count += parser.correct_label_count
         self.label_count += parser.label_count
-        self.duration += parser.duration
         self.num_tokens += parser.num_tokens
         self.num_passages += 1
         self.f1 += parser.f1
@@ -340,10 +340,9 @@ class BatchParser(AbstractParser):
                 if self.label_count:
                     accuracy_str += ", " + percents_str(self.correct_label_count, self.label_count, "correct labels ")
                 print("Overall %s" % accuracy_str)
-            if self.duration:
-                print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
-                    self.duration, Config().passage_word, self.time_per_passage(),
-                    self.tokens_per_second()), flush=True)
+            print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
+                self.duration, Config().passage_word, self.time_per_passage(),
+                self.tokens_per_second()), flush=True)
 
     def time_per_passage(self):
         return self.duration / self.num_passages
