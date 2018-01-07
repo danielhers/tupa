@@ -82,10 +82,10 @@ class PassageParser(AbstractParser):
         if self.oracle and self.args.verify:
             self.verify(self.out, self.passage)
         if self.args.verbose and self.oracle and self.action_count:
-            accuracy_str = "a=" + percents_str(self.correct_action_count, self.action_count)
+            accuracy_str = "a=%-14s" % percents_str(self.correct_action_count, self.action_count)
             if self.label_count:
-                accuracy_str += " l=" + percents_str(self.correct_label_count, self.label_count)
-            print("%-30s" % accuracy_str, end=Config().line_end)
+                accuracy_str += " l=%-14s" % percents_str(self.correct_label_count, self.label_count)
+            print("%-33s" % accuracy_str, end=Config().line_end)
         if exception:
             raise exception
 
@@ -261,11 +261,14 @@ class BatchParser(AbstractParser):
 
     def parse(self, passages, evaluate):
         passages, total = self.passage_generator(passages)
+        id_width = 1
         for i, passage in enumerate(passages, start=1):
             pformat = passage.extra.get("format") or "ucca"
             if self.args.verbose:
                 progress = "%3d%% %*d/%d" % (i / total * 100, len(str(total)), i, total) if total else "%d" % i
-                print("%s %-6s %s %-7s" % (progress, pformat, Config().passage_word, passage.ID), end=Config().line_end)
+                id_width = max(id_width, len(str(passage.ID)))
+                print("%s %-6s %s %*s" % (progress, pformat, Config().passage_word, id_width, passage.ID),
+                      end=Config().line_end)
             else:
                 passages.set_description()
                 postfix = {pformat: passage.ID, "|t/s|": self.tokens_per_second()}
