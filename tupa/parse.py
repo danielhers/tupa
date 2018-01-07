@@ -210,7 +210,7 @@ class PassageParser(AbstractParser):
             ret += (self.evaluate(),)
             status = "%-14s F1=%.3f" % (status, self.f1)
         if self.args.verbose:
-            print("%s%.3fs %s" % (self.accuracy_str, self.duration, status))
+            print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), flush=True)
         return ret
 
     @property
