@@ -64,6 +64,9 @@ PARAM_DEFS = (
     ParameterDefinition("p", dim="punct_dim",         size="max_puncts"),
     ParameterDefinition("A", dim="action_dim",        size="max_action_types"),
     ParameterDefinition("T", dim="ner_dim",           size="max_ner_types"),
+    ParameterDefinition("#", dim="shape_dim",         size="max_shapes"),
+    ParameterDefinition("^", dim="prefix_dim",        size="max_prefixes"),
+    ParameterDefinition("$", dim="suffix_dim",        size="max_suffixes"),
 )
 
 
