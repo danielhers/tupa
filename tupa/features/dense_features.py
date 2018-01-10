@@ -4,7 +4,7 @@ from .feature_extractor import FeatureExtractor
 from .feature_params import FeatureParameters, NumericFeatureParameters
 from ..model_util import MISSING_VALUE, UnknownDict, save_dict, load_dict
 
-NON_NUMERIC_FEATURE_SUFFIXES = "wtdencpAT"
+NON_NUMERIC_FEATURE_SUFFIXES = "wtdencpAT#^$"
 FEATURE_TEMPLATES = (
     # words
     "s0ws1ws2ws3w"  # stack
@@ -45,6 +45,10 @@ FEATURE_TEMPLATES = (
     # NER
     "s0Ts1Ts2Ts3T"  # stack
     "b0Tb1Tb2Tb3T",  # buffer
+    # shape, prefix, suffix
+    "s0#s1#s2#s3#b0#b1#b2#b3#s0l#s0r#s1l#s1r#s0ll#s0lr#s0rl#s0rr#s1ll#s1lr#s1rl#s1rr#s0L#s0R#s1L#s1R#b0L#b0R#",
+    "s0^s1^s2^s3^b0^b1^b2^b3^s0l^s0r^s1l^s1r^s0ll^s0lr^s0rl^s0rr^s1ll^s1lr^s1rl^s1rr^s0L^s0R^s1L^s1R^b0L^b0R^",
+    "s0$s1$s2$s3$b0$b1$b2$b3$s0l$s0r$s1l$s1r$s0ll$s0lr$s0rl$s0rr$s1ll$s1lr$s1rl$s1rr$s0L$s0R$s1L$s1R$b0L$b0R$",
     # numeric
     "s0s1xds1s0xs0b0xdb0s0x"
     "s0xhqyPCIRNs1xhyNs2xhys3xhyN"
