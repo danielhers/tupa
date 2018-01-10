@@ -149,6 +149,9 @@ class FallbackNamespace(Namespace):
     def __getattr__(self, item):
         return getattr(super(), item, getattr(self._fallback, item))
 
+    def items(self):
+        return vars(self).items()
+
 
 class Hyperparams:
     def __init__(self, parent, shared=None, **kwargs):
@@ -326,14 +329,14 @@ class Config(object, metaclass=Singleton):
     def update_iteration(self, iteration):
         if iteration.hyperparams:
             print("Updating: %s" % iteration.hyperparams)
-            self.iteration_hyperparams = iteration.hyperparams
+            self.iteration_hyperparams = iteration.hyperparams.args
             self.update_by_hyperparams()
 
     def update_by_hyperparams(self):
         format_values = dict(self.original_values)
         for hyperparams in (self.iteration_hyperparams, self.hyperparams.specific[self.format]):
             if hyperparams:
-                format_values.update({k: v for k, v in vars(hyperparams).items() if not k.startswith("_")})
+                format_values.update({k: v for k, v in hyperparams.items() if not k.startswith("_")})
         for attr, value in format_values.items():
             setattr(self.args, attr, value)
         if self.format == "amr":
