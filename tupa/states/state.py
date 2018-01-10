@@ -1,7 +1,7 @@
 import sys
 from collections import deque, defaultdict
 
-from ucca import core, layer0, layer1, textutil
+from ucca import core, layer0, layer1
 from ucca.layer1 import EdgeTags
 
 from scheme.constrain import CONSTRAINTS
@@ -30,16 +30,9 @@ class State:
         self.log = []
         self.finished = False
         self.passage = passage
-        l0 = passage.layer(layer0.LAYER_ID)
-        l1 = passage.layer(layer1.LAYER_ID)
+        l0, l1 = [passage.layer(l.LAYER_ID) for l in (layer0, layer1)]
         self.labeled = any(n.outgoing or n.attrib.get(LABEL_ATTRIB) for n in l1.all)
-        self.terminals = [Node(i, orig_node=t, root=passage, text=t.text, paragraph=t.paragraph, tag=t.tag,
-                               pos_tag=t.extra.get(textutil.TAG_KEY),
-                               dep_rel=t.extra.get(textutil.DEP_KEY),
-                               dep_head=t.extra.get(textutil.HEAD_KEY),
-                               ner_type=t.extra.get(textutil.NER_KEY),
-                               ner_iob=t.extra.get(textutil.IOB_KEY),
-                               lemma=t.extra.get(textutil.LEMMA_KEY))
+        self.terminals = [Node(i, orig_node=t, root=passage, text=t.text, paragraph=t.paragraph, tag=t.tag)
                           for i, t in enumerate(l0.all, start=1)]
         self.stack = []
         self.buffer = deque()

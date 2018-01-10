@@ -301,7 +301,7 @@ class BatchParser(AbstractParser):
         if not hasattr(passages, "__iter__"):  # Single passage given
             passages = (passages,)
         total = len(passages) if hasattr(passages, "__len__") else None
-        passages = textutil.annotate_all(passages, lang=self.args.lang, verbose=self.args.verbose > 2)
+        passages = textutil.annotate_all(passages, as_array=True, lang=self.args.lang, verbose=self.args.verbose > 2)
         if not self.args.verbose:
             passages = tqdm(passages, unit=Config().passages_word, total=total, file=sys.stdout, desc="Initializing")
         return passages, total

@@ -2,7 +2,7 @@ from collections import namedtuple, OrderedDict
 from itertools import tee
 
 import penman
-from ucca import layer0, convert
+from ucca import layer0, convert, textutil
 
 from ..util.amr import *
 
@@ -23,7 +23,7 @@ class AmrConverter(convert.FormatConverter):
         gen1, gen2 = tee(self._init_passages(self._amr_generator(lines)))
         passages = (passage for passage, _, _ in gen1)
         amrs = ((amr, amr_id) for _, amr, amr_id in gen2)
-        for passage, (amr, amr_id) in zip(textutil.annotate_all(passages), amrs):
+        for passage, (amr, amr_id) in zip(textutil.annotate_all(passages, as_array=True), amrs):
             yield self._build_passage(passage, amr, amr_id)
 
     @staticmethod
@@ -233,7 +233,7 @@ class AmrConverter(convert.FormatConverter):
             node.attrib[LABEL_ATTRIB] = label
 
     def to_format(self, passage, metadata=True, wikification=True, verbose=False):
-        textutil.annotate(passage)
+        textutil.annotate(passage, as_array=True)
         lines = ["# ::id " + passage.ID,
                  "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all)] if metadata else []
         if wikification:

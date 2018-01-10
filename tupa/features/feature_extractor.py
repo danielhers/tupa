@@ -2,6 +2,7 @@ import re
 
 from ucca import layer0
 from ucca.layer1 import EdgeTags
+from ucca.textutil import Attr
 
 FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([wtdhencpqxyAPCIRNT]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile(r"^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
@@ -158,7 +159,7 @@ class FeatureExtractor:
             elif prop in "pq":
                 return separator_prop(state.stack[-1:-3:-1], state.terminals, prop)
             return node_prop(node, prop, prev_node, prev_elem)
-        except (AttributeError, StopIteration):
+        except (TypeError, AttributeError, StopIteration):
             return None
 
     def get_all_features(self, indexed=False):
@@ -204,7 +205,7 @@ def separator_prop(nodes, terminals, prop):
     t0, t1 = sorted([head_terminal(node) for node in nodes], key=lambda t: t.index)
     punctuation = [t for t in terminals[t0.index:t1.index - 1] if t.tag == layer0.NodeTags.Punct]
     if prop == "p" and len(punctuation) == 1:
-        return punctuation[0].text
+        return punctuation[0].tok[Attr.ORTH.value]
     if prop == "q":
         return len(punctuation)
     return None
@@ -236,7 +237,7 @@ def head_terminal(node, *_):
 
 
 def height(node, *_):
-    return head_terminal_height(node, True)
+    return head_terminal_height(node, return_height=True)
 
 
 def static_vars(**kwargs):
@@ -247,6 +248,9 @@ def static_vars(**kwargs):
     return decorate
 
 
+MAX_HEIGHT = 30
+
+
 @static_vars(node=None, head_terminal=None, height=None)
 def head_terminal_height(node, return_height=False):
     if node is not head_terminal_height.node:
@@ -254,7 +258,7 @@ def head_terminal_height(node, return_height=False):
         head_terminal_height.height = 0
         while head_terminal_height.head_terminal.text is None:  # Not a terminal
             edges = [edge for edge in node.outgoing if not edge.remote and not edge.child.implicit]
-            if not edges or head_terminal_height.height > 30:
+            if not edges or head_terminal_height.height > MAX_HEIGHT:
                 head_terminal_height.head_terminal = head_terminal_height.height = None
                 break
             head_terminal_height.head_terminal = min(edges, key=lambda edge: EDGE_PRIORITY.get(edge.tag, 0)).child
@@ -284,19 +288,19 @@ def gap_type(node, *_):
     return 0  # None
 
 
-def dependency_distance(node1, node2, *_):
-    t1, t2 = head_terminal(node1), head_terminal(node2)
-    if t1.dep_head == t2.index:
-        return 1
-    elif t2.dep_head == t1.index:
-        return -1
+def dep_distance(node1, node2, *_):
+    terminals = list(map(head_terminal, (node1, node2)))
+    for v in 1, -1:
+        t1, t2 = terminals[::v]
+        if t1.index + t1.tok[Attr.HEAD.value] == t2.index:
+            return v
     return None
 
 
 NODE_PROP_GETTERS = {
-    "w": lambda node, *_: head_terminal(node).text,
-    "t": lambda node, *_: head_terminal(node).pos_tag,
-    "d": lambda node, prev, binary: dependency_distance(prev, node) if binary else head_terminal(node).dep_rel,
+    "w": lambda node, *_: head_terminal(node).tok[Attr.ORTH.value],
+    "t": lambda node, *_: head_terminal(node).tok[Attr.TAG.value],
+    "d": lambda node, prev, binary: dep_distance(prev, node) if binary else head_terminal(node).tok[Attr.DEP.value],
     "h": height,
     "i": lambda node, *_: head_terminal(node).index - 1,
     "e": lambda node, prev, binary: next(e.tag for e in node.incoming if not binary or e.parent == prev),
@@ -306,10 +310,10 @@ NODE_PROP_GETTERS = {
     "y": gap_length_sum,
     "P": lambda node, *_: len(node.incoming),
     "C": lambda node, *_: len(node.outgoing),
-    "I": lambda node, *_: len([n for n in node.children if n.implicit]),
-    "R": lambda node, *_: len([e for e in node.outgoing if e.remote]),
-    "N": lambda node, *_: int(head_terminal(node).ner_iob),
-    "T": lambda node, *_: head_terminal(node).ner_type,
+    "I": lambda node, *_: sum(1 for n in node.children if n.implicit),
+    "R": lambda node, *_: sum(1 for e in node.outgoing if e.remote),
+    "N": lambda node, *_: head_terminal(node).tok[Attr.ENT_IOB.value],
+    "T": lambda node, *_: head_terminal(node).tok[Attr.ENT_TYPE.value],
 }
 
 

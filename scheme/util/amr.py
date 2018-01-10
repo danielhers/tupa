@@ -9,8 +9,8 @@ import spotlight
 from requests.exceptions import ConnectionError
 from spotlight import SpotlightException
 from ucca import layer1
-from ucca import textutil
 from ucca.convert import to_text
+from ucca.textutil import Attr, get_nlp
 from word2number import w2n
 
 from ..constraints import Valid
@@ -280,10 +280,7 @@ def terminals_to_number(terminals):
 
 
 def lemmatize(terminal):
-    try:
-        lemma = terminal.lemma
-    except AttributeError:
-        lemma = terminal.extra.get(textutil.LEMMA_KEY)
+    lemma = get_nlp().vocab[terminal.tok[Attr.LEMMA.value]].text
     if lemma == "-PRON-":
         lemma = terminal.text.lower()
     return lemma.translate(PUNCTUATION_REMOVER)
