@@ -4,7 +4,7 @@ from ucca import layer0
 from ucca.layer1 import EdgeTags
 from ucca.textutil import Attr
 
-FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([wtdhencpqxyAPCIRNT]*)")
+FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([wtdhencpqxyAPCIRNT#^$]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile(r"^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 
 
@@ -63,6 +63,9 @@ class FeatureTemplateElement:
                            R: number of remote children
                            N: numeric value of named entity IOB
                            T: named entity type
+                           #: word shape
+                           ^: word prefix (one character)
+                           $: word suffix (three characters)
                            If empty,
                              If the next node comes with the "x" property, the value will be 1 if there is an edge from
                              this node to the next one in the template, or 0 otherwise.
@@ -314,6 +317,9 @@ NODE_PROP_GETTERS = {
     "R": lambda node, *_: sum(1 for e in node.outgoing if e.remote),
     "N": lambda node, *_: head_terminal(node).tok[Attr.ENT_IOB.value],
     "T": lambda node, *_: head_terminal(node).tok[Attr.ENT_TYPE.value],
+    "#": lambda node, *_: head_terminal(node).tok[Attr.SHAPE.value],
+    "^": lambda node, *_: head_terminal(node).tok[Attr.PREFIX.value],
+    "$": lambda node, *_: head_terminal(node).tok[Attr.SUFFIX.value],
 }
 
 
