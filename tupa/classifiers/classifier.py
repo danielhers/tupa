@@ -28,7 +28,7 @@ class Classifier:
     @property
     def num_labels(self):
         return OrderedDict((a, len(l.all)) for a, l in self.labels.items()) if self.labels \
-            else OrderedDict((a, s) for a, (_, s) in self.labels_t.items()) if self.labels_t else {}
+            else OrderedDict((a, len(l) if l else s) for a, (l, s) in self.labels_t.items()) if self.labels_t else {}
     
     @property
     def input_dim(self):
