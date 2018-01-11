@@ -1,10 +1,12 @@
 import os
+import sys
 import time
 from collections import OrderedDict
 from itertools import repeat
 
 import dynet as dy
 import numpy as np
+from tqdm import tqdm
 
 from .birnn import BiRNN
 from .constants import TRAINERS, TRAINER_LEARNING_RATE_PARAM_NAMES, TRAINER_KWARGS, CategoricalParameter
@@ -271,16 +273,13 @@ class NeuralNetwork(Classifier, SubModel):
                 print(model.params_str())
         if self.args.verbose:
             print(self)
-        started = time.time()
         try:
             os.remove(filename)
             print("Removed existing '%s'." % filename)
         except OSError:
             pass
-        print("Saving model to '%s'... " % filename, end="", flush=True)
         try:
-            dy.save(filename, values)
-            print("Done (%.3fs)." % (time.time() - started))
+            dy.save(filename, tqdm(values, desc="Saving model to '%s'" % filename, unit="param", file=sys.stdout))
         except ValueError as e:
             print("Failed saving model: %s" % e)
 
