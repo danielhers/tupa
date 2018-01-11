@@ -337,7 +337,9 @@ class Config(object, metaclass=Singleton):
         for hyperparams in (self.iteration_hyperparams, self.hyperparams.specific[self.format]):
             if hyperparams:
                 format_values.update({k: v for k, v in hyperparams.items() if not k.startswith("_")})
-        for attr, value in format_values.items():
+        for attr, value in sorted(format_values.items()):
+            if self.args.verbose > 3:
+                print("Setting %s=%s" % (attr, value))
             setattr(self.args, attr, value)
         if self.format == "amr":
             if not self.args.node_label_dim:
