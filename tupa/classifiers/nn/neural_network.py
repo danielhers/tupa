@@ -42,13 +42,12 @@ class NeuralNetwork(Classifier, SubModel):
         Classifier.__init__(self, *args, **kwargs)
         SubModel.__init__(self)
         self.minibatch_size = self.args.minibatch_size
-        self.trainer_type = CategoricalParameter(TRAINERS, self.args.optimizer)
         self.loss = self.args.loss
         self.empty_values = OrderedDict()  # string (feature suffix) -> expression
         self.axes = OrderedDict()  # string (axis) -> AxisModel
         self.losses = []
         self.steps = 0
-        self.trainer = self.value = self.birnn = None
+        self.trainer_type = self.trainer = self.value = self.birnn = None
 
     @property
     def input_dim(self):
@@ -65,23 +64,27 @@ class NeuralNetwork(Classifier, SubModel):
         init = self.model is None
         if init:
             self.model = dy.ParameterCollection()
-            trainer_kwargs = dict(TRAINER_KWARGS.get(str(self.trainer_type), {}))
-            learning_rate_param_name = TRAINER_LEARNING_RATE_PARAM_NAMES.get(str(self.trainer_type))
-            if learning_rate_param_name and self.learning_rate:
-                trainer_kwargs[learning_rate_param_name] = self.learning_rate
-            if self.args.verbose > 3:
-                print("Initializing model with trainer=%s(%s)" % (
-                    self.trainer_type, ", ".join("%s=%s" % (k, v) for k, v in trainer_kwargs.items())))
-            self.trainer = self.trainer_type()(self.model, **trainer_kwargs)
             self.birnn = BiRNN(Config().hyperparams.shared, self.model,
                                save_path=("shared", "birnn"), with_birnn=self.model_type == BIRNN)
-
+        self.init_trainer()
         if axis:
             self.init_axis_model(axis)
         if init:
             self.init_cg()
             self.finished_step()
         self.init_empty_values()
+
+    def init_trainer(self):
+        if self.trainer_type is None or str(self.trainer_type) != self.args.optimizer:
+            self.trainer_type = CategoricalParameter(TRAINERS, self.args.optimizer)
+            trainer_kwargs = dict(TRAINER_KWARGS.get(str(self.trainer_type), {}))
+            learning_rate_param_name = TRAINER_LEARNING_RATE_PARAM_NAMES.get(str(self.trainer_type))
+            if learning_rate_param_name and self.learning_rate:
+                trainer_kwargs[learning_rate_param_name] = self.learning_rate
+            if self.args.verbose > 3:
+                print("Initializing trainer=%s(%s)" % (
+                    self.trainer_type, ", ".join("%s=%s" % (k, v) for k, v in trainer_kwargs.items())))
+            self.trainer = self.trainer_type()(self.model, **trainer_kwargs)
 
     def init_axis_model(self, axis):
         model = self.axes.get(axis)
