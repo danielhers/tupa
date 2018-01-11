@@ -10,7 +10,7 @@ from requests.exceptions import ConnectionError
 from spotlight import SpotlightException
 from ucca import layer1
 from ucca.convert import to_text
-from ucca.textutil import Attr, get_nlp
+from ucca.textutil import Attr
 from word2number import w2n
 
 from ..constraints import Valid
@@ -236,9 +236,10 @@ def resolve_label(node, label=None, reverse=False, conservative=False):
                         terminals = ()
                 for terminal in terminals:
                     lemma = lemmatize(terminal)
-                    if reverse and category is None:
-                        category = CATEGORIES.get(lemma)
-                    label = _replace(LEMMA_PLACEHOLDER, lemma)
+                    if lemma:
+                        if reverse and category is None:
+                            category = CATEGORIES.get(lemma)
+                        label = _replace(LEMMA_PLACEHOLDER, lemma)
                     label = _replace(TOKEN_PLACEHOLDER, terminal.text)
                     label = _replace(TOKEN_TITLE_PLACEHOLDER, terminal.text.title())
                     negation = NEGATIONS.get(terminal.text)
@@ -246,7 +247,7 @@ def resolve_label(node, label=None, reverse=False, conservative=False):
                         label = _replace(NEGATION_PLACEHOLDER, negation)
                     if label.startswith(CONCEPT):
                         morph = VERBALIZATION.get(lemma)
-                        if morph is not None:
+                        if morph:
                             for prefix, value in morph.items():  # V: verb, N: noun, A: noun actor
                                 label = _replace("<%s>" % prefix, value)
                     elif label.startswith('"') and (reverse and not PLACEHOLDER_PATTERN.search(label) or
@@ -280,10 +281,10 @@ def terminals_to_number(terminals):
 
 
 def lemmatize(terminal):
-    lemma = get_nlp().vocab[terminal.tok[Attr.LEMMA.value]].text
+    lemma = Attr.LEMMA(terminal.tok[Attr.LEMMA.value])
     if lemma == "-PRON-":
         lemma = terminal.text.lower()
-    return lemma.translate(PUNCTUATION_REMOVER)
+    return lemma.translate(PUNCTUATION_REMOVER) if lemma else None
 
 
 # If a token starts/ends with punctuation, merge it with the previous/next token
