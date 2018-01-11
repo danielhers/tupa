@@ -281,7 +281,10 @@ def terminals_to_number(terminals):
 
 
 def lemmatize(terminal):
-    lemma = Attr.LEMMA(terminal.tok[Attr.LEMMA.value])
+    try:
+        lemma = Attr.LEMMA(terminal.tok[Attr.LEMMA.value])
+    except KeyError:
+        return None
     if lemma == "-PRON-":
         lemma = terminal.text.lower()
     return lemma.translate(PUNCTUATION_REMOVER) if lemma else None
