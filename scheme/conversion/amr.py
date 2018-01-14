@@ -1,5 +1,4 @@
 from collections import namedtuple, OrderedDict
-from itertools import tee
 
 import penman
 from ucca import layer0, convert, textutil
@@ -20,10 +19,8 @@ class AmrConverter(convert.FormatConverter):
         self.remove_cycles = remove_cycles
         self.extensions = [l for l in EXTENSIONS if kwargs.get(l)]
         self.excluded = {i for l, r in EXTENSIONS.items() if l not in self.extensions for i in r}
-        gen1, gen2 = tee(self._init_passages(self._amr_generator(lines)))
-        passages = (passage for passage, _, _ in gen1)
-        amrs = ((amr, amr_id) for _, amr, amr_id in gen2)
-        for passage, (amr, amr_id) in zip(textutil.annotate_all(passages, as_array=True), amrs):
+        for passage, amr, amr_id in textutil.annotate_all(self._init_passages(self._amr_generator(lines)),
+                                                          as_array=True, as_tuples=True):
             yield self._build_passage(passage, amr, amr_id)
 
     @staticmethod
