@@ -97,4 +97,4 @@ class MultilayerPerceptron(SubModel):
         return "%s layers: %d, total_layers: %d, layer_dim: %d, output_dim: %d, activation: %s, init: %s, " \
                "dropout: %f, num_labels: %s, input_dim: %d, params: %s" % (
                 "/".join(self.save_path), self.layers, self.total_layers, self.layer_dim, self.output_dim,
-                self.activation, self.init, self.dropout, self.num_labels, self.input_dim, self.params.keys())
+                self.activation, self.init, self.dropout, self.num_labels, self.input_dim, list(self.params.keys()))

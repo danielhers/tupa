@@ -116,4 +116,4 @@ class BiRNN(SubModel):
                "params: %s" % (
                 "/".join(self.save_path), self.lstm_layers, self.lstm_layer_dim, self.embedding_layers,
                 self.embedding_layer_dim, self.max_length, self.rnn_builder, self.activation, self.init, self.dropout,
-                self.indexed_dim, self.indexed_num, self.params.keys())
+                self.indexed_dim, self.indexed_num, list(self.params.keys()))
