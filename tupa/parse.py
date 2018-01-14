@@ -114,7 +114,7 @@ class PassageParser(AbstractParser):
         scores = self.model.classifier.score(features, axis=Config().format)  # Returns NumPy array
         self.print("  action scores: " + ",".join(("%s=%g" % x for x in zip(self.model.actions.all, scores))), level=4)
         try:
-            predicted_action = self.predict(scores, self.model.actions.all, self.state.is_valid_action, unit="action")
+            predicted_action = self.predict(scores, self.model.actions.all, self.state.is_valid_action)
         except StopIteration as e:
             raise ParserException("No valid action available\n%s" % (self.oracle.log if self.oracle else "")) from e
         action = true_actions.get(predicted_action.id)
@@ -158,7 +158,7 @@ class PassageParser(AbstractParser):
         features = self.model.feature_extractor.extract_features(self.state)
         scores = self.model.classifier.score(features, axis=NODE_LABEL_KEY)
         self.print("  label scores: " + ",".join(("%s=%g" % x for x in zip(self.model.labels.all, scores))), level=4)
-        label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label, unit="label")
+        label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label)
         if self.oracle:
             is_correct = (label == true_label)
             if is_correct:
@@ -171,18 +171,15 @@ class PassageParser(AbstractParser):
         self.model.classifier.finished_step(self.training)
         return label, predicted_label
 
-    def predict(self, scores, values, is_valid=None, unit=None):
+    @staticmethod
+    def predict(scores, values, is_valid=None):
         """
         Choose action/label based on classifier
         Usually the best action/label is valid, so max is enough to choose it in O(n) time
         Otherwise, sorts all the other scores to choose the best valid one in O(n lg n)
         :return: valid action/label with maximum probability according to classifier
         """
-        indices = (values[i] for i in self.generate_descending(scores))
-        if unit:
-            self.print("Finding valid %s..." % unit, level=4)
-            indices = tqdm(indices, total=len(scores), unit=" " + unit + "s", file=sys.stdout)
-        return next(filter(is_valid, indices))
+        return next(filter(is_valid, (values[i] for i in PassageParser.generate_descending(scores))))
 
     @staticmethod
     def generate_descending(scores):
