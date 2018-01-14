@@ -146,13 +146,10 @@ class NeuralNetwork(Classifier, SubModel):
             elif param.indexed:  # collect indices to be looked up
                 indices += values  # DenseFeatureExtractor collapsed features so there are no repetitions between them
             else:  # lookup feature
-                yield dy.concatenate([self.empty_values[suffix] if x == MISSING_VALUE else self.params[suffix][x]
-                                      for x in values])
+                yield from (self.empty_values[suffix] if x == MISSING_VALUE else self.params[suffix][x] for x in values)
         if indices:
-            values = []
             for birnn in self.get_birnns(axis):
-                values += birnn.evaluate(indices)
-            yield dy.concatenate(values)
+                yield from birnn.evaluate(indices)
 
     def get_birnns(self, axis):
         """ Return shared + axis-specific BiRNNs """
