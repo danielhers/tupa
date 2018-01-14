@@ -86,7 +86,11 @@ def evaluate_all(args, evaluate, files):
         if not args.quiet:
             print(passage_id, end=" ")
         if guessed_format != ref_format:
-            guessed_passage = next(iter(guessed_converter(guessed_passage + [""], passage_id=passage_id))) if \
+            try:
+                guessed_passage += [""]
+            except TypeError:
+                pass
+            guessed_passage = next(iter(guessed_converter(guessed_passage, passage_id=passage_id))) if \
                 ref_converter is None else ref_converter(guessed_passage)
         result = evaluate(guessed_passage, ref_passage, verbose=args.verbose > 1)
         if not args.quiet:
