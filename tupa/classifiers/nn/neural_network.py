@@ -133,9 +133,8 @@ class NeuralNetwork(Classifier, SubModel):
         embeddings = [[self.params[s][k] for k in ks] for s, ks in sorted(features.items())]  # lists of vectors
         if self.args.verbose > 3:
             print("Initializing %s BiRNN features for %d elements" % (", ".join(axes), len(embeddings)))
-        self.birnn.init_features(embeddings, train)
-        for axis in axes:
-            self.axes[axis].birnn.init_features(embeddings, train)
+        for birnn in self.get_birnns(*axes):
+            birnn.init_features(embeddings, train)
 
     def generate_inputs(self, features, axis):
         indices = []  # list, not set, in order to maintain consistent order
@@ -151,9 +150,9 @@ class NeuralNetwork(Classifier, SubModel):
             for birnn in self.get_birnns(axis):
                 yield from birnn.evaluate(indices)
 
-    def get_birnns(self, axis):
+    def get_birnns(self, *axes):
         """ Return shared + axis-specific BiRNNs """
-        return [m.birnn for m in (self, self.axes[axis])]
+        return [m.birnn for m in [self] + [self.axes[axis] for axis in axes]]
 
     def evaluate(self, features, axis, train=False):
         """
