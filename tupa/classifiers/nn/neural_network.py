@@ -89,6 +89,7 @@ class NeuralNetwork(Classifier, SubModel):
                 print("Initializing trainer=%s(%s)" % (
                     self.trainer_type, ", ".join("%s=%s" % (k, v) for k, v in trainer_kwargs.items())))
             self.trainer = self.trainer_type()(self.model, **trainer_kwargs)
+            self.trainer.set_sparse_updates(False)
 
     def init_axis_model(self, axis):
         model = self.axes.get(axis)
