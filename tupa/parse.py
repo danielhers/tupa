@@ -78,8 +78,7 @@ class PassageParser(AbstractParser):
         Internal method to parse a single passage.
         If training, use oracle to train on given passages. Otherwise just parse with classifier.
         """
-        if self.args.verbose > 2:
-            print("  initial state: %s" % self.state)
+        self.print("  initial state: %s" % self.state)
         while True:
             if self.args.check_loops:
                 self.check_loop()
@@ -91,19 +90,12 @@ class PassageParser(AbstractParser):
             if self.args.action_stats:
                 with open(self.args.action_stats, "a") as f:
                     print(",".join(map(str, [predicted_action, action] + list(true_actions.values()))), file=f)
-            if self.args.verbose > 2:
-                if self.oracle:
-                    print("  predicted: %-15s true: %-15s taken: %-15s %s" % (
-                        predicted_action, "|".join(map(str, true_actions.values())), action, self.state))
-                else:
-                    print("  action: %-15s %s" % (action, self.state))
-                if need_label:
-                    if self.oracle and not self.args.use_gold_node_labels:
-                        print("  predicted label: %-9s true label: %s" % (predicted_label, true_label))
-                    else:
-                        print("  label: %s" % label)
-                for line in self.state.log:
-                    print("    " + line)
+            self.print("\n".join(["  predicted: %-15s true: %-15s taken: %-15s %s" % (
+                predicted_action, "|".join(map(str, true_actions.values())), action, self.state) if self.oracle else
+                                  "  action: %-15s %s" % (action, self.state)] + (
+                ["  predicted label: %-9s true label: %s" % (predicted_label, true_label) if self.oracle and not
+                 self.args.use_gold_node_labels else "  label: %s" % label] if need_label else []) + [
+                "    " + l for l in self.state.log]))
             if self.state.finished:
                 return  # action is Finish (or early update is triggered)
 
@@ -120,8 +112,7 @@ class PassageParser(AbstractParser):
     def choose_action(self, true_actions):
         features = self.model.feature_extractor.extract_features(self.state)
         scores = self.model.classifier.score(features, axis=Config().format)  # Returns NumPy array
-        if self.args.verbose > 3:
-            print("  action scores: " + ",".join(("%s=%g" % x for x in zip(self.model.actions.all, scores))))
+        self.print("  action scores: " + ",".join(("%s=%g" % x for x in zip(self.model.actions.all, scores))), level=4)
         try:
             predicted_action = self.predict(scores, self.model.actions.all, self.state.is_valid_action, unit="action")
         except StopIteration as e:
@@ -166,8 +157,7 @@ class PassageParser(AbstractParser):
         true = (self.model.labels[true_label],) if self.oracle else ()  # Needs to happen before score()
         features = self.model.feature_extractor.extract_features(self.state)
         scores = self.model.classifier.score(features, axis=NODE_LABEL_KEY)
-        if self.args.verbose > 3:
-            print("  label scores: " + ",".join(("%s=%g" % x for x in zip(self.model.labels.all, scores))))
+        self.print("  label scores: " + ",".join(("%s=%g" % x for x in zip(self.model.labels.all, scores))), level=4)
         label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label, unit="label")
         if self.oracle:
             is_correct = (label == true_label)
@@ -189,8 +179,8 @@ class PassageParser(AbstractParser):
         :return: valid action/label with maximum probability according to classifier
         """
         indices = (values[i] for i in self.generate_descending(scores))
-        if unit and self.args.verbose > 3:
-            print("Finding valid %s..." % unit)
+        if unit:
+            self.print("Finding valid %s..." % unit, level=4)
             indices = tqdm(indices, total=len(scores), unit=" " + unit + "s", file=sys.stdout)
         return next(filter(is_valid, indices))
 
@@ -209,8 +199,7 @@ class PassageParser(AbstractParser):
         if evaluate:
             ret += (self.evaluate(),)
             status = "%-14s F1=%.3f" % (status, self.f1)
-        if self.args.verbose:
-            print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), flush=True)
+        self.print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), level=1)
         return ret
 
     @property
@@ -224,8 +213,8 @@ class PassageParser(AbstractParser):
 
     def evaluate(self):
         ref_format = self.passage.extra.get("format")
-        if self.args.verbose > 2 and ref_format:
-            print("Converting to %s and evaluating..." % ref_format, flush=True)
+        if ref_format:
+            self.print("Converting to %s and evaluating..." % ref_format)
         score = EVALUATORS.get(ref_format, evaluation).evaluate(
             self.out, self.passage, converter=get_output_converter(ref_format),
             verbose=self.out and self.args.verbose > 3, constructions=self.args.constructions)
@@ -257,6 +246,13 @@ class PassageParser(AbstractParser):
     @num_tokens.setter
     def num_tokens(self, _):
         pass
+
+    def print(self, message, level=3):
+        if self.args.verbose >= level:
+            try:
+                print(message, flush=True)
+            except UnicodeEncodeError:
+                pass
 
 
 class BatchParser(AbstractParser):
