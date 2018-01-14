@@ -40,7 +40,11 @@ class MultilayerPerceptron(SubModel):
         x = dy.concatenate(list(inputs))
         dim = x.dim()[0][0]
         assert dim == self.input_dim, "Input dim mismatch: %d != %d" % (dim, self.input_dim)
+        if self.args.verbose > 3:
+            print(self)
         for i in range(self.total_layers):
+            if self.args.verbose > 3:
+                print(x.npvalue().tolist())
             try:
                 if train and self.dropout:
                     x = dy.dropout(x, self.dropout)
@@ -48,6 +52,8 @@ class MultilayerPerceptron(SubModel):
                 x = self.activation()(W * x + b)
             except ValueError as e:
                 raise ValueError("Error in evaluating layer %d of %d" % (i + 1, self.total_layers)) from e
+        if self.args.verbose > 3:
+            print(x.npvalue().tolist())
         return x
 
     def save_sub_model(self, d, *args):

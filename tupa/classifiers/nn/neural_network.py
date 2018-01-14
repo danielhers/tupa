@@ -133,6 +133,8 @@ class NeuralNetwork(Classifier, SubModel):
         embeddings = [[self.params[s][k] for k in ks] for s, ks in sorted(features.items())]  # lists of vectors
         if self.args.verbose > 3:
             print("Initializing %s BiRNN features for %d elements" % (", ".join(axes), len(embeddings)))
+            for suffix, values in sorted(features.items()):
+                print("%s: %s" % (suffix, values))
         for birnn in self.get_birnns(*axes):
             birnn.init_features(embeddings, train)
 
@@ -146,6 +148,8 @@ class NeuralNetwork(Classifier, SubModel):
                 indices += values  # DenseFeatureExtractor collapsed features so there are no repetitions between them
             else:  # lookup feature
                 yield from (self.empty_values[suffix] if x == MISSING_VALUE else self.params[suffix][x] for x in values)
+            if self.args.verbose > 3:
+                print("%s: %s" % (suffix, values))
         if indices:
             for birnn in self.get_birnns(axis):
                 yield from birnn.evaluate(indices)
