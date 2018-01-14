@@ -272,7 +272,7 @@ class NeuralNetwork(Classifier, SubModel):
         values = []
         for model in self.sub_models():
             values += model.save_sub_model(d)
-            if self.args.verbose > 1:
+            if 1 < self.args.verbose <= 3:
                 print(model.params_str())
         if self.args.verbose:
             print(self)
@@ -301,7 +301,7 @@ class NeuralNetwork(Classifier, SubModel):
         for model in self.sub_models():
             model.load_sub_model(d, *values)
             del values[:len(model.params)]  # Take next len(model.params) values
-            if self.args.verbose > 1:
+            if 1 < self.args.verbose <= 3:
                 print(model.params_str())
         if self.args.verbose:
             print(self)
