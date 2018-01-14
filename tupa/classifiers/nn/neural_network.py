@@ -75,6 +75,10 @@ class NeuralNetwork(Classifier, SubModel):
         self.init_empty_values()
 
     def init_trainer(self):
+        try:
+            self.model.set_weight_decay_lambda(self.args.dynet_weight_decay)
+        except AttributeError:
+            pass  # Supported from DyNet commit a094a59
         if self.trainer_type is None or str(self.trainer_type) != self.args.optimizer:
             self.trainer_type = CategoricalParameter(TRAINERS, self.args.optimizer)
             trainer_kwargs = dict(TRAINER_KWARGS.get(str(self.trainer_type), {}))
