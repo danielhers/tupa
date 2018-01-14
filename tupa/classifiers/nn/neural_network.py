@@ -293,10 +293,14 @@ class NeuralNetwork(Classifier, SubModel):
     def load_model(self, filename, d):
         self.model = None
         self.init_model()
-        print("Loading model from '%s'... " % filename, end="", flush=True)
-        started = time.time()
-        values = dy.load(filename, self.model)  # All sub-model parameter values, concatenated
-        print("Done (%.3fs)." % (time.time() - started))
+        try:
+            values = list(tqdm(dy.load_generator(filename, self.model),
+                               desc="Load model from '%s'" % filename, unit="param", file=sys.stdout))
+        except AttributeError:
+            print("Loading model from '%s'... " % filename, end="", flush=True)
+            started = time.time()
+            values = dy.load(filename, self.model)  # All sub-model parameter values, concatenated
+            print("Done (%.3fs)." % (time.time() - started))
         self.axes = OrderedDict()
         for axis, labels in self.labels_t.items():
             _, size = labels
