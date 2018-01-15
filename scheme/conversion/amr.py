@@ -49,7 +49,7 @@ class AmrConverter(convert.FormatConverter):
 
     def _init_passages(self, amrs):
         for lines, amr_id, tokens in amrs:
-            assert tokens is not None, "Cannot convert AMR without input tokens"
+            assert tokens is not None, "Cannot convert AMR without input tokens: %s" % lines
             amr = parse(" ".join(lines), tokens=tokens)
             amr_id = amr_id or self.passage_id
             passage = next(convert.from_text(tokens, amr_id, tokenized=True))
@@ -63,7 +63,8 @@ class AmrConverter(convert.FormatConverter):
         self._build_layer0(self.align_nodes(amr), l1, l0)
         self._update_implicit(l1)
         self._update_labels(l1)
-        return (passage, amr(alignments=False), amr_id) if self.return_original else passage
+        return (passage, self.header(passage) + amr(alignments=False).split("\n"), amr_id) if self.return_original \
+            else passage
 
     def _build_layer1(self, amr, l1):
         def _reachable(x, y):  # is there a path from x to y? used to detect cycles
@@ -231,8 +232,7 @@ class AmrConverter(convert.FormatConverter):
 
     def to_format(self, passage, metadata=True, wikification=True, verbose=False):
         textutil.annotate(passage, as_array=True)
-        lines = ["# ::id " + passage.ID,
-                 "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all)] if metadata else []
+        lines = self.header(passage) if metadata else []
         if wikification:
             if verbose:
                 print("Wikifying passage...")
@@ -302,6 +302,11 @@ class AmrConverter(convert.FormatConverter):
     @staticmethod
     def strip_quotes(label):
         return label[1:-1] if len(label) > 1 and label.startswith('"') and label.endswith('"') else label
+
+    @staticmethod
+    def header(passage):
+        return ["# ::id " + passage.ID,
+                "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all)]
 
 
 def from_amr(lines, passage_id=None, return_original=False, *args, **kwargs):
