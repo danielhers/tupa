@@ -2,11 +2,10 @@
 import glob
 import os
 import re
-import sys
 
 import configargparse
 
-from scheme.util import amr
+from scheme.util.amr import ID_PATTERN, COMMENT_PREFIX
 
 desc = """Split sentences/passages to separate files (important for shuffling before training the parser)"""
 
@@ -19,6 +18,7 @@ def main(args):
         pass
     lines = []
     passage_id = 0
+    doc_id = None
     filenames = glob.glob(args.filename)
     if not filenames:
         raise IOError("Not found: " + args.filename)
@@ -27,28 +27,32 @@ def main(args):
         with open(filename, encoding="utf-8") as f:
             for line in f:
                 clean = line.lstrip()
-                m = amr.ID_PATTERN.match(clean) or \
+                m_id = ID_PATTERN.match(clean) or \
                     re.match("#\s*(\d+).*", line) or re.match("#\s*sent_id\s*=\s*(\S+)", line)
-                if m or not clean or clean[0] != amr.COMMENT_PREFIX or re.match("#\s*::", clean):
+                m_docid = re.match("#\s*doc_id\s*=\s*(\S+)", line)
+                if m_id or m_docid or not clean or clean[0] != COMMENT_PREFIX or re.match("#\s*::", clean):
                     lines.append(line)
-                    if m:
-                        passage_id = m.group(1)
+                    if m_docid:
+                        doc_id = m_docid.group(1)
+                        passage_id = 1
+                    if m_id:
+                        passage_id = m_id.group(1)
                 if not clean and any(map(str.strip, lines)):
-                    write_file(args.outdir, passage_id, ext, lines, quiet=args.quiet)
+                    write_file(args.outdir, doc_id, passage_id, ext, lines, quiet=args.quiet)
                     if isinstance(passage_id, str):
                         passage_id = None
                     else:
                         passage_id += 1
             if lines:
-                write_file(args.outdir, passage_id, ext, lines, quiet=args.quiet)
+                write_file(args.outdir, doc_id, passage_id, ext, lines, quiet=args.quiet)
     if not args.quiet:
         print()
 
 
-def write_file(outdir, passage_id, ext, lines, quiet=False):
+def write_file(outdir, doc_id, passage_id, ext, lines, quiet=False):
     if passage_id is None:
         raise ValueError("Could not determine passage ID")
-    filename = os.path.join(outdir, str(passage_id) + ext)
+    filename = os.path.join(outdir, ".".join(map(str, filter(None, (doc_id, passage_id)))) + ext)
     with open(filename, "w", encoding="utf-8") as f:
         f.writelines(lines)
     lines.clear()
@@ -62,4 +66,3 @@ if __name__ == '__main__':
     argparser.add_argument("outdir", help="output directory")
     argparser.add_argument("-q", "--quiet", action="store_true", help="less output")
     main(argparser.parse_args())
-    sys.exit(0)
