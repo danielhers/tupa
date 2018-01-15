@@ -54,7 +54,11 @@ class DependencyConverter(convert.DependencyConverter):
     def find_head_terminal(self, unit):
         while unit.outgoing:  # still non-terminal
             heads = [e.child for e in unit.outgoing if e.tag == self.HEAD]
-            unit = heads[0] if heads else unit.children[0]
+            try:
+                unit = heads[0] if heads else next(iter(e.child for e in unit.outgoing if not e.attrib.get("remote") and
+                                                        not e.child.attrib.get("implicit")))
+            except StopIteration:
+                unit = unit.children[0]
         return unit
 
     def find_top_headed_edges(self, unit):
