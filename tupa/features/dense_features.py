@@ -132,7 +132,7 @@ class DenseFeatureExtractor(FeatureExtractor):
 
     def get_all_features(self, indexed=False):
         features = [] if indexed else [self.numeric_features_template]
-        for suffix, feature_template in self.non_numeric_feature_templates.items:
+        for suffix, feature_template in self.non_numeric_feature_templates.items():
             param = (self.params or {}).get(suffix)
             if (not param and not indexed) or (param and param.enabled and indexed == param.indexed):
                 features.append(feature_template)
