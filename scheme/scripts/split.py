@@ -38,12 +38,14 @@ def main(args):
                     if m_id:
                         passage_id = m_id.group(1)
                 if not clean and any(map(str.strip, lines)):
-                    write_file(args.outdir, doc_id, passage_id, ext, lines, quiet=args.quiet)
+                    if not args.doc_ids or doc_id in args.doc_ids:
+                        write_file(args.outdir, doc_id, passage_id, ext, lines, quiet=args.quiet)
+                    lines.clear()
                     if isinstance(passage_id, str):
                         passage_id = None
                     else:
                         passage_id += 1
-            if lines:
+            if lines and not args.doc_ids or doc_id in args.doc_ids:
                 write_file(args.outdir, doc_id, passage_id, ext, lines, quiet=args.quiet)
     if not args.quiet:
         print()
@@ -55,7 +57,6 @@ def write_file(outdir, doc_id, passage_id, ext, lines, quiet=False):
     filename = os.path.join(outdir, ".".join(map(str, filter(None, (doc_id, passage_id)))) + ext)
     with open(filename, "w", encoding="utf-8") as f:
         f.writelines(lines)
-    lines.clear()
     if not quiet:
         print("\rWrote %-70s" % filename, end="", flush=True)
 
@@ -65,4 +66,5 @@ if __name__ == '__main__':
     argparser.add_argument("filename", help="file name to split")
     argparser.add_argument("outdir", help="output directory")
     argparser.add_argument("-q", "--quiet", action="store_true", help="less output")
+    argparser.add_argument("--doc-ids", nargs="+", help="document IDs to keep from the input file (by '# doc_id')")
     main(argparser.parse_args())
