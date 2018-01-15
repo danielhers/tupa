@@ -60,13 +60,14 @@ class NeuralNetwork(Classifier, SubModel):
                 assert num_labels <= labels.size, "Exceeded maximum number of labels at axis '%s': %d > %d:\n%s" % (
                     axis, num_labels, labels.size, "\n".join(map(str, labels.all)))
 
-    def init_model(self, axis=None):
+    def init_model(self, axis=None, train=False):
         init = self.model is None
         if init:
             self.model = dy.ParameterCollection()
             self.birnn = BiRNN(Config().hyperparams.shared, self.model,
                                save_path=("shared", "birnn"), with_birnn=self.model_type == BIRNN)
-        self.init_trainer()
+        if train:
+            self.init_trainer()
         if axis:
             self.init_axis_model(axis)
         if init:
@@ -134,7 +135,7 @@ class NeuralNetwork(Classifier, SubModel):
 
     def init_features(self, features, axes, train=False):
         for axis in axes:
-            self.init_model(axis)
+            self.init_model(axis, train)
         embeddings = [[self.params[s][k] for k in ks] for s, ks in sorted(features.items())]  # lists of vectors
         if self.args.verbose > 3:
             print("Initializing %s BiRNN features for %d elements" % (", ".join(axes), len(embeddings)))
@@ -171,7 +172,7 @@ class NeuralNetwork(Classifier, SubModel):
         :param train: whether to apply dropout
         :return: expression corresponding to log softmax applied to MLP output
         """
-        self.init_model(axis)
+        self.init_model(axis, train)
         value = self.value.get(axis)
         if value is None:
             self.value[axis] = value = self.axes[axis].mlp.evaluate(self.generate_inputs(features, axis), train=train)
