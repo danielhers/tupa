@@ -139,8 +139,8 @@ class NeuralNetwork(Classifier, SubModel):
         embeddings = [[self.params[s][k] for k in ks] for s, ks in sorted(features.items())]  # lists of vectors
         if self.args.verbose > 3:
             print("Initializing %s BiRNN features for %d elements" % (", ".join(axes), len(embeddings)))
-            for suffix, values in sorted(features.items()):
-                print("%s: %s" % (suffix, values))
+            for (suffix, values), embs in zip(sorted(features.items()), embeddings):
+                print("%s: %s %s" % (suffix, values, [e.npvalue().tolist() for e in embs]))
         for birnn in self.get_birnns(*axes):
             birnn.init_features(embeddings, train)
 
