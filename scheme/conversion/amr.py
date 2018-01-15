@@ -150,6 +150,7 @@ class AmrConverter(convert.FormatConverter):
             align = alignments.get(triple)
             if align is not None:
                 indices += list(map(int, align.lstrip(ALIGNMENT_PREFIX).split(ALIGNMENT_SEP)))  # split numeric
+                assert set(indices) <= set(range(len(tokens))), "%d tokens, invalid alignment: %s" % (len(lower), align)
             dep = triple[2]
             if not isinstance(dep, amr_lib.Var):
                 indices = self._expand_alignments(str(dep), indices, lower)
