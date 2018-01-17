@@ -175,23 +175,26 @@ def test_passage():
 
 
 @pytest.mark.parametrize("model_type", CLASSIFIERS)
-@pytest.mark.parametrize("iterations", (1,))
-def test_model(model_type, formats, test_passage, iterations):
+@pytest.mark.parametrize("iterations", (1, 2))
+def test_model(config, model_type, formats, test_passage, iterations):
     filename = "test_files/models/test_%s_%s" % (model_type, "_".join(formats))
     for f in glob(filename + ".*"):
         os.remove(f)
     model = Model(model_type, filename)
-    for _ in range(iterations):
+    finalized = None
+    for i in range(iterations):
         for axis in formats:
-            Config().set_format(axis)
+            axes = (axis,) + ((NODE_LABEL_KEY,) if axis == "amr" else ())
+            config.set_format(axis)
             model.init_model()
             state = State(test_passage)
             if ClassifierProperty.require_init_features in model.get_classifier_properties():
-                model.init_features(state, (axis,), train=True)
+                model.init_features(state, axes, train=True)
             features = model.feature_extractor.extract_features(state)
-            model.classifier.update(features, axis, pred=0, true=[0])
-            if axis == "amr":
-                model.classifier.update(features, axis=NODE_LABEL_KEY, pred=0, true=[0])
+            for a in axes:
+                model.classifier.update(features, axis=a, pred=0, true=[0])
+            model.classifier.finished_step(train=True)
+            model.classifier.finished_item(train=True)
         finalized = model.finalize(finished_epoch=True)
         finalized.save()
     loaded = Model(model_type, filename)
