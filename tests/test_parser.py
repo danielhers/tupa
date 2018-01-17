@@ -4,6 +4,7 @@ from glob import glob
 from itertools import combinations
 
 import pytest
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 from ucca import convert, ioutil
 
 from scheme.convert import FROM_FORMAT
@@ -186,9 +187,17 @@ def test_model(model_type, formats, test_passage):
         model.classifier.update(features, axis, pred=0, true=[0])
         if axis == "amr":
             model.classifier.update(features, axis=NODE_LABEL_KEY, pred=0, true=[0])
-    model.finalize(finished_epoch=True).save()
+    finalized = model.finalize(finished_epoch=True)
+    finalized.save()
     loaded = Model(model_type, filename)
     loaded.load(finalized=False)
-    for suffix, param in sorted(model.feature_extractor.params.items()):
-        loaded_param = loaded.feature_extractor.params[suffix]
+    for key, param in sorted(model.feature_extractor.params.items()):
+        loaded_param = loaded.feature_extractor.params[key]
         assert param == loaded_param
+    all_params = loaded.get_all_params()
+    for key, param in sorted(finalized.get_all_params().items()):
+        loaded_param = all_params[key]
+        try:
+            assert_array_almost_equal(param, loaded_param, key, verbose=True)
+        except TypeError:
+            assert_array_equal(param, loaded_param, key, verbose=True)
