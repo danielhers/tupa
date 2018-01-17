@@ -1,5 +1,6 @@
 """Testing code for the tupa package, unit-testing only."""
 
+import os
 from glob import glob
 from itertools import combinations
 
@@ -174,21 +175,25 @@ def test_passage():
 
 
 @pytest.mark.parametrize("model_type", CLASSIFIERS)
-def test_model(model_type, formats, test_passage):
+@pytest.mark.parametrize("iterations", (1,))
+def test_model(model_type, formats, test_passage, iterations):
     filename = "test_files/models/test_%s_%s" % (model_type, "_".join(formats))
+    for f in glob(filename + ".*"):
+        os.remove(f)
     model = Model(model_type, filename)
-    for axis in formats:
-        Config().set_format(axis)
-        model.init_model()
-        state = State(test_passage)
-        if ClassifierProperty.require_init_features in model.get_classifier_properties():
-            model.init_features(state, (axis,), train=True)
-        features = model.feature_extractor.extract_features(state)
-        model.classifier.update(features, axis, pred=0, true=[0])
-        if axis == "amr":
-            model.classifier.update(features, axis=NODE_LABEL_KEY, pred=0, true=[0])
-    finalized = model.finalize(finished_epoch=True)
-    finalized.save()
+    for _ in range(iterations):
+        for axis in formats:
+            Config().set_format(axis)
+            model.init_model()
+            state = State(test_passage)
+            if ClassifierProperty.require_init_features in model.get_classifier_properties():
+                model.init_features(state, (axis,), train=True)
+            features = model.feature_extractor.extract_features(state)
+            model.classifier.update(features, axis, pred=0, true=[0])
+            if axis == "amr":
+                model.classifier.update(features, axis=NODE_LABEL_KEY, pred=0, true=[0])
+        finalized = model.finalize(finished_epoch=True)
+        finalized.save()
     loaded = Model(model_type, filename)
     loaded.load(finalized=False)
     for key, param in sorted(model.feature_extractor.params.items()):
