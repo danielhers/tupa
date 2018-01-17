@@ -18,5 +18,5 @@ def write_oracle_actions(request):
 def pytest_generate_tests(metafunc):
     if "formats" in metafunc.fixturenames:
         metafunc.parametrize("formats",
-                             [c for n in range(1, (len(FORMATS) if metafunc.config.getoption("--multitask") else 1) + 1)
+                             [c for n in range(1, (3 if metafunc.config.getoption("--multitask") else 1) + 1)
                               for c in combinations(FORMATS, n)], ids="-".join)
