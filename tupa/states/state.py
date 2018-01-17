@@ -77,7 +77,7 @@ class State:
 
         def _check_possible_parent(node):
             self.check(node.text is None, message and "Terminals may not have children: %s" % node.text, is_type=True)
-            if self.args.constraints and action.tag:
+            if self.args.constraints and action.tag is not None:
                 for rule in self.constraints.tag_rules:
                     violation = rule.violation(node, action.tag, Direction.outgoing, message=message)
                     self.check(violation is None, violation)
@@ -89,7 +89,7 @@ class State:
 
         def _check_possible_child(node):
             self.check(node is not self.root, message and "Root may not have parents", is_type=True)
-            if self.args.constraints and action.tag:
+            if self.args.constraints and action.tag is not None:
                 self.check((node.text is not None) == (action.tag == EdgeTags.Terminal),
                            message and "Edge tag must be %s iff child is terminal, but node is %s and edge tag is %s" %
                            (EdgeTags.Terminal, node, action.tag))
@@ -109,7 +109,7 @@ class State:
             parent, child = self.get_parent_child(action)
             _check_possible_parent(parent)
             _check_possible_child(child)
-            if self.args.constraints and action.tag:
+            if self.args.constraints and action.tag is not None:
                 if parent is self.root:
                     self.check(self.constraints.top_level_allowed is None or
                                action.tag in self.constraints.top_level_allowed,
