@@ -90,7 +90,7 @@ class State:
         def _check_possible_child(node):
             self.check(node is not self.root, message and "Root may not have parents", is_type=True)
             if self.args.constraints and action.tag is not None:
-                self.check((node.text is not None) == (action.tag == EdgeTags.Terminal),
+                self.check(not action.tag or (node.text is None) != (action.tag == EdgeTags.Terminal),
                            message and "Edge tag must be %s iff child is terminal, but node is %s and edge tag is %s" %
                            (EdgeTags.Terminal, node, action.tag))
                 for rule in self.constraints.tag_rules:
@@ -100,7 +100,7 @@ class State:
                            message and "%s may not be a '%s' child (currently %s, %s)" % (
                                node, action.tag, ", ".join(map(str, node.incoming)) or "parentless",
                                ", ".join(map(str, node.outgoing)) or "childless"))
-            self.check(self.constraints.possible_multiple_incoming is None or
+            self.check(self.constraints.possible_multiple_incoming is None or not action.tag or
                        action.remote or action.tag in self.constraints.possible_multiple_incoming or
                        all(e.remote or e.tag in self.constraints.possible_multiple_incoming for e in node.incoming),
                        message and "Multiple non-remote '%s' parents not allowed for %s" % (action.tag, node))
@@ -111,7 +111,7 @@ class State:
             _check_possible_child(child)
             if self.args.constraints and action.tag is not None:
                 if parent is self.root:
-                    self.check(self.constraints.top_level_allowed is None or
+                    self.check(self.constraints.top_level_allowed is None or not action.tag or
                                action.tag in self.constraints.top_level_allowed,
                                message and "Root may not have %s edges" % action.tag)
                 else:
