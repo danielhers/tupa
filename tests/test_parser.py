@@ -174,38 +174,46 @@ def test_passage():
     return next(iter(ioutil.read_files_and_dirs(("test_files/120.xml",))))
 
 
-@pytest.mark.parametrize("model_type", CLASSIFIERS)
 @pytest.mark.parametrize("iterations", (1, 2))
-def test_model(config, model_type, formats, test_passage, iterations):
+@pytest.mark.parametrize("model_type", CLASSIFIERS)
+def test_model(model_type, formats, test_passage, iterations):
     filename = "test_files/models/test_%s_%s" % (model_type, "_".join(formats))
     for f in glob(filename + ".*"):
         os.remove(f)
     model = Model(model_type, filename)
-    finalized = None
+    finalized_all_params = None
     for i in range(iterations):
-        for axis in formats:
-            axes = (axis,) + ((NODE_LABEL_KEY,) if axis == "amr" else ())
-            config.set_format(axis)
-            model.init_model()
-            state = State(test_passage)
-            if ClassifierProperty.require_init_features in model.get_classifier_properties():
-                model.init_features(state, axes, train=True)
-            features = model.feature_extractor.extract_features(state)
-            for a in axes:
-                model.classifier.update(features, axis=a, pred=0, true=[0])
-            model.classifier.finished_step(train=True)
-            model.classifier.finished_item(train=True)
+        parse(formats, model, test_passage, train=True)
         finalized = model.finalize(finished_epoch=True)
+        finalized_all_params = finalized.get_all_params()
+        parse(formats, model, test_passage, train=False)
         finalized.save()
     loaded = Model(model_type, filename)
-    loaded.load(finalized=False)
+    loaded.load()
     for key, param in sorted(model.feature_extractor.params.items()):
         loaded_param = loaded.feature_extractor.params[key]
         assert param == loaded_param
-    all_params = loaded.get_all_params()
-    for key, param in sorted(finalized.get_all_params().items()):
-        loaded_param = all_params[key]
+    loaded_all_params = loaded.get_all_params()
+    for key, param in sorted(finalized_all_params.items()):
+        loaded_param = loaded_all_params[key]
         try:
             assert_array_almost_equal(param, loaded_param, key, verbose=True)
         except TypeError:
             assert_array_equal(param, loaded_param, key, verbose=True)
+
+
+def parse(formats, model, passage, train):
+    for axis in formats:
+        axes = (axis,) + ((NODE_LABEL_KEY,) if axis == "amr" else ())
+        Config().set_format(axis)
+        model.init_model()
+        state = State(passage)
+        if ClassifierProperty.require_init_features in model.get_classifier_properties():
+            model.init_features(state, axes, train=train)
+        features = model.feature_extractor.extract_features(state)
+        for a in axes:
+            pred = model.classifier.score(features, axis=a).argmax()
+            if train:
+                model.classifier.update(features, axis=a, pred=pred, true=[0])
+        model.classifier.finished_step(train=train)
+        model.classifier.finished_item(train=train)
