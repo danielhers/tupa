@@ -91,7 +91,7 @@ class Model:
         self.filename = filename
         self.feature_extractor = self.classifier = None
         self.feature_params = OrderedDict()
-        self.finalized = False
+        self.is_finalized = False
         if args or kwargs:
             self.restore(*args, **kwargs)
 
@@ -172,7 +172,7 @@ class Model:
         if self.args.verbose > 1:
             print("Finalizing model")
         self.init_model()
-        return Model(None, None, model=self, finalized=True,
+        return Model(None, None, model=self, is_finalized=True,
                      feature_extractor=self.feature_extractor.finalize(),
                      classifier=self.classifier.finalize(finished_epoch=finished_epoch))
 
@@ -191,21 +191,21 @@ class Model:
             except Exception as e:
                 raise IOError("Failed saving model to '%s'" % self.filename) from e
 
-    def load(self, finalized=True):
+    def load(self, is_finalized=True):
         """
         Load the feature and classifier parameters from files
-        :param finalized: whether the loaded model should be finalized, or allow feature values to be added subsequently
+        :param is_finalized: whether the loaded model should be finalized, or allow feature values to be added subsequently
         """
         if self.filename is not None:
             try:
                 self.args.classifier = self.model_type = Classifier.get_model_type(self.filename)
                 self.init_model(init_params=False)
                 self.feature_extractor.load(self.filename)
-                if not finalized:
+                if not is_finalized:
                     self.feature_extractor.unfinalize()
                 self._update_input_params()  # Must be before classifier.load() because it uses them to init the model
                 self.classifier.load(self.filename)
-                self.finalized = finalized
+                self.is_finalized = is_finalized
                 self.load_labels()
                 if self.args.verbose:
                     print("\n".join("%s: %s" % i for i in self.feature_params.items()))
@@ -217,23 +217,23 @@ class Model:
             except Exception as e:
                 raise IOError("Failed loading model from '%s'" % self.filename) from e
 
-    def restore(self, model, feature_extractor=None, classifier=None, finalized=None):
+    def restore(self, model, feature_extractor=None, classifier=None, is_finalized=None):
         """
         Set all attributes to a reference to existing model, except labels, which will be copied.
         :param model: Model to restore
         :param feature_extractor: optional FeatureExtractor to restore instead of model's
         :param classifier: optional Classifier to restore instead of model's
-        :param finalized: whether the restored model is finalized
+        :param is_finalized: whether the restored model is finalized
         """
-        if finalized is None:
-            finalized = model.finalized
+        if is_finalized is None:
+            is_finalized = model.is_finalized
         if self.args.verbose > 1:
-            print("Restoring %sfinalized model" % ("" if finalized else "non-"))
+            print("Restoring %sfinalized model" % ("" if is_finalized else "non-"))
         self.model_type = model.model_type
         self.filename = model.filename
         self.feature_extractor = feature_extractor or model.feature_extractor
         self.classifier = classifier or model.classifier
-        self.finalized = finalized
+        self.is_finalized = is_finalized
         self._update_input_params()
         self.classifier.labels_t = OrderedDict((a, l.save()) for a, l in self.classifier.labels.items())
         self.load_labels()
@@ -250,7 +250,7 @@ class Model:
                     del all_size
                     labels = node_labels.data
                 else:  # Not used as a feature, just get labels
-                    labels = UnknownDict() if self.finalized else AutoIncrementDict()
+                    labels = UnknownDict() if self.is_finalized else AutoIncrementDict()
                     labels.load(all_size)
             else:  # Action labels for format determined by axis
                 labels = Actions(*all_size)
