@@ -185,8 +185,8 @@ def test_model(model_type, formats, test_passage, iterations):
     for i in range(iterations):
         parse(formats, model, test_passage, train=True)
         finalized = model.finalize(finished_epoch=True)
-        finalized_all_params = finalized.get_all_params()
         parse(formats, model, test_passage, train=False)
+        finalized_all_params = finalized.get_all_params()
         finalized.save()
     loaded = Model(model_type, filename)
     loaded.load()
