@@ -162,12 +162,12 @@ class DenseFeatureExtractor(FeatureExtractor):
     def finalize(self):
         return type(self)(FeatureParameters.copy(self.params, UnknownDict), self.indexed)
 
-    def restore(self):
+    def unfinalize(self):
         """
         Opposite of finalize(): replace each feature parameter's data dict with a DropoutDict again, to keep training
         """
         for param in self.params.values():
-            param.restore()
+            param.unfinalize()
 
     def save(self, filename, save_init=True):
         save_dict(filename + FILENAME_SUFFIX, FeatureParameters.copy(self.params, copy_init=save_init))

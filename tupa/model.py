@@ -201,7 +201,7 @@ class Model:
                 self.init_model(init_params=False)
                 self.feature_extractor.load(self.filename)
                 if not finalized:
-                    self.feature_extractor.restore()
+                    self.feature_extractor.unfinalize()
                 self._update_input_params()  # Must be before classifier.load() because it uses them to init the model
                 self.classifier.load(self.filename)
                 self.load_labels(finalized)
@@ -218,13 +218,12 @@ class Model:
     def restore(self, model, feature_extractor=None, classifier=None):
         """
         Set all attributes to a reference to existing model, except labels, which will be copied.
-        Restored model is not finalized: new feature values will be added during subsequent training
         :param model: Model to restore
         :param feature_extractor: optional FeatureExtractor to restore instead of model's
         :param classifier: optional Classifier to restore instead of model's
         """
         if self.args.verbose > 1:
-            print("Restoring non-finalized model")
+            print("Restoring model")
         self.model_type = model.model_type
         self.filename = model.filename
         self.feature_extractor = feature_extractor or model.feature_extractor

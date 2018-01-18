@@ -122,7 +122,7 @@ class FeatureExtractor:
     def finalize(self):
         return self
 
-    def restore(self):
+    def unfinalize(self):
         pass
 
     def save(self, filename, save_init=True):

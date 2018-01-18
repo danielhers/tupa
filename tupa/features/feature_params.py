@@ -100,7 +100,7 @@ class FeatureParameters(Labels):
                                  indexed=self.indexed, copy_from=self.copy_from, filename=self.filename,
                                  min_count=self.min_count, enabled=self.enabled)
 
-    def restore(self):
+    def unfinalize(self):
         self.data = DropoutDict(self.data, size=self.size, dropout=self.dropout, min_count=self.min_count)
 
 
