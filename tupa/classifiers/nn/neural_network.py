@@ -16,6 +16,8 @@ from ..classifier import Classifier
 from ...config import Config, BIRNN
 from ...model_util import MISSING_VALUE
 
+tqdm.monitor_interval = 0
+
 
 class AxisModel:
     """
@@ -297,7 +299,7 @@ class NeuralNetwork(Classifier, SubModel):
         self.init_model()
         try:
             values = list(tqdm(dy.load_generator(filename, self.model),
-                               desc="Load model from '%s'" % filename, unit="param", file=sys.stdout))
+                               desc="Loading model from '%s'" % filename, unit="param", file=sys.stdout))
         except AttributeError:
             print("Loading model from '%s'... " % filename, end="", flush=True)
             started = time.time()
