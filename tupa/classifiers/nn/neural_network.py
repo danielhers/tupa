@@ -328,3 +328,13 @@ class NeuralNetwork(Classifier, SubModel):
                         if isinstance(value, dy.BiRNNBuilder) else ((key, value),):
                     d["_".join(model.save_path + (name,))] = param.as_array()
         return d
+
+    def print_params(self, max_rows=10):
+        for model in self.sub_models():
+            for key, value in model.params.items():
+                print(model.params_str(), key)
+                # noinspection PyBroadException
+                try:
+                    print(value.as_array()[:max_rows])
+                except Exception:
+                    pass

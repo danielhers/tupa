@@ -177,3 +177,14 @@ class SparsePerceptron(Perceptron):
         d = super().get_all_params()
         d.update(("_".join((axis, k)), v.weights) for axis, model in self.model.items() for k, v in model.items())
         return d
+
+    def print_params(self, max_rows=10):
+        for axis, model in self.model.items():
+            for key, value in model.params.items():
+                print(axis, key)
+                # noinspection PyBroadException
+                try:
+                    print(list(value.items())[:max_rows])
+                except Exception:
+                    pass
+

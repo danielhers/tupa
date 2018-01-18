@@ -148,6 +148,9 @@ class Classifier:
     def __str__(self):
         return "Labels: %s, features: %s" % tuple(map(dict_value, (self.num_labels, self.input_dim)))
 
+    def print_params(self, max_rows=10):
+        pass
+
 
 def dict_value(d):
     return next(iter(d.values())) if len(d) == 1 else ", ".join("%s: %d" % i for i in d.items())
