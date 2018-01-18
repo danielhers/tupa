@@ -168,6 +168,8 @@ class Model:
         :param finished_epoch: whether this is the end of an epoch (or just intermediate checkpoint), for bookkeeping
         :return: a copy of this model with a new feature extractor and classifier (actually classifier may be the same)
         """
+        if self.args.verbose > 1:
+            print("Finalizing model")
         self.init_model()
         return Model(None, None, model=self,
                      feature_extractor=self.feature_extractor.finalize(),
@@ -221,6 +223,8 @@ class Model:
         :param feature_extractor: optional FeatureExtractor to restore instead of model's
         :param classifier: optional Classifier to restore instead of model's
         """
+        if self.args.verbose > 1:
+            print("Restoring non-finalized model")
         self.model_type = model.model_type
         self.filename = model.filename
         self.feature_extractor = feature_extractor or model.feature_extractor
