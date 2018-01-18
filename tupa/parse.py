@@ -350,7 +350,7 @@ class Parser:
         self.beam = beam  # Currently unused
         self.trained = False
 
-    def train(self, passages=None, dev=None, test=None, iterations=(Iterations(1),)):
+    def train(self, passages=None, dev=None, test=None, iterations=1):
         """
         Train parser on given passages
         :param passages: iterable of passages to train on
