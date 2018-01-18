@@ -91,6 +91,7 @@ class Model:
         self.filename = filename
         self.feature_extractor = self.classifier = None
         self.feature_params = OrderedDict()
+        self.finalized = False
         if args or kwargs:
             self.restore(*args, **kwargs)
 
@@ -171,7 +172,7 @@ class Model:
         if self.args.verbose > 1:
             print("Finalizing model")
         self.init_model()
-        return Model(None, None, model=self,
+        return Model(None, None, model=self, finalized=True,
                      feature_extractor=self.feature_extractor.finalize(),
                      classifier=self.classifier.finalize(finished_epoch=finished_epoch))
 
@@ -204,7 +205,8 @@ class Model:
                     self.feature_extractor.unfinalize()
                 self._update_input_params()  # Must be before classifier.load() because it uses them to init the model
                 self.classifier.load(self.filename)
-                self.load_labels(finalized)
+                self.finalized = finalized
+                self.load_labels()
                 if self.args.verbose:
                     print("\n".join("%s: %s" % i for i in self.feature_params.items()))
                 for param in PARAM_DEFS:
@@ -215,24 +217,28 @@ class Model:
             except Exception as e:
                 raise IOError("Failed loading model from '%s'" % self.filename) from e
 
-    def restore(self, model, feature_extractor=None, classifier=None):
+    def restore(self, model, feature_extractor=None, classifier=None, finalized=None):
         """
         Set all attributes to a reference to existing model, except labels, which will be copied.
         :param model: Model to restore
         :param feature_extractor: optional FeatureExtractor to restore instead of model's
         :param classifier: optional Classifier to restore instead of model's
+        :param finalized: whether the restored model is finalized
         """
+        if finalized is None:
+            finalized = model.finalized
         if self.args.verbose > 1:
-            print("Restoring model")
+            print("Restoring %sfinalized model" % ("" if finalized else "non-"))
         self.model_type = model.model_type
         self.filename = model.filename
         self.feature_extractor = feature_extractor or model.feature_extractor
         self.classifier = classifier or model.classifier
+        self.finalized = finalized
         self._update_input_params()
         self.classifier.labels_t = OrderedDict((a, l.save()) for a, l in self.classifier.labels.items())
         self.load_labels()
 
-    def load_labels(self, finalized=True):
+    def load_labels(self):
         """
         Copy classifier's labels to create new Actions/Labels objects
         Restoring from a model that was just loaded from file, or called by restore()
@@ -244,7 +250,7 @@ class Model:
                     del all_size
                     labels = node_labels.data
                 else:  # Not used as a feature, just get labels
-                    labels = UnknownDict() if finalized else AutoIncrementDict()
+                    labels = UnknownDict() if self.finalized else AutoIncrementDict()
                     labels.load(all_size)
             else:  # Action labels for format determined by axis
                 labels = Actions(*all_size)

@@ -125,6 +125,7 @@ class PassageParser(AbstractParser):
             action = Config().random.choice(tuple(true_actions.values())) if self.training else predicted_action
         if self.training and not (
                     is_correct and ClassifierProperty.update_only_on_error in self.model.get_classifier_properties()):
+            assert not self.model.finalized, "Updating finalized model"
             self.model.classifier.update(
                 features, axis=Config().format, pred=predicted_action.id, true=tuple(true_actions.keys()),
                 importance=[self.args.swap_importance if a.is_swap else 1 for a in true_actions.values()])
@@ -165,6 +166,7 @@ class PassageParser(AbstractParser):
                 self.correct_label_count += 1
             if self.training and not (is_correct and ClassifierProperty.update_only_on_error in
                                       self.model.get_classifier_properties()):
+                assert not self.model.finalized, "Updating finalized model"
                 self.model.classifier.update(features, axis=NODE_LABEL_KEY, pred=self.model.labels[label], true=true)
                 label = true_label
         self.label_count += 1
