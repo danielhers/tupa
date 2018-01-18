@@ -12,7 +12,7 @@ from scheme.convert import FROM_FORMAT
 from scheme.evaluate import Scores
 from scheme.util.amr import WIKIFIER
 from tupa.action import Actions
-from tupa.config import Config, CLASSIFIERS, Iterations
+from tupa.config import Config, CLASSIFIERS
 from tupa.model import Model, ClassifierProperty, NODE_LABEL_KEY
 from tupa.oracle import Oracle
 from tupa.parse import Parser
@@ -60,14 +60,14 @@ def passage_id(passage):
 @pytest.fixture
 def config():
     config = Config("", "-m", "test")
-    config.update({"verbose": 1, "timeout": 1, "embedding_layer_dim": 1, "ner_dim": 1, "action_dim": 1,
+    config.update({"verbose": 2, "timeout": 1, "embedding_layer_dim": 1, "ner_dim": 1, "action_dim": 1,
                    "max_words_external": 3, "word_dim_external": 1, "word_dim": 1,
                    "max_words": 3, "max_node_labels": 3, "max_node_categories": 3,
                    "max_tags": 3, "max_deps": 3, "max_edge_labels": 3, "max_puncts": 3, "max_action_types": 3,
                    "max_ner_types": 3, "node_label_dim": 1, "node_category_dim": 1, "edge_label_dim": 1,
                    "tag_dim": 1, "dep_dim": 1, "optimizer": "sgd", "output_dim": 1,
                    "layer_dim": 1, "layers": 1, "lstm_layer_dim": 2, "lstm_layers": 1})
-                   # "use_gold_node_labels": True})
+    # "use_gold_node_labels": True})
     config.update_hyperparams(shared={"lstm_layer_dim": 2, "lstm_layers": 1}, ucca={"word_dim": 2})
     return config
 
@@ -107,15 +107,20 @@ def default_setting():
 
 @pytest.mark.parametrize("model_type", CLASSIFIERS)
 def test_parser(config, model_type, formats, default_setting, text=True):
+    filename = "test_files/models/%s_%s%s" % ("_".join(formats), model_type, default_setting.suffix())
+    for f in glob(filename + ".*"):
+        os.remove(f)
     config.update(default_setting.dict())
     scores = []
+    params = []
     passages = load_passages(*formats)
     evaluate = ("amr" not in formats)
     for mode in "train", "load":
         print("-- %sing %s" % (mode, model_type))
-        p = Parser(model_file="test_files/models/%s_%s%s" % ("_".join(formats), model_type, default_setting.suffix()),
-                   model_type=model_type)
-        list(p.train(passages if mode == "train" else None, iterations=(Iterations(2),)))
+        p = Parser(model_file=filename, model_type=model_type)
+        list(p.train(passages if mode == "train" else None, dev=passages, test=True, iterations=2))
+        assert p.model.is_finalized, "Model should be finalized after %sing" % mode
+        params.append(p.model.get_all_params())
         text_results = results = list(p.parse(passages, evaluate=evaluate))
         if text:
             print("Converting to text and parsing...")
@@ -129,6 +134,7 @@ def test_parser(config, model_type, formats, default_setting, text=True):
                     print("  %s F1=%.3f" % (r.ID, s.average_f1()))
         assert not list(p.parse(()))  # parsing nothing returns nothing
         print()
+    assert_all_params_equal(*params)
     if evaluate:
         print("-- average f1: %.3f, %.3f\n" % tuple(scores))
         assert scores[0] == pytest.approx(scores[1], 0.1)
@@ -180,26 +186,32 @@ def test_model(model_type, formats, test_passage, iterations):
     filename = "test_files/models/test_%s_%s" % (model_type, "_".join(formats))
     for f in glob(filename + ".*"):
         os.remove(f)
-    model = Model(model_type, filename)
-    finalized_all_params = None
+    finalized = model = Model(model_type, filename)
     for i in range(iterations):
         parse(formats, model, test_passage, train=True)
         finalized = model.finalize(finished_epoch=True)
         parse(formats, model, test_passage, train=False)
-        finalized_all_params = finalized.get_all_params()
         finalized.save()
     loaded = Model(model_type, filename)
     loaded.load()
     for key, param in sorted(model.feature_extractor.params.items()):
         loaded_param = loaded.feature_extractor.params[key]
         assert param == loaded_param
-    loaded_all_params = loaded.get_all_params()
-    for key, param in sorted(finalized_all_params.items()):
-        loaded_param = loaded_all_params[key]
-        try:
-            assert_array_almost_equal(param, loaded_param, key, verbose=True)
-        except TypeError:
-            assert_array_equal(param, loaded_param, key, verbose=True)
+    assert_all_params_equal(finalized.get_all_params(), loaded.get_all_params())
+
+
+def assert_all_params_equal(*params):
+    for key, param in sorted(params[0].items()):
+        for p in params[1:]:
+            exception = None
+            for f in (assert_array_almost_equal, assert_array_equal):
+                try:
+                    f(param, p[key], key, verbose=True)
+                    exception = None
+                except TypeError as e:
+                    exception = e
+            if exception:
+                raise exception
 
 
 def parse(formats, model, passage, train):
