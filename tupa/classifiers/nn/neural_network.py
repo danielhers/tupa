@@ -213,13 +213,11 @@ class NeuralNetwork(Classifier, SubModel):
         self.steps += 1
 
     def calc_loss(self, scores, axis, true, importance):
-        if self.loss == "softmax":
-            return [i * dy.pickneglogsoftmax(scores, t) for t, i in zip(true, importance)]
-        elif self.loss == "max_margin":
-            max_true = dy.emax([i * dy.pick(scores, t) for t, i in zip(true, importance)])
-            max_false = dy.emax([dy.pick(scores, t) for t in range(self.num_labels[axis]) if t not in true])
-            return [dy.rectify(1 - max_true + max_false)]
-        raise NotImplementedError("%s loss is not supported" % self.loss)
+        loss = [i * dy.pickneglogsoftmax(scores, t) for t, i in zip(true, importance)]
+        if self.loss == "max_margin":
+            not_true = [t for t in range(self.num_labels[axis]) if t not in true]
+            loss.append(dy.emax([-dy.pickneglogsoftmax(scores, t) for t in not_true]))
+        return loss
 
     def finished_step(self, train=False):
         self.value = {}  # For caching the result of _evaluate
