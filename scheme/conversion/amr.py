@@ -10,12 +10,13 @@ DELETE_PATTERN = re.compile("\\\\|(?<=(?<!<)<)[^<>]+(?=>(?!>))")  # Delete text 
 
 class AmrConverter(convert.FormatConverter):
     def __init__(self):
-        self.passage_id = self.nodes = self.return_original = self.remove_cycles = self.extensions = self.excluded = \
-            None
+        self.passage_id = self.nodes = self.return_original = self.save_original = self.remove_cycles = \
+            self.extensions = self.excluded = None
 
-    def from_format(self, lines, passage_id, return_original=False, remove_cycles=True, **kwargs):
+    def from_format(self, lines, passage_id, return_original=False, save_original=True, remove_cycles=True, **kwargs):
         self.passage_id = passage_id
         self.return_original = return_original
+        self.save_original = save_original
         self.remove_cycles = remove_cycles
         self.extensions = [l for l in EXTENSIONS if kwargs.get(l)]
         self.excluded = {i for l, r in EXTENSIONS.items() if l not in self.extensions for i in r}
@@ -63,8 +64,11 @@ class AmrConverter(convert.FormatConverter):
         self._build_layer0(self.align_nodes(amr), l1, l0)
         self._update_implicit(l1)
         self._update_labels(l1)
-        return (passage, self.header(passage) + amr(alignments=False).split("\n"), amr_id) if self.return_original \
-            else passage
+        original = self.header(passage) + amr(alignments=False).split("\n") if \
+            self.save_original or self.return_original else None
+        if self.save_original:
+            passage.extra["original"] = original
+        return (passage, original, amr_id) if self.return_original else passage
 
     def _build_layer1(self, amr, l1):
         def _reachable(x, y):  # is there a path from x to y? used to detect cycles
@@ -178,16 +182,16 @@ class AmrConverter(convert.FormatConverter):
         elif len(stripped) > 1:  # no given alignment, and label has more than one character (to avoid aligning "-")
             for i, token in enumerate(tokens):  # use any equal span, or any equal token if it occurs only once
                 if stripped.startswith(token):
-                    l = [i]
+                    interval = [i]
                     j = i
                     while j < len(tokens) - 1:
                         j += 1
                         if not SKIP_TOKEN_PATTERN.match(tokens[j]):
-                            if not AmrConverter._contains_substring(stripped, tokens, l + [j]):
+                            if not AmrConverter._contains_substring(stripped, tokens, interval + [j]):
                                 break
-                            l.append(j)
-                    if len(l) > 1 and stripped.endswith(tokens[l[-1]]) or tokens.count(token) == 1:
-                        return l
+                            interval.append(j)
+                    if len(interval) > 1 and stripped.endswith(tokens[interval[-1]]) or tokens.count(token) == 1:
+                        return interval
         return indices
 
     @staticmethod
@@ -231,7 +235,11 @@ class AmrConverter(convert.FormatConverter):
                     label = CONST + "(" + MINUS + ")"
             node.attrib[LABEL_ATTRIB] = label
 
-    def to_format(self, passage, metadata=True, wikification=True, verbose=False):
+    def to_format(self, passage, metadata=True, wikification=True, verbose=False, use_original=True):
+        if use_original:
+            original = passage.extra.get("original")
+            if original:
+                return original
         textutil.annotate(passage, as_array=True)
         lines = self.header(passage) if metadata else []
         if wikification:
@@ -310,28 +318,30 @@ class AmrConverter(convert.FormatConverter):
                 "# ::tok " + " ".join(t.text for t in passage.layer(layer0.LAYER_ID).all)]
 
 
-def from_amr(lines, passage_id=None, return_original=False, *args, **kwargs):
+def from_amr(lines, passage_id=None, return_original=False, save_original=True, *args, **kwargs):
     """Converts from parsed text in AMR PENMAN format to a Passage object.
 
     :param lines: iterable of lines in AMR PENMAN format, describing a single passage.
     :param passage_id: ID to set for passage, overriding the ID from the file
+    :param save_original: whether to save original AMR text in passage.extra
     :param return_original: return triple of (UCCA passage, AMR string, AMR ID)
 
     :return generator of Passage objects
     """
     del args, kwargs
-    return AmrConverter().from_format(lines, passage_id, return_original=return_original)
+    return AmrConverter().from_format(lines, passage_id, return_original=return_original, save_original=save_original)
 
 
-def to_amr(passage, metadata=True, wikification=True, verbose=False, *args, **kwargs):
+def to_amr(passage, metadata=True, wikification=True, use_original=True, verbose=False, *args, **kwargs):
     """ Convert from a Passage object to a string in AMR PENMAN format (export)
 
     :param passage: the Passage object to convert
     :param metadata: whether to print ::id and ::tok lines
     :param wikification: whether to wikify named concepts, adding a :wiki triple
+    :param use_original: whether to use original AMR text from passage.extra
     :param verbose: whether to print extra information
 
     :return list of lines representing an AMR in PENMAN format, constructed from the passage
     """
     del args, kwargs
-    return AmrConverter().to_format(passage, metadata, wikification, verbose)
+    return AmrConverter().to_format(passage, metadata, wikification, verbose, use_original=use_original)
