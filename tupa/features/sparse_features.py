@@ -2,8 +2,9 @@ from .feature_extractor import FeatureExtractor
 
 FEATURE_TEMPLATES = (
     # unigrams (Zhang and Clark 2009):
-    "s0tde", "s0we", "s1tde", "s1we", "s2tde", "s2we", "s3tde", "s3we", "b0wtd", "b1wtd", "b2wtd", "b3wtd",
-    "s0lwe", "s0rwe", "s1lwe", "s1rwe",
+    "s0tde", "s0we", "s0#e", "s0^e", "s0$e", "s1tde", "s1we", "s1#e", "s1^e", "s1$e",
+    "s2tde", "s2we", "s2#e", "s2^e", "s2$e", "s3tde", "s3we", "s3#e", "s3^e", "s3$e",
+    "b0wtd", "b1wtd", "b2wtd", "b3wtd", "s0lwe", "s0rwe", "s1lwe", "s1rwe",
     # bigrams (Zhang and Clark 2009):
     "s0ws1w", "s0ws1e", "s0es1w", "s0es1e", "s0wb0w", "s0wb0td",
     "s0eb0w", "s0eb0td", "s1wb0w", "s1wb0td", "s1eb0w", "s1eb0td", "b0wb1w", "b0wb1td", "b0tdb1w", "b0tdb1td",
