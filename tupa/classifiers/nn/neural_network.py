@@ -332,7 +332,7 @@ class NeuralNetwork(Classifier, SubModel):
     def print_params(self, max_rows=10):
         for model in self.sub_models():
             for key, value in model.params.items():
-                print(model.params_str(), key)
+                print("[%s] %s" % (model.params_str(), key))
                 # noinspection PyBroadException
                 try:
                     print(value.as_array()[:max_rows])
