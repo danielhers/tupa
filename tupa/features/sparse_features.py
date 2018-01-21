@@ -9,8 +9,8 @@ FEATURE_TEMPLATES = (
     "s0ws1w", "s0ws1e", "s0es1w", "s0es1e", "s0wb0w", "s0wb0td",
     "s0eb0w", "s0eb0td", "s1wb0w", "s1wb0td", "s1eb0w", "s1eb0td", "b0wb1w", "b0wb1td", "b0tdb1w", "b0tdb1td",
     # trigrams (Zhang and Clark 2009):
-    "s0es1es2w", "s0es1es2e", "s0es1es2e", "s0es1eb0w", "s0es1eb0td",
-    "s0es1wb0w", "s0es1wb0td", "s0ws1es2e", "s0ws1eb0td",
+    "s0es1es2#", "s0es1es2e", "s0es1es2e", "s0es1eb0#", "s0es1eb0td",
+    "s0es1#b0#", "s0es1#b0td", "s0#s1es2e", "s0#s1eb0td",
     # extended (Zhu et al. 2013):
     "s0llwe", "s0lrwe", "s0rlwe", "s0rrwe", "s1llwe", "s1lrwe", "s1rlwe", "s1rrwe",
     # parents:
