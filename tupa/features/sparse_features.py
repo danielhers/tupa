@@ -30,7 +30,7 @@ FEATURE_TEMPLATES = (
     # past actions (Tokgöz and Eryiğit 2015):
     "a0Ae", "a1Ae",
     # implicit and remote
-    "s0I", "s0E", "s0wI", "s0wE", "b0I", "b0E", "b0wI", "b0wE",
+    "s0I", "s0E", "s0M", "s0wI", "s0wE", "s0wM", "b0I", "b0E", "b0M", "b0wI", "b0wE", "b0wM",
     # node labels
     "s0n", "s0wn", "s0c", "b0n", "b0wn", "b0c", "s0Ln", "s0Rn", "s1Ln", "s1Rn", "b0Ln", "b0Rn",
     # height

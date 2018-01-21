@@ -51,8 +51,8 @@ FEATURE_TEMPLATES = (
     "s0$s1$s2$s3$b0$b1$b2$b3$s0l$s0r$s1l$s1r$s0ll$s0lr$s0rl$s0rr$s1ll$s1lr$s1rl$s1rr$s0L$s0R$s1L$s1R$b0L$b0R$",
     # numeric
     "s0s1xds1s0xs0b0xdb0s0x"
-    "s0xhqyPCIENs1xhyNs2xhys3xhyN"
-    "b0hPCIEN",
+    "s0xhqyPCIEMNs1xhyNs2xhys3xhyN"
+    "b0hPCIEMN",
 )
 EXTRA_NUMERIC_FEATURES = 1  # node ratio
 INDEXED_FEATURES = "WwtdT"  # external + learned word embeddings, POS tags, dep rels, entity type

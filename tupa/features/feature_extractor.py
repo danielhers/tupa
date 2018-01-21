@@ -4,7 +4,7 @@ from ucca import layer0
 from ucca.layer1 import EdgeTags
 from ucca.textutil import Attr
 
-FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([wtdhencpqxyAPCIENT#^$]*)")
+FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([wtdhencpqxyAPCIEMNT#^$]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile(r"^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 
 
@@ -61,6 +61,7 @@ class FeatureTemplateElement:
                            C: number of children
                            I: number of implicit children
                            E: number of remote children
+                           M: number of remote parents
                            N: numeric value of named entity IOB
                            T: named entity type
                            #: word shape
@@ -315,6 +316,7 @@ NODE_PROP_GETTERS = {
     "C": lambda node, *_: len(node.outgoing),
     "I": lambda node, *_: sum(1 for n in node.children if n.implicit),
     "E": lambda node, *_: sum(1 for e in node.outgoing if e.remote),
+    "M": lambda node, *_: sum(1 for e in node.incoming if e.remote),
     "N": lambda node, *_: head_terminal(node).tok[Attr.ENT_IOB.value],
     "T": lambda node, *_: head_terminal(node).tok[Attr.ENT_TYPE.value],
     "#": lambda node, *_: head_terminal(node).tok[Attr.SHAPE.value],
