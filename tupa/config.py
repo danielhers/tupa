@@ -127,7 +127,7 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
     add(group, "--max-ner-types", type=int, default=18, help="max number of entity types to allow")
     add(group, "--max-shapes", type=int, default=30, help="max number of word shapes to allow")
     add(group, "--max-prefixes", type=int, default=30, help="max number of 1-character word prefixes to allow")
-    add(group, "--max-suffixes", type=int, default=1000, help="max number of 3-character word suffixes to allow")
+    add(group, "--max-suffixes", type=int, default=500, help="max number of 3-character word suffixes to allow")
     add(group, "--word-dropout", type=float, default=0.2, help="word dropout parameter")
     add(group, "--word-dropout-external", type=float, default=0, help="word dropout for word vectors")
     add(group, "--tag-dropout", type=float, default=0.2, help="POS tag dropout parameter")
