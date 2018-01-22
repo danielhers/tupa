@@ -160,6 +160,8 @@ class HighwayRNN(BiRNN):
 
     def transduce(self, inputs, train):
         xs = inputs[:self.max_length]
+        if not xs:
+            return []
         for i in range(self.lstm_layers):
             for n, d in ("f", 1), ("b", -1):
                 hs = self.params["rnn%d%s" % (i, n)].initial_state().transduce(xs[::d])
