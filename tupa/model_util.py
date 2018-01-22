@@ -147,12 +147,22 @@ class KeyBasedDefaultDict(defaultdict):
         return self[key]
 
 
+def remove_existing(*filenames):
+    for filename in filenames:
+        try:
+            os.remove(filename)
+            print("Removed existing '%s'." % filename)
+        except OSError:
+            pass
+
+
 def save_dict(filename, d):
     """
     Save dictionary to Pickle file
     :param filename: file to write to
     :param d: dictionary to save
     """
+    remove_existing(filename)
     sys.setrecursionlimit(2000)
     print("Saving to '%s'... " % filename, end="", flush=True)
     started = time.time()
@@ -202,6 +212,7 @@ def save_json(filename, d):
     :param filename: file to write to
     :param d: dictionary to save
     """
+    remove_existing(filename)
     print("Saving to '%s'." % filename)
     with open(filename, "w") as h:
         json.dump(d, h, default=jsonify)

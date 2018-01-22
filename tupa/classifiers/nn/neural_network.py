@@ -1,4 +1,3 @@
-import os
 import sys
 import time
 from collections import OrderedDict
@@ -14,7 +13,7 @@ from .mlp import MultilayerPerceptron
 from .sub_model import SubModel
 from ..classifier import Classifier
 from ...config import Config, BIRNN
-from ...model_util import MISSING_VALUE
+from ...model_util import MISSING_VALUE, remove_existing
 
 tqdm.monitor_interval = 0
 
@@ -213,11 +212,14 @@ class NeuralNetwork(Classifier, SubModel):
         self.steps += 1
 
     def calc_loss(self, scores, axis, true, importance):
-        loss = [i * dy.pickneglogsoftmax(scores, t) for t, i in zip(true, importance)]
         if self.loss == "max_margin":
-            not_true = [t for t in range(self.num_labels[axis]) if t not in true]
-            loss.append(dy.emax([-dy.pickneglogsoftmax(scores, t) for t in not_true]))
-        return loss
+            num_labels = self.num_labels[axis]
+            importance_vector = num_labels * [1]
+            for t, i in zip(true, importance):
+                importance_vector[t] = i
+            softmax = dy.cdiv(dy.softmax(dy.pick_range(scores, 0, num_labels)), dy.inputVector(importance_vector))
+            return [dy.log(dy.sum_elems(dy.rectify(softmax - dy.emax([dy.pick(softmax, t) for t in true]))))]
+        return [i * dy.pickneglogsoftmax(scores, t) for t, i in zip(true, importance)]
 
     def finished_step(self, train=False):
         self.value = {}  # For caching the result of _evaluate
@@ -282,11 +284,7 @@ class NeuralNetwork(Classifier, SubModel):
                 print(model.params_str())
         if self.args.verbose:
             print(self)
-        try:
-            os.remove(filename)
-            print("Removed existing '%s'." % filename)
-        except OSError:
-            pass
+        remove_existing(filename + ".data", filename + ".meta")
         try:
             dy.save(filename, tqdm(values, desc="Saving model to '%s'" % filename, unit="param", file=sys.stdout))
         except ValueError as e:
