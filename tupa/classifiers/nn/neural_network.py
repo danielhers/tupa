@@ -7,12 +7,12 @@ import dynet as dy
 import numpy as np
 from tqdm import tqdm
 
-from .birnn import BiRNN
+from .birnn import EmptyRNN, BiRNN, HighwayRNN
 from .constants import TRAINERS, TRAINER_LEARNING_RATE_PARAM_NAMES, TRAINER_KWARGS, CategoricalParameter
 from .mlp import MultilayerPerceptron
 from .sub_model import SubModel
 from ..classifier import Classifier
-from ...config import Config, BIRNN
+from ...config import Config, BIRNN, HIGHWAY_RNN
 from ...model_util import MISSING_VALUE, remove_existing
 
 tqdm.monitor_interval = 0
@@ -22,9 +22,9 @@ class AxisModel:
     """
     Format-specific parameters that are part of the network
     """
-    def __init__(self, axis, num_labels, model, with_birnn=True):
+    def __init__(self, axis, num_labels, model, birnn_type):
         args = Config().hyperparams.specific[axis]
-        self.birnn = BiRNN(args, model, save_path=("axes", axis, "birnn"), with_birnn=with_birnn)
+        self.birnn = birnn_type(args, model, save_path=("axes", axis, "birnn"))
         self.mlp = MultilayerPerceptron(args, model, num_labels=num_labels, save_path=("axes", axis, "mlp"))
 
 
@@ -53,6 +53,10 @@ class NeuralNetwork(Classifier, SubModel):
     @property
     def input_dim(self):
         return {a: m.mlp.input_dim for a, m in self.axes.items()}
+    
+    @property
+    def birnn_type(self):
+        return {BIRNN: BiRNN, HIGHWAY_RNN: HighwayRNN}.get(self.model_type, EmptyRNN)
 
     def resize(self):
         for axis, labels in self.labels.items():
@@ -65,8 +69,7 @@ class NeuralNetwork(Classifier, SubModel):
         init = self.model is None
         if init:
             self.model = dy.ParameterCollection()
-            self.birnn = BiRNN(Config().hyperparams.shared, self.model,
-                               save_path=("shared", "birnn"), with_birnn=self.model_type == BIRNN)
+            self.birnn = self.birnn_type(Config().hyperparams.shared, self.model, save_path=("shared", "birnn"))
         if train:
             self.init_trainer()
         if axis:
@@ -97,8 +100,7 @@ class NeuralNetwork(Classifier, SubModel):
         model = self.axes.get(axis)
         if model:
             return
-        model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model,
-                                            with_birnn=self.model_type == BIRNN)
+        model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model, self.birnn_type)
         if self.args.verbose > 3:
             print("Initializing %s model with %d labels" % (axis, self.labels[axis].size))
         input_dim = indexed_dim = indexed_num = 0
@@ -139,7 +141,7 @@ class NeuralNetwork(Classifier, SubModel):
             self.init_model(axis, train)
         embeddings = [[self.params[s][k] for k in ks] for s, ks in sorted(features.items())]  # lists of vectors
         if self.args.verbose > 3:
-            print("Initializing %s BiRNN features for %d elements" % (", ".join(axes), len(embeddings)))
+            print("Initializing %s %s features for %d elements" % (", ".join(axes), self.birnn_type, len(embeddings)))
             for (suffix, values), embs in zip(sorted(features.items()), embeddings):
                 print("%s: %s %s" % (suffix, values, [e.npvalue().tolist() for e in embs]))
         for birnn in self.get_birnns(*axes):
@@ -305,7 +307,7 @@ class NeuralNetwork(Classifier, SubModel):
         for axis, labels in self.labels_t.items():
             _, size = labels
             assert size, "Size limit for '%s' axis labels is %s" % (axis, size)
-            self.axes[axis] = AxisModel(axis, size, self.model, with_birnn=self.model_type == BIRNN)
+            self.axes[axis] = AxisModel(axis, size, self.model, self.birnn_type)
         for model in self.sub_models():
             model.load_sub_model(d, *values)
             del values[:len(model.params)]  # Take next len(model.params) values
@@ -319,11 +321,13 @@ class NeuralNetwork(Classifier, SubModel):
         d = super().get_all_params()
         for model in self.sub_models():
             for key, value in model.params.items():
-                for name, param in [("%s%s%d%d%d" % (key, p, i, j, k), v) for i, (f, b) in
-                                    enumerate(value.builder_layers)
-                                    for p, r in (("f", f), ("b", b)) for j, l in enumerate(r.get_parameters())
-                                    for k, v in enumerate(l)] \
-                        if isinstance(value, dy.BiRNNBuilder) else ((key, value),):
+                for name, param in ((key, value),) if isinstance(value, (dy.Parameters, dy.LookupParameters)) else [
+                        ("%s%s%d%d%d" % (key, p, i, j, k), v) for i, (f, b) in
+                        enumerate(value.builder_layers)
+                        for p, r in (("f", f), ("b", b)) for j, l in enumerate(r.get_parameters())
+                        for k, v in enumerate(l)] if isinstance(value, dy.BiRNNBuilder) else [
+                        ("%s%d%d" % (key, j, k), v) for j, l in enumerate(value.get_parameters())
+                        for k, v in enumerate(l)]:
                     d["_".join(model.save_path + (name,))] = param.as_array()
         return d
 

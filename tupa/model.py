@@ -3,7 +3,7 @@ from enum import Enum
 
 from .action import Actions
 from .classifiers.classifier import Classifier
-from .config import Config, SPARSE, MLP, BIRNN, NOOP
+from .config import Config, SPARSE, MLP, BIRNN, HIGHWAY_RNN, NOOP
 from .features.feature_params import FeatureParameters
 from .model_util import UnknownDict, AutoIncrementDict
 
@@ -80,6 +80,7 @@ CLASSIFIER_PROPERTIES = {
     SPARSE: (ClassifierProperty.update_only_on_error,),
     MLP: (ClassifierProperty.trainable_after_saving,),
     BIRNN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
+    HIGHWAY_RNN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
     NOOP: (),
 }
 
@@ -124,7 +125,7 @@ class Model:
         elif self.is_neural_network:
             from .features.dense_features import DenseFeatureExtractor
             from .classifiers.nn.neural_network import NeuralNetwork
-            self.feature_extractor = DenseFeatureExtractor(self.feature_params, indexed=self.model_type == BIRNN)
+            self.feature_extractor = DenseFeatureExtractor(self.feature_params, indexed=self.model_type != MLP)
             self.classifier = NeuralNetwork(self.model_type, labels)
         else:
             raise ValueError("Invalid model type: '%s'" % self.model_type)
@@ -132,7 +133,7 @@ class Model:
     
     @property
     def is_neural_network(self):
-        return self.model_type in (MLP, BIRNN)
+        return self.model_type in (MLP, BIRNN, HIGHWAY_RNN)
 
     def init_actions(self):
         return Actions(size=self.args.max_action_labels)

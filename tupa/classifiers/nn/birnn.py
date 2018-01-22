@@ -8,7 +8,7 @@ from ...model_util import MISSING_VALUE
 
 
 class BiRNN(SubModel):
-    def __init__(self, args, model, save_path=None, with_birnn=True):
+    def __init__(self, args, model, save_path=None):
         super().__init__(save_path=save_path)
         self.args = args
         self.model = model
@@ -25,14 +25,13 @@ class BiRNN(SubModel):
         self.mlp = MultilayerPerceptron(self.args, self.model, params=self.params, layers=self.embedding_layers,
                                         layer_dim=self.embedding_layer_dim, output_dim=self.lstm_layer_dim)
         self.save_path = save_path
-        self.with_birnn = with_birnn
 
     def init_params(self, indexed_dim, indexed_num):
         """
         Initialize BiRNN builder
         :return: total output dimension of BiRNN
         """
-        if self.with_birnn and self.lstm_layer_dim and self.lstm_layers:
+        if self.lstm_layer_dim and self.lstm_layers:
             if self.params:
                 assert self.indexed_dim == indexed_dim, "Input dim changed: %d != %d" % (self.indexed_dim, indexed_dim)
                 assert self.indexed_num == indexed_num, "Input num changed: %d != %d" % (self.indexed_num, indexed_num)
@@ -40,26 +39,32 @@ class BiRNN(SubModel):
                 self.indexed_dim = indexed_dim
                 self.indexed_num = indexed_num
                 self.mlp.init_params(indexed_dim)
-                self.params["birnn"] = dy.BiRNNBuilder(self.lstm_layers,
-                                                       self.lstm_layer_dim if self.embedding_layers else indexed_dim,
-                                                       self.lstm_layer_dim, self.model, self.rnn_builder())
+                self.init_rnn_params(indexed_dim)
                 if self.args.verbose > 3:
                     print("Initializing BiRNN: %s" % self)
             return indexed_num * self.lstm_layer_dim
         return 0
+
+    def init_rnn_params(self, indexed_dim):
+        self.params["birnn"] = dy.BiRNNBuilder(self.lstm_layers,
+                                               self.lstm_layer_dim if self.embedding_layers else indexed_dim,
+                                               self.lstm_layer_dim, self.model, self.rnn_builder())
 
     def init_features(self, embeddings, train=False):
         if self.params:
             inputs = [self.mlp.evaluate(e, train=train) for e in zip(*embeddings)]  # join each time step to a vector
             if self.args.verbose > 3:
                 print("Transducing %d inputs with dropout %s" % (len(inputs), self.dropout if train else "disabled"))
-            birnn = self.params["birnn"]
-            if train:
-                birnn.set_dropout(self.dropout)
-            else:
-                birnn.disable_dropout()
-            self.input_reps = birnn.transduce(inputs[:self.max_length])
+            self.input_reps = self.transduce(inputs, train)
             self.empty_rep = dy.inputVector(np.zeros(self.lstm_layer_dim, dtype=float))
+
+    def transduce(self, inputs, train):
+        birnn = self.params["birnn"]
+        if train:
+            birnn.set_dropout(self.dropout)
+        else:
+            birnn.disable_dropout()
+        return birnn.transduce(inputs[:self.max_length])
 
     def evaluate(self, indices):
         """
@@ -86,14 +91,14 @@ class BiRNN(SubModel):
             ("rnn", str(self.rnn_builder)),
             ("indexed_dim", self.indexed_dim),
             ("indexed_num", self.indexed_num),
-        ) if self.with_birnn and self.lstm_layer_dim and self.lstm_layers else []
+        ) if self.lstm_layer_dim and self.lstm_layers else []
         if self.args.verbose > 3:
             print("Saving BiRNN: %s" % self)
         return values
 
     def load_sub_model(self, d, *args):
         d = super().load_sub_model(d, *args)
-        if self.with_birnn and d:
+        if d:
             self.args.lstm_layers = self.lstm_layers = d["lstm_layers"]
             self.args.lstm_layer_dim = self.lstm_layer_dim = d["lstm_layer_dim"]
             self.args.embedding_layers = self.embedding_layers = d["embedding_layers"]
@@ -117,3 +122,51 @@ class BiRNN(SubModel):
                 "/".join(self.save_path), self.lstm_layers, self.lstm_layer_dim, self.embedding_layers,
                 self.embedding_layer_dim, self.max_length, self.rnn_builder, self.activation, self.init, self.dropout,
                 self.indexed_dim, self.indexed_num, list(self.params.keys()))
+
+
+class EmptyRNN(BiRNN):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def init_params(self, indexed_dim, indexed_num):
+        return 0
+
+    def init_features(self, embeddings, train=False):
+        pass
+
+    def evaluate(self, indices):
+        return []
+
+    def save_sub_model(self, d, *args):
+        return []
+
+    def load_sub_model(self, d, *args):
+        super().load_sub_model(d, *args)
+        self.args.lstm_layers = self.lstm_layers = self.args.lstm_layer_dim = self.lstm_layer_dim = 0
+
+
+class HighwayRNN(BiRNN):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def init_rnn_params(self, indexed_dim):
+        for i in range(self.lstm_layers):
+            for n in "f", "b":
+                input_dim = self.lstm_layer_dim if i or self.embedding_layers else indexed_dim
+                self.params["rnn%d%s" % (i, n)] = self.rnn_builder()(1, input_dim, self.lstm_layer_dim, self.model)
+                for p, dim in (("Wr", (self.lstm_layer_dim, input_dim + self.lstm_layer_dim)),
+                               ("br", self.lstm_layer_dim), ("Wh", (self.lstm_layer_dim, input_dim))):
+                    self.params["%s%d%s" % (p, i, n)] = self.model.add_parameters(dim, init=self.init()())
+
+    def transduce(self, inputs, train):
+        xs = inputs[:self.max_length]
+        for i in range(self.lstm_layers):
+            for n, d in ("f", 1), ("b", -1):
+                hs = self.params["rnn%d%s" % (i, n)].initial_state().transduce(xs[::d])
+                Wr, br, Wh = [dy.parameter(self.params["%s%d%s" % (p, i, n)]) for p in ("Wr", "br", "Wh")]
+                rs = [dy.logistic(Wr * dy.concatenate([h, x]) + br) for h, x in zip(hs[:-1], xs[::d][1:])]
+                xs = [hs[0]] + [dy.cmult(r, h) + dy.cmult(1 - r, Wh * x) for r, h, x in zip(rs, hs[1:], xs[::d][1:])]
+        if train:
+            x = dy.dropout_dim(dy.concatenate(xs, 1), 1, self.dropout)
+            xs = [dy.pick(x, i, 1) for i in range(len(xs))]
+        return xs

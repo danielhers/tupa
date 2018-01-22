@@ -16,9 +16,10 @@ from tupa.classifiers.nn.constants import *
 SPARSE = "sparse"
 MLP = "mlp"
 BIRNN = "bilstm"
+HIGHWAY_RNN = "highway"
 NOOP = "noop"
-NN_CLASSIFIERS = (MLP, BIRNN)
-CLASSIFIERS = (SPARSE, MLP, BIRNN, NOOP)
+NN_CLASSIFIERS = (MLP, BIRNN, HIGHWAY_RNN)
+CLASSIFIERS = (SPARSE, MLP, BIRNN, HIGHWAY_RNN, NOOP)
 
 # Swap types
 REGULAR = "regular"
