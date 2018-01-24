@@ -351,6 +351,7 @@ class Parser:
         self.model = Model(model_type, model_file)
         self.beam = beam  # Currently unused
         self.trained = False
+        self.save_init = False
 
     def train(self, passages=None, dev=None, test=None, iterations=1):
         """
@@ -398,7 +399,7 @@ class Parser:
         self.model = self.model.finalize(finished_epoch=finished_epoch)
         if self.dev:
             if not self.best_score:
-                self.model.save()
+                self.model.save(save_init=self.save_init)
             print("Evaluating on dev passages")
             passage_scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev, evaluate=True)]
             scores = Scores(passage_scores)
@@ -412,12 +413,12 @@ class Parser:
                 print("Better than previous best score (%.3f)" % self.best_score)
                 self.model.classifier.best_score = average_score
                 if self.best_score:
-                    self.model.save()
+                    self.model.save(save_init=self.save_init)
                 self.best_score = average_score
             else:
                 print("Not better than previous best score (%.3f)" % self.best_score)
         elif last or self.args.save_every is not None:
-            self.model.save()
+            self.model.save(save_init=self.save_init)
         if not last:
             self.model.restore(model)  # Restore non-finalized model
         return scores
