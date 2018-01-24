@@ -20,7 +20,7 @@ INITIALIZERS = {
     "glorot_uniform": "GlorotInitializer",
     "normal": "NormalInitializer",
 }
-DEFAULT_INITIALIZER = "saxe"
+DEFAULT_INITIALIZER = "glorot_uniform"
 
 ACTIVATIONS = {
     "cube": "cube",
