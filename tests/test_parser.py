@@ -182,7 +182,7 @@ def test_passage():
 
 @pytest.mark.parametrize("iterations", (1, 2))
 @pytest.mark.parametrize("model_type", CLASSIFIERS)
-def test_model(model_type, formats, test_passage, iterations):
+def test_model(model_type, formats, test_passage, iterations, config):
     filename = "test_files/models/test_%s_%s" % (model_type, "_".join(formats))
     for f in glob(filename + ".*"):
         os.remove(f)
