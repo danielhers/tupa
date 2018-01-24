@@ -140,7 +140,8 @@ class NeuralNetwork(Classifier, SubModel):
     def init_features(self, features, axes, train=False):
         for axis in axes:
             self.init_model(axis, train)
-        embeddings = [[self.params[s][k] for k in ks] for s, ks in sorted(features.items())]  # lists of vectors
+        embeddings = [[dy.lookup(self.params[s], k, update=self.input_params[s].updated) for k in ks]
+                      for s, ks in sorted(features.items())]  # lists of vectors
         if self.args.verbose > 3:
             print("Initializing %s %s features for %d elements" % (", ".join(axes), self.birnn_type, len(embeddings)))
             for (suffix, values), embs in zip(sorted(features.items()), embeddings):
@@ -157,7 +158,8 @@ class NeuralNetwork(Classifier, SubModel):
             elif param.indexed:  # collect indices to be looked up
                 indices += values  # DenseFeatureExtractor collapsed features so there are no repetitions between them
             else:  # lookup feature
-                yield from (self.empty_values[suffix] if x == MISSING_VALUE else self.params[suffix][x] for x in values)
+                yield from (self.empty_values[suffix] if x == MISSING_VALUE else
+                            dy.lookup(self.params[suffix], x, update=param.updated) for x in values)
             if self.args.verbose > 3:
                 print("%s: %s" % (suffix, values))
         if indices:
