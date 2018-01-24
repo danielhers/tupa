@@ -16,10 +16,11 @@ TRAINER_LEARNING_RATE_PARAM_NAMES.update(cyclic="learning_rate_max", adam="alpha
 TRAINER_KWARGS = {}  # "adam": dict(beta_2=0.9)}
 
 INITIALIZERS = {
+    "saxe": "SaxeInitializer",
     "glorot_uniform": "GlorotInitializer",
     "normal": "NormalInitializer",
 }
-DEFAULT_INITIALIZER = "glorot_uniform"
+DEFAULT_INITIALIZER = "saxe"
 
 ACTIVATIONS = {
     "cube": "cube",
