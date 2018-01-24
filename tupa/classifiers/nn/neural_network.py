@@ -217,14 +217,10 @@ class NeuralNetwork(Classifier, SubModel):
         self.steps += 1
 
     def calc_loss(self, scores, axis, true, importance):
+        ret = [i * dy.pickneglogsoftmax(scores, t) for t, i in zip(true, importance)]
         if self.loss == "max_margin":
-            num_labels = self.num_labels[axis]
-            importance_vector = num_labels * [1]
-            for t, i in zip(true, importance):
-                importance_vector[t] = i
-            softmax = dy.cdiv(dy.softmax(dy.pick_range(scores, 0, num_labels)), dy.inputVector(importance_vector))
-            return [dy.log(dy.sum_elems(dy.rectify(softmax - dy.emax([dy.pick(softmax, t) for t in true]))))]
-        return [i * dy.pickneglogsoftmax(scores, t) for t, i in zip(true, importance)]
+            ret.append(dy.max_dim(dy.log_softmax(scores, restrict=list(set(range(self.num_labels[axis])) - set(true)))))
+        return ret
 
     def finished_step(self, train=False):
         self.value = {}  # For caching the result of _evaluate
