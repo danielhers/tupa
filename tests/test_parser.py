@@ -66,7 +66,8 @@ def config():
                    "max_tags": 3, "max_deps": 3, "max_edge_labels": 3, "max_puncts": 3, "max_action_types": 3,
                    "max_ner_types": 3, "node_label_dim": 1, "node_category_dim": 1, "edge_label_dim": 1,
                    "tag_dim": 1, "dep_dim": 1, "optimizer": "sgd", "output_dim": 1,
-                   "layer_dim": 1, "layers": 1, "lstm_layer_dim": 2, "lstm_layers": 1, "max_action_ratio": 10})
+                   "layer_dim": 1, "layers": 1, "lstm_layer_dim": 2, "lstm_layers": 1, "max_action_ratio": 10,
+                   "update_word_vectors": False})
     # "use_gold_node_labels": True})
     config.update_hyperparams(shared={"lstm_layer_dim": 2, "lstm_layers": 1}, ucca={"word_dim": 2})
     return config
@@ -118,9 +119,14 @@ def test_parser(config, model_type, formats, default_setting, text=True):
     for mode in "train", "load":
         print("-- %sing %s" % (mode, model_type))
         p = Parser(model_file=filename, model_type=model_type)
+        p.save_init = True
         list(p.train(passages if mode == "train" else None, dev=passages, test=True, iterations=2))
         assert p.model.is_finalized, "Model should be finalized after %sing" % mode
-        params.append(p.model.get_all_params())
+        all_params = p.model.get_all_params()
+        params.append(all_params)
+        param1, param2 = [d.get("W") for d in (all_params, p.model.feature_extractor.params)]
+        if param1 is not None and param2 and param2.init is not None and not config.args.update_word_vectors:
+            assert_array_equal(param1, param2.init)
         text_results = results = list(p.parse(passages, evaluate=evaluate))
         if text:
             print("Converting to text and parsing...")
