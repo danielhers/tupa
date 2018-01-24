@@ -45,7 +45,7 @@ def main(args):
                         passage_id = None
                     else:
                         passage_id += 1
-            if lines and not args.doc_ids or doc_id in args.doc_ids:
+            if lines and (not args.doc_ids or doc_id in args.doc_ids):
                 write_file(args.outdir, doc_id, passage_id, ext, lines, quiet=args.quiet)
     if not args.quiet:
         print()
