@@ -44,6 +44,7 @@ class NeuralNetwork(Classifier, SubModel):
         SubModel.__init__(self)
         self.minibatch_size = self.args.minibatch_size
         self.loss = self.args.loss
+        self.weight_decay = self.args.dynet_weight_decay
         self.empty_values = OrderedDict()  # string (feature suffix) -> expression
         self.axes = OrderedDict()  # string (axis) -> AxisModel
         self.losses = []
@@ -70,6 +71,10 @@ class NeuralNetwork(Classifier, SubModel):
         if init:
             self.model = dy.ParameterCollection()
             self.birnn = self.birnn_type(Config().hyperparams.shared, self.model, save_path=("shared", "birnn"))
+            try:
+                self.model.set_weight_decay_lambda(self.weight_decay)
+            except AttributeError:
+                pass  # Supported from DyNet commit a094a59
         if train:
             self.init_trainer()
         if axis:
@@ -80,10 +85,6 @@ class NeuralNetwork(Classifier, SubModel):
         self.init_empty_values()
 
     def init_trainer(self):
-        try:
-            self.model.set_weight_decay_lambda(self.args.dynet_weight_decay)
-        except AttributeError:
-            pass  # Supported from DyNet commit a094a59
         if self.trainer_type is None or str(self.trainer_type) != self.args.optimizer:
             self.trainer_type = CategoricalParameter(TRAINERS, self.args.optimizer)
             trainer_kwargs = dict(TRAINER_KWARGS.get(str(self.trainer_type), {}))
@@ -270,11 +271,13 @@ class NeuralNetwork(Classifier, SubModel):
         return SubModel.save_sub_model(
             self, d,
             ("loss", self.loss),
+            ("weight_decay", self.weight_decay),
         )
 
     def load_sub_model(self, d, *args):
         d = SubModel.load_sub_model(self, d, *args)
         self.args.loss = self.loss = d["loss"]
+        self.args.dynet_weight_decay = self.weight_decay = d.get("weight_decay", self.args.dynet_weight_decay)
 
     def save_model(self, filename, d):
         Classifier.save_model(self, filename, d)
