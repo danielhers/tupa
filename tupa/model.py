@@ -177,14 +177,14 @@ class Model:
                      feature_extractor=self.feature_extractor.finalize(),
                      classifier=self.classifier.finalize(finished_epoch=finished_epoch))
 
-    def save(self):
+    def save(self, save_init=False):
         """
         Save feature and classifier parameters to files
         """
         if self.filename is not None:
             self.init_model()
             try:
-                self.feature_extractor.save(self.filename, save_init=False)
+                self.feature_extractor.save(self.filename, save_init=save_init)
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
                 skip_labels = (NODE_LABEL_KEY,) if node_labels and node_labels.size else ()
                 self.classifier.save(self.filename, skip_labels=skip_labels)
