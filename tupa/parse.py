@@ -117,18 +117,19 @@ class PassageParser(AbstractParser):
             predicted_action = self.predict(scores, self.model.actions.all, self.state.is_valid_action)
         except StopIteration as e:
             raise ParserException("No valid action available\n%s" % (self.oracle.log if self.oracle else "")) from e
+        true_keys, true_values = map(list, zip(*true_actions.items())) if true_actions else (None, None)
         action = true_actions.get(predicted_action.id)
         is_correct = (action is not None)
         if is_correct:
             self.correct_action_count += 1
         else:
-            action = Config().random.choice(tuple(true_actions.values())) if self.training else predicted_action
+            action = true_values[scores[true_keys].argmax()] if self.training else predicted_action
         if self.training and not (
                     is_correct and ClassifierProperty.update_only_on_error in self.model.get_classifier_properties()):
             assert not self.model.is_finalized, "Updating finalized model"
             self.model.classifier.update(
-                features, axis=Config().format, pred=predicted_action.id, true=tuple(true_actions.keys()),
-                importance=[self.args.swap_importance if a.is_swap else 1 for a in true_actions.values()])
+                features, axis=Config().format, pred=predicted_action.id, true=true_keys,
+                importance=[self.args.swap_importance if a.is_swap else 1 for a in true_values])
         if self.training and not is_correct and self.args.early_update:
             self.state.finished = True
         self.action_count += 1
