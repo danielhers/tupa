@@ -5,7 +5,7 @@ from .action import Actions
 from .classifiers.classifier import Classifier
 from .config import Config, SPARSE, MLP, BIRNN, HIGHWAY_RNN, NOOP
 from .features.feature_params import FeatureParameters
-from .model_util import UnknownDict, AutoIncrementDict
+from .model_util import UnknownDict, AutoIncrementDict, remove_backup
 
 
 class ParameterDefinition:
@@ -189,6 +189,7 @@ class Model:
                 skip_labels = (NODE_LABEL_KEY,) if node_labels and node_labels.size else ()
                 self.classifier.save(self.filename, skip_labels=skip_labels)
                 Config().save(self.filename)
+                remove_backup(self.filename)
             except Exception as e:
                 raise IOError("Failed saving model to '%s'" % self.filename) from e
 

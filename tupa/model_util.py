@@ -2,9 +2,11 @@ import json
 import os
 import pickle
 import pprint as pp
+import shutil
 import sys
 import time
 from collections import OrderedDict, Counter, defaultdict
+from glob import glob
 from operator import itemgetter
 
 import numpy as np
@@ -150,10 +152,20 @@ class KeyBasedDefaultDict(defaultdict):
 def remove_existing(*filenames):
     for filename in filenames:
         try:
+            shutil.copy2(filename, filename + "~")
             os.remove(filename)
             print("Removed existing '%s'." % filename)
         except OSError:
             pass
+
+
+def remove_backup(*filenames):
+    for filename in filenames:
+        for backup in glob(filename + "*~"):
+            try:
+                os.remove(backup)
+            except OSError:
+                pass
 
 
 def save_dict(filename, d):
