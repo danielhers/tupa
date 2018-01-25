@@ -160,6 +160,12 @@ class SparsePerceptron(Perceptron):
         ret = SparsePerceptron(self.labels, epoch=self.epoch)
         ret.update_model(finalized)
         ret.is_frozen = True
+        ret.min_update = self.min_update
+        ret.updates = self.updates
+        ret.initial_learning_rate = self.initial_learning_rate
+        ret.learning_rate = self.learning_rate
+        ret.learning_rate_decay = self.learning_rate_decay
+        ret.epoch = self.epoch
         return ret
 
     def save_model(self, filename, d):
