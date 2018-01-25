@@ -2,6 +2,7 @@ import dynet as dy
 
 from .constants import ACTIVATIONS, INITIALIZERS, CategoricalParameter
 from .sub_model import SubModel
+from .util import randomize_orthonormal
 
 
 class MultilayerPerceptron(SubModel):
@@ -33,6 +34,7 @@ class MultilayerPerceptron(SubModel):
                            for prefix, dims in (("W", list(zip(o_dim, i_dim))), ("b", o_dim))
                            for i, dim in enumerate(dims))
         self.verify_dims()
+        randomize_orthonormal(*self.params.values())
         if self.args.verbose > 3:
             print("Initializing MLP: %s" % self)
 

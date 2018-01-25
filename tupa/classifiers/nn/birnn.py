@@ -4,6 +4,7 @@ import numpy as np
 from .constants import ACTIVATIONS, INITIALIZERS, RNNS, CategoricalParameter
 from .mlp import MultilayerPerceptron
 from .sub_model import SubModel
+from .util import randomize_orthonormal
 from ...model_util import MISSING_VALUE
 
 
@@ -39,16 +40,17 @@ class BiRNN(SubModel):
                 self.indexed_dim = indexed_dim
                 self.indexed_num = indexed_num
                 self.mlp.init_params(indexed_dim)
-                self.init_rnn_params(indexed_dim)
+                randomize_orthonormal(*self.init_rnn_params(indexed_dim))
                 if self.args.verbose > 3:
                     print("Initializing BiRNN: %s" % self)
             return indexed_num * self.lstm_layer_dim
         return 0
 
     def init_rnn_params(self, indexed_dim):
-        self.params["birnn"] = dy.BiRNNBuilder(self.lstm_layers,
-                                               self.lstm_layer_dim if self.embedding_layers else indexed_dim,
-                                               self.lstm_layer_dim, self.model, self.rnn_builder())
+        rnn = dy.BiRNNBuilder(self.lstm_layers, self.lstm_layer_dim if self.embedding_layers else indexed_dim,
+                              self.lstm_layer_dim, self.model, self.rnn_builder())
+        self.params["birnn"] = rnn
+        return [p for f, b in rnn.builder_layers for r in (f, b) for l in r.get_parameters() for p in l]
 
     def init_features(self, embeddings, train=False):
         if self.params:
@@ -150,13 +152,19 @@ class HighwayRNN(BiRNN):
         super().__init__(*args, **kwargs)
 
     def init_rnn_params(self, indexed_dim):
+        params = []
         for i in range(self.lstm_layers):
             for n in "f", "b":
                 input_dim = self.lstm_layer_dim if i or self.embedding_layers else indexed_dim
-                self.params["rnn%d%s" % (i, n)] = self.rnn_builder()(1, input_dim, self.lstm_layer_dim, self.model)
+                rnn = self.rnn_builder()(1, input_dim, self.lstm_layer_dim, self.model)
+                self.params["rnn%d%s" % (i, n)] = rnn
+                params += [p for l in rnn.get_parameters() for p in l]
                 for p, dim in (("Wr", (self.lstm_layer_dim, input_dim + self.lstm_layer_dim)),
                                ("br", self.lstm_layer_dim), ("Wh", (self.lstm_layer_dim, input_dim))):
-                    self.params["%s%d%s" % (p, i, n)] = self.model.add_parameters(dim, init=self.init()())
+                    param = self.model.add_parameters(dim, init=self.init()())
+                    self.params["%s%d%s" % (p, i, n)] = param
+                    params.append(param)
+        return params
 
     def transduce(self, inputs, train):
         xs = inputs[:self.max_length]
