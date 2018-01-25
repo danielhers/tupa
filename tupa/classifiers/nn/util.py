@@ -17,5 +17,8 @@ def is_square(param):
 def randomize_orthonormal(*parameters):  # Saxe et al., 2014 (https://arxiv.org/abs/1312.6120)
     for d, params in groupby(sorted(filter(is_square, parameters), key=dim), dim):
         params = list(params)
-        for param, init in zip(params, ortho_group.rvs(d, size=len(params), random_state=Config().random)):
+        inits = ortho_group.rvs(d, size=len(params), random_state=Config().random)
+        if len(params) == 1:
+            inits = (inits,)
+        for param, init in zip(params, inits):
             param.set_value(init)
