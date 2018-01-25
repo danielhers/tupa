@@ -314,11 +314,21 @@ class NeuralNetwork(Classifier, SubModel):
             del values[:len(model.params)]  # Take next len(model.params) values
             if 1 < self.args.verbose <= 3:
                 print(model.params_str())
+        if self.weight_decay:
+            t = tqdm(self.get_all_params(as_array=False).items(),
+                     desc="Applying weight decay of %g" % self.weight_decay, unit="param", file=sys.stdout)
+            for key, param in t:
+                t.set_postfix(param=key)
+                value = param.as_array() * (1 - self.weight_decay) ** self.updates
+                try:
+                    param.set_value(value)
+                except AttributeError:
+                    param.init_from_array(value)
         if self.args.verbose:
             print(self)
         assert not values, "Loaded values: %d more than expected" % len(values)
 
-    def get_all_params(self):
+    def get_all_params(self, as_array=True):
         d = super().get_all_params()
         for model in self.sub_models():
             for key, value in model.params.items():
@@ -329,7 +339,7 @@ class NeuralNetwork(Classifier, SubModel):
                         for k, v in enumerate(l)] if isinstance(value, dy.BiRNNBuilder) else [
                         ("%s%d%d" % (key, j, k), v) for j, l in enumerate(value.get_parameters())
                         for k, v in enumerate(l)]:
-                    d["_".join(model.save_path + (name,))] = param.as_array()
+                    d["_".join(model.save_path + (name,))] = param.as_array() if as_array else param
         return d
 
     def print_params(self, max_rows=10):
