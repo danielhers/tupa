@@ -1,4 +1,5 @@
 numpy
+scipy
 cython
 ucca==1.0.43
 spacy==2.0.5
