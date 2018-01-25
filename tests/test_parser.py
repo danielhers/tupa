@@ -66,7 +66,7 @@ def config():
                    "max_tags": 3, "max_deps": 3, "max_edge_labels": 3, "max_puncts": 3, "max_action_types": 3,
                    "max_ner_types": 3, "node_label_dim": 1, "node_category_dim": 1, "edge_label_dim": 1,
                    "tag_dim": 1, "dep_dim": 1, "optimizer": "sgd", "output_dim": 1,
-                   "layer_dim": 1, "layers": 1, "lstm_layer_dim": 2, "lstm_layers": 1, "max_action_ratio": 10,
+                   "layer_dim": 2, "layers": 3, "lstm_layer_dim": 2, "lstm_layers": 3, "max_action_ratio": 10,
                    "update_word_vectors": False})
     # "use_gold_node_labels": True})
     config.update_hyperparams(shared={"lstm_layer_dim": 2, "lstm_layers": 1}, ucca={"word_dim": 2})
