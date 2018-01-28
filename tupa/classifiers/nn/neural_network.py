@@ -319,7 +319,10 @@ class NeuralNetwork(Classifier, SubModel):
                      desc="Applying weight decay of %g" % self.weight_decay, unit="param", file=sys.stdout)
             for key, param in t:
                 t.set_postfix(param=key)
-                value = param.as_array() * (1 - self.weight_decay) ** self.updates
+                try:
+                    value = param.as_array() * (1 - self.weight_decay) ** self.updates
+                except AttributeError:
+                    continue
                 try:
                     param.set_value(value)
                 except AttributeError:
@@ -329,7 +332,7 @@ class NeuralNetwork(Classifier, SubModel):
         assert not values, "Loaded values: %d more than expected" % len(values)
 
     def get_all_params(self, as_array=True):
-        d = OrderedDict() if as_array else super().get_all_params()
+        d = super().get_all_params()
         for model in self.sub_models():
             for key, value in model.params.items():
                 for name, param in ((key, value),) if isinstance(value, (dy.Parameters, dy.LookupParameters)) else [
