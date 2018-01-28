@@ -329,7 +329,7 @@ class NeuralNetwork(Classifier, SubModel):
         assert not values, "Loaded values: %d more than expected" % len(values)
 
     def get_all_params(self, as_array=True):
-        d = super().get_all_params()
+        d = OrderedDict() if as_array else super().get_all_params()
         for model in self.sub_models():
             for key, value in model.params.items():
                 for name, param in ((key, value),) if isinstance(value, (dy.Parameters, dy.LookupParameters)) else [
