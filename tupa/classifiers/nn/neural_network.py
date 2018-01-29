@@ -320,7 +320,7 @@ class NeuralNetwork(Classifier, SubModel):
             for key, param in t:
                 t.set_postfix(param=key)
                 try:
-                    value = param.as_array() * (1 - self.weight_decay) ** self.updates
+                    value = param.as_array() * np.float_power(1 - self.weight_decay, self.updates)
                 except AttributeError:
                     continue
                 try:
