@@ -52,9 +52,13 @@ def read_amr(amr, converter=None):
 
 
 class SmatchResults(evaluation.EvaluatorResults):
-    def __init__(self, *counts):
-        super().__init__({PRIMARY: evaluation.SummaryStatistics(*counts)}, default={PRIMARY.name: PRIMARY})
-        self.p, self.r, self.f1 = smatch.compute_f(*counts)
+    def __init__(self, best_match_num, test_triple_num, gold_triple_num):
+        num_matches, num_only_guessed, num_only_ref = (best_match_num,
+                                                       test_triple_num - best_match_num,
+                                                       gold_triple_num - best_match_num)
+        super().__init__({PRIMARY: evaluation.SummaryStatistics(num_matches, num_only_guessed, num_only_ref)},
+                         default={PRIMARY.name: PRIMARY})
+        self.p, self.r, self.f1 = smatch.compute_f(best_match_num, test_triple_num, gold_triple_num)
 
 
 class SmatchScores(evaluation.Scores):
