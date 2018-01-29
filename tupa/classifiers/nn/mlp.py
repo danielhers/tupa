@@ -34,7 +34,7 @@ class MultilayerPerceptron(SubModel):
                            for prefix, dims in (("W", list(zip(o_dim, i_dim))), ("b", o_dim))
                            for i, dim in enumerate(dims))
         self.verify_dims()
-        randomize_orthonormal(*self.params.values())
+        randomize_orthonormal(*self.params.values(), activation=self.activation)
         if self.args.verbose > 3:
             print("Initializing MLP: %s" % self)
 

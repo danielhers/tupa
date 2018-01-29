@@ -40,7 +40,7 @@ class BiRNN(SubModel):
                 self.indexed_dim = indexed_dim
                 self.indexed_num = indexed_num
                 self.mlp.init_params(indexed_dim)
-                randomize_orthonormal(*self.init_rnn_params(indexed_dim))
+                randomize_orthonormal(*self.init_rnn_params(indexed_dim), activation=self.activation)
                 if self.args.verbose > 3:
                     print("Initializing BiRNN: %s" % self)
             return indexed_num * self.lstm_layer_dim

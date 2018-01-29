@@ -1,24 +1,11 @@
-from itertools import groupby
-
-from scipy.stats import ortho_group
-
-from ...config import Config
+import numpy as np
 
 
-def dim(param):
-    return param.shape()[0]
-
-
-def is_square(param):
-    shape = param.shape()
-    return len(shape) == 2 and shape[0] == shape[1] > 1
-
-
-def randomize_orthonormal(*parameters):  # Saxe et al., 2014 (https://arxiv.org/abs/1312.6120)
-    for d, params in groupby(sorted(filter(is_square, parameters), key=dim), dim):
-        params = list(params)
-        inits = ortho_group.rvs(d, size=len(params), random_state=Config().random)
-        if len(params) == 1:
-            inits = (inits,)
-        for param, init in zip(params, inits):
+def randomize_orthonormal(*parameters, activation=None):  # Saxe et al., 2014 (https://arxiv.org/abs/1312.6120)
+    for param in parameters:
+        shape = param.shape()
+        if len(shape) == 2 and shape[0] == shape[1] > 1:
+            init, _, _ = np.linalg.svd(np.random.randn(*shape))
+            if str(activation) == "relu":
+                init *= np.sqrt(2)
             param.set_value(init)
