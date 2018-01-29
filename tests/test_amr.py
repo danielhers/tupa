@@ -27,7 +27,7 @@ class ConversionTests(unittest.TestCase):
     def convert_and_evaluate(self, amr_id, passage, ref):
         converted = "\n".join(to_amr(passage, metadata=False))
         scores = evaluate(converted, ref, amr_id=amr_id)
-        self.assertAlmostEqual(scores.f1, 1, msg=converted)
+        self.assertAlmostEqual(scores.average_f1(), 1, msg=converted)
 
 
 class EvaluationTests(unittest.TestCase):
@@ -37,7 +37,7 @@ class EvaluationTests(unittest.TestCase):
         """Test that comparing an AMR against itself returns perfect Smatch F1"""
         for _, ref, amr_id in read_test_amr():
             scores = evaluate(ref, ref, amr_id=amr_id)
-            self.assertAlmostEqual(scores.f1, 1)
+            self.assertAlmostEqual(scores.average_f1(), 1)
 
 
 def read_test_amr():
