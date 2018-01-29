@@ -4,8 +4,9 @@ import os
 from glob import glob
 from itertools import combinations
 
+import numpy as np
 import pytest
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_allclose, assert_array_equal
 from ucca import convert, ioutil
 
 from scheme.convert import FROM_FORMAT
@@ -126,7 +127,7 @@ def test_parser(config, model_type, formats, default_setting, text=True):
         params.append(all_params)
         param1, param2 = [d.get("W") for d in (all_params, p.model.feature_extractor.params)]
         if param1 is not None and param2 and param2.init is not None and not config.args.update_word_vectors:
-            assert_array_equal(param1, param2.init)
+            assert_allclose(param1, weight_decay(p.model) * param2.init, rtol=1e-6)
         text_results = results = list(p.parse(passages, evaluate=evaluate))
         if text:
             print("Converting to text and parsing...")
@@ -144,6 +145,13 @@ def test_parser(config, model_type, formats, default_setting, text=True):
     if evaluate:
         print("-- average f1: %.3f, %.3f\n" % tuple(scores))
         assert scores[0] == pytest.approx(scores[1], 0.1)
+
+
+def weight_decay(model):
+    try:
+        return np.float_power(1 - model.classifier.weight_decay, model.classifier.updates)
+    except AttributeError:
+        return 1
 
 
 @pytest.fixture
@@ -203,21 +211,16 @@ def test_model(model_type, formats, test_passage, iterations, config):
     for key, param in sorted(model.feature_extractor.params.items()):
         loaded_param = loaded.feature_extractor.params[key]
         assert param == loaded_param
-    assert_all_params_equal(finalized.get_all_params(), loaded.get_all_params())
+    assert_all_params_equal(finalized.get_all_params(), loaded.get_all_params(), decay=weight_decay(model))
 
 
-def assert_all_params_equal(*params):
+def assert_all_params_equal(*params, decay=1):
     for key, param in sorted(params[0].items()):
         for p in params[1:]:
-            exception = None
-            for f in (assert_array_almost_equal, assert_array_equal):
-                try:
-                    f(param, p[key], key, verbose=True)
-                    exception = None
-                except TypeError as e:
-                    exception = e
-            if exception:
-                raise exception
+            try:
+                assert_allclose(decay * param, p[key], rtol=1e-6)
+            except TypeError:
+                assert_array_equal(param, p[key])
 
 
 def parse(formats, model, passage, train):
