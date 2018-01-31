@@ -105,8 +105,8 @@ class NeuralNetwork(Classifier, SubModel):
                 return
         else:
             model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model, self.birnn_type)
-        if self.args.verbose > 3:
-            print("Initializing %s model with %d labels" % (axis, self.labels[axis].size))
+            if self.args.verbose > 3:
+                print("Initializing %s model with %d labels" % (axis, self.labels[axis].size))
         input_dim = indexed_dim = indexed_num = 0
         for suffix, param in sorted(self.input_params.items()):
             if not param.enabled:
