@@ -24,19 +24,20 @@ class MultilayerPerceptron(SubModel):
 
     def init_params(self, input_dim):
         self.input_dim = input_dim
-        hidden_dim = (self.layers - 1) * [self.layer_dim]
-        i_dim = [input_dim] + hidden_dim
-        o_dim = hidden_dim + [self.output_dim]
-        if self.num_labels:  # Adding another layer at the top
-            i_dim.append(self.output_dim)
-            o_dim.append(self.num_labels)
-        self.params.update((prefix + str(i), self.model.add_parameters(dims[i], init=self.init()()))
-                           for prefix, dims in (("W", list(zip(o_dim, i_dim))), ("b", o_dim))
-                           for i, dim in enumerate(dims))
-        self.verify_dims()
-        randomize_orthonormal(*self.params.values(), activation=self.activation)
-        if self.args.verbose > 3:
-            print("Initializing MLP: %s" % self)
+        if self.layers > 0:
+            hidden_dim = (self.layers - 1) * [self.layer_dim]
+            i_dim = [input_dim] + hidden_dim
+            o_dim = hidden_dim + [self.output_dim]
+            if self.num_labels:  # Adding another layer at the top
+                i_dim.append(self.output_dim)
+                o_dim.append(self.num_labels)
+            self.params.update((prefix + str(i), self.model.add_parameters(dims[i], init=self.init()()))
+                               for prefix, dims in (("W", list(zip(o_dim, i_dim))), ("b", o_dim))
+                               for i, dim in enumerate(dims))
+            self.verify_dims()
+            randomize_orthonormal(*self.params.values(), activation=self.activation)
+            if self.args.verbose > 3:
+                print("Initializing MLP: %s" % self)
 
     def evaluate(self, inputs, train=False):
         x = dy.concatenate(list(inputs))
