@@ -9,8 +9,8 @@ from ...model_util import MISSING_VALUE
 
 
 class BiRNN(SubModel):
-    def __init__(self, args, model, save_path=None):
-        super().__init__(save_path=save_path)
+    def __init__(self, args, model, **kwargs):
+        super().__init__(**kwargs)
         self.args = args
         self.model = model
         self.dropout = self.args.dropout
@@ -25,7 +25,6 @@ class BiRNN(SubModel):
         self.input_reps = self.empty_rep = self.indexed_dim = self.indexed_num = None
         self.mlp = MultilayerPerceptron(self.args, self.model, params=self.params, layers=self.embedding_layers,
                                         layer_dim=self.embedding_layer_dim, output_dim=self.lstm_layer_dim)
-        self.save_path = save_path
 
     def init_params(self, indexed_dim, indexed_num):
         """
@@ -98,18 +97,18 @@ class BiRNN(SubModel):
             print("Saving BiRNN: %s" % self)
         return values
 
-    def load_sub_model(self, d, *args):
-        d = super().load_sub_model(d, *args)
+    def load_sub_model(self, d, *args, **kwargs):
+        d = super().load_sub_model(d, *args, **kwargs)
         if d:
             self.args.lstm_layers = self.lstm_layers = d["lstm_layers"]
-            self.args.lstm_layer_dim = self.lstm_layer_dim = d["lstm_layer_dim"]
-            self.args.embedding_layers = self.embedding_layers = d["embedding_layers"]
-            self.args.embedding_layer_dim = self.embedding_layer_dim = d["embedding_layer_dim"]
+            self.args.lstm_layer_dim = self.mlp.output_dim = self.lstm_layer_dim = d["lstm_layer_dim"]
+            self.args.embedding_layers = self.mlp.layers = self.embedding_layers = d["embedding_layers"]
+            self.args.embedding_layer_dim = self.mlp.layer_dim = self.embedding_layer_dim = d["embedding_layer_dim"]
             self.args.max_length = self.max_length = d["max_length"]
             self.args.rnn = self.rnn_builder.string = d["rnn"]
-            self.args.activation = self.activation.string = d["activation"]
-            self.args.init = self.init.string = d["init"]
-            self.args.dropout = self.dropout = d["dropout"]
+            self.args.activation = self.mlp.activation.string = self.activation.string = d["activation"]
+            self.args.init = self.mlp.init.string = self.init.string = d["init"]
+            self.args.dropout = self.mlp.dropout = self.dropout = d["dropout"]
             self.indexed_dim = self.mlp.input_dim = d["indexed_dim"]
             self.indexed_num = d["indexed_num"]
         else:

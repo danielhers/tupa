@@ -2,16 +2,17 @@ from collections import OrderedDict
 
 
 class SubModel:
-    def __init__(self, params=None, save_path=()):
+    def __init__(self, params=None, save_path=(), copy_shared=False):
         self.params = OrderedDict() if params is None else params  # string (param identifier) -> parameter
         self.save_path = save_path
+        self.copy_shared = copy_shared
 
     def save_sub_model(self, d, *args):
         self.get_sub_dict(d).update(args + (("param_keys", list(self.params.keys())),))
         return list(self.params.values())
 
-    def load_sub_model(self, d, *args):
-        d = self.get_sub_dict(d)
+    def load_sub_model(self, d, *args, load_path=None):
+        d = self.get_sub_dict(d, load_path=load_path)
         param_keys = d.get("param_keys", ())
         assert len(param_keys) <= len(args), "%s loaded values: expected %d, got %d" % ("/".join(self.save_path),
                                                                                         len(param_keys), len(args))
@@ -19,8 +20,8 @@ class SubModel:
         self.params.update(zip(param_keys, args))
         return d
 
-    def get_sub_dict(self, d):
-        for element in self.save_path:
+    def get_sub_dict(self, d, load_path=None):
+        for element in load_path or self.save_path:
             d = d.setdefault(element, OrderedDict())
         return d
 

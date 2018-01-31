@@ -24,7 +24,8 @@ class AxisModel:
     """
     def __init__(self, axis, num_labels, model, birnn_type):
         args = Config().hyperparams.specific[axis]
-        self.birnn = birnn_type(args, model, save_path=("axes", axis, "birnn"))
+        self.birnn = birnn_type(args, model, save_path=("axes", axis, "birnn"),
+                                copy_shared=args.copy_shared == [] or axis in (args.copy_shared or ()))
         self.mlp = MultilayerPerceptron(args, model, num_labels=num_labels, save_path=("axes", axis, "mlp"))
 
 
@@ -97,11 +98,13 @@ class NeuralNetwork(Classifier, SubModel):
             self.trainer = self.trainer_type()(self.model, **trainer_kwargs)
             self.trainer.set_sparse_updates(False)
 
-    def init_axis_model(self, axis):
+    def init_axis_model(self, axis, init=True):
         model = self.axes.get(axis)
         if model:
-            return
-        model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model, self.birnn_type)
+            if init:
+                return
+        else:
+            model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model, self.birnn_type)
         if self.args.verbose > 3:
             print("Initializing %s model with %d labels" % (axis, self.labels[axis].size))
         input_dim = indexed_dim = indexed_num = 0
@@ -111,12 +114,13 @@ class NeuralNetwork(Classifier, SubModel):
             if self.args.verbose > 3:
                 print("Initializing input parameter: %s" % param)
             if not param.numeric and suffix not in self.params:  # lookup feature
-                lookup = self.model.add_lookup_parameters((param.size, param.dim))
-                lookup.set_updated(param.updated)
-                param.init_data()
-                if param.init is not None and param.init.size:
-                    lookup.init_from_array(param.init)
-                self.params[suffix] = lookup
+                if init:
+                    lookup = self.model.add_lookup_parameters((param.size, param.dim))
+                    lookup.set_updated(param.updated)
+                    param.init_data()
+                    if param.init is not None and param.init.size:
+                        lookup.init_from_array(param.init)
+                    self.params[suffix] = lookup
             if param.indexed:
                 indexed_dim += param.dim  # add to the input dimensionality at each indexed time point
                 indexed_num = max(indexed_num, param.num)  # indices to be looked up are collected
@@ -272,8 +276,8 @@ class NeuralNetwork(Classifier, SubModel):
             ("weight_decay", self.weight_decay),
         )
 
-    def load_sub_model(self, d, *args):
-        d = SubModel.load_sub_model(self, d, *args)
+    def load_sub_model(self, d, *args, **kwargs):
+        d = SubModel.load_sub_model(self, d, *args, **kwargs)
         self.args.loss = self.loss = d["loss"]
         self.args.dynet_weight_decay = self.weight_decay = d.get("weight_decay", self.args.dynet_weight_decay)
 
@@ -287,6 +291,10 @@ class NeuralNetwork(Classifier, SubModel):
                 print(model.params_str())
         if self.args.verbose:
             print(self)
+        self.save_param_values(filename, values)
+
+    @staticmethod
+    def save_param_values(filename, values):
         remove_existing(filename + ".data", filename + ".meta")
         try:
             dy.save(filename, tqdm(values, desc="Saving model to '%s'" % filename, unit="param", file=sys.stdout))
@@ -296,14 +304,7 @@ class NeuralNetwork(Classifier, SubModel):
     def load_model(self, filename, d):
         self.model = None
         self.init_model()
-        try:
-            values = list(tqdm(dy.load_generator(filename, self.model),
-                               desc="Loading model from '%s'" % filename, unit="param", file=sys.stdout))
-        except AttributeError:
-            print("Loading model from '%s'... " % filename, end="", flush=True)
-            started = time.time()
-            values = dy.load(filename, self.model)  # All sub-model parameter values, concatenated
-            print("Done (%.3fs)." % (time.time() - started))
+        values = self.load_param_values(filename)
         self.axes = OrderedDict()
         for axis, labels in self.labels_t.items():
             _, size = labels
@@ -314,6 +315,8 @@ class NeuralNetwork(Classifier, SubModel):
             del values[:len(model.params)]  # Take next len(model.params) values
             if 1 < self.args.verbose <= 3:
                 print(model.params_str())
+        self.copy_shared_birnn(filename, d)
+        assert not values, "Loaded values: %d more than expected" % len(values)
         if self.weight_decay:
             t = tqdm(self.get_all_params(as_array=False).items(),
                      desc="Applying weight decay of %g" % self.weight_decay, unit="param", file=sys.stdout)
@@ -329,7 +332,31 @@ class NeuralNetwork(Classifier, SubModel):
                     param.init_from_array(value)
         if self.args.verbose:
             print(self)
-        assert not values, "Loaded values: %d more than expected" % len(values)
+
+    def load_param_values(self, filename):
+        try:
+            return list(tqdm(dy.load_generator(filename, self.model),
+                             desc="Loading model from '%s'" % filename, unit="param", file=sys.stdout))
+        except AttributeError:
+            print("Loading model from '%s'... " % filename, end="", flush=True)
+            started = time.time()
+            values = dy.load(filename, self.model)  # All sub-model parameter values, concatenated
+            print("Done (%.3fs)." % (time.time() - started))
+            return values
+
+    def copy_shared_birnn(self, filename, d):
+        shared_values = None
+        values = self.load_param_values(filename)  # Load parameter values again so that shared parameters are copied
+        for model in self.sub_models():
+            if model is self.birnn:
+                shared_values = values[:len(model.params)]
+            del values[:len(model.params)]  # Take next len(model.params) values
+        for axis, model in self.axes.items():
+            if model.birnn.copy_shared:
+                model.birnn.load_sub_model(d, *shared_values, load_path=self.birnn.save_path)
+                if 1 < self.args.verbose <= 3:
+                    print("Copied from %s: %s" % ("/".join(self.birnn.save_path), model.birnn.params_str()))
+                self.init_axis_model(axis, init=False)  # Update input_dim
 
     def get_all_params(self, as_array=True):
         d = super().get_all_params()

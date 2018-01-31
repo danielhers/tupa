@@ -254,6 +254,8 @@ class Config(object, metaclass=Singleton):
                                help="shared hyperparameters or hyperparameters for specific formats, "
                                     'e.g., "shared --lstm-layer-dim=100 --lstm-layers=1" "ucca --word-dim=300"',
                                default=[HyperparamsInitializer.action("shared --lstm-layers 2")])
+        argparser.add_argument("--copy-shared", nargs="*", choices=FORMATS, help="formats whose parameters shall be "
+                                                                                 "copied from loaded shared parameters")
 
         self.args = argparser.parse_args(args if args else None)
 
