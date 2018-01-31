@@ -44,7 +44,8 @@ class DependencyConverter(convert.DependencyConverter):
             if dep_node.outgoing:
                 dep_node.preterminal = l1.add_fnode(dep_node.preterminal, self.HEAD)
             for edge in remote_edges:
-                l1.add_remote(edge.head.node or l1.heads[0], edge.rel, dep_node.node)
+                if primary_edge.head.node != edge.head.node:  # Avoid multi-edges
+                    l1.add_remote(edge.head.node or l1.heads[0], edge.rel, dep_node.node)
 
     def from_format(self, lines, passage_id, split=False, return_original=False):
         for passage in super().from_format(lines, passage_id, split=split):
