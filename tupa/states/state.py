@@ -100,7 +100,7 @@ class State:
                            message and "%s may not be a '%s' child (currently %s, %s)" % (
                                node, action.tag, ", ".join(map(str, node.incoming)) or "parentless",
                                ", ".join(map(str, node.outgoing)) or "childless"))
-            self.check(self.constraints.possible_multiple_incoming is None or not action.tag or
+            self.check(self.constraints.possible_multiple_incoming is None or action.tag is None or
                        action.remote or action.tag in self.constraints.possible_multiple_incoming or
                        all(e.remote or e.tag in self.constraints.possible_multiple_incoming for e in node.incoming),
                        message and "Multiple non-remote '%s' parents not allowed for %s" % (action.tag, node))
