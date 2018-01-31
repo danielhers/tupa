@@ -27,3 +27,10 @@ class SubModel:
 
     def params_str(self):
         return "/".join(self.save_path) + (": " if self.save_path else "") + ", ".join(self.params.keys())
+
+    def invalidate_caches(self):
+        for model in self.sub_models():
+            model.invalidate_caches()
+
+    def sub_models(self):
+        return ()

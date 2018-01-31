@@ -124,6 +124,9 @@ class BiRNN(SubModel):
                 self.embedding_layer_dim, self.max_length, self.rnn_builder, self.activation, self.init, self.dropout,
                 self.indexed_dim, self.indexed_num, list(self.params.keys()))
 
+    def sub_models(self):
+        return [self.mlp]
+
 
 class EmptyRNN(BiRNN):
     def __init__(self, *args, **kwargs):

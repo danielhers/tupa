@@ -18,7 +18,7 @@ class MultilayerPerceptron(SubModel):
         self.init = CategoricalParameter(INITIALIZERS, self.args.init)
         self.dropout = self.args.dropout
         self.num_labels = num_labels
-        self.input_dim = None
+        self.input_dim = self.weights = None
 
     @property
     def total_layers(self):
@@ -61,18 +61,21 @@ class MultilayerPerceptron(SubModel):
         assert dim == self.input_dim, "Input dim mismatch: %d != %d" % (dim, self.input_dim)
         if self.args.verbose > 3:
             print(self)
-        for i in range(self.total_layers):
-            if self.args.verbose > 3:
-                print(x.npvalue().tolist())
-            try:
-                if train and self.dropout:
-                    x = dy.dropout(x, self.dropout)
-                W, b = [dy.parameter(self.params[prefix + str(i)]) for prefix in ("W", "b")]
-                if i == 0 and W.dim()[0][1] < dim:
-                    W = dy.concatenate_cols([W, dy.parameter(self.params["W0+"])])
-                x = self.activation()(W * x + b)
-            except ValueError as e:
-                raise ValueError("Error in evaluating layer %d of %d" % (i + 1, self.total_layers)) from e
+        if self.total_layers:
+            if self.weights is None:
+                self.weights = [[dy.parameter(self.params[prefix + str(i)]) for prefix in ("W", "b")]
+                                for i in range(self.total_layers)]
+                if self.weights[0][0].dim()[0][1] < dim:  # number of columns in W0
+                    self.weights[0][0] = dy.concatenate_cols([self.weights[0][0], dy.parameter(self.params["W0+"])])
+            for i, (W, b) in enumerate(self.weights):
+                if self.args.verbose > 3:
+                    print(x.npvalue().tolist())
+                try:
+                    if train and self.dropout:
+                        x = dy.dropout(x, self.dropout)
+                    x = self.activation()(W * x + b)
+                except ValueError as e:
+                    raise ValueError("Error in evaluating layer %d of %d" % (i + 1, self.total_layers)) from e
         if self.args.verbose > 3:
             print(x.npvalue().tolist())
         return x
@@ -119,6 +122,9 @@ class MultilayerPerceptron(SubModel):
     def verify_dim(self, attr, val):
         expected = getattr(self, attr)
         assert val == expected, "%s %s: %d, expected: %d" % ("/".join(self.save_path), attr, val, expected)
+
+    def invalidate_caches(self):
+        self.weights = None
 
     def __str__(self):
         return "%s layers: %d, total_layers: %d, layer_dim: %d, output_dim: %d, activation: %s, init: %s, " \

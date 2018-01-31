@@ -227,6 +227,9 @@ class NeuralNetwork(Classifier, SubModel):
         return ret
 
     def finished_step(self, train=False):
+        super().invalidate_caches()
+
+    def invalidate_caches(self):
         self.value = {}  # For caching the result of _evaluate
 
     def finished_item(self, train=False):
@@ -266,7 +269,7 @@ class NeuralNetwork(Classifier, SubModel):
             
     def sub_models(self):
         """ :return: ordered list of SubModels """
-        axes = [self.axes[a] for a in self.labels or self.labels_t]
+        axes = list(filter(None, map(self.axes.get, self.labels or self.labels_t)))
         return [self] + [m.mlp for m in axes] + [m.birnn for m in axes + [self]]
     
     def save_sub_model(self, d, *args):
