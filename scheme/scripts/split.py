@@ -54,7 +54,7 @@ def main(args):
 def write_file(outdir, doc_id, passage_id, ext, lines, quiet=False):
     if passage_id is None:
         raise ValueError("Could not determine passage ID")
-    filename = os.path.join(outdir, ".".join(map(str, filter(None, (doc_id, passage_id)))) + ext)
+    filename = os.path.join(outdir, ("" if doc_id is None else (doc_id + ".")) + str(passage_id) + ext)
     with open(filename, "w", encoding="utf-8") as f:
         f.writelines(lines)
     if not quiet:
