@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import glob
 import os
 import sys
+from glob import glob
 
 import configargparse
 from ucca import ioutil
@@ -19,13 +19,13 @@ def main():
     argparser = configargparse.ArgParser(description=desc)
     argparser.add_argument("filenames", nargs="+", help="file names to convert and evaluate")
     add_verbose_argument(argparser, help="detailed evaluation output")
-    add_boolean_option(argparser, "wikification", "use Spotlight to wikify any named node")
+    add_boolean_option(argparser, "wikification", "Spotlight to wikify any named node (for AMR)")
     argparser.add_argument("-o", "--outdir", help="output directory (if unspecified, files are not written)")
     args = argparser.parse_args()
 
     scores = []
     for pattern in args.filenames:
-        filenames = glob.glob(pattern)
+        filenames = glob(pattern)
         if not filenames:
             raise IOError("Not found: " + pattern)
         for filename in filenames:
