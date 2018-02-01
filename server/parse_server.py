@@ -60,7 +60,7 @@ def parse():
     text = request.values["input"]
     print("Parsing text: '%s'" % text)
     in_passage = next(from_text(text))
-    out_passage = next(get_parser().parse(in_passage))
+    out_passage = next(get_parser().parse(in_passage))[0]
     root = to_standard(out_passage)
     xml = tostring(root).decode()
     return Response(indent_xml(xml), headers={"Content-Type": "xml/application"})
