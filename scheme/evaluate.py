@@ -30,8 +30,8 @@ class Scores:
     """
     def __init__(self, scores):
         self.scores_by_format = [t.aggregate(s) for t, s in groupby(scores, type)]
-        self.name = "Multiple formats" if len(self.scores_by_format) != 1 else self.scores_by_format[0][1].name
-        self.format = None if len(self.scores_by_format) != 1 else self.scores_by_format[0][1].format
+        self.name = "Multiple formats" if len(self.scores_by_format) != 1 else self.scores_by_format[0].name
+        self.format = None if len(self.scores_by_format) != 1 else self.scores_by_format[0].format
 
     @staticmethod
     def aggregate(scores):
