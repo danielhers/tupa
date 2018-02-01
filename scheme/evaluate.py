@@ -29,37 +29,35 @@ class Scores:
     Keeps score objects from multiple formats
     """
     def __init__(self, scores):
-        self.scores_by_format = [(t, t.aggregate(s)) for t, s in groupby(scores, type)]
-
-    @staticmethod
-    def name():
-        return "Multiple formats"
+        self.scores_by_format = [t.aggregate(s) for t, s in groupby(scores, type)]
+        self.name = "Multiple formats" if len(self.scores_by_format) != 1 else self.scores_by_format[0][1].name
+        self.format = None if len(self.scores_by_format) != 1 else self.scores_by_format[0][1].format
 
     @staticmethod
     def aggregate(scores):
-        return Scores([s for score in scores for _, s in score.scores_by_format])
+        return Scores([s for score in scores for s in score.scores_by_format])
 
     def average_f1(self, *args, **kwargs):
-        return sum(s.average_f1(*args, **kwargs) for t, s in self.scores_by_format) / len(self.scores_by_format)
+        return sum(s.average_f1(*args, **kwargs) for s in self.scores_by_format) / len(self.scores_by_format)
 
     def print(self, *args, **kwargs):
-        for t, s in self.scores_by_format:
+        for s in self.scores_by_format:
             if len(self.scores_by_format):
-                print(name(t) + ":", *args, **kwargs)
+                print(s.name + ":", *args, **kwargs)
             s.print(*args, **kwargs)
 
     def fields(self):
-        return [f for _, s in self.scores_by_format for f in s.fields()]
+        return [f for s in self.scores_by_format for f in s.fields()]
 
     def titles(self):
-        return [(name(t) + "_" + f) for t, s in self.scores_by_format for f in s.titles()]
+        return [(s.name + "_" + f) for s in self.scores_by_format for f in s.titles()]
+
+    def details(self, average_f1):
+        return "" if len(self.scores_by_format) < 2 else \
+            " (" + ", ".join("%.3f" % average_f1(s) for s in self.scores_by_format) + ")"
 
     def __str__(self):
         print(",".join(self.fields()))
-
-
-def name(t):
-    return t.name() if hasattr(t, "name") else "UCCA"
 
 
 def passage_format(filename):

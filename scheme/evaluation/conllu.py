@@ -22,22 +22,16 @@ def get_scores(s1, s2, eval_type, verbose):
     return res
 
 
-def evaluate(guessed, ref, converter=None, verbose=False, **kwargs):
+def evaluate(guessed, ref, converter=None, verbose=False, eval_types=EVAL_TYPES, **kwargs):
     del kwargs
     if converter is not None:
         guessed = converter(guessed)
         ref = converter(ref)
-    return ConlluScores((eval_type, get_scores(guessed, ref, eval_type, verbose)) for eval_type in EVAL_TYPES)
+    return ConlluScores((eval_type, get_scores(guessed, ref, eval_type, verbose)) for eval_type in eval_types)
 
 
 class ConlluScores(evaluation.Scores):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-    @staticmethod
-    def name():
-        return "CoNLL-U"
-
-    @staticmethod
-    def format():
-        return "conllu"
+        self.name = "CoNLL-U"
+        self.format = "conllu"

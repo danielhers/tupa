@@ -72,6 +72,7 @@ class PassageParser(AbstractParser):
                 axes.append(NODE_LABEL_KEY)
             self.model.init_features(self.state, axes, self.training)
         self.out = self.passage
+        self.eval_type = None
 
     def parse(self):
         """
@@ -197,8 +198,8 @@ class PassageParser(AbstractParser):
             self.verify(self.out, self.passage)
         ret = (self.out,)
         if evaluate:
-            ret += (self.evaluate(),)
-            status = "%-14s F1=%.3f" % (status, self.f1)
+            ret += (self.evaluate(evaluate),)
+            status = "%-14s %s F1=%.3f" % (status, self.eval_type, self.f1)
         self.print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), level=1)
         return ret
 
@@ -211,14 +212,16 @@ class PassageParser(AbstractParser):
             return "%-33s" % accuracy_str
         return ""
 
-    def evaluate(self):
+    def evaluate(self, mode="test"):
         ref_format = self.passage.extra.get("format")
         if ref_format:
             self.print("Converting to %s and evaluating..." % ref_format)
+        self.eval_type = UNLABELED if Config().is_unlabeled(ref_format or "ucca") else LABELED
         score = EVALUATORS.get(ref_format, evaluation).evaluate(
             self.out, self.passage, converter=get_output_converter(ref_format),
-            verbose=self.out and self.args.verbose > 3, constructions=self.args.constructions)
-        self.f1 = average_f1(score)
+            verbose=self.out and self.args.verbose > 3, constructions=self.args.constructions,
+            eval_types=(self.eval_type,) if mode == "dev" else (LABELED, UNLABELED))
+        self.f1 = average_f1(score, self.eval_type)
         return score
 
     def check_loop(self):
@@ -402,13 +405,12 @@ class Parser:
             if not self.best_score:
                 self.model.save(save_init=self.save_init)
             print("Evaluating on dev passages")
-            passage_scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev, evaluate=True)]
+            passage_scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev, evaluate="dev")]
             scores = Scores(passage_scores)
             average_score = average_f1(scores)
             prefix = ".".join(map(str, [self.iteration] + ([self.eval_index] if self.args.save_every else [])))
-            score_details = "" if len(scores.scores_by_format) < 2 else " (" + ", ".join(
-                "%.3f" % average_f1(s) for f, s in scores.scores_by_format) + ")"
-            print("Evaluation %s, average F1 score on dev: %.3f%s" % (prefix, average_score, score_details))
+            print("Evaluation %s, average %s F1 score on dev: %.3f%s" % (prefix, get_eval_type(scores), average_score,
+                                                                         scores.details(average_f1)))
             print_scores(scores, self.args.devscores, prefix=prefix, prefix_title="iteration")
             if average_score >= self.best_score:
                 print("Better than previous best score (%.3f)" % self.best_score)
@@ -478,7 +480,7 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
         if passage_scores:
             scores = Scores(passage_scores)
             if args.verbose <= 1 or len(passage_scores) > 1:
-                print("\nAverage F1 score on test: %.3f" % average_f1(scores))
+                print("\nAverage %s F1 score on test: %.3f" % (get_eval_type(scores), average_f1(scores)))
                 print("Aggregated scores:")
                 scores.print()
             print_scores(scores, args.testscores)
@@ -513,10 +515,12 @@ def print_scores(scores, filename, prefix=None, prefix_title=None):
             print(",".join(fields), file=f)
 
 
-def average_f1(scores):
-    return scores.average_f1(mode=UNLABELED if Config().is_unlabeled(scores.format() if hasattr(scores, "format")
-                                                                     else "ucca")
-                             else LABELED)
+def average_f1(scores, eval_type=None):
+    return scores.average_f1(eval_type or get_eval_type(scores))
+
+
+def get_eval_type(scores):
+    return UNLABELED if Config().is_unlabeled(scores.format) else LABELED
 
 
 def print_config():

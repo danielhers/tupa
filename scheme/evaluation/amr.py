@@ -11,6 +11,7 @@ sys.path.pop(0)
 
 EVAL_TYPES = (evaluation.LABELED, evaluation.UNLABELED)
 
+
 def get_scores(a1, a2, amr_id, eval_type, verbose):
     if eval_type == evaluation.UNLABELED:
         a1, a2 = [re.sub(":[a-zA-Z0-9-]*", ":label", a) for a in (a1, a2)]
@@ -29,20 +30,21 @@ def get_scores(a1, a2, amr_id, eval_type, verbose):
     return res
 
 
-def evaluate(guessed, ref, converter=None, verbose=False, amr_id=None, **kwargs):
+def evaluate(guessed, ref, converter=None, verbose=False, amr_id=None, eval_types=EVAL_TYPES, **kwargs):
     """
     Compare two AMRs and return scores, possibly printing them too.
     :param guessed: AMR object to evaluate
     :param ref: reference AMR object to compare to
     :param converter: optional function to apply to inputs before evaluation
     :param amr_id: ID of AMR pair
+    :param eval_types: optional subset of evaluation types to perform (LABELED/UNLABELED)
     :param verbose: whether to print the results
     :return: SmatchScores object
     """
     del kwargs
     smatch.verbose = verbose
     a1, a2 = [read_amr(a, converter) for a in (guessed, ref)]
-    return SmatchScores((eval_type, get_scores(a1, a2, amr_id, eval_type, verbose)) for eval_type in EVAL_TYPES)
+    return SmatchScores((eval_type, get_scores(a1, a2, amr_id, eval_type, verbose)) for eval_type in eval_types)
 
 
 def read_amr(amr, converter=None):
@@ -64,14 +66,8 @@ class SmatchResults(evaluation.EvaluatorResults):
 class SmatchScores(evaluation.Scores):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-    @staticmethod
-    def name():
-        return "AMR"
-
-    @staticmethod
-    def format():
-        return "amr"
+        self.name = "AMR"
+        self.format = "amr"
 
     def __str__(self):
         return ",".join(self.fields())
