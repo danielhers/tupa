@@ -187,13 +187,13 @@ class HyperparamsInitializer:
 class Iterations:
     def __init__(self, args):
         try:
-            i, *hyperparams = args.replace("=", " ").split()
+            epochs, *hyperparams = args.replace("=", " ").split()
         except (AttributeError, ValueError):
-            i, *hyperparams = args,
-        self.i, self.hyperparams = int(i), HyperparamsInitializer(str(i), *hyperparams)
+            epochs, *hyperparams = args,
+        self.epochs, self.hyperparams = int(epochs), HyperparamsInitializer(str(epochs), *hyperparams)
 
     def __str__(self):
-        return str(self.hyperparams or self.i)
+        return str(self.hyperparams or self.epochs)
 
 
 class Config(object, metaclass=Singleton):

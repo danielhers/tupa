@@ -135,6 +135,9 @@ class Model:
     def is_neural_network(self):
         return self.model_type in (MLP, BIRNN, HIGHWAY_RNN)
 
+    def is_retrainable(self):
+        return ClassifierProperty.trainable_after_saving in self.get_classifier_properties()
+
     def init_actions(self):
         return Actions(size=self.args.max_action_labels)
 

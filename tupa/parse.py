@@ -351,11 +351,10 @@ class Parser:
     """ Main class to implement transition-based UCCA parser """
     def __init__(self, model_file=None, model_type=None, beam=1):
         self.args = Config().args
-        self.best_score = self.dev = self.iteration = self.eval_index = None
+        self.best_score = self.dev = self.iteration = self.epoch = self.batch = None
         self.model = Model(model_type, model_file)
         self.beam = beam  # Currently unused
-        self.trained = False
-        self.save_init = False
+        self.trained = self.save_init = False
 
     def train(self, passages=None, dev=None, test=None, iterations=1):
         """
@@ -367,7 +366,7 @@ class Parser:
         """
         self.trained = True
         if passages:
-            if ClassifierProperty.trainable_after_saving in self.model.get_classifier_properties():
+            if self.model.is_retrainable():
                 try:
                     self.model.load(is_finalized=False)
                 except FileNotFoundError:
@@ -378,24 +377,32 @@ class Parser:
             print_config()
             self.dev = dev
             self.best_score = self.model.classifier.best_score if self.model.classifier else 0
-            start_iter = self.model.classifier.epoch + 1 if self.model.classifier else 1
-            iterations = [i if isinstance(i, Iterations) else Iterations(i) for i in (
-                iterations if hasattr(iterations, "__iter__") else (iterations,))]
-            total_iter = start_iter - 1 + sum(i.i for i in iterations)
-            for i in iterations:
-                Config().update_iteration(i)
-                for self.iteration in range(start_iter, start_iter + i.i):
-                    self.eval_index = 0
-                    print("Training iteration %d of %d: " % (self.iteration, total_iter))
+            iterations = [i if isinstance(i, Iterations) else Iterations(i)
+                          for i in (iterations if hasattr(iterations, "__iter__") else (iterations,))]
+            end = None
+            for self.iteration, it in enumerate(iterations, start=1):
+                start = self.model.classifier.epoch + 1 if self.model.classifier else 1
+                if end and start < end + 1:
+                    print("Dropped %d iterations because best score was on %d" % (end - start + 1, start - 1))
+                end = start + it.epochs
+                Config().update_iteration(it)
+                for self.epoch in range(start, end):
+                    print("Training iteration %d of %d: " % (
+                        self.epoch, start - 1 + sum(i.epochs for i in iterations[self.iteration - 1:])))
                     Config().random.shuffle(passages)
                     list(self.parse(passages, mode=ParseMode.train))
-                    yield self.eval_and_save(self.iteration == total_iter, finished_epoch=True)
-                start_iter = self.iteration + 1
-            print("Trained %d iterations" % total_iter)
-        if dev and test or not passages:
-            self.model.load()  # Load best model (on dev) to prepare for test
-            if not passages:
-                print_config()
+                    yield self.eval_and_save(self.iteration == len(iterations) and self.epoch == end - 1,
+                                             finished_epoch=True)
+                print("Trained %d iterations" % end)
+                if dev:
+                    if self.iteration < len(iterations):
+                        if self.model.is_retrainable():
+                            self.model.load(is_finalized=False)  # Load best model to prepare for next iteration
+                    elif test:
+                        self.model.load()  # Load best model to prepare for test
+        else:  # No passages to train on, just load model
+            self.model.load()
+            print_config()
 
     def eval_and_save(self, last=False, finished_epoch=False):
         scores = None
@@ -408,7 +415,7 @@ class Parser:
             passage_scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev, evaluate="dev")]
             scores = Scores(passage_scores)
             average_score = average_f1(scores)
-            prefix = ".".join(map(str, [self.iteration] + ([self.eval_index] if self.args.save_every else [])))
+            prefix = ".".join(map(str, [self.iteration, self.epoch] + ([self.batch] if self.args.save_every else [])))
             print("Evaluation %s, average %s F1 score on dev: %.3f%s" % (prefix, get_eval_type(scores), average_score,
                                                                          scores.details(average_f1)))
             print_scores(scores, self.args.devscores, prefix=prefix, prefix_title="iteration")
@@ -438,6 +445,7 @@ class Parser:
         :return: generator of parsed passages (or in train mode, the original ones),
                  or, if evaluate=True, of pairs of (Passage, Scores).
         """
+        self.batch = 0
         assert mode in ParseMode, "Invalid parse mode: %s" % mode
         training = (mode is ParseMode.train)
         if not training and not self.trained:
@@ -446,7 +454,7 @@ class Parser:
         for i, passage in enumerate(parser.parse(passages, evaluate), start=1):
             if training and self.args.save_every and i % self.args.save_every == 0:
                 self.eval_and_save()
-                self.eval_index += 1
+                self.batch += 1
             yield passage
 
 
