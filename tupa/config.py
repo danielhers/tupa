@@ -1,5 +1,6 @@
 import shlex
 from collections import defaultdict
+from copy import deepcopy
 from functools import partial
 
 import dynet_config
@@ -148,6 +149,8 @@ class FallbackNamespace(Namespace):
         self._fallback = fallback
 
     def __getattr__(self, item):
+        if item.startswith("__"):
+            return getattr(super(), item)
         return getattr(super(), item, getattr(self._fallback, item))
 
     def items(self):
@@ -202,7 +205,8 @@ class Config(object, metaclass=Singleton):
                               formatter_class=ArgumentDefaultsHelpFormatter)
         argparser.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
         argparser.add_argument("-C", "--config", is_config_file=True, help="configuration file to get arguments from")
-        argparser.add_argument("-m", "--model", help="model file basename to load/save (default: <format>_<model_type>")
+        argparser.add_argument("-m", "--models", nargs="+", help="model file basename(s) to load/save, ensemble if >1 "
+                                                                 "(default: <format>_<model_type>")
         argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=SPARSE, help="model type")
         argparser.add_argument("-B", "--beam", type=int, choices=(1,), default=1, help="beam size for beam search")
         add_boolean_option(argparser, "evaluate", "evaluation of parsed passages", short="e")
@@ -262,15 +266,16 @@ class Config(object, metaclass=Singleton):
         if self.args.config:
             print("Loading configuration from '%s'." % self.args.config)
 
-        if self.args.model:
+        if self.args.models:
             if not self.args.log:
-                self.args.log = self.args.model + ".log"
+                self.args.log = self.args.models[0] + ".log"
             if self.args.dev and not self.args.devscores:
-                self.args.devscores = self.args.model + ".dev.csv"
+                self.args.devscores = self.args.models[0] + ".dev.csv"
             if self.args.passages and not self.args.testscores:
-                self.args.testscores = self.args.model + ".test.csv"
+                self.args.testscores = self.args.models[0] + ".test.csv"
         elif not self.args.log:
             self.args.log = "parse.log"
+        self.sub_configs = []  # Copies to be stored in Models so that they do not interfere with each other
         self._logger = self.format = self.hyperparams = self.iteration_hyperparams = None
         self.original_values = {}
         self.random = np.random
@@ -286,6 +291,8 @@ class Config(object, metaclass=Singleton):
         if update or self.format != f:
             self.format = f
             self.update_by_hyperparams()
+        for config in self.sub_configs:
+            config.set_format(f=f, update=update)
 
     def is_unlabeled(self, f=None):
         # If just -u or --unlabeled is given then its value is [], and we want to treat that as "all formats"
@@ -329,11 +336,14 @@ class Config(object, metaclass=Singleton):
     def update_hyperparams(self, **kwargs):
         self.update({"hyperparams": [HyperparamsInitializer(k, **v) for k, v in kwargs.items()]})
 
-    def update_iteration(self, iteration):
+    def update_iteration(self, iteration, print_message=True):
         if iteration.hyperparams:
-            print("Updating: %s" % iteration.hyperparams)
+            if print_message:
+                print("Updating: %s" % iteration.hyperparams)
             self.iteration_hyperparams = iteration.hyperparams.args
             self.update_by_hyperparams()
+            for config in self.sub_configs:
+                config.update_iteration(iteration, print_message=False)
 
     def update_by_hyperparams(self):
         format_values = dict(self.original_values)
@@ -409,6 +419,20 @@ class Config(object, metaclass=Singleton):
                     values = []
                 else:
                     values.append(arg)
+
+    def copy(self):
+        cls = self.__class__
+        ret = cls.__new__(cls)
+        ret.args = deepcopy(self.args)
+        ret.original_values = deepcopy(self.original_values)
+        ret.hyperparams = deepcopy(self.hyperparams)
+        ret.iteration_hyperparams = deepcopy(self.iteration_hyperparams)
+        ret.format = self.format
+        ret.random = self.random
+        self._logger = self._logger
+        ret.sub_configs = []
+        self.sub_configs.append(ret)
+        return ret
 
     def __str__(self):
         return " ".join(list(self.args.passages) + [""]) + \

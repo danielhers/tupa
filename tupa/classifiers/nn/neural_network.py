@@ -22,8 +22,8 @@ class AxisModel:
     """
     Format-specific parameters that are part of the network
     """
-    def __init__(self, axis, num_labels, model, birnn_type):
-        args = Config().hyperparams.specific[axis]
+    def __init__(self, axis, num_labels, config, model, birnn_type):
+        args = config.hyperparams.specific[axis]
         self.birnn = birnn_type(args, model, save_path=("axes", axis, "birnn"),
                                 copy_shared=args.copy_shared == [] or axis in (args.copy_shared or ()))
         self.mlp = MultilayerPerceptron(args, model, num_labels=num_labels, save_path=("axes", axis, "mlp"))
@@ -36,6 +36,7 @@ class NeuralNetwork(Classifier, SubModel):
     Allows adding new labels on-the-fly, but requires pre-setting maximum number of labels.
     Expects features from DenseFeatureExtractor.
     """
+    CG_FRESH = False
 
     def __init__(self, *args, **kwargs):
         """
@@ -43,9 +44,9 @@ class NeuralNetwork(Classifier, SubModel):
         """
         Classifier.__init__(self, *args, **kwargs)
         SubModel.__init__(self)
-        self.minibatch_size = self.args.minibatch_size
-        self.loss = self.args.loss
-        self.weight_decay = self.args.dynet_weight_decay
+        self.minibatch_size = self.config.args.minibatch_size
+        self.loss = self.config.args.loss
+        self.weight_decay = self.config.args.dynet_weight_decay
         self.empty_values = OrderedDict()  # string (feature suffix) -> expression
         self.axes = OrderedDict()  # string (axis) -> AxisModel
         self.losses = []
@@ -78,7 +79,7 @@ class NeuralNetwork(Classifier, SubModel):
         if axis:
             self.init_axis_model(axis)
         if init:
-            self.init_cg()
+            self.init_cg(init=True)
             self.finished_step()
         self.init_empty_values()
 
@@ -89,13 +90,13 @@ class NeuralNetwork(Classifier, SubModel):
             pass  # Supported from DyNet commit a094a59
 
     def init_trainer(self):
-        if self.trainer_type is None or str(self.trainer_type) != self.args.optimizer:
-            self.trainer_type = CategoricalParameter(TRAINERS, self.args.optimizer)
+        if self.trainer_type is None or str(self.trainer_type) != self.config.args.optimizer:
+            self.trainer_type = CategoricalParameter(TRAINERS, self.config.args.optimizer)
             trainer_kwargs = dict(TRAINER_KWARGS.get(str(self.trainer_type), {}))
             learning_rate_param_name = TRAINER_LEARNING_RATE_PARAM_NAMES.get(str(self.trainer_type))
             if learning_rate_param_name and self.learning_rate:
                 trainer_kwargs[learning_rate_param_name] = self.learning_rate
-            if self.args.verbose > 3:
+            if self.config.args.verbose > 3:
                 print("Initializing trainer=%s(%s)" % (
                     self.trainer_type, ", ".join("%s=%s" % (k, v) for k, v in trainer_kwargs.items())))
             self.trainer = self.trainer_type()(self.model, **trainer_kwargs)
@@ -107,14 +108,14 @@ class NeuralNetwork(Classifier, SubModel):
             if init:
                 return
         else:
-            model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.model, self.birnn_type)
-            if self.args.verbose > 3:
+            model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.config, self.model, self.birnn_type)
+            if self.config.args.verbose > 3:
                 print("Initializing %s model with %d labels" % (axis, self.labels[axis].size))
         input_dim = indexed_dim = indexed_num = 0
         for suffix, param in sorted(self.input_params.items()):
             if not param.enabled:
                 continue
-            if self.args.verbose > 3:
+            if self.config.args.verbose > 3:
                 print("Initializing input parameter: %s" % param)
             if not param.numeric and suffix not in self.params:  # lookup feature
                 if init:
@@ -133,8 +134,10 @@ class NeuralNetwork(Classifier, SubModel):
             input_dim += birnn.init_params(indexed_dim, indexed_num)
         model.mlp.init_params(input_dim)
 
-    def init_cg(self):
-        dy.renew_cg()
+    def init_cg(self, init=False):
+        if init and not NeuralNetwork.CG_FRESH:  # No one else renewed yet
+            dy.renew_cg()  # Renew only when this is the first time this is called in a step
+        NeuralNetwork.CG_FRESH = init
         self.init_empty_values(clear=True)
 
     def init_empty_values(self, clear=False):
@@ -149,7 +152,7 @@ class NeuralNetwork(Classifier, SubModel):
             self.init_model(axis, train)
         embeddings = [[dy.lookup(self.params[s], k, update=self.input_params[s].updated) for k in ks]
                       for s, ks in sorted(features.items())]  # lists of vectors
-        if self.args.verbose > 3:
+        if self.config.args.verbose > 3:
             print("Initializing %s %s features for %d elements" % (", ".join(axes), self.birnn_type, len(embeddings)))
             for (suffix, values), embs in zip(sorted(features.items()), embeddings):
                 print("%s: %s %s" % (suffix, values, [e.npvalue().tolist() for e in embs]))
@@ -167,7 +170,7 @@ class NeuralNetwork(Classifier, SubModel):
             else:  # lookup feature
                 yield from (self.empty_values[suffix] if x == MISSING_VALUE else
                             dy.lookup(self.params[suffix], x, update=param.updated) for x in values)
-            if self.args.verbose > 3:
+            if self.config.args.verbose > 3:
                 print("%s: %s" % (suffix, values))
         if indices:
             for birnn in self.get_birnns(axis):
@@ -203,7 +206,7 @@ class NeuralNetwork(Classifier, SubModel):
         if self.updates > 0 and num_labels > 1:
             value = dy.log_softmax(self.evaluate(features, axis), restrict=list(range(num_labels))).npvalue()
             return value[:num_labels]
-        if self.args.verbose > 3:
+        if self.config.args.verbose > 3:
             print("  no updates done yet, returning zero vector.")
         return np.zeros(num_labels)
 
@@ -218,7 +221,7 @@ class NeuralNetwork(Classifier, SubModel):
         """
         super().update(features, axis, pred, true, importance)
         losses = self.calc_loss(self.evaluate(features, axis, train=True), axis, true, importance or repeat(1))
-        if self.args.verbose > 3:
+        if self.config.args.verbose > 3:
             print("  loss=" + ", ".join("%g" % l.value() for l in losses))
         self.losses += losses
         self.steps += 1
@@ -252,7 +255,7 @@ class NeuralNetwork(Classifier, SubModel):
         if self.losses:
             loss = dy.esum(self.losses)
             loss.forward()
-            if self.args.verbose > 3:
+            if self.config.args.verbose > 3:
                 print("Total loss from %d time steps: %g" % (self.steps, loss.value()))
             loss.backward()
             try:
@@ -266,7 +269,7 @@ class NeuralNetwork(Classifier, SubModel):
         if finished_epoch:
             self.trainer.learning_rate /= (1 - self.learning_rate_decay)
             self.epoch += 1
-        if self.args.verbose > 2:
+        if self.config.args.verbose > 2:
             self.trainer.status()
         return self
             
@@ -284,8 +287,9 @@ class NeuralNetwork(Classifier, SubModel):
 
     def load_sub_model(self, d, *args, **kwargs):
         d = SubModel.load_sub_model(self, d, *args, **kwargs)
-        self.args.loss = self.loss = d["loss"]
-        self.args.dynet_weight_decay = self.weight_decay = d.get("weight_decay", self.args.dynet_weight_decay)
+        self.config.args.loss = self.loss = d["loss"]
+        self.config.args.dynet_weight_decay = self.weight_decay = d.get("weight_decay",
+                                                                        self.config.args.dynet_weight_decay)
 
     def save_model(self, filename, d):
         Classifier.save_model(self, filename, d)
@@ -293,9 +297,9 @@ class NeuralNetwork(Classifier, SubModel):
         values = []
         for model in self.sub_models():
             values += model.save_sub_model(d)
-            if 1 < self.args.verbose <= 3:
+            if 1 < self.config.args.verbose <= 3:
                 print(model.params_str())
-        if self.args.verbose:
+        if self.config.args.verbose:
             print(self)
         self.save_param_values(filename, values)
 
@@ -316,11 +320,11 @@ class NeuralNetwork(Classifier, SubModel):
         for axis, labels in self.labels_t.items():
             _, size = labels
             assert size, "Size limit for '%s' axis labels is %s" % (axis, size)
-            self.axes[axis] = AxisModel(axis, size, self.model, self.birnn_type)
+            self.axes[axis] = AxisModel(axis, size, self.config, self.model, self.birnn_type)
         for model in self.sub_models():
             model.load_sub_model(d, *values)
             del values[:len(model.params)]  # Take next len(model.params) values
-            if 1 < self.args.verbose <= 3:
+            if 1 < self.config.args.verbose <= 3:
                 print(model.params_str())
         self.copy_shared_birnn(filename, d)
         assert not values, "Loaded values: %d more than expected" % len(values)
@@ -337,7 +341,7 @@ class NeuralNetwork(Classifier, SubModel):
                     param.set_value(value)
                 except AttributeError:
                     param.init_from_array(value)
-        if self.args.verbose:
+        if self.config.args.verbose:
             print(self)
 
     def load_param_values(self, filename):
@@ -361,7 +365,7 @@ class NeuralNetwork(Classifier, SubModel):
         for axis, model in self.axes.items():
             if model.birnn.copy_shared:
                 model.birnn.load_sub_model(d, *shared_values, load_path=self.birnn.save_path)
-                if 1 < self.args.verbose <= 3:
+                if 1 < self.config.args.verbose <= 3:
                     print("Copied from %s: %s" % ("/".join(self.birnn.save_path), model.birnn.params_str()))
                 self.init_axis_model(axis, init=False)  # Update input_dim
 

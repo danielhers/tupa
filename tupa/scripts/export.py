@@ -1,12 +1,11 @@
 import numpy as np
 from configargparse import ArgParser
 
-from tupa.config import Config
 from tupa.model import Model
 
 
 def load_model(filename):
-    model = Model(model_type=None, filename=filename)
+    model = Model(filename=filename)
     model.load()
     return model
 
@@ -24,7 +23,7 @@ def main():
     for filename in args.models:
         model = load_model(filename)
         save_model(model, filename)
-        Config().save(filename)
+        model.config.save(filename)
 
 
 if __name__ == "__main__":

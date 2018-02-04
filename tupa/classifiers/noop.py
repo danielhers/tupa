@@ -1,12 +1,11 @@
 import numpy as np
 
 from .classifier import Classifier
-from ..config import NOOP
 
 
 class NoOp(Classifier):
     def __init__(self, *args, **kwargs):
-        super().__init__(NOOP, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def score(self, features, axis):
         super().score(features, axis)

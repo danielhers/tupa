@@ -38,15 +38,13 @@ Compress(app)
 
 app.parser = None
 PARSER_MODEL = os.getenv("PARSER_MODEL", os.path.join(SCRIPT_DIR, "..", "models/bilstm"))
-PARSER_TYPE = os.getenv("PARSER_TYPE", "bilstm")
 
 
 def get_parser():
     if app.parser is None:
         print("Initializing parser...")
         print("PARSER_MODEL=" + PARSER_MODEL)
-        print("PARSER_TYPE=" + PARSER_TYPE)
-        app.parser = Parser(PARSER_MODEL, PARSER_TYPE)
+        app.parser = Parser(PARSER_MODEL)
     return app.parser
 
 

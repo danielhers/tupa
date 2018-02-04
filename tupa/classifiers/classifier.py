@@ -1,6 +1,5 @@
 from collections import OrderedDict
 
-from ..config import Config
 from ..model_util import load_json, save_json
 
 
@@ -9,17 +8,18 @@ class Classifier:
     Interface for classifier used by the parser.
     """
 
-    def __init__(self, model_type, labels, input_params=None):
+    def __init__(self, config, labels, input_params=None):
         """
+        :param config: Config to get hyperparameters from
         :param labels: dict of axis (string) -> Labels object, can be updated later to add new axes and labels
         :param input_params: dict of feature type name -> FeatureInformation
         """
-        self.args = Config().args
-        self.model_type = model_type
         self.labels = labels
+        self.config = config
         self.input_params = input_params
-        self.learning_rate = self.args.learning_rate
-        self.learning_rate_decay = self.args.learning_rate_decay
+        self.model_type = self.config.args.classifier
+        self.learning_rate = self.config.args.learning_rate
+        self.learning_rate_decay = self.config.args.learning_rate_decay
         self.model = self.labels_t = None
         self.is_frozen = False
         self.updates = self.epoch = self.best_score = 0
@@ -116,8 +116,8 @@ class Classifier:
         assert model_type is None or model_type == self.model_type, "Model type does not match: %s" % model_type
         self.labels_t = OrderedDict((a, l["labels"]) for a, l in sorted(d["axes"].items(), key=lambda x: x[1]["index"]))
         self.is_frozen = d["is_frozen"]
-        self.args.learning_rate = self.learning_rate = d["learning_rate"]
-        self.args.learning_rate_decay = self.learning_rate_decay = d["learning_rate_decay"]
+        self.config.args.learning_rate = self.learning_rate = d["learning_rate"]
+        self.config.args.learning_rate_decay = self.learning_rate_decay = d["learning_rate_decay"]
         self.updates = d.get("updates", 0)
         self.epoch = d.get("epoch", 0)
         self.best_score = d.get("best_score", 0)

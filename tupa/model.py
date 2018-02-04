@@ -9,7 +9,8 @@ from .model_util import UnknownDict, AutoIncrementDict, remove_backup
 
 
 class ParameterDefinition:
-    def __init__(self, name, **param_attr_to_arg):
+    def __init__(self, config, name, **param_attr_to_arg):
+        self.config = config
         self.name = name
         self.param_attr_to_arg = param_attr_to_arg
 
@@ -23,23 +24,24 @@ class ParameterDefinition:
 
     @property
     def enabled(self):
-        return bool(getattr(Config().args, self.dim_arg))
+        return bool(getattr(self.config.args, self.dim_arg))
     
     @enabled.setter
     def enabled(self, value):
         if value:
             raise ValueError("Can only disable parameter configuration by setting 'enabled' to False")
-        setattr(Config().args, self.dim_arg, 0)
+        setattr(self.config.args, self.dim_arg, 0)
 
     def create_from_config(self):
-        args = Config().args
+        args = self.config.args
         return FeatureParameters(self.name, **{k: getattr(args, v) if hasattr(args, v) else v
                                                for k, v in self.param_attr_to_arg.items()})
 
     def load_to_config(self, params):
         param = params.get(self.name)
-        Config().update({self.dim_arg: 0, self.size_arg: 0} if param is None else
-                        {v: getattr(param, k) for k, v in self.param_attr_to_arg.items() if hasattr(Config().args, v)})
+        self.config.update({self.dim_arg: 0, self.size_arg: 0} if param is None else {v: getattr(param, k) for k, v in
+                                                                                      self.param_attr_to_arg.items()
+                                                                                      if hasattr(self.config.args, v)})
 
     def __str__(self):
         return self.name
@@ -50,24 +52,6 @@ class ParameterDefinition:
 
 
 NODE_LABEL_KEY = "n"
-NODE_LABEL_PARAM_DEF = ParameterDefinition(NODE_LABEL_KEY, dim="node_label_dim", size="max_node_labels",
-                                           min_count="min_node_label_count", dropout="node_label_dropout")
-PARAM_DEFS = (
-    NODE_LABEL_PARAM_DEF,
-    ParameterDefinition("c", dim="node_category_dim", size="max_node_categories"),
-    ParameterDefinition("W", dim="word_dim_external", size="max_words_external", dropout="word_dropout_external",
-                        updated="update_word_vectors", filename="word_vectors",  copy_from="w"),
-    ParameterDefinition("w", dim="word_dim",          size="max_words",          dropout="word_dropout"),
-    ParameterDefinition("t", dim="tag_dim",           size="max_tags",           dropout="tag_dropout"),
-    ParameterDefinition("d", dim="dep_dim",           size="max_deps",           dropout="dep_dropout"),
-    ParameterDefinition("e", dim="edge_label_dim",    size="max_edge_labels"),
-    ParameterDefinition("p", dim="punct_dim",         size="max_puncts"),
-    ParameterDefinition("A", dim="action_dim",        size="max_action_types"),
-    ParameterDefinition("T", dim="ner_dim",           size="max_ner_types"),
-    ParameterDefinition("#", dim="shape_dim",         size="max_shapes"),
-    ParameterDefinition("^", dim="prefix_dim",        size="max_prefixes"),
-    ParameterDefinition("$", dim="suffix_dim",        size="max_suffixes"),
-)
 
 
 class ClassifierProperty(Enum):
@@ -86,9 +70,28 @@ CLASSIFIER_PROPERTIES = {
 
 
 class Model:
-    def __init__(self, model_type, filename, *args, **kwargs):
-        self.args = Config().args
-        self.model_type = model_type or SPARSE
+    def __init__(self, filename, config=None, *args, **kwargs):
+        self.config = config or Config().copy()
+        self.node_label_param_def = ParameterDefinition(self.config, NODE_LABEL_KEY, dim="node_label_dim",
+                                                        size="max_node_labels", min_count="min_node_label_count",
+                                                        dropout="node_label_dropout")
+        self.param_defs = (
+            self.node_label_param_def,
+            ParameterDefinition(self.config, "c", dim="node_category_dim", size="max_node_categories"),
+            ParameterDefinition(self.config, "W", dim="word_dim_external", size="max_words_external",
+                                dropout="word_dropout_external", updated="update_word_vectors", filename="word_vectors",
+                                copy_from="w"),
+            ParameterDefinition(self.config, "w", dim="word_dim",          size="max_words", dropout="word_dropout"),
+            ParameterDefinition(self.config, "t", dim="tag_dim",           size="max_tags",  dropout="tag_dropout"),
+            ParameterDefinition(self.config, "d", dim="dep_dim",           size="max_deps",  dropout="dep_dropout"),
+            ParameterDefinition(self.config, "e", dim="edge_label_dim",    size="max_edge_labels"),
+            ParameterDefinition(self.config, "p", dim="punct_dim",         size="max_puncts"),
+            ParameterDefinition(self.config, "A", dim="action_dim",        size="max_action_types"),
+            ParameterDefinition(self.config, "T", dim="ner_dim",           size="max_ner_types"),
+            ParameterDefinition(self.config, "#", dim="shape_dim",         size="max_shapes"),
+            ParameterDefinition(self.config, "^", dim="prefix_dim",        size="max_prefixes"),
+            ParameterDefinition(self.config, "$", dim="suffix_dim",        size="max_suffixes"),
+        )
         self.filename = filename
         self.feature_extractor = self.classifier = None
         self.feature_params = OrderedDict()
@@ -99,47 +102,49 @@ class Model:
     def init_model(self, init_params=True):
         labels = self.classifier.labels if self.classifier else OrderedDict()
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
-            for param_def in PARAM_DEFS:
+            for param_def in self.param_defs:
                 param = self.feature_params.get(param_def.name)
                 if param:
                     param.enabled = param_def.enabled
                 elif self.is_neural_network and param_def.enabled:
                     self.feature_params[param_def.name] = param = param_def.create_from_config()
                     self.init_param(param)
-            if Config().format not in labels:
-                labels[Config().format] = self.init_actions()  # Uses config to determine actions
-            if self.args.node_labels and not self.args.use_gold_node_labels and NODE_LABEL_KEY not in labels:
+            if self.config.format not in labels:
+                labels[self.config.format] = self.init_actions()  # Uses config to determine actions
+            if self.config.args.node_labels and not self.config.args.use_gold_node_labels and \
+                    NODE_LABEL_KEY not in labels:
                 labels[NODE_LABEL_KEY] = self.init_node_labels()  # Updates self.feature_params
         if self.classifier:  # Already initialized
             pass
-        elif self.model_type == SPARSE:
+        elif self.config.args.classifier == SPARSE:
             from .features.sparse_features import SparseFeatureExtractor
             from .classifiers.linear.sparse_perceptron import SparsePerceptron
             self.feature_extractor = SparseFeatureExtractor()
-            self.classifier = SparsePerceptron(labels)
-        elif self.model_type == NOOP:
+            self.classifier = SparsePerceptron(self.config, labels)
+        elif self.config.args.classifier == NOOP:
             from .features.empty_features import EmptyFeatureExtractor
             from .classifiers.noop import NoOp
             self.feature_extractor = EmptyFeatureExtractor()
-            self.classifier = NoOp(labels)
+            self.classifier = NoOp(self.config, labels)
         elif self.is_neural_network:
             from .features.dense_features import DenseFeatureExtractor
             from .classifiers.nn.neural_network import NeuralNetwork
-            self.feature_extractor = DenseFeatureExtractor(self.feature_params, indexed=self.model_type != MLP)
-            self.classifier = NeuralNetwork(self.model_type, labels)
+            self.feature_extractor = DenseFeatureExtractor(self.feature_params,
+                                                           indexed=self.config.args.classifier != MLP)
+            self.classifier = NeuralNetwork(self.config, labels)
         else:
-            raise ValueError("Invalid model type: '%s'" % self.model_type)
+            raise ValueError("Invalid model type: '%s'" % self.config.args.classifier)
         self._update_input_params()
     
     @property
     def is_neural_network(self):
-        return self.model_type in (MLP, BIRNN, HIGHWAY_RNN)
+        return self.config.args.classifier in (MLP, BIRNN, HIGHWAY_RNN)
 
     def is_retrainable(self):
         return ClassifierProperty.trainable_after_saving in self.get_classifier_properties()
 
     def init_actions(self):
-        return Actions(size=self.args.max_action_labels)
+        return Actions(size=self.config.args.max_action_labels)
 
     def init_param(self, param):
         if self.feature_extractor:
@@ -148,7 +153,7 @@ class Model:
     def init_node_labels(self):
         node_labels = self.feature_params.get(NODE_LABEL_KEY)
         if node_labels is None:
-            node_labels = NODE_LABEL_PARAM_DEF.create_from_config()
+            node_labels = self.node_label_param_def.create_from_config()
             if self.is_neural_network:
                 self.feature_params[NODE_LABEL_KEY] = node_labels
         self.init_param(node_labels)
@@ -157,7 +162,7 @@ class Model:
 
     @property
     def actions(self):
-        return self.classifier.labels[Config().format]
+        return self.classifier.labels[self.config.format]
 
     @property
     def labels(self):
@@ -173,10 +178,10 @@ class Model:
         :param finished_epoch: whether this is the end of an epoch (or just intermediate checkpoint), for bookkeeping
         :return: a copy of this model with a new feature extractor and classifier (actually classifier may be the same)
         """
-        if self.args.verbose > 1:
+        if self.config.args.verbose > 1:
             print("Finalizing model")
         self.init_model()
-        return Model(None, None, model=self, is_finalized=True,
+        return Model(None, model=self, is_finalized=True,
                      feature_extractor=self.feature_extractor.finalize(),
                      classifier=self.classifier.finalize(finished_epoch=finished_epoch))
 
@@ -191,7 +196,7 @@ class Model:
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
                 skip_labels = (NODE_LABEL_KEY,) if node_labels and node_labels.size else ()
                 self.classifier.save(self.filename, skip_labels=skip_labels)
-                Config().save(self.filename)
+                self.config.save(self.filename)
                 remove_backup(self.filename)
             except Exception as e:
                 raise IOError("Failed saving model to '%s'" % self.filename) from e
@@ -199,11 +204,11 @@ class Model:
     def load(self, is_finalized=True):
         """
         Load the feature and classifier parameters from files
-        :param is_finalized: whether the loaded model should be finalized, or allow feature values to be added subsequently
+        :param is_finalized: whether loaded model should be finalized, or allow feature values to be added subsequently
         """
         if self.filename is not None:
             try:
-                self.args.classifier = self.model_type = Classifier.get_model_type(self.filename)
+                self.config.args.classifier = Classifier.get_model_type(self.filename)
                 self.init_model(init_params=False)
                 self.feature_extractor.load(self.filename)
                 if not is_finalized:
@@ -212,9 +217,9 @@ class Model:
                 self.classifier.load(self.filename)
                 self.is_finalized = is_finalized
                 self.load_labels()
-                if self.args.verbose:
+                if self.config.args.verbose:
                     print("\n".join("%s: %s" % i for i in self.feature_params.items()))
-                for param in PARAM_DEFS:
+                for param in self.param_defs:
                     param.load_to_config(self.feature_extractor.params)
             except FileNotFoundError:
                 self.feature_extractor = self.classifier = None
@@ -232,9 +237,8 @@ class Model:
         """
         if is_finalized is None:
             is_finalized = model.is_finalized
-        if self.args.verbose > 1:
+        if self.config.args.verbose > 1:
             print("Restoring %sfinalized model" % ("" if is_finalized else "non-"))
-        self.model_type = model.model_type
         self.filename = model.filename
         self.feature_extractor = feature_extractor or model.feature_extractor
         self.classifier = classifier or model.classifier
@@ -262,7 +266,7 @@ class Model:
             self.classifier.labels[axis] = labels
 
     def get_classifier_properties(self):
-        return CLASSIFIER_PROPERTIES[self.model_type]
+        return CLASSIFIER_PROPERTIES[self.config.args.classifier]
 
     def _update_input_params(self):
         self.feature_params = self.classifier.input_params = self.feature_extractor.params

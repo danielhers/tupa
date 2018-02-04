@@ -2,7 +2,7 @@ import concurrent.futures
 import os
 import sys
 import time
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from enum import Enum
 from functools import partial
 from glob import glob
@@ -32,9 +32,9 @@ class ParseMode(Enum):
 
 
 class AbstractParser:
-    def __init__(self, args, model, training):
-        self.args = args
-        self.model = model
+    def __init__(self, config, models, training):
+        self.config = config
+        self.models = models
         self.training = training
         self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = \
             self.num_tokens = self.f1 = 0
@@ -50,27 +50,28 @@ class AbstractParser:
 
 class PassageParser(AbstractParser):
     """ Parser for a single passage, has a state and optionally an oracle """
-    def __init__(self, args, model, training, passage):
-        super().__init__(args, model, training)
+    def __init__(self, config, models, training, passage):
+        super().__init__(config, models, training)
         self.passage = passage
-        self.args.lang = passage.attrib.get("lang", self.args.lang)
-        WIKIFIER.enabled = self.args.wikification
+        self.config.args.lang = passage.attrib.get("lang", self.config.args.lang)
+        WIKIFIER.enabled = self.config.args.wikification
         self.state = State(passage)
         self.state_hash_history = set()
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
-        self.ignore_node = None if self.args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
+        self.ignore_node = None if self.config.args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
         # Passage is considered labeled if there are any edges or node labels in it
         edges, node_labels = map(any, zip(*[(n.outgoing, n.attrib.get(LABEL_ATTRIB))
                                             for n in passage.layer(layer1.LAYER_ID).all]))
-        self.oracle = Oracle(passage) if self.training or self.args.verify or (
-                (self.args.verbose > 1 or self.args.use_gold_node_labels or self.args.action_stats)
+        self.oracle = Oracle(passage) if self.training or self.config.args.verify or (
+                (self.config.args.verbose > 1 or self.config.args.use_gold_node_labels or self.config.args.action_stats)
                 and (edges or node_labels)) else None
-        self.model.init_model()
-        if ClassifierProperty.require_init_features in self.model.get_classifier_properties():
-            axes = [Config().format]
-            if self.args.node_labels and not self.args.use_gold_node_labels:
-                axes.append(NODE_LABEL_KEY)
-            self.model.init_features(self.state, axes, self.training)
+        for model in self.models:
+            model.init_model()
+            if ClassifierProperty.require_init_features in model.get_classifier_properties():
+                axes = [self.config.format]
+                if self.config.args.node_labels and not self.config.args.use_gold_node_labels:
+                    axes.append(NODE_LABEL_KEY)
+                model.init_features(self.state, axes, self.training)
         self.out = self.passage
         self.eval_type = None
 
@@ -81,21 +82,21 @@ class PassageParser(AbstractParser):
         """
         self.print("  initial state: %s" % self.state)
         while True:
-            if self.args.check_loops:
+            if self.config.args.check_loops:
                 self.check_loop()
             self.label_node()  # In case root node needs labeling
             true_actions = self.get_true_actions()
             action, predicted_action = self.choose_action(true_actions)
             self.state.transition(action)
             need_label, label, predicted_label, true_label = self.label_node(action)
-            if self.args.action_stats:
-                with open(self.args.action_stats, "a") as f:
+            if self.config.args.action_stats:
+                with open(self.config.args.action_stats, "a") as f:
                     print(",".join(map(str, [predicted_action, action] + list(true_actions.values()))), file=f)
             self.print("\n".join(["  predicted: %-15s true: %-15s taken: %-15s %s" % (
                 predicted_action, "|".join(map(str, true_actions.values())), action, self.state) if self.oracle else
                                   "  action: %-15s %s" % (action, self.state)] + (
                 ["  predicted label: %-9s true label: %s" % (predicted_label, true_label) if self.oracle and not
-                 self.args.use_gold_node_labels else "  label: %s" % label] if need_label else []) + [
+                 self.config.args.use_gold_node_labels else "  label: %s" % label] if need_label else []) + [
                 "    " + l for l in self.state.log]))
             if self.state.finished:
                 return  # action is Finish (or early update is triggered)
@@ -104,18 +105,26 @@ class PassageParser(AbstractParser):
         true_actions = {}
         if self.oracle:
             try:
-                true_actions = self.oracle.get_actions(self.state, self.model.actions, create=self.training)
+                true_actions = self.oracle.get_actions(self.state, self.models[0].actions, create=self.training)
             except (AttributeError, AssertionError) as e:
                 if self.training:
                     raise ParserException("Error in getting action from oracle during training") from e
         return true_actions
 
     def choose_action(self, true_actions):
-        features = self.model.feature_extractor.extract_features(self.state)
-        scores = self.model.classifier.score(features, axis=Config().format)  # Returns NumPy array
-        self.print("  action scores: " + ",".join(("%s=%g" % x for x in zip(self.model.actions.all, scores))), level=4)
+        features = scores = actions = None
+        for model in self.models:
+            features = model.feature_extractor.extract_features(self.state)
+            model_scores = model.classifier.score(features, axis=self.config.format)  # Returns NumPy array
+            scores_map = OrderedDict(zip(model.actions.all, model_scores))
+            if scores is None:
+                scores = model_scores
+                actions = model.actions
+            else:
+                scores += [scores_map.get(a, 0) for a in actions.all]  # Product of Experts, assuming log(softmax)
+            self.print("  action scores: %s" % scores_map, level=4)
         try:
-            predicted_action = self.predict(scores, self.model.actions.all, self.state.is_valid_action)
+            predicted_action = self.predict(scores, actions.all, self.state.is_valid_action)
         except StopIteration as e:
             raise ParserException("No valid action available\n%s" % (self.oracle.log if self.oracle else "")) from e
         true_keys, true_values = map(list, zip(*true_actions.items())) if true_actions else (None, None)
@@ -125,16 +134,18 @@ class PassageParser(AbstractParser):
             self.correct_action_count += 1
         else:
             action = true_values[scores[true_keys].argmax()] if self.training else predicted_action
-        if self.training and not (
-                    is_correct and ClassifierProperty.update_only_on_error in self.model.get_classifier_properties()):
-            assert not self.model.is_finalized, "Updating finalized model"
-            self.model.classifier.update(
-                features, axis=Config().format, pred=predicted_action.id, true=true_keys,
-                importance=[self.args.swap_importance if a.is_swap else 1 for a in true_values])
-        if self.training and not is_correct and self.args.early_update:
+        model = self.models[0]
+        if self.training and not (is_correct and
+                                  ClassifierProperty.update_only_on_error in model.get_classifier_properties()):
+                assert not model.is_finalized, "Updating finalized model"
+                model.classifier.update(
+                    features, axis=self.config.format, pred=predicted_action.id, true=true_keys,
+                    importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values])
+        if self.training and not is_correct and self.config.args.early_update:
             self.state.finished = True
         self.action_count += 1
-        self.model.classifier.finished_step(self.training)
+        for model in self.models:
+            model.classifier.finished_step(self.training)
         return action, predicted_action
 
     def label_node(self, action=None):
@@ -155,24 +166,34 @@ class PassageParser(AbstractParser):
             return None, None
 
     def choose_label(self, true_label):
-        if self.args.use_gold_node_labels:
+        if self.config.args.use_gold_node_labels:
             return true_label, true_label
-        true = (self.model.labels[true_label],) if self.oracle else ()  # Needs to happen before score()
-        features = self.model.feature_extractor.extract_features(self.state)
-        scores = self.model.classifier.score(features, axis=NODE_LABEL_KEY)
-        self.print("  label scores: " + ",".join(("%s=%g" % x for x in zip(self.model.labels.all, scores))), level=4)
-        label = predicted_label = self.predict(scores, self.model.labels.all, self.state.is_valid_label)
+        features = scores = labels = true = None
+        model = self.models[0]
+        for model in self.models:
+            features = model.feature_extractor.extract_features(self.state)
+            model_scores = model.classifier.score(features, axis=NODE_LABEL_KEY)  # Returns NumPy array
+            scores_map = OrderedDict(zip(model.labels.all, model_scores))
+            if scores is None:
+                scores = model_scores
+                labels = model.labels
+                true = (labels[true_label],) if self.oracle else ()  # Needs to happen before score()
+            else:
+                scores += [scores_map.get(a, 0) for a in labels.all]  # Product of Experts, assuming log(softmax)
+            self.print("  label scores: %s" % scores_map, level=4)
+        label = predicted_label = self.predict(scores, labels.all, self.state.is_valid_label)
         if self.oracle:
             is_correct = (label == true_label)
             if is_correct:
                 self.correct_label_count += 1
-            if self.training and not (is_correct and ClassifierProperty.update_only_on_error in
-                                      self.model.get_classifier_properties()):
-                assert not self.model.is_finalized, "Updating finalized model"
-                self.model.classifier.update(features, axis=NODE_LABEL_KEY, pred=self.model.labels[label], true=true)
+            if self.training and not (is_correct and
+                                      ClassifierProperty.update_only_on_error in model.get_classifier_properties()):
+                assert not model.is_finalized, "Updating finalized model"
+                model.classifier.update(features, axis=NODE_LABEL_KEY, pred=labels[label], true=true)
                 label = true_label
         self.label_count += 1
-        self.model.classifier.finished_step(self.training)
+        for model in self.models:
+            model.classifier.finished_step(self.training)
         return label, predicted_label
 
     @staticmethod
@@ -191,10 +212,11 @@ class PassageParser(AbstractParser):
         yield from scores.argsort()[::-1]  # Contains the max, but otherwise items might be missed (different order)
 
     def finish(self, evaluate, status):
-        self.model.classifier.finished_item(self.training)
-        if not self.training or self.args.verify:
-            self.out = self.state.create_passage(verify=self.args.verify)
-        if self.oracle and self.args.verify:
+        for model in self.models:
+            model.classifier.finished_item(self.training)
+        if not self.training or self.config.args.verify:
+            self.out = self.state.create_passage(verify=self.config.args.verify)
+        if self.oracle and self.config.args.verify:
             self.verify(self.out, self.passage)
         ret = (self.out,)
         if evaluate:
@@ -216,10 +238,10 @@ class PassageParser(AbstractParser):
         ref_format = self.passage.extra.get("format")
         if ref_format:
             self.print("Converting to %s and evaluating..." % ref_format)
-        self.eval_type = UNLABELED if Config().is_unlabeled(ref_format or "ucca") else LABELED
+        self.eval_type = UNLABELED if self.config.is_unlabeled(ref_format or "ucca") else LABELED
         score = EVALUATORS.get(ref_format, evaluation).evaluate(
             self.out, self.passage, converter=get_output_converter(ref_format),
-            verbose=self.out and self.args.verbose > 3, constructions=self.args.constructions,
+            verbose=self.out and self.config.args.verbose > 3, constructions=self.config.args.constructions,
             eval_types=(self.eval_type,) if mode == "dev" else (LABELED, UNLABELED))
         self.f1 = average_f1(score, self.eval_type)
         return score
@@ -251,7 +273,7 @@ class PassageParser(AbstractParser):
         pass
 
     def print(self, message, level=3):
-        if self.args.verbose >= level:
+        if self.config.args.verbose >= level:
             try:
                 print(message, flush=True)
             except UnicodeEncodeError:
@@ -260,8 +282,8 @@ class PassageParser(AbstractParser):
 
 class BatchParser(AbstractParser):
     """ Parser for a single training iteration or single pass over dev/test passages """
-    def __init__(self, args, model, training):
-        super().__init__(args, model, training)
+    def __init__(self, config, models, training):
+        super().__init__(config, models, training)
         self.seen_per_format = defaultdict(int)
         self.num_passages = 0
 
@@ -270,11 +292,11 @@ class BatchParser(AbstractParser):
         id_width = 1
         for i, passage in enumerate(passages, start=1):
             pformat = passage.extra.get("format") or "ucca"
-            if self.args.verbose:
+            if self.config.args.verbose:
                 progress = "%3d%% %*d/%d" % (i / total * 100, len(str(total)), i, total) if total else "%d" % i
                 id_width = max(id_width, len(str(passage.ID)))
-                print("%s %-6s %s %-*s" % (progress, pformat, Config().passage_word, id_width, passage.ID),
-                      end=Config().line_end)
+                print("%s %-6s %s %-*s" % (progress, pformat, self.config.passage_word, id_width, passage.ID),
+                      end=self.config.line_end)
             else:
                 passages.set_description()
                 postfix = {pformat: passage.ID, "|t/s|": self.tokens_per_second()}
@@ -286,13 +308,13 @@ class BatchParser(AbstractParser):
                     postfix["|F1|"] = self.f1 / self.num_passages
                 passages.set_postfix(**postfix)
             self.seen_per_format[pformat] += 1
-            if self.training and self.args.max_training_per_format and \
-                    self.seen_per_format[pformat] > self.args.max_training_per_format:
-                if self.args.verbose:
+            if self.training and self.config.args.max_training_per_format and \
+                    self.seen_per_format[pformat] > self.config.args.max_training_per_format:
+                if self.config.args.verbose:
                     print("skipped")
                 continue
             assert not (self.training and pformat == "text"), "Cannot train on unannotated plain text"
-            Config().set_format(pformat)
+            self.config.set_format(pformat)
             yield self.parse_with_timeout(passage, evaluate)
         self.summary()
 
@@ -300,24 +322,25 @@ class BatchParser(AbstractParser):
         if not hasattr(passages, "__iter__"):  # Single passage given
             passages = (passages,)
         total = len(passages) if hasattr(passages, "__len__") else None
-        passages = textutil.annotate_all(passages, as_array=True, lang=self.args.lang, verbose=self.args.verbose > 2)
-        if not self.args.verbose:
-            passages = tqdm(passages, unit=Config().passages_word, total=total, file=sys.stdout, desc="Initializing")
+        passages = textutil.annotate_all(passages, as_array=True, lang=self.config.args.lang,
+                                         verbose=self.config.args.verbose > 2)
+        if not self.config.args.verbose:
+            passages = tqdm(passages, unit=self.config.passages_word, total=total, file=sys.stdout, desc="Initializing")
         return passages, total
 
     def parse_with_timeout(self, passage, evaluate):
-        parser = PassageParser(self.args, self.model, self.training, passage)
+        parser = PassageParser(self.config, self.models, self.training, passage)
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                executor.submit(parser.parse).result(self.args.timeout)
+                executor.submit(parser.parse).result(self.config.args.timeout)
             status = "(%d tokens/s)" % parser.tokens_per_second()
         except ParserException as e:
             if self.training:
                 raise
-            Config().log("%s %s: %s" % (Config().passage_word, passage.ID, e))
+            self.config.log("%s %s: %s" % (self.config.passage_word, passage.ID, e))
             status = "(failed)"
         except concurrent.futures.TimeoutError:
-            Config().log("%s %s: timeout (%fs)" % (Config().passage_word, passage.ID, self.args.timeout))
+            self.config.log("%s %s: timeout (%fs)" % (self.config.passage_word, passage.ID, self.config.args.timeout))
             status = "(timeout)"
         self.update_counts(parser)
         return parser.finish(evaluate, status)
@@ -333,14 +356,14 @@ class BatchParser(AbstractParser):
 
     def summary(self):
         if self.num_passages:
-            print("Parsed %d%s" % (self.num_passages, Config().passages_word))
+            print("Parsed %d%s" % (self.num_passages, self.config.passages_word))
             if self.correct_action_count:
                 accuracy_str = percents_str(self.correct_action_count, self.action_count, "correct actions ")
                 if self.label_count:
                     accuracy_str += ", " + percents_str(self.correct_label_count, self.label_count, "correct labels ")
                 print("Overall %s" % accuracy_str)
             print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
-                self.duration, Config().passage_word, self.time_per_passage(),
+                self.duration, self.config.passage_word, self.time_per_passage(),
                 self.tokens_per_second()), flush=True)
 
     def time_per_passage(self):
@@ -349,10 +372,12 @@ class BatchParser(AbstractParser):
 
 class Parser:
     """ Main class to implement transition-based UCCA parser """
-    def __init__(self, model_file=None, model_type=None, beam=1):
-        self.args = Config().args
+    def __init__(self, model_files=None, config=None, beam=1):
+        self.config = config or Config()
         self.best_score = self.dev = self.iteration = self.epoch = self.batch = None
-        self.model = Model(model_type, model_file)
+        if isinstance(model_files, str):
+            model_files = (model_files,)
+        self.models = list(map(Model, model_files))
         self.beam = beam  # Currently unused
         self.trained = self.save_init = False
 
@@ -365,72 +390,76 @@ class Parser:
         :param iterations: iterable of Iterations objects whose i attributes are the number of iterations to perform
         """
         self.trained = True
+        self.dev = dev
         if passages:
-            if self.model.is_retrainable():
+            assert len(self.models) == 1, "Can only train one model at a time"
+            model = self.models[0]
+            if model.is_retrainable():
                 try:
-                    self.model.load(is_finalized=False)
+                    model.load(is_finalized=False)
                 except FileNotFoundError:
                     print("not found, starting from untrained model.")
-            for f in self.args.formats:
-                Config().set_format(f)
-                self.model.init_model()
-            print_config()
-            self.dev = dev
-            self.best_score = self.model.classifier.best_score if self.model.classifier else 0
+            for f in self.config.args.formats:
+                self.config.set_format(f)
+                model.init_model()
+            self.print_config()
+            self.best_score = model.classifier.best_score if model.classifier else 0
             iterations = [i if isinstance(i, Iterations) else Iterations(i)
                           for i in (iterations if hasattr(iterations, "__iter__") else (iterations,))]
             end = None
             for self.iteration, it in enumerate(iterations, start=1):
-                start = self.model.classifier.epoch + 1 if self.model.classifier else 1
+                start = model.classifier.epoch + 1 if model.classifier else 1
                 if end and start < end + 1:
                     print("Dropped %d iterations because best score was on %d" % (end - start + 1, start - 1))
                 end = start + it.epochs
-                Config().update_iteration(it)
+                self.config.update_iteration(it)
                 for self.epoch in range(start, end):
                     print("Training iteration %d of %d: " % (
                         self.epoch, start - 1 + sum(i.epochs for i in iterations[self.iteration - 1:])))
-                    Config().random.shuffle(passages)
+                    self.config.random.shuffle(passages)
                     list(self.parse(passages, mode=ParseMode.train))
                     yield self.eval_and_save(self.iteration == len(iterations) and self.epoch == end - 1,
                                              finished_epoch=True)
                 print("Trained %d iterations" % end)
                 if dev:
                     if self.iteration < len(iterations):
-                        if self.model.is_retrainable():
-                            self.model.load(is_finalized=False)  # Load best model to prepare for next iteration
+                        if model.is_retrainable():
+                            model.load(is_finalized=False)  # Load best model to prepare for next iteration
                     elif test:
-                        self.model.load()  # Load best model to prepare for test
+                        model.load()  # Load best model to prepare for test
         else:  # No passages to train on, just load model
-            self.model.load()
-            print_config()
+            for model in self.models:
+                model.load()
+            self.print_config()
 
     def eval_and_save(self, last=False, finished_epoch=False):
         scores = None
-        model = self.model
-        self.model = self.model.finalize(finished_epoch=finished_epoch)
+        model = self.models[0]
+        self.models[0] = finalized = model.finalize(finished_epoch=finished_epoch)
         if self.dev:
             if not self.best_score:
-                self.model.save(save_init=self.save_init)
+                finalized.save(save_init=self.save_init)
             print("Evaluating on dev passages")
             passage_scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev, evaluate="dev")]
             scores = Scores(passage_scores)
             average_score = average_f1(scores)
-            prefix = ".".join(map(str, [self.iteration, self.epoch] + ([self.batch] if self.args.save_every else [])))
+            prefix = ".".join(map(str, [self.iteration, self.epoch] + (
+                [self.batch] if self.config.args.save_every else [])))
             print("Evaluation %s, average %s F1 score on dev: %.3f%s" % (prefix, get_eval_type(scores), average_score,
                                                                          scores.details(average_f1)))
-            print_scores(scores, self.args.devscores, prefix=prefix, prefix_title="iteration")
+            print_scores(scores, self.config.args.devscores, prefix=prefix, prefix_title="iteration")
             if average_score >= self.best_score:
                 print("Better than previous best score (%.3f)" % self.best_score)
-                self.model.classifier.best_score = average_score
+                finalized.classifier.best_score = average_score
                 if self.best_score:
-                    self.model.save(save_init=self.save_init)
+                    finalized.save(save_init=self.save_init)
                 self.best_score = average_score
             else:
                 print("Not better than previous best score (%.3f)" % self.best_score)
-        elif last or self.args.save_every is not None:
-            self.model.save(save_init=self.save_init)
+        elif last or self.config.args.save_every is not None:
+            finalized.save(save_init=self.save_init)
         if not last:
-            self.model.restore(model)  # Restore non-finalized model
+            finalized.restore(model)  # Restore non-finalized model
         return scores
 
     def parse(self, passages, mode=ParseMode.test, evaluate=False):
@@ -450,12 +479,15 @@ class Parser:
         training = (mode is ParseMode.train)
         if not training and not self.trained:
             list(self.train())  # Try to load model from file
-        parser = BatchParser(self.args, self.model, training)
+        parser = BatchParser(self.config, self.models, training)
         for i, passage in enumerate(parser.parse(passages, evaluate), start=1):
-            if training and self.args.save_every and i % self.args.save_every == 0:
+            if training and self.config.args.save_every and i % self.config.args.save_every == 0:
                 self.eval_and_save()
                 self.batch += 1
             yield passage
+
+    def print_config(self):
+        print("%s %s" % (os.path.basename(__file__), self.config))
 
 
 def train_test(train_passages, dev_passages, test_passages, args, model_suffix=""):
@@ -468,8 +500,8 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
     :param model_suffix: string to append to model filename before file extension
     :return: generator of Scores objects: dev scores for each training iteration (if given dev), and finally test scores
     """
-    model_base, model_ext = os.path.splitext(args.model or args.classifier)
-    p = Parser(model_file=model_base + model_suffix + model_ext, model_type=args.classifier, beam=args.beam)
+    model_files = [base + model_suffix + ext for base, ext in map(os.path.splitext, args.models or (args.classifier,))]
+    p = Parser(model_files=model_files, config=Config(), beam=args.beam)
     yield from filter(None, p.train(train_passages, dev=dev_passages, test=test_passages, iterations=args.iterations))
     if test_passages:
         if args.train or args.folds:
@@ -531,10 +563,6 @@ def get_eval_type(scores):
     return UNLABELED if Config().is_unlabeled(scores.format) else LABELED
 
 
-def print_config():
-    print("%s %s" % (os.path.basename(__file__), Config()))
-
-
 class TextReader:  # Marks input passages as text so that we don't accidentally train on them
     def __call__(self, *args, **kwargs):
         for passage in from_text(*args, **kwargs):
@@ -551,7 +579,7 @@ def read_passages(args, files):
 def main_generator():
     args = Config().args
     assert args.passages or args.train, "Either passages or --train is required (use -h for help)"
-    assert args.model or args.train or args.folds, "Either --model or --train or --folds is required"
+    assert args.models or args.train or args.folds, "Either --model or --train or --folds is required"
     assert not (args.train or args.dev) or not args.folds, "--train and --dev are incompatible with --folds"
     assert args.train or not args.dev, "--dev is only possible together with --train"
     if args.folds:

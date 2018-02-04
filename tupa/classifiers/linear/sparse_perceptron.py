@@ -3,7 +3,6 @@ from itertools import repeat
 
 import numpy as np
 
-from tupa.config import SPARSE
 from tupa.model_util import KeyBasedDefaultDict, save_dict, load_dict
 from .perceptron import Perceptron
 
@@ -77,13 +76,13 @@ class SparsePerceptron(Perceptron):
         :param min_update: minimum number of updates to a feature required for consideration
         :param model: if given, copy the weights (from a trained model)
         """
-        super().__init__(SPARSE, *args, epoch=epoch, **kwargs)
+        super().__init__(*args, epoch=epoch, **kwargs)
         model = KeyBasedDefaultDict(self.create_axis_weights)
         if self.is_frozen:
             for axis, feature_weights in self.model.items():
                 model[axis].update(feature_weights)
         self.model = model
-        self.min_update = self.args.min_update  # Minimum number of updates for a feature to be used in scoring
+        self.min_update = self.config.args.min_update  # Minimum number of updates for a feature to be used in scoring
         self.dropped = set()  # Features that did not get min_updates after a full epoch
 
     @property
@@ -157,7 +156,7 @@ class SparsePerceptron(Perceptron):
         print("%d features occurred at least %d times, dropped %d rare features" % (
             num_features, self.min_update, len(dropped)))
         finalized = {a: {f: w.finalize(self.updates, average=average) for f, w in m.items()} for a, m in model.items()}
-        ret = SparsePerceptron(self.labels, epoch=self.epoch)
+        ret = SparsePerceptron(self.config, self.labels, epoch=self.epoch)
         ret.update_model(finalized)
         ret.is_frozen = True
         ret.min_update = self.min_update
@@ -176,7 +175,7 @@ class SparsePerceptron(Perceptron):
     def load_model(self, filename, d):
         self.model.clear()
         self.update_model(load_dict(filename + ".data"))
-        self.args.min_update = self.min_update = d["min_update"]
+        self.config.args.min_update = self.min_update = d["min_update"]
         super().load_model(filename, d)
 
     def get_all_params(self):
@@ -193,4 +192,3 @@ class SparsePerceptron(Perceptron):
                     print(list(value.items())[:max_rows])
                 except Exception:
                     pass
-
