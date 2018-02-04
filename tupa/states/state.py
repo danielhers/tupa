@@ -2,6 +2,7 @@ import sys
 from collections import deque, defaultdict
 
 from ucca import core, layer0, layer1
+from ucca.layer0 import NodeTags
 from ucca.layer1 import EdgeTags
 
 from scheme.constrain import CONSTRAINTS
@@ -75,61 +76,55 @@ class State:
                 self.check(head.height <= self.args.max_height,
                            message and "Graph height: %d" % self.args.max_height, is_type=True)
 
-        def _check_possible_parent(node):
+        def _check_possible_parent(node, t):
             self.check(node.text is None, message and "Terminals may not have children: %s" % node.text, is_type=True)
-            if self.args.constraints and action.tag is not None:
+            if self.args.constraints and t is not None:
                 for rule in self.constraints.tag_rules:
-                    violation = rule.violation(node, action.tag, Direction.outgoing, message=message)
+                    violation = rule.violation(node, t, Direction.outgoing, message=message)
                     self.check(violation is None, violation)
-                self.check(self.constraints.allow_parent(node, action.tag),
+                self.check(self.constraints.allow_parent(node, t),
                            message and "%s may not be a '%s' parent (currently %s)" % (
-                               node, action.tag, ", ".join(map(str, node.outgoing)) or "childless"))
+                               node, t, ", ".join(map(str, node.outgoing)) or "childless"))
             self.check(not self.constraints.require_implicit_childless or not node.implicit,
                        message and "Implicit nodes may not have children: %s" % s0, is_type=True)
 
-        def _check_possible_child(node):
+        def _check_possible_child(node, t):
             self.check(node is not self.root, message and "Root may not have parents", is_type=True)
-            if self.args.constraints and action.tag is not None:
-                self.check(not action.tag or (node.text is None) != (action.tag == EdgeTags.Terminal),
+            if self.args.constraints and t is not None:
+                self.check(not t or (node.text is None) != (t == EdgeTags.Terminal),
                            message and "Edge tag must be %s iff child is terminal, but node is %s and edge tag is %s" %
-                           (EdgeTags.Terminal, node, action.tag))
+                           (EdgeTags.Terminal, node, t))
                 for rule in self.constraints.tag_rules:
-                    violation = rule.violation(node, action.tag, Direction.incoming, message=message)
+                    violation = rule.violation(node, t, Direction.incoming, message=message)
                     self.check(violation is None, violation)
-                self.check(self.constraints.allow_child(node, action.tag),
+                self.check(self.constraints.allow_child(node, t),
                            message and "%s may not be a '%s' child (currently %s, %s)" % (
-                               node, action.tag, ", ".join(map(str, node.incoming)) or "parentless",
+                               node, t, ", ".join(map(str, node.incoming)) or "parentless",
                                ", ".join(map(str, node.outgoing)) or "childless"))
-            self.check(self.constraints.possible_multiple_incoming is None or action.tag is None or
-                       action.remote or action.tag in self.constraints.possible_multiple_incoming or
+            self.check(self.constraints.possible_multiple_incoming is None or t is None or
+                       action.remote or t in self.constraints.possible_multiple_incoming or
                        all(e.remote or e.tag in self.constraints.possible_multiple_incoming for e in node.incoming),
-                       message and "Multiple non-remote '%s' parents not allowed for %s" % (action.tag, node))
+                       message and "Multiple non-remote '%s' parents not allowed for %s" % (t, node))
 
-        def _check_possible_edge():
-            parent, child = self.get_parent_child(action)
-            _check_possible_parent(parent)
-            _check_possible_child(child)
-            if self.args.constraints and action.tag is not None:
-                if parent is self.root:
-                    self.check(self.constraints.top_level_allowed is None or not action.tag or
-                               action.tag in self.constraints.top_level_allowed,
-                               message and "Root may not have %s edges" % action.tag)
+        def _check_possible_edge(p, c, t):
+            _check_possible_parent(p, t)
+            _check_possible_child(c, t)
+            if self.args.constraints and t is not None:
+                if p is self.root:
+                    self.check(self.constraints.top_level_allowed is None or not t or
+                               t in self.constraints.top_level_allowed, message and "Root may not have %s edges" % t)
                 else:
                     self.check(self.constraints.top_level_only is None or
-                               action.tag not in self.constraints.top_level_only,
-                               message and "Only root may have %s edges" % action.tag)
-            self.check(self.constraints.allow_root_terminal_children or parent is not self.root or child.text is None,
-                       message and "Terminal child '%s' for root" % child, is_type=True)
+                               t not in self.constraints.top_level_only, message and "Only root may have %s edges" % t)
+            self.check(self.constraints.allow_root_terminal_children or p is not self.root or c.text is None,
+                       message and "Terminal child '%s' for root" % c, is_type=True)
             if self.constraints.multigraph:  # Nodes may be connected by more than one edge
-                edge = Edge(parent, child, action.tag, remote=action.remote)
-                self.check(self.constraints.allow_edge(edge),
-                           message and "Edge not allowed: %s (currently: %s)" % (
-                               edge, ", ".join(map(str, parent.outgoing)) or "childless"))
+                edge = Edge(p, c, t, remote=action.remote)
+                self.check(self.constraints.allow_edge(edge), message and "Edge not allowed: %s (currently: %s)" % (
+                               edge, ", ".join(map(str, p.outgoing)) or "childless"))
             else:  # Simple graph, i.e., no more than one edge between the same pair of nodes
-                self.check(child not in parent.children,
-                           message and "%s is already %s's child" % (child, parent), is_type=True)
-            self.check(parent not in child.descendants,
-                       message and "Detected cycle by edge: %s->%s" % (parent, child), is_type=True)
+                self.check(c not in p.children, message and "%s is already %s's child" % (c, p), is_type=True)
+            self.check(p not in c.descendants, message and "Detected cycle by edge: %s->%s" % (p, c), is_type=True)
 
         def _check_possible_label():
             self.check(self.args.node_labels, message and "Node labels disabled", is_type=True)
@@ -161,18 +156,12 @@ class State:
                        message and "Actions/terminals ratio: %.3f" % self.args.max_action_ratio, is_type=True)
             if action.is_type(Actions.Shift):
                 self.check(self.buffer, message and "Shifting from empty buffer", is_type=True)
-            else:  # Unary actions
-                self.check(self.stack, message and "Empty stack at %s" % action, is_type=True)
+            elif action.is_type(Actions.Label):
+                _check_possible_label()
+            else:   # Unary actions
+                self.check(self.stack, message and "%s with empty stack" % action, is_type=True)
                 s0 = self.stack[-1]
-                if action.is_type(Actions.Node, Actions.RemoteNode):
-                    _check_possible_child(s0)
-                    _check_possible_node()
-                elif action.is_type(Actions.Implicit):
-                    _check_possible_parent(s0)
-                    _check_possible_node()
-                elif action.is_type(Actions.Label):
-                    _check_possible_label()
-                elif action.is_type(Actions.Reduce):
+                if action.is_type(Actions.Reduce):
                     if s0 is self.root:
                         self.check(self.root.labeled or not self.args.node_labels,
                                    message and "Reducing root without label", is_type=True)
@@ -186,22 +175,28 @@ class State:
                                        s0, self.constraints.required_outgoing), is_type=True)
                     self.check(not self.args.node_labels or s0.text or s0.labeled,
                                message and "Reducing non-terminal %s without label" % s0, is_type=True)
-                else:  # Binary actions
-                    self.check(len(self.stack) > 1, message and "%s with len(stack) < 2" % action, is_type=True)
-                    if action.is_type(Actions.LeftEdge, Actions.RightEdge, Actions.LeftRemote, Actions.RightRemote):
-                        _check_possible_edge()
-                    elif action.is_type(Actions.Swap):
-                        # A regular swap is possible since the stack has at least two elements;
-                        # A compound swap is possible if the stack is longer than the distance
-                        distance = action.tag or 1
-                        self.check(1 <= distance < len(self.stack), message and "Invalid swap distance: %d" % distance)
-                        swapped = self.stack[-distance - 1]
-                        # To prevent swap loops: only swap if the nodes are currently in their original order
-                        self.check(self.swappable(s0, swapped),
-                                   message and "Already swapped nodes: %s (swap index %g) <--> %s (swap index %g)"
-                                   % (swapped, swapped.swap_index, s0, s0.swap_index))
-                    else:
-                        raise ValueError("Invalid action: %s" % action)
+                elif action.is_type(Actions.Swap):
+                    # A regular swap is possible since the stack has at least two elements;
+                    # A compound swap is possible if the stack is longer than the distance
+                    distance = action.tag or 1
+                    self.check(1 <= distance < len(self.stack), message and "Invalid swap distance: %d" % distance)
+                    swapped = self.stack[-distance - 1]
+                    # To prevent swap loops: only swap if the nodes are currently in their original order
+                    self.check(self.swappable(s0, swapped),
+                               message and "Already swapped nodes: %s (swap index %g) <--> %s (swap index %g)"
+                               % (swapped, swapped.swap_index, s0, s0.swap_index))
+                else:
+                    pct = self.get_parent_child_tag(action)
+                    self.check(pct, message and "%s with len(stack) = %d" % (action, len(self.stack)), is_type=True)
+                    parent, child, tag = pct
+                    if parent is None:
+                        _check_possible_child(child, tag)
+                        _check_possible_node()
+                    elif child is None:
+                        _check_possible_parent(parent, tag)
+                        _check_possible_node()
+                    else:  # Binary actions
+                        _check_possible_edge(parent, child, tag)
 
     @staticmethod
     def swappable(right, left):
@@ -236,23 +231,22 @@ class State:
         """
         action.apply()
         self.log = []
-        if action.is_type(Actions.Shift):  # Push buffer head to stack; shift buffer
+        pct = self.get_parent_child_tag(action)
+        if pct:
+            parent, child, tag = pct
+            if parent is None:
+                parent = action.node = self.add_node(orig_node=action.orig_node)
+            if child is None:
+                child = action.node = self.add_node(orig_node=action.orig_node, implicit=True)
+            action.edge = self.add_edge(Edge(parent, child, tag, remote=action.remote))
+            if action.node:
+                self.buffer.appendleft(action.node)
+        elif action.is_type(Actions.Shift):  # Push buffer head to stack; shift buffer
             self.stack.append(self.buffer.popleft())
-        elif action.is_type(Actions.Node, Actions.RemoteNode):  # Create new parent node and add to the buffer
-            action.node = self.add_node(orig_node=action.orig_node)
-            self.add_edge(Edge(action.node, self.stack[-1], action.tag, remote=action.remote))
-            self.buffer.appendleft(action.node)
-        elif action.is_type(Actions.Implicit):  # Create new child node and add to the buffer
-            action.node = self.add_node(orig_node=action.orig_node, implicit=True)
-            self.add_edge(Edge(self.stack[-1], action.node, action.tag))
-            self.buffer.appendleft(action.node)
         elif action.is_type(Actions.Label):
             self.need_label = self.stack[-action.tag]  # The parser is responsible to choose a label and set it
         elif action.is_type(Actions.Reduce):  # Pop stack (no more edges to create with this node)
             self.stack.pop()
-        elif action.is_type(Actions.LeftEdge, Actions.LeftRemote, Actions.RightEdge, Actions.RightRemote):
-            parent, child = self.get_parent_child(action)
-            action.edge = self.add_edge(Edge(parent, child, action.tag, remote=action.remote))
         elif action.is_type(Actions.Swap):  # Place second (or more) stack item back on the buffer
             distance = action.tag or 1
             s = slice(-distance - 1, -1)
@@ -308,13 +302,28 @@ class State:
         self.heads.discard(edge.child)
         self.log.append("edge: %s" % edge)
         return edge
+    
+    PARENT_CHILD = (
+        ((Actions.LeftEdge, Actions.LeftRemote), (-1, -2)),
+        ((Actions.RightEdge, Actions.RightRemote), (-2, -1)),
+        ((Actions.Node, Actions.RemoteNode), (None, -1)),
+        ((Actions.Implicit,), (-1, None)),
+    )
 
-    def get_parent_child(self, action):
-        if action.is_type(Actions.LeftEdge, Actions.LeftRemote):
-            return self.stack[-1], self.stack[-2]
-        elif action.is_type(Actions.RightEdge, Actions.RightRemote):
-            return self.stack[-2], self.stack[-1]
-        return None, None
+    def get_parent_child_tag(self, action):
+        try:
+            for types, indices in self.PARENT_CHILD:
+                if action.is_type(*types):
+                    parent, child = [None if i is None else self.stack[i] for i in indices]
+                    break
+            else:
+                return None
+            return parent, child, (EdgeTags.Terminal if child and child.text else
+                                   EdgeTags.Punctuation if child and child.children and all(
+                                       c.tag == NodeTags.Punct for c in child.children)
+                                   else action.tag)  # In unlabeled parsing, keep a valid graph
+        except IndexError:
+            return None
 
     def label_node(self, label):
         self.need_label.label = label
