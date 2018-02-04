@@ -9,10 +9,11 @@ TRAINERS = {
     "adadelta": "AdadeltaTrainer",
     "rmsprop": "RMSPropTrainer",
     "adam": "AdamTrainer",
+    "amsgrad": "AmsgradTrainer",
 }
 DEFAULT_TRAINER = "adam"
-TRAINER_LEARNING_RATE_PARAM_NAMES = {k: "learning_rate" for k in ("sgd", "momentum", "adagrad", "rmsprop")}
-TRAINER_LEARNING_RATE_PARAM_NAMES.update(cyclic="learning_rate_max", adam="alpha")
+TRAINER_LEARNING_RATE_PARAM_NAMES = {k: "learning_rate" for k in TRAINERS}
+TRAINER_LEARNING_RATE_PARAM_NAMES.update(cyclic="learning_rate_max")
 TRAINER_KWARGS = {}  # "adam": dict(beta_2=0.9)}
 
 INITIALIZERS = {
