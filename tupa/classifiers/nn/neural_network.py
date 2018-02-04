@@ -72,10 +72,7 @@ class NeuralNetwork(Classifier, SubModel):
         if init:
             self.model = dy.ParameterCollection()
             self.birnn = self.birnn_type(Config().hyperparams.shared, self.model, save_path=("shared", "birnn"))
-            try:
-                self.model.set_weight_decay_lambda(self.weight_decay)
-            except AttributeError:
-                pass  # Supported from DyNet commit a094a59
+            self.set_weight_decay_lambda()
         if train:
             self.init_trainer()
         if axis:
@@ -84,6 +81,12 @@ class NeuralNetwork(Classifier, SubModel):
             self.init_cg()
             self.finished_step()
         self.init_empty_values()
+
+    def set_weight_decay_lambda(self, weight_decay=None):
+        try:
+            self.model.set_weight_decay_lambda(self.weight_decay if weight_decay is None else weight_decay)
+        except AttributeError:
+            pass  # Supported from DyNet commit a094a59
 
     def init_trainer(self):
         if self.trainer_type is None or str(self.trainer_type) != self.args.optimizer:
@@ -296,11 +299,12 @@ class NeuralNetwork(Classifier, SubModel):
             print(self)
         self.save_param_values(filename, values)
 
-    @staticmethod
-    def save_param_values(filename, values):
+    def save_param_values(self, filename, values):
         remove_existing(filename + ".data", filename + ".meta")
         try:
+            self.set_weight_decay_lambda(0)  # Avoid applying weight decay due to clab/dynet#1206, we apply it on load
             dy.save(filename, tqdm(values, desc="Saving model to '%s'" % filename, unit="param", file=sys.stdout))
+            self.set_weight_decay_lambda()
         except ValueError as e:
             print("Failed saving model: %s" % e)
 
