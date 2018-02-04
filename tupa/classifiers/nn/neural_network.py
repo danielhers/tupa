@@ -301,7 +301,7 @@ class NeuralNetwork(Classifier, SubModel):
     def save_param_values(self, filename, values):
         remove_existing(filename + ".data", filename + ".meta")
         try:
-            self.set_weight_decay_lambda(0)  # Avoid applying weight decay due to clab/dynet#1206, we apply it on load
+            self.set_weight_decay_lambda(0.0)  # Avoid applying weight decay due to clab/dynet#1206, we apply it on load
             dy.save(filename, tqdm(values, desc="Saving model to '%s'" % filename, unit="param", file=sys.stdout))
             self.set_weight_decay_lambda()
         except ValueError as e:
