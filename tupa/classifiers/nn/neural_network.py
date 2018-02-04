@@ -36,7 +36,6 @@ class NeuralNetwork(Classifier, SubModel):
     Allows adding new labels on-the-fly, but requires pre-setting maximum number of labels.
     Expects features from DenseFeatureExtractor.
     """
-    CG_FRESH = False
 
     def __init__(self, *args, **kwargs):
         """
@@ -79,9 +78,8 @@ class NeuralNetwork(Classifier, SubModel):
         if axis:
             self.init_axis_model(axis)
         if init:
-            self.init_cg(init=True)
+            self.init_cg()
             self.finished_step()
-        self.init_empty_values()
 
     def set_weight_decay_lambda(self, weight_decay=None):
         try:
@@ -134,18 +132,15 @@ class NeuralNetwork(Classifier, SubModel):
             input_dim += birnn.init_params(indexed_dim, indexed_num)
         model.mlp.init_params(input_dim)
 
-    def init_cg(self, init=False):
-        if init and not NeuralNetwork.CG_FRESH:  # No one else renewed yet
-            dy.renew_cg()  # Renew only when this is the first time this is called in a step
-        NeuralNetwork.CG_FRESH = init
-        self.init_empty_values(clear=True)
+    def init_cg(self):
+        dy.renew_cg()
+        self.empty_values.clear()
 
-    def init_empty_values(self, clear=False):
-        if clear:
-            self.empty_values.clear()
-        for suffix, param in self.input_params.items():
-            if param.enabled and not param.numeric and suffix not in self.empty_values:  # lookup feature
-                self.empty_values[suffix] = dy.inputVector(np.zeros(param.dim, dtype=float))
+    def get_empty_values(self, suffix):
+        value = self.empty_values.get(suffix)
+        if value is None:
+            self.empty_values[suffix] = value = dy.inputVector(np.zeros(self.input_params[suffix].dim, dtype=float))
+        return value
 
     def init_features(self, features, axes, train=False):
         for axis in axes:
@@ -168,7 +163,7 @@ class NeuralNetwork(Classifier, SubModel):
             elif param.indexed:  # collect indices to be looked up
                 indices += values  # DenseFeatureExtractor collapsed features so there are no repetitions between them
             else:  # lookup feature
-                yield from (self.empty_values[suffix] if x == MISSING_VALUE else
+                yield from (self.get_empty_values(suffix) if x == MISSING_VALUE else
                             dy.lookup(self.params[suffix], x, update=param.updated) for x in values)
             if self.config.args.verbose > 3:
                 print("%s: %s" % (suffix, values))

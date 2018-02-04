@@ -212,8 +212,9 @@ class PassageParser(AbstractParser):
         yield from scores.argsort()[::-1]  # Contains the max, but otherwise items might be missed (different order)
 
     def finish(self, evaluate, status):
-        for model in self.models:
-            model.classifier.finished_item(self.training)
+        self.models[0].classifier.finished_item(self.training)  # So that dynet.renew_cg happens only once
+        for model in self.models[1:]:
+            model.classifier.finished_item(True)
         if not self.training or self.config.args.verify:
             self.out = self.state.create_passage(verify=self.config.args.verify)
         if self.oracle and self.config.args.verify:
