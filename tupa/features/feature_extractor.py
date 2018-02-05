@@ -193,14 +193,14 @@ def get_node(element, state):
     return node
 
 
-ACTION_PROPS = {
-    "A": "type",
-    "e": "tag",
+ACTION_PROP_GETTERS = {
+    "A": lambda a: a.type,
+    "e": lambda a: a.tag if isinstance(a.tag, str) else None,  # Ignore numeric tags for Swap, Label actions
 }
 
 
 def action_prop(action, prop):
-    return getattr(action, ACTION_PROPS[prop])
+    return ACTION_PROP_GETTERS[prop](action)
 
 
 def separator_prop(nodes, terminals, prop):
