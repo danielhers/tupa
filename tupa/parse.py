@@ -2,7 +2,7 @@ import concurrent.futures
 import os
 import sys
 import time
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 from enum import Enum
 from functools import partial
 from glob import glob
@@ -86,7 +86,7 @@ class PassageParser(AbstractParser):
                 self.check_loop()
             self.label_node()  # In case root node needs labeling
             true_actions = self.get_true_actions()
-            action, predicted_action = self.choose_action(true_actions)
+            action, predicted_action = self.choose(true_actions, self.config.format)
             self.state.transition(action)
             need_label, label, predicted_label, true_label = self.label_node(action)
             if self.config.args.action_stats:
@@ -111,53 +111,6 @@ class PassageParser(AbstractParser):
                     raise ParserException("Error in getting action from oracle during training") from e
         return true_actions
 
-    def choose_action(self, true_actions):
-        features = scores = actions = None
-        for model in self.models:
-            features = model.feature_extractor.extract_features(self.state)
-            model_scores = model.classifier.score(features, axis=self.config.format)  # Returns NumPy array
-            scores_map = OrderedDict(zip(model.actions.all, model_scores)) \
-                if scores is not None or self.config.args.verbose >= 4 else None
-            if scores is None:
-                scores = model_scores
-                actions = model.actions
-            else:
-                scores += [scores_map.get(a, 0) for a in actions.all]  # Product of Experts, assuming log(softmax)
-            self.print(lambda: "  action scores: %s" % scores_map, level=4)
-        try:
-            predicted_action = self.predict(scores, actions.all, self.state.is_valid_action)
-        except StopIteration as e:
-            raise ParserException("No valid action available\n%s" % (self.oracle.log if self.oracle else "")) from e
-        true_keys, true_values = map(list, zip(*true_actions.items())) if true_actions else (None, None)
-        action = true_actions.get(predicted_action.id)
-        is_correct = (action is not None)
-        if is_correct:
-            self.correct_action_count += 1
-        else:
-            action = true_values[scores[true_keys].argmax()] if self.training else predicted_action
-        model = self.models[0]
-        if self.training and not (is_correct and
-                                  ClassifierProperty.update_only_on_error in model.get_classifier_properties()):
-                assert not model.is_finalized, "Updating finalized model"
-                model.classifier.update(
-                    features, axis=self.config.format, pred=predicted_action.id, true=true_keys,
-                    importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values])
-        if self.training and not is_correct and self.config.args.early_update:
-            self.state.finished = True
-        self.action_count += 1
-        for model in self.models:
-            model.classifier.finished_step(self.training)
-        return action, predicted_action
-
-    def label_node(self, action=None):
-        true_label = label = predicted_label = None
-        need_label = self.state.need_label  # Label action that requires a choice of label
-        if need_label:
-            true_label, raw_true_label = self.get_true_label(action or need_label)
-            label, predicted_label = self.choose_label(true_label)
-            self.state.label_node(raw_true_label if label == true_label else label)
-        return need_label, label, predicted_label, true_label
-
     def get_true_label(self, node):
         try:
             return self.oracle.get_label(self.state, node) if self.oracle else (None, None)
@@ -166,37 +119,71 @@ class PassageParser(AbstractParser):
                 raise ParserException("Error in getting label from oracle during training") from e
             return None, None
 
-    def choose_label(self, true_label):
-        if self.config.args.use_gold_node_labels:
-            return true_label, true_label
-        features = scores = labels = true = None
+    def label_node(self, action=None):
+        true_label = label = predicted_label = None
+        need_label = self.state.need_label  # Label action that requires a choice of label
+        if need_label:
+            true_label, raw_true_label = self.get_true_label(action or need_label)
+            label, predicted_label = self.choose(true_label, NODE_LABEL_KEY, "node label")
+            self.state.label_node(raw_true_label if label == true_label else label)
+        return need_label, label, predicted_label, true_label
+
+    def choose(self, true, axis, name="action"):
+        if axis == NODE_LABEL_KEY and self.config.args.use_gold_node_labels:
+            return true, true
+        labels = self.models[0].classifier.labels[axis]
+        if axis == NODE_LABEL_KEY:
+            true_keys = (labels[true],) if self.oracle else ()  # Must be before score()
+            is_valid = self.state.is_valid_label
+        else:
+            true_keys = None
+            is_valid = self.state.is_valid_action
+        scores, features = self.score(self.models[0], axis)
+        for model in self.models[1:]:  # Ensemble if given more than one model
+            label_scores = dict(zip(model.classifier.labels[axis].all, self.score(model, axis)[0]))  # Align label order
+            scores += [label_scores.get(a, 0) for a in labels.all]  # Product of Experts, assuming log(softmax)
+        self.print(lambda: "  %s scores: %s" % (name, tuple(zip(labels.all, scores))), level=4)
+        try:
+            label = pred = self.predict(scores, labels.all, is_valid)
+        except StopIteration as e:
+            raise ParserException("No valid %s available\n%s" % (name, self.oracle.log if self.oracle else "")) from e
+        label, is_correct, true_keys, true_values = self.correct(axis, label, pred, scores, true, true_keys)
         for model in self.models:
-            features = model.feature_extractor.extract_features(self.state)
-            model_scores = model.classifier.score(features, axis=NODE_LABEL_KEY)  # Returns NumPy array
-            scores_map = OrderedDict(zip(model.labels.all, model_scores)) \
-                if scores is not None or self.config.args.verbose >= 4 else None
-            if scores is None:
-                scores = model_scores
-                labels = model.labels
-                true = (labels[true_label],) if self.oracle else ()  # Needs to happen before score()
-            else:
-                scores += [scores_map.get(a, 0) for a in labels.all]  # Product of Experts, assuming log(softmax)
-            self.print(lambda: "  label scores: %s" % scores_map, level=4)
-        label = predicted_label = self.predict(scores, labels.all, self.state.is_valid_label)
-        if self.oracle:
-            is_correct = (label == true_label)
-            if is_correct:
-                self.correct_label_count += 1
-            model = self.models[0]
-            if self.training and not (is_correct and
-                                      ClassifierProperty.update_only_on_error in model.get_classifier_properties()):
-                assert not model.is_finalized, "Updating finalized model"
-                model.classifier.update(features, axis=NODE_LABEL_KEY, pred=labels[label], true=true)
-                label = true_label
-        self.label_count += 1
-        for model in self.models:
+            if self.training:
+                if not (is_correct and ClassifierProperty.update_only_on_error in model.get_classifier_properties()):
+                    assert not model.is_finalized, "Updating finalized model"
+                    model.classifier.update(
+                        features, axis=axis, true=true_keys, pred=labels[pred] if axis == NODE_LABEL_KEY else pred.id,
+                        importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values] or None)
+                if not is_correct and self.config.args.early_update:
+                    self.state.finished = True
             model.classifier.finished_step(self.training)
-        return label, predicted_label
+        return label, pred
+
+    def correct(self, axis, label, predicted, scores, true, true_keys):
+        true_values = is_correct = None
+        if axis == NODE_LABEL_KEY:
+            if self.oracle:
+                is_correct = (label == true)
+                if is_correct:
+                    self.correct_label_count += 1
+                else:
+                    label = true
+            self.label_count += 1
+        else:  # action
+            true_keys, true_values = map(list, zip(*true.items())) if true else (None, None)
+            label = true.get(predicted.id)
+            is_correct = (label is not None)
+            if is_correct:
+                self.correct_action_count += 1
+            else:
+                label = true_values[scores[true_keys].argmax()] if self.training else predicted
+            self.action_count += 1
+        return label, is_correct, true_keys, true_values
+
+    def score(self, model, axis):
+        features = model.feature_extractor.extract_features(self.state)
+        return model.classifier.score(features, axis=axis), features  # scores is a NumPy array
 
     @staticmethod
     def predict(scores, values, is_valid=None):
