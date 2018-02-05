@@ -361,7 +361,7 @@ class NeuralNetwork(Classifier, SubModel):
             if model.birnn.copy_shared:
                 model.birnn.load_sub_model(d, *shared_values, load_path=self.birnn.save_path)
                 if 1 < self.config.args.verbose <= 3:
-                    print("Copied from %s: %s" % ("/".join(self.birnn.save_path), model.birnn.params_str()))
+                    print("Copied from %s to %s" % ("/".join(self.birnn.save_path), model.birnn.params_str()))
                 self.init_axis_model(axis, init=False)  # Update input_dim
 
     def get_all_params(self, as_array=True):
