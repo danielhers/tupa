@@ -144,7 +144,7 @@ class EmptyRNN(BiRNN):
     def save_sub_model(self, d, *args):
         return []
 
-    def load_sub_model(self, d, *args):
+    def load_sub_model(self, d, *args, **kwargs):
         super().load_sub_model(d, *args)
         self.args.lstm_layers = self.lstm_layers = self.args.lstm_layer_dim = self.lstm_layer_dim = 0
 
