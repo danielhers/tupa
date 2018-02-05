@@ -1,10 +1,11 @@
+import time
 from collections import defaultdict
 from itertools import repeat
 
 import numpy as np
 
 from tupa.model_util import KeyBasedDefaultDict, save_dict, load_dict
-from .perceptron import Perceptron
+from ..classifier import Classifier
 
 
 class FeatureWeights:
@@ -61,7 +62,7 @@ class FeatureWeightsCreator:
         return FeatureWeights(self.perceptron.num_labels[self.axis])
 
 
-class SparsePerceptron(Perceptron):
+class SparsePerceptron(Classifier):
     """
     Multi-class averaged perceptron with min-update for sparse features.
     Keeps weights in a dictionary by feature name, allowing adding new features on-the-fly.
@@ -71,12 +72,12 @@ class SparsePerceptron(Perceptron):
 
     def __init__(self, *args, epoch=0, **kwargs):
         """
-        Create a new untrained Perceptron or copy the weights from an existing one
+        Create a new untrained SparsePerceptron or copy the weights from an existing one
         :param labels: tuple of lists of labels that can be updated later to add new labels
         :param min_update: minimum number of updates to a feature required for consideration
         :param model: if given, copy the weights (from a trained model)
         """
-        super().__init__(*args, epoch=epoch, **kwargs)
+        super().__init__(*args, **kwargs)
         model = KeyBasedDefaultDict(self.create_axis_weights)
         if self.is_frozen:
             for axis, feature_weights in self.model.items():
@@ -84,10 +85,16 @@ class SparsePerceptron(Perceptron):
         self.model = model
         self.min_update = self.config.args.min_update  # Minimum number of updates for a feature to be used in scoring
         self.dropped = set()  # Features that did not get min_updates after a full epoch
+        self.initial_learning_rate = self.learning_rate if self.learning_rate else 1.0
+        self.epoch = epoch
+        self.update_learning_rate()
 
     @property
     def input_dim(self):
         return {a: len(m) for a, m in self.model.items()}
+
+    def update_learning_rate(self):
+        self.learning_rate = self.initial_learning_rate / (1.0 + self.epoch * self.learning_rate_decay)
 
     def create_axis_weights(self, axis):
         return defaultdict(FeatureWeightsCreator(self, axis).create)
@@ -128,6 +135,7 @@ class SparsePerceptron(Perceptron):
         :param importance: how much to scale the update for the weight update for each true label
         """
         super().update(features, axis, pred, true, importance)
+        self.updates += 1
         model = self.model[axis]
         for feature, value in features.items():
             if not value or feature in self.dropped:
@@ -142,6 +150,25 @@ class SparsePerceptron(Perceptron):
             num_labels = self.num_labels[axis]
             for weights in model.values():
                 weights.resize(num_labels)
+
+    def finalize(self, finished_epoch=False, average=True):
+        """
+        Average all weights over all updates, as a form of regularization
+        :param average: whether to really average the weights or just return them as they are now
+        :param finished_epoch: whether to decay the learning rate and drop rare features
+        :return new SparsePerceptron object with the weights averaged
+        """
+        super().finalize()
+        started = time.time()
+        if finished_epoch:
+            self.epoch += 1
+        if average:
+            print("Averaging weights... ", end="", flush=True)
+        finalized = self._finalize_model(finished_epoch, average)
+        if average:
+            print("Done (%.3fs)." % (time.time() - started))
+        print(self)
+        return finalized
 
     def _finalize_model(self, finished_epoch, average):
         # If finished an epoch, remove rare features from our model directly. Otherwise, copy it.
@@ -169,12 +196,16 @@ class SparsePerceptron(Perceptron):
 
     def save_model(self, filename, d):
         super().save_model(filename, d)
-        d["min_update"] = self.min_update
+        d.update((
+            ("initial_learning_rate", self.initial_learning_rate),
+            ("min_update", self.min_update),
+        ))
         save_dict(filename + ".data", self.copy_model())
 
     def load_model(self, filename, d):
         self.model.clear()
         self.update_model(load_dict(filename + ".data"))
+        self.initial_learning_rate = d["initial_learning_rate"]
         self.config.args.min_update = self.min_update = d["min_update"]
         super().load_model(filename, d)
 
