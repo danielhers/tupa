@@ -164,10 +164,6 @@ class Model:
     def actions(self):
         return self.classifier.labels[self.config.format]
 
-    @property
-    def labels(self):
-        return self.classifier.labels[NODE_LABEL_KEY]
-
     def init_features(self, state, axes, train):
         self.init_model()
         self.classifier.init_features(self.feature_extractor.init_features(state), axes, train)
