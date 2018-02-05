@@ -30,22 +30,10 @@ class FeatureTemplate:
         return self.name
 
     def extract(self, state, default=None, indexed=False):
-        values = []
-        prev_node = None
-        for element in self.elements:
-            node = element.get_node(state)
-            if element.properties:
-                for prop in ("i",) if indexed else element.properties:
-                    value = get_prop(element, node, prev_node, element.previous, prop, state)
-                    if value is None:
-                        if default is None:
-                            return None
-                        value = default
-                    values.append(value)
-                prev_node = None
-            else:
-                prev_node = node
-        return values
+        try:
+            return [value for element in self.elements for value in element.extract(state, default, indexed)]
+        except ValueError:
+            return None
 
 
 class FeatureTemplateElement:
@@ -100,7 +88,7 @@ class FeatureTemplateElement:
         self.index = int(index)
         self.relatives = relatives
         self.properties = properties
-        self.previous = None
+        self.node = self.previous = None
 
     def __str__(self):
         return self.source + str(self.index) + self.relatives + self.properties
@@ -108,27 +96,38 @@ class FeatureTemplateElement:
     def __eq__(self, other):
         return self.source == other.source and self.index == other.index and self.relatives == other.relatives
 
-    def get_node(self, state):
+    def set_node(self, state):
+        self.node = None
         try:
             if self.source == "s":
-                node = state.stack[-1 - self.index]
+                self.node = state.stack[-1 - self.index]
             elif self.source == "b":
-                node = state.buffer[self.index]
+                self.node = state.buffer[self.index]
             else:  # source == "a"
-                node = state.actions[-1 - self.index]
+                self.node = state.actions[-1 - self.index]
         except IndexError:
-            return None
+            return
         for relative in self.relatives:
-            nodes = node.parents if relative.isupper() else node.children
+            nodes = self.node.parents if relative.isupper() else self.node.children
             if not nodes:
-                return None
+                return
             if relative.lower() == "r":
                 if len(nodes) == 1:
-                    return None
-                node = nodes[-1]
+                    return
+                self.node = nodes[-1]
             else:
-                node = nodes[0]
-        return node
+                self.node = nodes[0]
+
+    def extract(self, state, default, indexed):
+        self.set_node(state)
+        if self.properties:
+            for prop in ("i",) if indexed else self.properties:
+                value = get_prop(self, self.node, self.previous, prop, state)
+                if value is None:
+                    if default is None:
+                        raise ValueError()
+                    value = default
+                yield value
 
 
 class FeatureExtractor:
@@ -181,7 +180,7 @@ class FeatureExtractor:
         return [str(e) for t in self.feature_templates for e in t.elements]
 
 
-def get_prop(element, node, prev_node, prev_elem, prop, state):
+def get_prop(element, node, prev, prop, state):
     if node is None:
         return None
     try:
@@ -189,7 +188,7 @@ def get_prop(element, node, prev_node, prev_elem, prop, state):
             return action_prop(node, prop)
         elif prop in "pq":
             return separator_prop(state.stack[-1:-3:-1], state.terminals, prop)
-        return node_prop(node, prop, prev_node, prev_elem)
+        return node_prop(node, prop, prev)
     except (TypeError, AttributeError, StopIteration):
         return None
 
@@ -326,5 +325,5 @@ NODE_PROP_GETTERS = {
 }
 
 
-def node_prop(node, prop, prev_node, prev_elem):
-    return NODE_PROP_GETTERS[prop](node, prev_node, prev_elem is not None)
+def node_prop(node, prop, prev):
+    return NODE_PROP_GETTERS[prop](node, None if prev is None else prev.node, prev is not None)

@@ -101,7 +101,7 @@ class DenseFeatureExtractor(FeatureExtractor):
         features = OrderedDict()
         for suffix, param in self.params.items():
             if param.indexed and param.enabled:
-                values = [get_prop(None, n, None, None, param.effective_suffix, state) for n in state.terminals]
+                values = [get_prop(None, n, None, param.effective_suffix, state) for n in state.terminals]
                 assert MISSING_VALUE not in values, "Missing value occurred in feature initialization: '%s'" % suffix
                 param.init_data()
                 features[suffix] = [param.data[v] for v in values]
