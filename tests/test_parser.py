@@ -163,6 +163,19 @@ def test_copy_shared(config, model_type):
         config.update_hyperparams(ucca={"lstm_layers": 1})
 
 
+@pytest.mark.parametrize("model_type", (BIRNN,))
+def test_ensemble(config, model_type):
+    config.update(dict(classifier=model_type, lstm_layers=0))
+    filenames = ["test_files/models/%s_%s_ensemble%d" % (FORMATS[0], model_type, i) for i in range(1, 3)]
+    passages = load_passages(FORMATS[0])
+    for i, filename in enumerate(filenames, start=1):
+        config.update(dict(seed=i))
+        for f in glob(filename + ".*"):
+            os.remove(f)
+        list(Parser(model_files=filename, config=config).train(passages, dev=passages, iterations=2))
+    list(Parser(model_files=filenames, config=config).parse(passages, evaluate=True))
+
+
 def weight_decay(model):
     try:
         return np.float_power(1 - model.classifier.weight_decay, model.classifier.updates)
