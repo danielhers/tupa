@@ -154,12 +154,13 @@ def test_copy_shared(config, model_type):
     filename = "test_files/models/%s_%s_copy_shared" % ("_".join(FORMATS), model_type)
     for f in glob(filename + ".*"):
         os.remove(f)
-    config.update(dict(classifier=model_type, copy_shared=[FORMATS[0]]))
+    config.update(dict(classifier=model_type, lstm_layers=0, copy_shared=[FORMATS[0]]))
     for formats in ((FORMATS[0],), FORMATS):
         p = Parser(model_files=filename, config=config)
         passages = load_passages(*formats)
         list(p.train(passages, dev=passages, test=True, iterations=2))
         list(p.parse(passages, evaluate=True))
+        config.update_hyperparams(ucca={"lstm_layers": 1})
 
 
 def weight_decay(model):
