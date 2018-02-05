@@ -232,7 +232,7 @@ class PassageParser(AbstractParser):
             return "%-33s" % accuracy_str
         return ""
 
-    def evaluate(self, mode="test"):
+    def evaluate(self, mode=ParseMode.test):
         ref_format = self.passage.extra.get("format")
         if ref_format:
             self.print("Converting to %s and evaluating..." % ref_format)
@@ -240,7 +240,7 @@ class PassageParser(AbstractParser):
         score = EVALUATORS.get(ref_format, evaluation).evaluate(
             self.out, self.passage, converter=get_output_converter(ref_format),
             verbose=self.out and self.config.args.verbose > 3, constructions=self.config.args.constructions,
-            eval_types=(self.eval_type,) if mode == "dev" else (LABELED, UNLABELED))
+            eval_types=(self.eval_type,) if mode is ParseMode.dev else (LABELED, UNLABELED))
         self.f1 = average_f1(score, self.eval_type)
         return score
 
@@ -435,7 +435,7 @@ class Parser(AbstractParser):
             if not self.best_score:
                 finalized.save(save_init=self.save_init)
             print("Evaluating on dev passages")
-            passage_scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev, evaluate="dev")]
+            passage_scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev)]
             scores = Scores(passage_scores)
             average_score = average_f1(scores)
             prefix = ".".join(map(str, [self.iteration, self.epoch] + (
@@ -475,7 +475,7 @@ class Parser(AbstractParser):
         if not training and not self.trained:
             list(self.train())  # Try to load model from file
         parser = BatchParser(self.config, self.models, training)
-        for i, passage in enumerate(parser.parse(passages, evaluate), start=1):
+        for i, passage in enumerate(parser.parse(passages, mode if mode is ParseMode.dev else evaluate), start=1):
             if training and self.config.args.save_every and i % self.config.args.save_every == 0:
                 self.eval_and_save()
                 self.batch += 1
