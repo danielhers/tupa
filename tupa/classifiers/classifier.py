@@ -75,7 +75,7 @@ class Classifier:
         """
         pass
 
-    def finished_item(self, train=False):
+    def finished_item(self, train=False, renew=True):
         """
         Called by the parser when a whole item is finished
         """

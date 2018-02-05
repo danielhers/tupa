@@ -132,8 +132,9 @@ class NeuralNetwork(Classifier, SubModel):
             input_dim += birnn.init_params(indexed_dim, indexed_num)
         model.mlp.init_params(input_dim)
 
-    def init_cg(self):
-        dy.renew_cg()
+    def init_cg(self, renew=True):
+        if renew:
+            dy.renew_cg()
         self.empty_values.clear()
 
     def get_empty_values(self, suffix):
@@ -233,11 +234,11 @@ class NeuralNetwork(Classifier, SubModel):
     def invalidate_caches(self):
         self.value = {}  # For caching the result of _evaluate
 
-    def finished_item(self, train=False):
+    def finished_item(self, train=False, renew=True):
         if self.steps >= self.minibatch_size:
             self.finalize()
         elif not train:
-            self.init_cg()
+            self.init_cg(renew)
         self.finished_step(train)
 
     def finalize(self, finished_epoch=False):
