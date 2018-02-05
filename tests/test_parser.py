@@ -123,13 +123,12 @@ def test_parser(config, model_type, formats, default_setting, text=True):
         p = Parser(model_files=filename, config=config)
         p.save_init = True
         list(p.train(passages if mode == "train" else None, dev=passages, test=True, iterations=2))
-        for model in p.models:
-            assert model.is_finalized, "Model should be finalized after %sing" % mode
-        all_params = p.models[0].get_all_params()
+        assert p.model.is_finalized, "Model should be finalized after %sing" % mode
+        all_params = p.model.get_all_params()
         params.append(all_params)
-        param1, param2 = [d.get("W") for d in (all_params, p.models[0].feature_extractor.params)]
+        param1, param2 = [d.get("W") for d in (all_params, p.model.feature_extractor.params)]
         if param1 is not None and param2 and param2.init is not None and not config.args.update_word_vectors:
-            assert_allclose(param1, weight_decay(p.models[0]) * param2.init, rtol=1e-6)
+            assert_allclose(param1, weight_decay(p.model) * param2.init, rtol=1e-6)
         text_results = results = list(p.parse(passages, evaluate=evaluate))
         if text:
             print("Converting to text and parsing...")
@@ -209,7 +208,7 @@ def test_model(model_type, formats, test_passage, iterations, config):
         finalized = model.finalize(finished_epoch=True)
         parse(formats, model, test_passage, train=False)
         finalized.save()
-    loaded = Model(filename)
+    loaded = Model(filename, config=config)
     loaded.load()
     for key, param in sorted(model.feature_extractor.params.items()):
         loaded_param = loaded.feature_extractor.params[key]

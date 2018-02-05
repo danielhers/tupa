@@ -41,6 +41,14 @@ class AbstractParser:
         self.started = time.time()
 
     @property
+    def model(self):
+        return self.models[0]
+
+    @model.setter
+    def model(self, model):
+        self.models[0] = model
+
+    @property
     def duration(self):
         return (time.time() - self.started) or 1.0
 
@@ -105,7 +113,7 @@ class PassageParser(AbstractParser):
         true_actions = {}
         if self.oracle:
             try:
-                true_actions = self.oracle.get_actions(self.state, self.models[0].actions, create=self.training)
+                true_actions = self.oracle.get_actions(self.state, self.model.actions, create=self.training)
             except (AttributeError, AssertionError) as e:
                 if self.training:
                     raise ParserException("Error in getting action from oracle during training") from e
@@ -131,14 +139,14 @@ class PassageParser(AbstractParser):
     def choose(self, true, axis, name="action"):
         if axis == NODE_LABEL_KEY and self.config.args.use_gold_node_labels:
             return true, true
-        labels = self.models[0].classifier.labels[axis]
+        labels = self.model.classifier.labels[axis]
         if axis == NODE_LABEL_KEY:
             true_keys = (labels[true],) if self.oracle else ()  # Must be before score()
             is_valid = self.state.is_valid_label
         else:
             true_keys = None
             is_valid = self.state.is_valid_action
-        scores, features = self.score(self.models[0], axis)
+        scores, features = self.score(self.model, axis)
         for model in self.models[1:]:  # Ensemble if given more than one model
             label_scores = dict(zip(model.classifier.labels[axis].all, self.score(model, axis)[0]))  # Align label order
             scores += [label_scores.get(a, 0) for a in labels.all]  # Product of Experts, assuming log(softmax)
@@ -201,7 +209,7 @@ class PassageParser(AbstractParser):
         yield from scores.argsort()[::-1]  # Contains the max, but otherwise items might be missed (different order)
 
     def finish(self, evaluate, status):
-        self.models[0].classifier.finished_item(self.training)  # So that dynet.renew_cg happens only once
+        self.model.classifier.finished_item(self.training)  # So that dynet.renew_cg happens only once
         for model in self.models[1:]:
             model.classifier.finished_item(True)
         if not self.training or self.config.args.verify:
@@ -360,15 +368,13 @@ class BatchParser(AbstractParser):
         return self.duration / self.num_passages
 
 
-class Parser:
+class Parser(AbstractParser):
     """ Main class to implement transition-based UCCA parser """
     def __init__(self, model_files=None, config=None, beam=1):
-        self.config = config or Config()
-        self.best_score = self.dev = self.iteration = self.epoch = self.batch = None
-        if isinstance(model_files, str):
-            model_files = (model_files,)
-        self.models = list(map(Model, model_files))
+        super().__init__(config=config or Config(), training=False,
+                         models=list(map(Model, (model_files,) if isinstance(model_files, str) else model_files)))
         self.beam = beam  # Currently unused
+        self.best_score = self.dev = self.iteration = self.epoch = self.batch = None
         self.trained = self.save_init = False
 
     def train(self, passages=None, dev=None, test=None, iterations=1):
@@ -383,22 +389,21 @@ class Parser:
         self.dev = dev
         if passages:
             assert len(self.models) == 1, "Can only train one model at a time"
-            model = self.models[0]
-            if model.is_retrainable():
+            if self.model.is_retrainable():
                 try:
-                    model.load(is_finalized=False)
+                    self.model.load(is_finalized=False)
                 except FileNotFoundError:
                     print("not found, starting from untrained model.")
             for f in self.config.args.formats:
                 self.config.set_format(f)
-                model.init_model()
+                self.model.init_model()
             self.print_config()
-            self.best_score = model.classifier.best_score if model.classifier else 0
+            self.best_score = self.model.classifier.best_score if self.model.classifier else 0
             iterations = [i if isinstance(i, Iterations) else Iterations(i)
                           for i in (iterations if hasattr(iterations, "__iter__") else (iterations,))]
             end = None
             for self.iteration, it in enumerate(iterations, start=1):
-                start = model.classifier.epoch + 1 if model.classifier else 1
+                start = self.model.classifier.epoch + 1 if self.model.classifier else 1
                 if end and start < end + 1:
                     print("Dropped %d iterations because best score was on %d" % (end - start + 1, start - 1))
                 end = start + it.epochs
@@ -413,10 +418,10 @@ class Parser:
                 print("Trained %d iterations" % end)
                 if dev:
                     if self.iteration < len(iterations):
-                        if model.is_retrainable():
-                            model.load(is_finalized=False)  # Load best model to prepare for next iteration
+                        if self.model.is_retrainable():
+                            self.model.load(is_finalized=False)  # Load best model to prepare for next iteration
                     elif test:
-                        model.load()  # Load best model to prepare for test
+                        self.model.load()  # Load best model to prepare for test
         else:  # No passages to train on, just load model
             for model in self.models:
                 model.load()
@@ -424,8 +429,8 @@ class Parser:
 
     def eval_and_save(self, last=False, finished_epoch=False):
         scores = None
-        model = self.models[0]
-        self.models[0] = finalized = model.finalize(finished_epoch=finished_epoch)
+        model = self.model
+        self.model = finalized = model.finalize(finished_epoch=finished_epoch)
         if self.dev:
             if not self.best_score:
                 finalized.save(save_init=self.save_init)
