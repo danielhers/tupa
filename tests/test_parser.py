@@ -120,7 +120,7 @@ def test_parser(config, model_type, formats, default_setting, text=True):
     evaluate = ("amr" not in formats)
     for mode in "train", "load":
         print("-- %sing %s" % (mode, model_type))
-        config.update(dict(classifier=model_type))
+        config.update(dict(classifier=model_type, copy_shared=None))
         p = Parser(model_files=filename, config=config)
         p.save_init = True
         list(p.train(passages if mode == "train" else None, dev=passages, test=True, iterations=2))
@@ -229,7 +229,7 @@ def test_model(model_type, formats, test_passage, iterations, config):
     filename = "test_files/models/test_%s_%s" % (model_type, "_".join(formats))
     for f in glob(filename + ".*"):
         os.remove(f)
-    config.update(dict(classifier=model_type))
+    config.update(dict(classifier=model_type, copy_shared=None))
     finalized = model = Model(filename, config=config)
     for i in range(iterations):
         parse(formats, model, test_passage, train=True)
