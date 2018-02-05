@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from .feature_extractor import FeatureExtractor
+from .feature_extractor import FeatureExtractor, get_prop
 from .feature_params import FeatureParameters, NumericFeatureParameters
 from ..model_util import MISSING_VALUE, UnknownDict, save_dict, load_dict
 
@@ -101,7 +101,7 @@ class DenseFeatureExtractor(FeatureExtractor):
         features = OrderedDict()
         for suffix, param in self.params.items():
             if param.indexed and param.enabled:
-                values = [self.get_prop(None, n, None, None, param.effective_suffix, state) for n in state.terminals]
+                values = [get_prop(None, n, None, None, param.effective_suffix, state) for n in state.terminals]
                 assert MISSING_VALUE not in values, "Missing value occurred in feature initialization: '%s'" % suffix
                 param.init_data()
                 features[suffix] = [param.data[v] for v in values]
@@ -123,7 +123,7 @@ class DenseFeatureExtractor(FeatureExtractor):
                     continue
             feature_template, default, values = (self.numeric_features_template, 0, [state.node_ratio()]) \
                 if param.numeric else (self.non_numeric_feature_templates[param.effective_suffix], MISSING_VALUE, [])
-            values += self.calc_feature(feature_template, state, default, param.indexed)
+            values += feature_template.extract(state, default, param.indexed)
             if not param.numeric and not param.indexed:  # Replace categorical values with their values in data dict
                 param.init_data()
                 values = [v if v == MISSING_VALUE else param.data[v] for v in values]

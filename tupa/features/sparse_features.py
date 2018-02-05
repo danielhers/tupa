@@ -61,7 +61,7 @@ class SparseFeatureExtractor(FeatureExtractor):
             "n/t": state.node_ratio(),  # number of nodes divided by number of terminals
         }
         for feature_template in self.feature_templates:
-            values = self.calc_feature(feature_template, state)
+            values = feature_template.extract(state)
             if values is not None:
                 features["%s=%s" % (feature_template.name, " ".join(map(str, values)))] = 1
         return features

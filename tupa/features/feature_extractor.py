@@ -21,9 +21,31 @@ class FeatureTemplate:
         self.name = name
         self.suffix = name[-1]
         self.elements = elements
+        for prev, elem in zip(self.elements[:-1], self.elements[1:]):
+            if not prev.properties:
+                assert prev.previous is None, "More than one consecutive empty element: %s%s" % (prev.previous, prev)
+                elem.previous = prev
 
     def __str__(self):
         return self.name
+
+    def extract(self, state, default=None, indexed=False):
+        values = []
+        prev_node = None
+        for element in self.elements:
+            node = element.get_node(state)
+            if element.properties:
+                for prop in ("i",) if indexed else element.properties:
+                    value = get_prop(element, node, prev_node, element.previous, prop, state)
+                    if value is None:
+                        if default is None:
+                            return None
+                        value = default
+                    values.append(value)
+                prev_node = None
+            else:
+                prev_node = node
+        return values
 
 
 class FeatureTemplateElement:
@@ -78,12 +100,35 @@ class FeatureTemplateElement:
         self.index = int(index)
         self.relatives = relatives
         self.properties = properties
+        self.previous = None
 
     def __str__(self):
         return self.source + str(self.index) + self.relatives + self.properties
 
     def __eq__(self, other):
         return self.source == other.source and self.index == other.index and self.relatives == other.relatives
+
+    def get_node(self, state):
+        try:
+            if self.source == "s":
+                node = state.stack[-1 - self.index]
+            elif self.source == "b":
+                node = state.buffer[self.index]
+            else:  # source == "a"
+                node = state.actions[-1 - self.index]
+        except IndexError:
+            return None
+        for relative in self.relatives:
+            nodes = node.parents if relative.isupper() else node.children
+            if not nodes:
+                return None
+            if relative.lower() == "r":
+                if len(nodes) == 1:
+                    return None
+                node = nodes[-1]
+            else:
+                node = nodes[0]
+        return node
 
 
 class FeatureExtractor:
@@ -132,65 +177,21 @@ class FeatureExtractor:
     def load(self, filename):
         pass
 
-    @staticmethod
-    def calc_feature(feature_template, state, default=None, indexed=False):
-        values = []
-        prev_elem = prev_node = None
-        for element in feature_template.elements:
-            node = get_node(element, state)
-            if element.properties:
-                for prop in ("i",) if indexed else element.properties:
-                    value = FeatureExtractor.get_prop(element, node, prev_node, prev_elem, prop, state)
-                    if value is None:
-                        if default is None:
-                            return None
-                        value = default
-                    values.append(value)
-                prev_elem = prev_node = None
-            else:
-                assert prev_elem is None, "More than one consecutive empty element: %s%s" % (prev_elem, element)
-                prev_elem = element
-                prev_node = node
-        return values
-
-    @staticmethod
-    def get_prop(element, node, prev_node, prev_elem, prop, state):
-        if node is None:
-            return None
-        try:
-            if element is not None and element.source == "a":
-                return action_prop(node, prop)
-            elif prop in "pq":
-                return separator_prop(state.stack[-1:-3:-1], state.terminals, prop)
-            return node_prop(node, prop, prev_node, prev_elem)
-        except (TypeError, AttributeError, StopIteration):
-            return None
-
     def get_all_features(self, indexed=False):
         return [str(e) for t in self.feature_templates for e in t.elements]
 
 
-def get_node(element, state):
-    try:
-        if element.source == "s":
-            node = state.stack[-1 - element.index]
-        elif element.source == "b":
-            node = state.buffer[element.index]
-        else:  # source == "a"
-            node = state.actions[-1 - element.index]
-    except IndexError:
+def get_prop(element, node, prev_node, prev_elem, prop, state):
+    if node is None:
         return None
-    for relative in element.relatives:
-        nodes = node.parents if relative.isupper() else node.children
-        if not nodes:
-            return None
-        if relative.lower() == "r":
-            if len(nodes) == 1:
-                return None
-            node = nodes[-1]
-        else:
-            node = nodes[0]
-    return node
+    try:
+        if element is not None and element.source == "a":
+            return action_prop(node, prop)
+        elif prop in "pq":
+            return separator_prop(state.stack[-1:-3:-1], state.terminals, prop)
+        return node_prop(node, prop, prev_node, prev_elem)
+    except (TypeError, AttributeError, StopIteration):
+        return None
 
 
 ACTION_PROP_GETTERS = {
