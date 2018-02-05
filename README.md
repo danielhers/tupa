@@ -53,9 +53,9 @@ To download and extract models pre-trained on the Wiki corpus, run:
 
 Run the parser using any of them:
 
-    python -m tupa example.txt -m models/sparse
-    python -m tupa example.txt -m models/mlp
-    python -m tupa example.txt -m models/bilstm
+    python -m tupa example.txt -c sparse -m models/sparse
+    python -m tupa example.txt -c mlp -m models/mlp
+    python -m tupa example.txt -c bilstm -m models/bilstm
     
 ### Other languages
 
