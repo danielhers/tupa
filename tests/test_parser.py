@@ -13,11 +13,12 @@ from scheme.convert import FROM_FORMAT
 from scheme.evaluate import Scores
 from scheme.util.amr import WIKIFIER
 from tupa.action import Actions
-from tupa.config import Config, CLASSIFIERS
+from tupa.config import Config, CLASSIFIERS, BIRNN
 from tupa.model import Model, ClassifierProperty, NODE_LABEL_KEY
 from tupa.oracle import Oracle
 from tupa.parse import Parser
 from tupa.states.state import State
+from .conftest import FORMATS
 
 
 # noinspection PyUnresolvedReferences
@@ -146,6 +147,19 @@ def test_parser(config, model_type, formats, default_setting, text=True):
     if evaluate:
         print("-- average f1: %.3f, %.3f\n" % tuple(scores))
         assert scores[0] == pytest.approx(scores[1], 0.1)
+
+
+@pytest.mark.parametrize("model_type", (BIRNN,))
+def test_copy_shared(config, model_type):
+    filename = "test_files/models/%s_%s_copy_shared" % ("_".join(FORMATS), model_type)
+    for f in glob(filename + ".*"):
+        os.remove(f)
+    config.update(dict(classifier=model_type, copy_shared=[FORMATS[0]]))
+    for formats in ((FORMATS[0],), FORMATS):
+        p = Parser(model_files=filename, config=config)
+        passages = load_passages(*formats)
+        list(p.train(passages, dev=passages, test=True, iterations=2))
+        list(p.parse(passages, evaluate=True))
 
 
 def weight_decay(model):
