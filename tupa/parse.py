@@ -169,7 +169,6 @@ class PassageParser(AbstractParser):
         if self.config.args.use_gold_node_labels:
             return true_label, true_label
         features = scores = labels = true = None
-        model = self.models[0]
         for model in self.models:
             features = model.feature_extractor.extract_features(self.state)
             model_scores = model.classifier.score(features, axis=NODE_LABEL_KEY)  # Returns NumPy array
@@ -186,6 +185,7 @@ class PassageParser(AbstractParser):
             is_correct = (label == true_label)
             if is_correct:
                 self.correct_label_count += 1
+            model = self.models[0]
             if self.training and not (is_correct and
                                       ClassifierProperty.update_only_on_error in model.get_classifier_properties()):
                 assert not model.is_finalized, "Updating finalized model"
