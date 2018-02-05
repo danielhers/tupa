@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from .feature_extractor import FeatureExtractor, get_prop
+from .feature_extractor import FeatureExtractor, calc
 from .feature_params import FeatureParameters, NumericFeatureParameters
 from ..model_util import MISSING_VALUE, UnknownDict, save_dict, load_dict
 
@@ -101,7 +101,7 @@ class DenseFeatureExtractor(FeatureExtractor):
         features = OrderedDict()
         for suffix, param in self.params.items():
             if param.indexed and param.enabled:
-                values = [get_prop(None, n, None, param.effective_suffix, state) for n in state.terminals]
+                values = [calc(n, state, param.effective_suffix) for n in state.terminals]
                 assert MISSING_VALUE not in values, "Missing value occurred in feature initialization: '%s'" % suffix
                 param.init_data()
                 features[suffix] = [param.data[v] for v in values]

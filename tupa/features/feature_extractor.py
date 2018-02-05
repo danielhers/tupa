@@ -89,6 +89,7 @@ class FeatureTemplateElement:
         self.relatives = relatives
         self.properties = properties
         self.node = self.previous = None
+        self.getters = [prop_getter(prop, self.source) for prop in self.properties]
 
     def __str__(self):
         return self.source + str(self.index) + self.relatives + self.properties
@@ -120,14 +121,16 @@ class FeatureTemplateElement:
 
     def extract(self, state, default, indexed):
         self.set_node(state)
-        if self.properties:
-            for prop in ("i",) if indexed else self.properties:
-                value = get_prop(self, self.node, self.previous, prop, state)
-                if value is None:
-                    if default is None:
-                        raise ValueError()
-                    value = default
-                yield value
+        return [self.get_prop(state, prop, getter, default) for prop, getter in
+                ((("i", None),) if indexed else zip(self.properties, self.getters))] if self.properties else ()
+
+    def get_prop(self, state, prop, getter, default):
+        value = calc(self.node, state, prop, getter, self.previous)
+        if value is None:
+            if default is None:
+                raise ValueError()
+            value = default
+        return value
 
 
 class FeatureExtractor:
@@ -178,41 +181,6 @@ class FeatureExtractor:
 
     def get_all_features(self, indexed=False):
         return [str(e) for t in self.feature_templates for e in t.elements]
-
-
-def get_prop(element, node, prev, prop, state):
-    if node is None:
-        return None
-    try:
-        if element is not None and element.source == "a":
-            return action_prop(node, prop)
-        elif prop in "pq":
-            return separator_prop(state.stack[-1:-3:-1], state.terminals, prop)
-        return node_prop(node, prop, prev)
-    except (TypeError, AttributeError, StopIteration):
-        return None
-
-
-ACTION_PROP_GETTERS = {
-    "A": lambda a: a.type,
-    "e": lambda a: a.tag if isinstance(a.tag, str) else None,  # Ignore numeric tags for Swap, Label actions
-}
-
-
-def action_prop(action, prop):
-    return ACTION_PROP_GETTERS[prop](action)
-
-
-def separator_prop(nodes, terminals, prop):
-    if len(nodes) < 2:
-        return None
-    t0, t1 = sorted([head_terminal(node) for node in nodes], key=lambda t: t.index)
-    punctuation = [t for t in terminals[t0.index:t1.index - 1] if t.tag == layer0.NodeTags.Punct]
-    if prop == "p" and len(punctuation) == 1:
-        return punctuation[0].tok[Attr.ORTH.value]
-    if prop == "q":
-        return len(punctuation)
-    return None
 
 
 EDGE_PRIORITY = {tag: i for i, tag in enumerate((
@@ -301,6 +269,19 @@ def dep_distance(node1, node2, *_):
     return None
 
 
+def get_punctuation(nodes, terminals):
+    if len(nodes) < 2:
+        return None
+    t0, t1 = sorted([head_terminal(node) for node in nodes], key=lambda t: t.index)
+    return [t for t in terminals[t0.index:t1.index - 1] if t.tag == layer0.NodeTags.Punct]
+
+
+ACTION_PROP_GETTERS = {
+    "A": lambda a, *_: a.type,
+    "e": lambda a, *_: a.tag if isinstance(a.tag, str) else None,  # Ignore numeric tags for Swap, Label actions
+}
+
+
 NODE_PROP_GETTERS = {
     "w": lambda node, *_: head_terminal(node).tok[Attr.ORTH.value],
     "t": lambda node, *_: head_terminal(node).tok[Attr.TAG.value],
@@ -325,5 +306,24 @@ NODE_PROP_GETTERS = {
 }
 
 
-def node_prop(node, prop, prev):
-    return NODE_PROP_GETTERS[prop](node, None if prev is None else prev.node, prev is not None)
+SEP_PROP_GETTERS = {
+    "p": lambda nodes, terminals: get_punctuation(nodes, terminals)[0].tok[Attr.ORTH.value],
+    "q": lambda nodes, terminals: len(get_punctuation(nodes, terminals)),
+}
+
+
+def prop_getter(prop, source=None):
+    return (ACTION_PROP_GETTERS if source == "a" else SEP_PROP_GETTERS if prop in "pq" else NODE_PROP_GETTERS)[prop]
+
+
+def calc(node, state, prop=None, getter=None, prev=None):
+    if node is None:
+        return None
+    if getter is None:
+        getter = prop_getter(prop)
+    try:
+        if prop in "pq":
+            return getter(state.stack[-1:-3:-1], state.terminals)
+        return getter(node, None if prev is None else prev.node, prev is not None)
+    except (TypeError, AttributeError, IndexError, StopIteration):
+        return None
