@@ -415,7 +415,7 @@ class Parser(AbstractParser):
                     list(self.parse(passages, mode=ParseMode.train))
                     yield self.eval_and_save(self.iteration == len(iterations) and self.epoch == end - 1,
                                              finished_epoch=True)
-                print("Trained %d iterations" % end)
+                print("Trained %d iterations" % (end - 1))
                 if dev:
                     if self.iteration < len(iterations):
                         if self.model.is_retrainable():
