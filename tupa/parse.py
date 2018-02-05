@@ -92,9 +92,9 @@ class PassageParser(AbstractParser):
             if self.config.args.action_stats:
                 with open(self.config.args.action_stats, "a") as f:
                     print(",".join(map(str, [predicted_action, action] + list(true_actions.values()))), file=f)
-            self.print("\n".join(["  predicted: %-15s true: %-15s taken: %-15s %s" % (
+            self.print(lambda: "\n".join(["  predicted: %-15s true: %-15s taken: %-15s %s" % (
                 predicted_action, "|".join(map(str, true_actions.values())), action, self.state) if self.oracle else
-                                  "  action: %-15s %s" % (action, self.state)] + (
+                                          "  action: %-15s %s" % (action, self.state)] + (
                 ["  predicted label: %-9s true label: %s" % (predicted_label, true_label) if self.oracle and not
                  self.config.args.use_gold_node_labels else "  label: %s" % label] if need_label else []) + [
                 "    " + l for l in self.state.log]))
@@ -116,13 +116,14 @@ class PassageParser(AbstractParser):
         for model in self.models:
             features = model.feature_extractor.extract_features(self.state)
             model_scores = model.classifier.score(features, axis=self.config.format)  # Returns NumPy array
-            scores_map = OrderedDict(zip(model.actions.all, model_scores))
+            scores_map = OrderedDict(zip(model.actions.all, model_scores)) \
+                if scores is not None or self.config.args.verbose >= 4 else None
             if scores is None:
                 scores = model_scores
                 actions = model.actions
             else:
                 scores += [scores_map.get(a, 0) for a in actions.all]  # Product of Experts, assuming log(softmax)
-            self.print("  action scores: %s" % scores_map, level=4)
+            self.print(lambda: "  action scores: %s" % scores_map, level=4)
         try:
             predicted_action = self.predict(scores, actions.all, self.state.is_valid_action)
         except StopIteration as e:
@@ -172,14 +173,15 @@ class PassageParser(AbstractParser):
         for model in self.models:
             features = model.feature_extractor.extract_features(self.state)
             model_scores = model.classifier.score(features, axis=NODE_LABEL_KEY)  # Returns NumPy array
-            scores_map = OrderedDict(zip(model.labels.all, model_scores))
+            scores_map = OrderedDict(zip(model.labels.all, model_scores)) \
+                if scores is not None or self.config.args.verbose >= 4 else None
             if scores is None:
                 scores = model_scores
                 labels = model.labels
                 true = (labels[true_label],) if self.oracle else ()  # Needs to happen before score()
             else:
                 scores += [scores_map.get(a, 0) for a in labels.all]  # Product of Experts, assuming log(softmax)
-            self.print("  label scores: %s" % scores_map, level=4)
+            self.print(lambda: "  label scores: %s" % scores_map, level=4)
         label = predicted_label = self.predict(scores, labels.all, self.state.is_valid_label)
         if self.oracle:
             is_correct = (label == true_label)
@@ -276,7 +278,7 @@ class PassageParser(AbstractParser):
     def print(self, message, level=3):
         if self.config.args.verbose >= level:
             try:
-                print(message, flush=True)
+                print(message() if hasattr(message, "__call__") else message, flush=True)
             except UnicodeEncodeError:
                 pass
 
