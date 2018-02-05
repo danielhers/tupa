@@ -161,7 +161,7 @@ class PassageParser(AbstractParser):
         return label, pred
 
     def correct(self, axis, label, predicted, scores, true, true_keys):
-        true_values = is_correct = None
+        true_values = is_correct = ()
         if axis == NODE_LABEL_KEY:
             if self.oracle:
                 is_correct = (label == true)
