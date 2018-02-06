@@ -26,7 +26,7 @@ class Params:
             self.params["word_vectors"] = self.params["update_word_vectors"] = None
         if not self.params["word_dim"]:
             self.params["max_words"] = self.params["word_dropout"] = 0
-        self.params["model"] = "%s/%s-%d" % (MODELS_DIR, self.params["classifier"], self.params["seed"])
+        self.params["models"] = ["%s/%s-%d" % (MODELS_DIR, self.params["classifier"], self.params["seed"])]
         self.scores = None
         self.all_params = OrderedDict(list(self.params.items()) +
                                       [(a + "." + k, v) for a, p in self.hyperparams.items() for k, v in p.items()])
