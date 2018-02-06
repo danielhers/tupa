@@ -134,6 +134,11 @@ def parse(formats, model, passage, train):
         model.classifier.finished_item(train=train)
 
 
+def remove_existing(filename):
+    for f in glob(filename + ".*"):
+        os.remove(f)
+
+
 @pytest.mark.parametrize("setting", Settings.all(), ids=str)
 @pytest.mark.parametrize("passage", load_passages(), ids=passage_id)
 def test_oracle(config, setting, passage, write_oracle_actions):
@@ -165,8 +170,7 @@ def test_oracle(config, setting, passage, write_oracle_actions):
 @pytest.mark.parametrize("model_type", CLASSIFIERS)
 def test_parser(config, model_type, formats, default_setting, text=True):
     filename = "test_files/models/%s_%s%s" % ("_".join(formats), model_type, default_setting.suffix())
-    for f in glob(filename + ".*"):
-        os.remove(f)
+    remove_existing(filename)
     config.update(default_setting.dict())
     scores = []
     params = []
@@ -206,8 +210,7 @@ def test_parser(config, model_type, formats, default_setting, text=True):
 @pytest.mark.parametrize("model_type", (BIRNN,))
 def test_copy_shared(config, model_type):
     filename = "test_files/models/%s_%s_copy_shared" % ("_".join(FORMATS), model_type)
-    for f in glob(filename + ".*"):
-        os.remove(f)
+    remove_existing(filename)
     config.update(dict(classifier=model_type, lstm_layers=0, copy_shared=[FORMATS[0]]))
     for formats in ((FORMATS[0],), FORMATS):
         p = Parser(model_files=filename, config=config)
@@ -224,8 +227,7 @@ def test_ensemble(config, model_type):
     passages = load_passages(FORMATS[0])
     for i, filename in enumerate(filenames, start=1):
         config.update(dict(seed=i))
-        for f in glob(filename + ".*"):
-            os.remove(f)
+        remove_existing(filename)
         list(Parser(model_files=filename, config=config).train(passages, dev=passages, iterations=2))
     list(Parser(model_files=filenames, config=config).parse(passages, evaluate=True))
 
@@ -233,13 +235,27 @@ def test_ensemble(config, model_type):
 @pytest.mark.parametrize("model_type", (BIRNN,))
 def test_empty_features(empty_features_config, model_type):
     filename = "test_files/models/%s_%s_empty_features" % (FORMATS[0], model_type)
-    for f in glob(filename + ".*"):
-        os.remove(f)
+    remove_existing(filename)
     empty_features_config.update(dict(classifier=model_type))
     passages = load_passages(FORMATS[0])
     p = Parser(model_files=filename, config=empty_features_config)
     list(p.train(passages, dev=passages, test=True, iterations=2))
     list(p.parse(passages, evaluate=True))
+
+
+# @pytest.mark.parametrize("model_type", (BIRNN,))
+# def test_change_hyperparams_load(empty_features_config, model_type):
+#     filename = "test_files/models/%s_%s_change_hyperparams" % (FORMATS[0], model_type)
+#     remove_existing(filename)
+#     c = empty_features_config.copy()
+#     c.update(dict(classifier=model_type))
+#     passages = load_passages(FORMATS[0])
+#     for _ in range(2):
+#         p = Parser(model_files=filename, config=c)
+#         list(p.train(passages, dev=passages, test=True, iterations=2))
+#         list(p.parse(passages, evaluate=True))
+#         c.update({"ner_dim": 1, "action_dim": 1, "word_dim_external": 1, "word_dim": 1, "node_label_dim": 1,
+#                   "node_category_dim": 1, "edge_label_dim": 1, "tag_dim": 1, "dep_dim": 1})
 
 
 def test_params(test_config):
@@ -273,8 +289,7 @@ def test_boolean_params(test_config):
 @pytest.mark.parametrize("model_type", CLASSIFIERS)
 def test_model(model_type, formats, test_passage, iterations, config):
     filename = "test_files/models/test_%s_%s" % (model_type, "_".join(formats))
-    for f in glob(filename + ".*"):
-        os.remove(f)
+    remove_existing(filename)
     config.update(dict(classifier=model_type, copy_shared=None))
     finalized = model = Model(filename, config=config)
     for i in range(iterations):
