@@ -17,5 +17,5 @@ def pytest_generate_tests(metafunc):
     if "formats" in metafunc.fixturenames:
         formats = [[f] for f in FORMATS]
         if metafunc.config.getoption("--multitask"):
-            formats += [[[FORMATS][0], f] for f in FORMATS[1:]]
+            formats += [[FORMATS[0], f] for f in FORMATS[1:]]
         metafunc.parametrize("formats", formats, ids="-".join)
