@@ -1,6 +1,7 @@
 """Testing code for the tupa.features package, unit-testing only."""
 
 import pytest
+from ucca import textutil
 
 from tupa.action import Actions
 from tupa.features.dense_features import DenseFeatureExtractor
@@ -34,6 +35,7 @@ FEATURE_EXTRACTORS = [
 @pytest.mark.parametrize("feature_extractor_creator", FEATURE_EXTRACTORS, ids=str)
 @pytest.mark.parametrize("passage", load_passages(), ids=passage_id)
 def test_features(config, feature_extractor_creator, passage, write_features):
+    textutil.annotate(passage, as_array=True, verbose=True)
     config.set_format(passage.extra.get("format"))
     feature_extractor = feature_extractor_creator(config)
     oracle = Oracle(passage)
@@ -54,7 +56,7 @@ def test_features(config, feature_extractor_creator, passage, write_features):
         if state.finished:
             break
     features = ["%s %s\n" % i for f in features if f for i in (sorted(f.items()) + [("", "")])]
-    compare_file = "test_files/features/%s-%s.txt" % (passage.ID, feature_extractor_creator.name)
+    compare_file = "test_files/features/%s-%s.txt" % (passage.ID, str(feature_extractor_creator))
     if write_features:
         with open(compare_file, "w") as f:
             f.writelines(features)
@@ -69,7 +71,7 @@ def test_feature_templates(config, feature_extractor_creator, write_features):
                 feature_extractor.non_numeric_feature_templates[p.effective_suffix] for _, p in
                 sorted(feature_extractor.params.items())] or sorted(feature_extractor.feature_templates, key=str)
     features = ["%s\n" % i for i in features]
-    compare_file = "test_files/features/templates-%s.txt" % feature_extractor_creator.name
+    compare_file = "test_files/features/templates-%s.txt" % str(feature_extractor_creator)
     if write_features:
         with open(compare_file, "w") as f:
             f.writelines(features)
