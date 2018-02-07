@@ -94,7 +94,7 @@ class PassageParser(AbstractParser):
                 self.check_loop()
             self.label_node()  # In case root node needs labeling
             true_actions = self.get_true_actions()
-            action, predicted_action = self.choose(true_actions, self.config.format)
+            action, predicted_action = self.choose(true_actions)
             self.state.transition(action)
             need_label, label, predicted_label, true_label = self.label_node(action)
             if self.config.args.action_stats:
@@ -136,7 +136,9 @@ class PassageParser(AbstractParser):
             self.state.label_node(raw_true_label if label == true_label else label)
         return need_label, label, predicted_label, true_label
 
-    def choose(self, true, axis, name="action"):
+    def choose(self, true, axis=None, name="action"):
+        if axis is None:
+            axis = self.config.format
         if axis == NODE_LABEL_KEY and self.config.args.use_gold_node_labels:
             return true, true
         labels = self.model.classifier.labels[axis]
@@ -156,19 +158,19 @@ class PassageParser(AbstractParser):
         except StopIteration as e:
             raise ParserException("No valid %s available\n%s" % (name, self.oracle.log if self.oracle else "")) from e
         label, is_correct, true_keys, true_values = self.correct(axis, label, pred, scores, true, true_keys)
+        if self.training:
+            if not (is_correct and ClassifierProperty.update_only_on_error in self.model.get_classifier_properties()):
+                assert not self.model.is_finalized, "Updating finalized model"
+                self.model.classifier.update(
+                    features, axis=axis, true=true_keys, pred=labels[pred] if axis == NODE_LABEL_KEY else pred.id,
+                    importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values] or None)
+            if not is_correct and self.config.args.early_update:
+                self.state.finished = True
         for model in self.models:
-            if self.training:
-                if not (is_correct and ClassifierProperty.update_only_on_error in model.get_classifier_properties()):
-                    assert not model.is_finalized, "Updating finalized model"
-                    model.classifier.update(
-                        features, axis=axis, true=true_keys, pred=labels[pred] if axis == NODE_LABEL_KEY else pred.id,
-                        importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values] or None)
-                if not is_correct and self.config.args.early_update:
-                    self.state.finished = True
             model.classifier.finished_step(self.training)
         return label, pred
 
-    def correct(self, axis, label, predicted, scores, true, true_keys):
+    def correct(self, axis, label, pred, scores, true, true_keys):
         true_values = is_correct = ()
         if axis == NODE_LABEL_KEY:
             if self.oracle:
@@ -180,12 +182,12 @@ class PassageParser(AbstractParser):
             self.label_count += 1
         else:  # action
             true_keys, true_values = map(list, zip(*true.items())) if true else (None, None)
-            label = true.get(predicted.id)
+            label = true.get(pred.id)
             is_correct = (label is not None)
             if is_correct:
                 self.correct_action_count += 1
             else:
-                label = true_values[scores[true_keys].argmax()] if self.training else predicted
+                label = true_values[scores[true_keys].argmax()] if self.training else pred
             self.action_count += 1
         return label, is_correct, true_keys, true_values
 
