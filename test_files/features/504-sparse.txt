@@ -1,0 +1,1360 @@
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.10000000000000009
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.10000000000000009
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1h=0 1
+n/t 0.19999999999999996
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.19999999999999996
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.19999999999999996
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE L 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.19999999999999996
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE L 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.19999999999999996
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.19999999999999996
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1h=0 1
+n/t 0.30000000000000004
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.30000000000000004
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.30000000000000004
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=NODE P 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=P 1
+b0s0x=1 1
+b1h=0 1
+n/t 0.3999999999999999
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a1Ae=NODE P 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.3999999999999999
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.3999999999999999
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE H 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.3999999999999999
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE H 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.3999999999999999
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 H 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1h=0 1
+n/t 0.5
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=Terminal H 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 H 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.5
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.5
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=1 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.5
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE U 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=1 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.5
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE U 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=1 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.5
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0e=H 1
+s0b0x=1 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.5
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.5
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 H 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1h=0 1
+n/t 0.6000000000000001
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=Terminal H 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 H 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.6000000000000001
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.6000000000000001
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=NODE A 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=A 1
+b0s0x=1 1
+b1h=0 1
+n/t 0.7
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=A H 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-REMOTE A 1
+a1Ae=NODE A 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=A 1
+b0s0x=1 1
+b1h=0 1
+n/t 0.7
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=1 1
+s0P=2 1
+s0b0x=0 1
+s0es1e=A H 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-REMOTE A 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.7
+s0C=2 1
+s0E=1 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.7
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.7
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE H 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.7
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE H 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.7
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 H 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1h=0 1
+n/t 0.8
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=Terminal H 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 H 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.8
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.8
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE P 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.8
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=P H 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE P 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.8
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.8
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 H 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1h=0 1
+n/t 0.8999999999999999
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=Terminal H 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 H 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.8999999999999999
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 0.8999999999999999
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=NODE R 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=R 1
+b0s0x=1 1
+b1h=0 1
+n/t 1.0
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=R H 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a1Ae=NODE R 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 1.0
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 1.0
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE A 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 1.0
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=A H 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE A 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 1.0
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 A 1
+s0xs2e=0 H 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1h=0 1
+n/t 1.1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=Terminal A 1
+s0es1es2e=Terminal A H 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 A 1
+s0xs2e=0 H 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1h=0 1
+n/t 1.1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=A H 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 1.1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE C 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 1.1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=C A 1
+s0es1es2e=C A H 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE C 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 1.1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 C 1
+s0xs2e=0 A 1
+s1h=1 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE Terminal 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 1.1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=Terminal C 1
+s0es1eq=Terminal C 0 1
+s0es1es2e=Terminal C A 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 C 1
+s0xs2e=0 A 1
+s1h=1 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE Terminal 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1h=0 1
+n/t 1.1
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=C A 1
+s0es1es2e=C A H 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+n/t 1.1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 C 1
+s0xs2e=0 A 1
+s1h=1 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE Terminal 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+n/t 1.1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=Terminal C 1
+s0es1eq=Terminal C 0 1
+s0es1es2e=Terminal C A 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 C 1
+s0xs2e=0 A 1
+s1h=1 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE Terminal 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+n/t 1.1
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=C A 1
+s0es1es2e=C A H 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+n/t 1.1
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=A H 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+n/t 1.1
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+n/t 1.1
+s0C=4 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s1s0x=0 1
+ 
+b 1
+b0s0x=0 1
+n/t 1.1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0h=0 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+n/t 1.2000000000000002
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+n/t 1.2000000000000002
+s0C=4 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s1s0x=0 1
+ 
+b 1
+b0s0x=0 1
+n/t 1.2000000000000002
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE U 1
+b 1
+n/t 1.2000000000000002
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE U 1
+b 1
+b0s0x=0 1
+n/t 1.2000000000000002
+s0C=5 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s1s0x=0 1
+ 
+b 1
+n/t 1.2000000000000002
+ 
