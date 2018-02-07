@@ -101,23 +101,24 @@ class FeatureTemplateElement:
         self.node = None
         try:
             if self.source == "s":
-                self.node = state.stack[-1 - self.index]
+                node = state.stack[-1 - self.index]
             elif self.source == "b":
-                self.node = state.buffer[self.index]
+                node = state.buffer[self.index]
             else:  # source == "a"
-                self.node = state.actions[-1 - self.index]
+                node = state.actions[-1 - self.index]
         except IndexError:
             return
         for relative in self.relatives:
-            nodes = self.node.parents if relative.isupper() else self.node.children
+            nodes = node.parents if relative.isupper() else node.children
             if not nodes:
                 return
             if relative.lower() == "r":
                 if len(nodes) == 1:
                     return
-                self.node = nodes[-1]
+                node = nodes[-1]
             else:
-                self.node = nodes[0]
+                node = nodes[0]
+        self.node = node
 
     def extract(self, state, default, indexed):
         self.set_node(state)
@@ -278,7 +279,7 @@ def get_punctuation(nodes, terminals):
 
 ACTION_PROP_GETTERS = {
     "A": lambda a, *_: a.type,
-    "e": lambda a, *_: a.tag if isinstance(a.tag, str) else None,  # Ignore numeric tags for Swap, Label actions
+    "e": lambda a, *_: a.tag   # if isinstance(a.tag, str) else None,  # Ignore numeric tags for Swap, Label actions
 }
 
 
