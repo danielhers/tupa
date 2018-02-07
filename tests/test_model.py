@@ -1,0 +1,45 @@
+"""Testing code for the tupa.model module, unit-testing only."""
+
+import pytest
+
+from tupa.config import CLASSIFIERS
+from tupa.model import Model, ClassifierProperty, NODE_LABEL_KEY
+from tupa.states.state import State
+from .conftest import remove_existing, weight_decay, assert_all_params_equal
+
+
+def parse(formats, model, passage, train):
+    for axis in formats:
+        axes = (axis,) + ((NODE_LABEL_KEY,) if axis == "amr" else ())
+        model.config.set_format(axis)
+        model.init_model()
+        state = State(passage)
+        if ClassifierProperty.require_init_features in model.get_classifier_properties():
+            model.init_features(state, axes, train=train)
+        features = model.feature_extractor.extract_features(state)
+        for a in axes:
+            pred = model.classifier.score(features, axis=a).argmax()
+            if train:
+                model.classifier.update(features, axis=a, pred=pred, true=[0])
+        model.classifier.finished_step(train=train)
+        model.classifier.finished_item(train=train)
+
+
+@pytest.mark.parametrize("iterations", (1, 2))
+@pytest.mark.parametrize("model_type", CLASSIFIERS)
+def test_model(model_type, formats, test_passage, iterations, config):
+    filename = "test_files/models/test_%s_%s" % (model_type, "_".join(formats))
+    remove_existing(filename)
+    config.update(dict(classifier=model_type, copy_shared=None))
+    finalized = model = Model(filename, config=config)
+    for i in range(iterations):
+        parse(formats, model, test_passage, train=True)
+        finalized = model.finalize(finished_epoch=True)
+        parse(formats, model, test_passage, train=False)
+        finalized.save()
+    loaded = Model(filename, config=config)
+    loaded.load()
+    for key, param in sorted(model.feature_extractor.params.items()):
+        loaded_param = loaded.feature_extractor.params[key]
+        assert param == loaded_param
+    assert_all_params_equal(finalized.get_all_params(), loaded.get_all_params(), decay=weight_decay(model))
