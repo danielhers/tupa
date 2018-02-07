@@ -9,39 +9,6 @@ from tupa.config import SPARSE, MLP, BIRNN, HIGHWAY_RNN, NOOP
 from tupa.parse import Parser
 from .conftest import FORMATS, remove_existing, load_passages, weight_decay, assert_all_params_equal
 
-
-class Settings:
-    SETTINGS = ("implicit", "linkage", "unlabeled")
-    VALUES = {"unlabeled": (None, [])}
-    INCOMPATIBLE = (("linkage", "unlabeled"),)
-
-    def __init__(self, *args):
-        for attr in self.SETTINGS:
-            setattr(self, attr, attr in args)
-
-    @classmethod
-    def all(cls):
-        return [Settings(*c) for n in range(len(cls.SETTINGS) + 1) for c in combinations(cls.SETTINGS, n)
-                if not any(all(s in c for s in i) for i in cls.INCOMPATIBLE)]
-
-    def dict(self):
-        return {attr: self.VALUES.get(attr, (False, True))[getattr(self, attr)] for attr in self.SETTINGS}
-
-    def list(self):
-        return [attr for attr in self.SETTINGS if getattr(self, attr)]
-
-    def suffix(self):
-        return "_".join([""] + self.list())
-
-    def __str__(self):
-        return "-".join(self.list()) or "default"
-
-
-@pytest.fixture
-def default_setting():
-    return Settings()
-
-
 CLASSIFIERS = (SPARSE, BIRNN, NOOP)
 
 

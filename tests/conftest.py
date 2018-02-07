@@ -1,5 +1,6 @@
 import os
 from glob import glob
+from itertools import combinations
 
 import numpy as np
 import pytest
@@ -59,6 +60,38 @@ def empty_features_config():
     c.update({"ner_dim": 0, "action_dim": 0, "word_dim_external": 0, "word_dim": 0, "node_label_dim": 0,
               "node_category_dim": 0, "edge_label_dim": 0, "tag_dim": 0, "dep_dim": 0})
     return c
+
+
+class Settings:
+    SETTINGS = ("implicit", "linkage", "unlabeled")
+    VALUES = {"unlabeled": (None, [])}
+    INCOMPATIBLE = (("linkage", "unlabeled"),)
+
+    def __init__(self, *args):
+        for attr in self.SETTINGS:
+            setattr(self, attr, attr in args)
+
+    @classmethod
+    def all(cls):
+        return [Settings(*c) for n in range(len(cls.SETTINGS) + 1) for c in combinations(cls.SETTINGS, n)
+                if not any(all(s in c for s in i) for i in cls.INCOMPATIBLE)]
+
+    def dict(self):
+        return {attr: self.VALUES.get(attr, (False, True))[getattr(self, attr)] for attr in self.SETTINGS}
+
+    def list(self):
+        return [attr for attr in self.SETTINGS if getattr(self, attr)]
+
+    def suffix(self):
+        return "_".join([""] + self.list())
+
+    def __str__(self):
+        return "-".join(self.list()) or "default"
+
+
+@pytest.fixture
+def default_setting():
+    return Settings()
 
 
 def load_passages(*formats):
