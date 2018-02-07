@@ -43,6 +43,7 @@ def test_features(config, feature_extractor_creator, passage, write_features):
     actions = Actions()
     for param in feature_extractor.params.values():
         if not param.numeric:
+            param.dropout = 0
             feature_extractor.init_param(param)
     features = [feature_extractor.init_features(state)]
     while True:
