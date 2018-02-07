@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from ucca import convert
 
 from scheme.evaluate import Scores
-from tupa.config import CLASSIFIERS, BIRNN
+from tupa.config import SPARSE, MLP, BIRNN, HIGHWAY_RNN, NOOP
 from tupa.parse import Parser
 from .conftest import FORMATS, remove_existing, load_passages, weight_decay, assert_all_params_equal
 
@@ -40,6 +40,9 @@ class Settings:
 @pytest.fixture
 def default_setting():
     return Settings()
+
+
+CLASSIFIERS = (SPARSE, BIRNN, NOOP)
 
 
 @pytest.mark.parametrize("model_type", CLASSIFIERS)
@@ -80,6 +83,23 @@ def test_parser(config, model_type, formats, default_setting, text=True):
     if evaluate:
         print("-- average f1: %.3f, %.3f\n" % tuple(scores))
         assert scores[0] == pytest.approx(scores[1], 0.1)
+
+
+EXTRA_CLASSIFIERS = (MLP, HIGHWAY_RNN)
+
+
+@pytest.mark.parametrize("model_type", EXTRA_CLASSIFIERS)
+def test_extra_classifiers(config, model_type, default_setting):
+    filename = "test_files/models/%s_%s%s" % (FORMATS[0], model_type, default_setting.suffix())
+    remove_existing(filename)
+    config.update(default_setting.dict())
+    passages = load_passages(FORMATS[0])
+    for mode in "train", "load":
+        print("-- %sing %s" % (mode, model_type))
+        config.update(dict(classifier=model_type, copy_shared=None))
+        p = Parser(model_files=filename, config=config)
+        list(p.train(passages if mode == "train" else None, dev=passages, test=True, iterations=2))
+        assert p.model.is_finalized, "Model should be finalized after %sing" % mode
 
 
 @pytest.mark.parametrize("model_type", (BIRNN,))
