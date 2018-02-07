@@ -14,14 +14,14 @@ from .conftest import load_passages, passage_id, config
 
 PARAMS = {p.name: p.create_from_config() for p in Model(None, config=config()).param_defs}
 
-FEATURE_EXTRACTORS = {
-    "sparse": SparseFeatureExtractor(),
-    "dense": DenseFeatureExtractor(PARAMS, indexed=False),
-    "dense-indexed": DenseFeatureExtractor(PARAMS, indexed=True),
-}
+FEATURE_EXTRACTORS = [
+    ("sparse", SparseFeatureExtractor()),
+    ("dense", DenseFeatureExtractor(PARAMS, indexed=False)),
+    ("dense-indexed", DenseFeatureExtractor(PARAMS, indexed=True)),
+]
 
 
-@pytest.mark.parametrize("feature_extractor_item", FEATURE_EXTRACTORS.items(), ids=itemgetter(0))
+@pytest.mark.parametrize("feature_extractor_item", FEATURE_EXTRACTORS, ids=itemgetter(0))
 @pytest.mark.parametrize("passage", load_passages(), ids=passage_id)
 def test_features(config, feature_extractor_item, passage, write_features):
     feature_extractor_id, feature_extractor = feature_extractor_item
@@ -45,6 +45,21 @@ def test_features(config, feature_extractor_item, passage, write_features):
             break
     features = ["%s %s\n" % i for f in features if f for i in (sorted(f.items()) + [("", "")])]
     compare_file = "test_files/features/%s-%s.txt" % (passage.ID, feature_extractor_id)
+    if write_features:
+        with open(compare_file, "w") as f:
+            f.writelines(features)
+    with open(compare_file) as f:
+        assert f.readlines() == features, compare_file
+
+
+@pytest.mark.parametrize("feature_extractor_item", FEATURE_EXTRACTORS[:-1], ids=itemgetter(0))
+def test_feature_templates(feature_extractor_item, write_features):
+    feature_extractor_id, feature_extractor = feature_extractor_item
+    features = [feature_extractor.numeric_features_template if p.numeric else
+                feature_extractor.non_numeric_feature_templates[p.effective_suffix] for _, p in
+                sorted(feature_extractor.params.items())] or sorted(feature_extractor.feature_templates, key=str)
+    features = ["%s\n" % i for i in features]
+    compare_file = "test_files/features/templates-%s.txt" % feature_extractor_id
     if write_features:
         with open(compare_file, "w") as f:
             f.writelines(features)
