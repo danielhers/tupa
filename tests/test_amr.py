@@ -29,6 +29,12 @@ class ConversionTests(unittest.TestCase):
         scores = evaluate(converted, ref, amr_id=amr_id)
         self.assertAlmostEqual(scores.average_f1(), 1, msg=converted)
 
+    def test_compare(self):
+        """Test that converting an AMR to UCCA gives the same passage"""
+        passages = [list(read_test_amr()) for _ in range(2)]
+        for (passage1, ref1, amr_id1), (passage2, ref2, amr_id2) in zip(*passages):
+            self.assertTrue(passage1.equals(passage2), amr_id1)
+
 
 class EvaluationTests(unittest.TestCase):
     """Tests the evaluation module functions and classes."""
