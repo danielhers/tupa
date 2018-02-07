@@ -78,7 +78,6 @@ def test_copy_shared(config, model_type):
         p = Parser(model_files=filename, config=config)
         passages = load_passages(*formats)
         list(p.train(passages, dev=passages, test=True, iterations=2))
-        list(p.parse(passages, evaluate=True))
         config.update_hyperparams(ucca={"lstm_layers": 1})
 
 
