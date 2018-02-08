@@ -151,17 +151,15 @@ class SparsePerceptron(Classifier):
             for weights in model.values():
                 weights.resize(num_labels)
 
-    def finalize(self, finished_epoch=False, average=True):
+    def finalize(self, finished_epoch=False, average=True, **kwargs):
         """
         Average all weights over all updates, as a form of regularization
         :param average: whether to really average the weights or just return them as they are now
         :param finished_epoch: whether to decay the learning rate and drop rare features
         :return new SparsePerceptron object with the weights averaged
         """
-        super().finalize()
+        super().finalize(finished_epoch=finished_epoch, **kwargs)
         started = time.time()
-        if finished_epoch:
-            self.epoch += 1
         if average:
             print("Averaging weights... ", end="", flush=True)
         finalized = self._finalize_model(finished_epoch, average)

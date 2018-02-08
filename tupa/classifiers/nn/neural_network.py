@@ -241,12 +241,12 @@ class NeuralNetwork(Classifier, SubModel):
             self.init_cg(renew)
         self.finished_step(train)
 
-    def finalize(self, finished_epoch=False):
+    def finalize(self, finished_epoch=False, **kwargs):
         """
         Fit this model on collected samples
         :return self
         """
-        super().finalize()
+        super().finalize(finished_epoch=finished_epoch, **kwargs)
         assert self.model, "Cannot finalize a model without initializing it first"
         if self.losses:
             loss = dy.esum(self.losses)
@@ -264,7 +264,6 @@ class NeuralNetwork(Classifier, SubModel):
             self.updates += 1
         if finished_epoch:
             self.trainer.learning_rate /= (1 - self.learning_rate_decay)
-            self.epoch += 1
         if self.config.args.verbose > 2:
             self.trainer.status()
         return self

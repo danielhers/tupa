@@ -14,8 +14,8 @@ class Classifier:
         :param labels: dict of axis (string) -> Labels object, can be updated later to add new axes and labels
         :param input_params: dict of feature type name -> FeatureInformation
         """
-        self.labels = labels
         self.config = config
+        self.labels = labels
         self.input_params = input_params
         self.model_type = self.config.args.classifier
         self.learning_rate = self.config.args.learning_rate
@@ -65,9 +65,11 @@ class Classifier:
     def resize(self):
         raise NotImplementedError()
 
-    def finalize(self, *args, **kwargs):
+    def finalize(self, *args, finished_epoch=False, **kwargs):
         assert not self.is_frozen, "Cannot freeze a frozen model"
         self._update_num_labels()
+        if finished_epoch:
+            self.epoch += 1
 
     def finished_step(self, train=False):
         """

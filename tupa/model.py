@@ -65,7 +65,7 @@ CLASSIFIER_PROPERTIES = {
     MLP: (ClassifierProperty.trainable_after_saving,),
     BIRNN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
     HIGHWAY_RNN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
-    NOOP: (),
+    NOOP: (ClassifierProperty.trainable_after_saving,),
 }
 
 
