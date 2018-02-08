@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from ucca import convert
 
 from scheme.evaluate import Scores
-from tupa.config import SPARSE, MLP, BIRNN, HIGHWAY_RNN, NOOP
+from tupa.config import SPARSE, MLP, BIRNN, HIGHWAY_RNN, NOOP, Iterations
 from tupa.parse import Parser
 from .conftest import FORMATS, remove_existing, load_passages, weight_decay, assert_all_params_equal
 
@@ -102,6 +102,22 @@ def test_empty_features(empty_features_config, model_type):
     p = Parser(model_files=filename, config=empty_features_config)
     list(p.train(passages, dev=passages, test=True, iterations=2))
     list(p.parse(passages, evaluate=True))
+
+
+@pytest.mark.parametrize("model_type", (NOOP,))
+def test_iterations(empty_features_config, model_type):
+    filename = "test_files/models/%s_%s_iterations" % (FORMATS[0], model_type)
+    remove_existing(filename)
+    empty_features_config.update(dict(classifier=model_type))
+    passages = load_passages(FORMATS[0])
+    last = 0
+    iterations = []
+    for i in 2, 5, 9:
+        iterations.append(Iterations(i))
+        p = Parser(model_files=filename, config=empty_features_config)
+        scores = list(p.train(passages, dev=passages, iterations=iterations))
+        assert i - last == len(scores)
+        last = i
 
 
 # @pytest.mark.parametrize("model_type", (BIRNN,))
