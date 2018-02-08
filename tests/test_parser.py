@@ -112,11 +112,15 @@ def test_iterations(empty_features_config, model_type):
     passages = load_passages(FORMATS[0])
     last = 0
     iterations = []
-    for i in 2, 5, 9:
-        iterations.append(Iterations(i))
+    for i in 2, 5, 9, (11, True), (4, True):
+        if isinstance(i, tuple):
+            i, simple = i
+        else:
+            simple = False
+            iterations.append(Iterations(i))
         p = Parser(model_files=filename, config=empty_features_config)
-        scores = list(p.train(passages, dev=passages, iterations=iterations))
-        assert i - last == len(scores)
+        scores = list(p.train(passages, dev=passages, iterations=i if simple else iterations))
+        assert max(0, i - last) == len(scores)
         last = i
 
 
