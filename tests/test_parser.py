@@ -117,7 +117,7 @@ def test_iterations(empty_features_config, model_type):
             i, simple = i
         else:
             simple = False
-            iterations.append(Iterations(i))
+            iterations.append(Iterations("%d --word-dim=%d" % (i, i)))
         p = Parser(model_files=filename, config=empty_features_config)
         scores = list(p.train(passages, dev=passages, iterations=i if simple else iterations))
         assert max(0, i - last) == len(scores)
