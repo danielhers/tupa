@@ -390,17 +390,7 @@ class Parser(AbstractParser):
         self.trained = True
         self.dev = dev
         if passages:
-            assert len(self.models) == 1, "Can only train one model at a time"
-            if self.model.is_retrainable():
-                try:
-                    self.model.load(is_finalized=False)
-                except FileNotFoundError:
-                    print("not found, starting from untrained model.")
-            for f in self.config.args.formats:
-                self.config.set_format(f)
-                self.model.init_model()
-            self.print_config()
-            self.best_score = self.model.classifier.best_score if self.model.classifier else 0
+            self.init_train()
             iterations = [i if isinstance(i, Iterations) else Iterations(i)
                           for i in (iterations if hasattr(iterations, "__iter__") else (iterations,))]
             end = None
@@ -408,8 +398,10 @@ class Parser(AbstractParser):
                 start = self.model.classifier.epoch + 1 if self.model.classifier else 1
                 if end and start < end + 1:
                     print("Dropped %d iterations because best score was on %d" % (end - start + 1, start - 1))
-                end = start + it.epochs
+                end = it.epochs + 1
                 self.config.update_iteration(it)
+                if end < start + 1:
+                    continue
                 for self.epoch in range(start, end):
                     print("Training iteration %d of %d: " % (
                         self.epoch, start - 1 + sum(i.epochs for i in iterations[self.iteration - 1:])))
@@ -428,6 +420,19 @@ class Parser(AbstractParser):
             for model in self.models:
                 model.load()
             self.print_config()
+
+    def init_train(self):
+        assert len(self.models) == 1, "Can only train one model at a time"
+        if self.model.is_retrainable():
+            try:
+                self.model.load(is_finalized=False)
+            except FileNotFoundError:
+                print("not found, starting from untrained model.")
+        for f in self.config.args.formats:
+            self.config.set_format(f)
+            self.model.init_model()
+        self.print_config()
+        self.best_score = self.model.classifier.best_score if self.model.classifier else 0
 
     def eval_and_save(self, last=False, finished_epoch=False):
         scores = None
