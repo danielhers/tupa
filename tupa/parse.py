@@ -393,6 +393,8 @@ class Parser(AbstractParser):
             self.init_train()
             iterations = [i if isinstance(i, Iterations) else Iterations(i)
                           for i in (iterations if hasattr(iterations, "__iter__") else (iterations,))]
+            if any(i.epochs >= j.epochs for i, j in zip(iterations[:-1], iterations[1:])):
+                raise ValueError("Arguments to --iterations must be increasing: " + " ".join(map(str, iterations)))
             self.config.args.iterations = iterations
             end = None
             for self.iteration, it in enumerate(iterations, start=1):

@@ -105,10 +105,10 @@ def test_empty_features(empty_features_config, model_type):
 
 
 @pytest.mark.parametrize("model_type", (NOOP,))
-def test_iterations(empty_features_config, model_type):
+def test_iterations(config, model_type):
     filename = "test_files/models/%s_%s_iterations" % (FORMATS[0], model_type)
     remove_existing(filename)
-    empty_features_config.update(dict(classifier=model_type))
+    config.update(dict(classifier=model_type))
     passages = load_passages(FORMATS[0])
     last = 0
     iterations = []
@@ -118,10 +118,13 @@ def test_iterations(empty_features_config, model_type):
         else:
             simple = False
             iterations.append(Iterations("%d --word-dim=%d" % (i, i)))
-        p = Parser(model_files=filename, config=empty_features_config)
-        scores = list(p.train(passages, dev=passages, iterations=i if simple else iterations))
+        scores = list(Parser(model_files=filename, config=config).train(passages, dev=passages,
+                                                                        iterations=i if simple else iterations))
         assert max(0, i - last) == len(scores)
         last = i
+    for iterations in ((3, 2), (4, 4)):
+        with pytest.raises(ValueError):  # Number of epochs must be strictly increasing
+            list(Parser(model_files=filename, config=config).train(passages, dev=passages, iterations=iterations))
 
 
 # @pytest.mark.parametrize("model_type", (BIRNN,))
