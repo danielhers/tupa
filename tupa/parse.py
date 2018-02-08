@@ -393,23 +393,24 @@ class Parser(AbstractParser):
             self.init_train()
             iterations = [i if isinstance(i, Iterations) else Iterations(i)
                           for i in (iterations if hasattr(iterations, "__iter__") else (iterations,))]
+            self.config.args.iterations = iterations
             end = None
             for self.iteration, it in enumerate(iterations, start=1):
                 start = self.model.classifier.epoch + 1 if self.model.classifier else 1
                 if end and start < end + 1:
-                    print("Dropped %d iterations because best score was on %d" % (end - start + 1, start - 1))
+                    print("Dropped %d epochs because best score was on %d" % (end - start + 1, start - 1))
                 end = it.epochs + 1
                 self.config.update_iteration(it)
                 if end < start + 1:
+                    print("Skipping %s, already trained %s epochs" % (it, start - 1))
                     continue
                 for self.epoch in range(start, end):
-                    print("Training iteration %d of %d: " % (
-                        self.epoch, start - 1 + sum(i.epochs for i in iterations[self.iteration - 1:])))
+                    print("Training epoch %d of %d: " % (self.epoch, end - 1))
                     self.config.random.shuffle(passages)
                     list(self.parse(passages, mode=ParseMode.train))
                     yield self.eval_and_save(self.iteration == len(iterations) and self.epoch == end - 1,
                                              finished_epoch=True)
-                print("Trained %d iterations" % (end - 1))
+                print("Trained %d epochs" % (end - 1))
                 if dev:
                     if self.iteration < len(iterations):
                         if self.model.is_retrainable():
