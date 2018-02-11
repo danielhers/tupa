@@ -323,7 +323,7 @@ class NeuralNetwork(Classifier, SubModel):
                 print(model.params_str())
         self.copy_shared_birnn(filename, d)
         assert not values, "Loaded values: %d more than expected" % len(values)
-        if self.weight_decay:
+        if self.weight_decay and self.config.args.dynet_apply_weight_decay_on_load:
             t = tqdm(self.get_all_params(as_array=False).items(),
                      desc="Applying weight decay of %g" % self.weight_decay, unit="param", file=sys.stdout)
             for key, param in t:
