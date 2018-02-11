@@ -492,7 +492,7 @@ class Parser(AbstractParser):
             yield passage
 
     def print_config(self):
-        print("%s %s" % (os.path.basename(__file__), self.config))
+        print("%s %s" % (os.path.basename(__file__), self.model.config if self.model else self.config))
 
 
 def train_test(train_passages, dev_passages, test_passages, args, model_suffix=""):
