@@ -85,6 +85,7 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
     add(group, "--learning-rate-decay", type=float, default=0, help="learning rate decay per iteration")
     add(group, "--swap-importance", type=float, default=1, help="learning rate factor for Swap")
     add(group, "--max-training-per-format", type=int, help="max number of training passages per format per iteration")
+    add_boolean(group, "missing-node-features", "allow node features to be missing if not available", default=True)
 
     group = argparser.add_argument_group(title="Perceptron parameters")
     add(group, "--min-update", type=int, default=5, help="minimum #updates for using a feature")

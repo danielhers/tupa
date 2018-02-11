@@ -4,6 +4,8 @@ from ucca import layer0
 from ucca.layer1 import EdgeTags
 from ucca.textutil import Attr
 
+from tupa.config import Config
+
 FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([wtdhencpqxyAPCIEMNT#^$]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile(r"^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 
@@ -101,24 +103,22 @@ class FeatureTemplateElement:
         self.node = None
         try:
             if self.source == "s":
-                node = state.stack[-1 - self.index]
+                self.node = state.stack[-1 - self.index]
             elif self.source == "b":
-                node = state.buffer[self.index]
+                self.node = state.buffer[self.index]
             else:  # source == "a"
-                node = state.actions[-1 - self.index]
-        except IndexError:
-            return
-        for relative in self.relatives:
-            nodes = node.parents if relative.isupper() else node.children
-            if not nodes:
-                return
-            if relative.lower() == "r":
-                if len(nodes) == 1:
-                    return
-                node = nodes[-1]
-            else:
-                node = nodes[0]
-        self.node = node
+                self.node = state.actions[-1 - self.index]
+            for relative in self.relatives:
+                nodes = self.node.parents if relative.isupper() else self.node.children
+                if relative.lower() == "r":
+                    if len(nodes) == 1:
+                        raise ValueError("Avoiding identical right and left relatives")
+                    self.node = nodes[-1]
+                else:  # relative.lower() == "l"
+                    self.node = nodes[0]
+        except (IndexError, TypeError, AttributeError, IndexError, ValueError):
+            if Config().args.missing_node_features:
+                self.node = None
 
     def extract(self, state, default, indexed):
         self.set_node(state)
@@ -129,7 +129,7 @@ class FeatureTemplateElement:
         value = calc(self.node, state, prop, getter, self.previous)
         if value is None:
             if default is None:
-                raise ValueError()
+                raise ValueError("Value does not exist, and no default given")
             value = default
         return value
 
