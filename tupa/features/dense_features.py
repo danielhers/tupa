@@ -170,9 +170,11 @@ class DenseFeatureExtractor(FeatureExtractor):
             param.unfinalize()
 
     def save(self, filename, save_init=True):
+        super().save(filename, save_init=save_init)
         save_dict(filename + FILENAME_SUFFIX, FeatureParameters.copy(self.params, copy_init=save_init))
 
     def load(self, filename):
+        super().load(filename)
         self.params = FeatureParameters.copy(load_dict(filename + FILENAME_SUFFIX), UnknownDict)
         if self.indexed:
             self.collapse_features(self.params, INDEXED_FEATURES)
