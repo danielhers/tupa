@@ -17,6 +17,11 @@ from ...model_util import MISSING_VALUE, remove_existing
 
 tqdm.monitor_interval = 0
 
+try:
+    print("[dynet] %s" % dy.__gitversion__, file=sys.stderr)
+except AttributeError:
+    pass
+
 
 class AxisModel:
     """
