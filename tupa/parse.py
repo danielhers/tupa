@@ -210,7 +210,7 @@ class PassageParser(AbstractParser):
         yield scores.argmax()
         yield from scores.argsort()[::-1]  # Contains the max, but otherwise items might be missed (different order)
 
-    def finish(self, evaluate, status):
+    def finish(self, evaluate, status, display=True):
         self.model.classifier.finished_item(self.training)
         for model in self.models[1:]:
             model.classifier.finished_item(renew=False)  # So that dynet.renew_cg happens only once
@@ -222,7 +222,8 @@ class PassageParser(AbstractParser):
         if evaluate:
             ret += (self.evaluate(evaluate),)
             status = "%-14s %s F1=%.3f" % (status, self.eval_type, self.f1)
-        self.print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), level=1)
+        if display:
+            self.print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), level=1)
         return ret
 
     @property
@@ -317,7 +318,7 @@ class BatchParser(AbstractParser):
                 continue
             assert not (self.training and pformat == "text"), "Cannot train on unannotated plain text"
             self.config.set_format(pformat)
-            yield self.parse_with_timeout(passage, evaluate)
+            yield self.parse_with_timeout(passage, evaluate, display=display)
         self.summary()
 
     def passage_generator(self, passages, display=True):
@@ -330,7 +331,7 @@ class BatchParser(AbstractParser):
             passages = tqdm(passages, unit=self.config.passages_word, total=total, file=sys.stdout, desc="Initializing")
         return passages, total
 
-    def parse_with_timeout(self, passage, evaluate):
+    def parse_with_timeout(self, passage, evaluate, display=True):
         parser = PassageParser(self.config, self.models, self.training, passage)
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
@@ -345,7 +346,7 @@ class BatchParser(AbstractParser):
             self.config.log("%s %s: timeout (%fs)" % (self.config.passage_word, passage.ID, self.config.args.timeout))
             status = "(timeout)"
         self.update_counts(parser)
-        return parser.finish(evaluate, status)
+        return parser.finish(evaluate, status, display=display)
 
     def update_counts(self, parser):
         self.correct_action_count += parser.correct_action_count
