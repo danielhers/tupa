@@ -456,7 +456,7 @@ class Parser(AbstractParser):
                 if self.best_score:
                     finalized.save(save_init=self.save_init)
                 self.best_score = average_score
-                if self.test:
+                if self.test and self.test is not True:  # There are actual passages to parse
                     self.eval(self.test, ParseMode.test, self.config.args.testscores, display=False)
             else:
                 print("Not better than previous best score (%.3f)" % self.best_score)
