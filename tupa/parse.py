@@ -319,7 +319,8 @@ class BatchParser(AbstractParser):
             assert not (self.training and pformat == "text"), "Cannot train on unannotated plain text"
             self.config.set_format(pformat)
             yield self.parse_with_timeout(passage, evaluate, display=display)
-        self.summary()
+        if display:
+            self.summary()
 
     def passage_generator(self, passages, display=True):
         if not hasattr(passages, "__iter__"):  # Single passage given
