@@ -287,25 +287,27 @@ class BatchParser(AbstractParser):
         self.seen_per_format = defaultdict(int)
         self.num_passages = 0
 
-    def parse(self, passages, evaluate):
-        passages, total = self.passage_generator(passages)
+    def parse(self, passages, evaluate, display=True):
+        passages, total = self.passage_generator(passages, display=display)
         id_width = 1
         for i, passage in enumerate(passages, start=1):
             pformat = passage.extra.get("format") or "ucca"
-            if self.config.args.verbose:
+            if self.config.args.verbose and display:
                 progress = "%3d%% %*d/%d" % (i / total * 100, len(str(total)), i, total) if total else "%d" % i
                 id_width = max(id_width, len(str(passage.ID)))
                 print("%s %-6s %s %-*s" % (progress, pformat, self.config.passage_word, id_width, passage.ID),
                       end=self.config.line_end)
             else:
                 passages.set_description()
-                postfix = {pformat: passage.ID, "|t/s|": self.tokens_per_second()}
-                if self.correct_action_count:
-                    postfix["|a|"] = percents_str(self.correct_action_count, self.action_count, fraction=False)
-                if self.correct_label_count:
-                    postfix["|l|"] = percents_str(self.correct_label_count, self.label_count, fraction=False)
-                if evaluate and self.num_passages:
-                    postfix["|F1|"] = self.f1 / self.num_passages
+                postfix = {pformat: passage.ID}
+                if display:
+                    postfix["|t/s|"] = self.tokens_per_second()
+                    if self.correct_action_count:
+                        postfix["|a|"] = percents_str(self.correct_action_count, self.action_count, fraction=False)
+                    if self.correct_label_count:
+                        postfix["|l|"] = percents_str(self.correct_label_count, self.label_count, fraction=False)
+                    if evaluate and self.num_passages:
+                        postfix["|F1|"] = self.f1 / self.num_passages
                 passages.set_postfix(**postfix)
             self.seen_per_format[pformat] += 1
             if self.training and self.config.args.max_training_per_format and \
@@ -318,13 +320,13 @@ class BatchParser(AbstractParser):
             yield self.parse_with_timeout(passage, evaluate)
         self.summary()
 
-    def passage_generator(self, passages):
+    def passage_generator(self, passages, display=True):
         if not hasattr(passages, "__iter__"):  # Single passage given
             passages = (passages,)
         total = len(passages) if hasattr(passages, "__len__") else None
         passages = textutil.annotate_all(passages, as_array=True, lang=self.config.args.lang,
                                          verbose=self.config.args.verbose > 2)
-        if not self.config.args.verbose:
+        if not self.config.args.verbose or not display:
             passages = tqdm(passages, unit=self.config.passages_word, total=total, file=sys.stdout, desc="Initializing")
         return passages, total
 
@@ -376,7 +378,7 @@ class Parser(AbstractParser):
         super().__init__(config=config or Config(), training=False,
                          models=list(map(Model, (model_files,) if isinstance(model_files, str) else model_files)))
         self.beam = beam  # Currently unused
-        self.best_score = self.dev = self.iteration = self.epoch = self.batch = None
+        self.best_score = self.dev = self.test = self.iteration = self.epoch = self.batch = None
         self.trained = self.save_init = False
 
     def train(self, passages=None, dev=None, test=None, iterations=1):
@@ -389,6 +391,7 @@ class Parser(AbstractParser):
         """
         self.trained = True
         self.dev = dev
+        self.test = test
         if passages:
             self.init_train()
             iterations = [i if isinstance(i, Iterations) else Iterations(i)
@@ -444,21 +447,15 @@ class Parser(AbstractParser):
         if self.dev:
             if not self.best_score:
                 finalized.save(save_init=self.save_init)
-            print("Evaluating on dev passages")
-            passage_scores = [s for _, s in self.parse(self.dev, mode=ParseMode.dev)]
-            scores = Scores(passage_scores)
-            average_score = average_f1(scores)
-            prefix = ".".join(map(str, [self.iteration, self.epoch] + (
-                [self.batch] if self.config.args.save_every else [])))
-            print("Evaluation %s, average %s F1 score on dev: %.3f%s" % (prefix, get_eval_type(scores), average_score,
-                                                                         scores.details(average_f1)))
-            print_scores(scores, self.config.args.devscores, prefix=prefix, prefix_title="iteration")
+            average_score, scores = self.eval(self.dev, ParseMode.dev, self.config.args.devscores)
             if average_score >= self.best_score:
                 print("Better than previous best score (%.3f)" % self.best_score)
                 finalized.classifier.best_score = average_score
                 if self.best_score:
                     finalized.save(save_init=self.save_init)
                 self.best_score = average_score
+                if self.test:
+                    self.eval(self.test, ParseMode.test, self.config.args.testscores, display=False)
             else:
                 print("Not better than previous best score (%.3f)" % self.best_score)
         elif last or self.config.args.save_every is not None:
@@ -467,7 +464,20 @@ class Parser(AbstractParser):
             finalized.restore(model)  # Restore non-finalized model
         return scores
 
-    def parse(self, passages, mode=ParseMode.test, evaluate=False):
+    def eval(self, passages, mode, scores_filename, display=True):
+        print("Evaluating on %s passages" % mode.name)
+        passage_scores = [s for _, s in self.parse(passages, mode=mode, evaluate=True, display=display)]
+        scores = Scores(passage_scores)
+        average_score = average_f1(scores)
+        prefix = ".".join(map(str, [self.iteration, self.epoch] + (
+            [self.batch] if self.config.args.save_every else [])))
+        if display:
+            print("Evaluation %s, average %s F1 score on %s: %.3f%s" % (prefix, get_eval_type(scores), mode.name,
+                                                                        average_score, scores.details(average_f1)))
+        print_scores(scores, scores_filename, prefix=prefix, prefix_title="iteration")
+        return average_score, scores
+
+    def parse(self, passages, mode=ParseMode.test, evaluate=False, display=True):
         """
         Parse given passages
         :param passages: iterable of passages to parse
@@ -476,6 +486,7 @@ class Parser(AbstractParser):
                      Otherwise, just parse with classifier.
         :param evaluate: whether to evaluate parsed passages with respect to given ones.
                          Only possible when given passages are annotated.
+        :param display: whether to display information on each parsed passage
         :return: generator of parsed passages (or in train mode, the original ones),
                  or, if evaluate=True, of pairs of (Passage, Scores).
         """
@@ -485,7 +496,8 @@ class Parser(AbstractParser):
         if not training and not self.trained:
             list(self.train())  # Try to load model from file
         parser = BatchParser(self.config, self.models, training)
-        for i, passage in enumerate(parser.parse(passages, mode if mode is ParseMode.dev else evaluate), start=1):
+        for i, passage in enumerate(parser.parse(passages, mode if mode is ParseMode.dev else evaluate,
+                                                 display=display), start=1):
             if training and self.config.args.save_every and i % self.config.args.save_every == 0:
                 self.eval_and_save()
                 self.batch += 1
