@@ -59,7 +59,7 @@ class NeuralNetwork(Classifier, SubModel):
 
     @property
     def input_dim(self):
-        return {a: m.mlp.input_dim for a, m in self.axes.items()}
+        return OrderedDict((a, m.mlp.input_dim) for a, m in self.axes.items())
     
     @property
     def birnn_type(self):
