@@ -110,6 +110,7 @@ def main():
         ("tag_dropout",             False,  np.arange(.41, step=.01)),
         ("dep_dropout",             False,  np.arange(.41, step=.01)),
         ("node_label_dropout",      False,  np.arange(.41, step=.01)),
+        ("node_dropout",            False,  np.arange(.41, step=.01)),
         ("dynet_weight_decay",      False,  [0, 1e-5]),
         ("dropout",                 False,  np.arange(.61, step=.01)),
         ("require_connected",       False,  [False]),
