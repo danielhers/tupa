@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import numpy as np
 from ucca.textutil import get_word_vectors
 
@@ -49,8 +51,11 @@ class FeatureParameters(Labels):
                self.dropout == other.dropout and self.updated == other.updated and self.num == other.num and \
                self.indexed == other.indexed and self.min_count == other.min_count and self.numeric == other.numeric
 
+    def __hash__(self):
+        return hash(self.suffix)
+
     def init_data(self):
-        if self.data is None:
+        if self.data is None and not self.numeric:
             keys = ()
             if self.dim and self.external:
                 vectors = self.get_word_vectors()
@@ -89,7 +94,7 @@ class FeatureParameters(Labels):
 
     @staticmethod
     def copy(params, copy_dict=dict, copy_init=True):
-        return {suffix: param.copy_with_data(copy_dict, copy_init) for suffix, param in params.items()}
+        return OrderedDict((suffix, param.copy_with_data(copy_dict, copy_init)) for suffix, param in params.items())
 
     def copy_with_data(self, copy_dict, copy_init):
         data = None if self.data is None else copy_dict(self.data)

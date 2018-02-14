@@ -269,10 +269,7 @@ class Model:
 
     def get_all_params(self):
         d = OrderedDict()
-        for name, indexed in (("features", False), ("indexed_features", True)):
-            features = self.feature_extractor.get_all_features(indexed)
-            if features:
-                d[name] = features
+        d["features"] = self.feature_extractor.get_all_features()
         d.update(("input_" + s, p.data.all) for s, p in self.feature_extractor.params.items() if p.data)
         d.update(self.classifier.get_all_params())
         return d

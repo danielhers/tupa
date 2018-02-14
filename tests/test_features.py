@@ -1,4 +1,5 @@
 """Testing code for the tupa.features package, unit-testing only."""
+from collections import OrderedDict
 
 import pytest
 from ucca import textutil
@@ -23,8 +24,8 @@ class FeatureExtractorCreator:
     def __call__(self, config):
         if self.name == "sparse":
             return SparseFeatureExtractor()
-        return DenseFeatureExtractor({p.name: p.create_from_config() for p in Model(None, config=config).param_defs},
-                                     indexed=self.indexed)
+        return DenseFeatureExtractor(OrderedDict((p.name, p.create_from_config())
+                                                 for p in Model(None, config=config).param_defs), indexed=self.indexed)
 
 
 FEATURE_EXTRACTORS = [
@@ -47,11 +48,11 @@ def test_features(config, feature_extractor_creator, passage, write_features):
             feature_extractor.init_param(param)
     features = [feature_extractor.init_features(state)]
     while True:
-        features.append(feature_extractor.extract_features(state))
+        extract_features(feature_extractor, state, features)
         action = min(oracle.get_actions(state, actions).values(), key=str)
         state.transition(action)
         if state.need_label:
-            features.append(feature_extractor.extract_features(state))
+            extract_features(feature_extractor, state, features)
             label, _ = oracle.get_label(state, action)
             state.label_node(label)
         if state.finished:
@@ -65,13 +66,19 @@ def test_features(config, feature_extractor_creator, passage, write_features):
         assert f.readlines() == features, compare_file
 
 
+def extract_features(feature_extractor, state, features):
+    values = feature_extractor.extract_features(state)
+    if feature_extractor.params:
+        for suffix, vs in values.items():
+            assert len(vs) == feature_extractor.params[suffix].num, suffix
+    features.append(values)
+
+
 @pytest.mark.parametrize("feature_extractor_creator", FEATURE_EXTRACTORS[:-1], ids=str)
 def test_feature_templates(config, feature_extractor_creator, write_features):
+    config.set_format("amr")
     feature_extractor = feature_extractor_creator(config)
-    features = [feature_extractor.numeric_features_template if p.numeric else
-                feature_extractor.non_numeric_feature_templates[p.effective_suffix] for _, p in
-                sorted(feature_extractor.params.items())] or sorted(feature_extractor.feature_templates, key=str)
-    features = ["%s\n" % i for i in features]
+    features = ["%s\n" % i for i in feature_extractor.get_all_features()]
     compare_file = "test_files/features/templates-%s.txt" % str(feature_extractor_creator)
     if write_features:
         with open(compare_file, "w") as f:

@@ -8,6 +8,7 @@ from tupa.config import Config
 
 FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([wtdhencpqxyAPCIEMNT#^$]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile(r"^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
+NON_NUMERIC = "wtdencpAT#^$"
 
 
 class FeatureTemplate:
@@ -21,7 +22,6 @@ class FeatureTemplate:
         :param elements: collection of FeatureElement objects that represent the actual feature
         """
         self.name = name
-        self.suffix = name[-1]
         self.elements = elements
         for prev, elem in zip(self.elements[:-1], self.elements[1:]):
             if not prev.properties:
@@ -31,9 +31,9 @@ class FeatureTemplate:
     def __str__(self):
         return self.name
 
-    def extract(self, state, default=None, indexed=False):
+    def extract(self, state, default=None, indexed=(), as_tuples=False):
         try:
-            return [value for element in self.elements for value in element.extract(state, default, indexed)]
+            return [value for element in self.elements for value in element.extract(state, default, indexed, as_tuples)]
         except ValueError:
             return None
 
@@ -94,7 +94,11 @@ class FeatureTemplateElement:
         self.getters = [prop_getter(prop, self.source) for prop in self.properties]
 
     def __str__(self):
-        return self.source + str(self.index) + self.relatives + self.properties
+        return self.str + self.properties
+
+    @property
+    def str(self):
+        return (self.previous.str if self.previous else "") + self.source + str(self.index) + self.relatives
 
     def __eq__(self, other):
         return self.source == other.source and self.index == other.index and self.relatives == other.relatives
@@ -120,10 +124,17 @@ class FeatureTemplateElement:
             if Config().args.missing_node_features:
                 self.node = None
 
-    def extract(self, state, default, indexed):
+    def extract(self, state, default, indexed, as_tuples):
         self.set_node(state)
-        return [self.get_prop(state, prop, getter, default) for prop, getter in
-                ((("i", None),) if indexed else zip(self.properties, self.getters))] if self.properties else ()
+        for prop, getter in zip(self.properties, self.getters):
+            suffix = prop
+            if indexed and not self.is_numeric(prop):
+                if prop == indexed[0]:
+                    prop, getter = "i", None
+                elif prop in indexed[1:]:
+                    continue
+            value = self.get_prop(state, prop, getter, default)
+            yield (self, suffix, value) if as_tuples else value
 
     def get_prop(self, state, prop, getter, default):
         value = calc(self.node, state, prop, getter, self.previous)
@@ -132,6 +143,9 @@ class FeatureTemplateElement:
                 raise ValueError("Value does not exist, and no default given")
             value = default
         return value
+
+    def is_numeric(self, prop):
+        return bool(prop not in NON_NUMERIC or (prop == "d" and self.previous))
 
 
 class FeatureExtractor:
@@ -166,7 +180,7 @@ class FeatureExtractor:
         pass
 
     def init_param(self, param):
-        return param
+        pass
 
     def finalize(self):
         return self
@@ -180,8 +194,8 @@ class FeatureExtractor:
     def load(self, filename):
         pass
 
-    def get_all_features(self, indexed=False):
-        return [str(e) for t in self.feature_templates for e in t.elements]
+    def get_all_features(self):
+        return sorted(list(map(str, self.feature_templates)))
 
 
 EDGE_PRIORITY = {tag: i for i, tag in enumerate((
