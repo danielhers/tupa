@@ -45,15 +45,17 @@ class DenseFeatureExtractor(FeatureExtractor):
     Object to extract features from the parser state to be used in action classification
     To be used with a NeuralNetwork classifier.
     """
-    def __init__(self, params, indexed):
+    def __init__(self, params, indexed, node_dropout=0):
         super().__init__(FEATURE_TEMPLATES)
         self.indexed = indexed
+        self.node_dropout = node_dropout
         self.params = OrderedDict((p.suffix, p) for p in [NumericFeatureParameters(1)] + list(params.values()))
         for param in self.params.values():
             self.update_param_indexed(param)
         param_values = self.get_param_values(all_params=True)
         for param in self.params.values():
             param.num = len(param_values[param])
+            param.node_dropout = self.node_dropout
     
     def init_param(self, param):
         self.update_param_indexed(param)
@@ -105,7 +107,8 @@ class DenseFeatureExtractor(FeatureExtractor):
                 param_values[param] = values.setdefault(
                     NumericFeatureParameters.SUFFIX if param.numeric else param.effective_suffix,
                     ([state.node_ratio()] if state else [1] if all_params else []) if param.numeric else [])
-        for e, prop, value in self.feature_template.extract(state, DEFAULT, "".join(indexed), as_tuples=True):
+        for e, prop, value in self.feature_template.extract(state, DEFAULT, "".join(indexed), as_tuples=True,
+                                                            node_dropout=self.node_dropout):
             vs = values.get(NumericFeatureParameters.SUFFIX if e.is_numeric(prop) else prop)
             if vs is not None:
                 vs.append(value if state else (e, prop))
@@ -132,6 +135,7 @@ class DenseFeatureExtractor(FeatureExtractor):
         """Undo finalize(): replace each feature parameter's data dict with a DropoutDict again, to keep training"""
         for param in self.params.values():
             param.unfinalize()
+            self.node_dropout = param.node_dropout
 
     def save(self, filename, save_init=True):
         super().save(filename, save_init=save_init)

@@ -136,6 +136,7 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
     add(group, "--tag-dropout", type=float, default=0.2, help="POS tag dropout parameter")
     add(group, "--dep-dropout", type=float, default=0.2, help="dependency label dropout parameter")
     add(group, "--node-label-dropout", type=float, default=0.2, help="node label dropout parameter")
+    add(group, "--node-dropout", type=float, default=0.1, help="probability to drop features for a whole node")
     add(group, "--dropout", type=float, default=0.4, help="dropout parameter between layers")
     add(group, "--max-length", type=int, default=120, help="maximum length of input sentence")
     add(group, "--rnn", choices=["None"] + list(RNNS), default=DEFAULT_RNN, help="type of recurrent neural network")

@@ -10,7 +10,7 @@ from ..model_util import DropoutDict
 
 class FeatureParameters(Labels):
     def __init__(self, suffix, dim, size, dropout=0, updated=True, num=1, init=None, data=None, indexed=False,
-                 copy_from=None, filename=None, min_count=1, enabled=True):
+                 copy_from=None, filename=None, min_count=1, enabled=True, node_dropout=0):
         """
         :param suffix: one-character title for feature
         :param dim: vector dimension or, filename to load vectors from, or Word2Vec object
@@ -25,6 +25,7 @@ class FeatureParameters(Labels):
         :param filename: name of file to load data from
         :param min_count: minimum number of occurrences for a feature value before it is actually added
         :param enabled: whether to actually use this parameter in feature extraction
+        :param node_dropout: probability to drop whole node in feature extraction
         """
         super().__init__(size)
         self.suffix = suffix
@@ -40,16 +41,19 @@ class FeatureParameters(Labels):
         self.filename = filename
         self.min_count = min_count
         self.enabled = enabled
+        self.node_dropout = node_dropout
 
     def __repr__(self):
         return type(self).__name__ + "(" + ", ".join(
             map(str, (self.suffix, self.dim, self.size, self.dropout, self.updated, self.num, self.init, self.data,
-                      self.indexed, self.copy_from, self.filename, self.min_count, self.enabled))) + ")"
+                      self.indexed, self.copy_from, self.filename, self.min_count, self.enabled, self.node_dropout))) +\
+               ")"
 
     def __eq__(self, other):
         return self.suffix == other.suffix and self.dim == other.dim and self.size == other.size and \
                self.dropout == other.dropout and self.updated == other.updated and self.num == other.num and \
-               self.indexed == other.indexed and self.min_count == other.min_count and self.numeric == other.numeric
+               self.indexed == other.indexed and self.min_count == other.min_count and \
+               self.numeric == other.numeric and self.node_dropout == other.node_dropout
 
     def __hash__(self):
         return hash(self.suffix)
@@ -103,7 +107,8 @@ class FeatureParameters(Labels):
         return FeatureParameters(suffix=self.suffix, dim=self.dim, size=self.size, dropout=self.dropout,
                                  updated=self.updated, num=self.num, init=self.init if copy_init else None, data=data,
                                  indexed=self.indexed, copy_from=self.copy_from, filename=self.filename,
-                                 min_count=self.min_count, enabled=self.enabled)
+                                 min_count=self.min_count, enabled=self.enabled,
+                                 node_dropout=getattr(self, "node_dropout", 0))
 
     def unfinalize(self):
         self.data = DropoutDict(self.data, size=self.size, dropout=self.dropout, min_count=self.min_count)

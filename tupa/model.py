@@ -130,7 +130,8 @@ class Model:
             from .features.dense_features import DenseFeatureExtractor
             from .classifiers.nn.neural_network import NeuralNetwork
             self.feature_extractor = DenseFeatureExtractor(self.feature_params,
-                                                           indexed=self.config.args.classifier != MLP)
+                                                           indexed=self.config.args.classifier != MLP,
+                                                           node_dropout=self.config.args.node_dropout)
             self.classifier = NeuralNetwork(self.config, labels)
         else:
             raise ValueError("Invalid model type: '%s'" % self.config.args.classifier)

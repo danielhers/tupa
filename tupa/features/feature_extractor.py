@@ -31,9 +31,10 @@ class FeatureTemplate:
     def __str__(self):
         return self.name
 
-    def extract(self, state, default=None, indexed=(), as_tuples=False):
+    def extract(self, state, default=None, indexed=(), as_tuples=False, node_dropout=0):
         try:
-            return [value for element in self.elements for value in element.extract(state, default, indexed, as_tuples)]
+            return [value for element in self.elements for value in element.extract(state, default, indexed, as_tuples,
+                                                                                    node_dropout=node_dropout)]
         except ValueError:
             return None
 
@@ -103,8 +104,10 @@ class FeatureTemplateElement:
     def __eq__(self, other):
         return self.source == other.source and self.index == other.index and self.relatives == other.relatives
 
-    def set_node(self, state):
+    def set_node(self, state, node_dropout=0):
         self.node = None
+        if node_dropout > Config().random.random_sample():
+            return
         try:
             if self.source == "s":
                 self.node = state.stack[-1 - self.index]
@@ -121,11 +124,11 @@ class FeatureTemplateElement:
                 else:  # relative.lower() == "l"
                     self.node = nodes[0]
         except (IndexError, TypeError, AttributeError, IndexError, ValueError):
-            if Config().args.missing_node_features:
+            if Config().args.missing_node_features or node_dropout > Config().random.random_sample():
                 self.node = None
 
-    def extract(self, state, default, indexed, as_tuples):
-        self.set_node(state)
+    def extract(self, state, default, indexed, as_tuples, node_dropout=0):
+        self.set_node(state, node_dropout=node_dropout)
         for prop, getter in zip(self.properties, self.getters):
             suffix = prop
             if indexed and not self.is_numeric(prop):
