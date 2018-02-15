@@ -144,6 +144,6 @@ class DenseFeatureExtractor(FeatureExtractor):
         super().save(filename, save_init=save_init)
         save_dict(filename + FILENAME_SUFFIX, FeatureParameters.copy(self.params, copy_init=save_init))
 
-    def load(self, filename):
-        super().load(filename)
-        self.params = FeatureParameters.copy(load_dict(filename + FILENAME_SUFFIX), UnknownDict)
+    def load(self, filename, order=None):
+        super().load(filename, order)
+        self.params = FeatureParameters.copy(load_dict(filename + FILENAME_SUFFIX), UnknownDict, order=order)

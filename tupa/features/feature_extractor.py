@@ -194,7 +194,7 @@ class FeatureExtractor:
     def save(self, filename, save_init=True):
         pass
 
-    def load(self, filename):
+    def load(self, filename, order=None):
         pass
 
     def get_all_features(self):

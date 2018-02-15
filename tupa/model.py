@@ -207,7 +207,7 @@ class Model:
             try:
                 self.config.args.classifier = Classifier.get_model_type(self.filename)
                 self.init_model(init_params=False)
-                self.feature_extractor.load(self.filename)
+                self.feature_extractor.load(self.filename, order=[p.name for p in self.param_defs])
                 if not is_finalized:
                     self.feature_extractor.unfinalize()
                 self._update_input_params()  # Must be before classifier.load() because it uses them to init the model

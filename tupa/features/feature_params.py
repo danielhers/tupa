@@ -97,8 +97,9 @@ class FeatureParameters(Labels):
         return self.copy_from is not None
 
     @staticmethod
-    def copy(params, copy_dict=dict, copy_init=True):
-        return OrderedDict((suffix, param.copy_with_data(copy_dict, copy_init)) for suffix, param in params.items())
+    def copy(params, copy_dict=dict, copy_init=True, order=None):
+        return OrderedDict((suffix, params[suffix].copy_with_data(copy_dict, copy_init)) for suffix in
+                           (params if order is None else order) if suffix in params)
 
     def copy_with_data(self, copy_dict, copy_init):
         data = None if self.data is None else copy_dict(self.data)
