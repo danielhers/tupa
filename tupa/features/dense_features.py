@@ -115,8 +115,8 @@ class DenseFeatureExtractor(FeatureExtractor):
         return param_values
 
     def get_all_features(self):
-        values = self.get_param_values()
-        return ["".join(self.join_props(values[p])) for p in sorted(values, key=str)]
+        return ["".join(self.join_props(vs)) for _, vs in sorted(self.get_param_values().items(),
+                                                                 key=lambda x: x[0].suffix)]
 
     @staticmethod
     def join_props(values):
