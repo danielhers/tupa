@@ -35,10 +35,12 @@ def test_model(model_type, formats, test_passage, iterations, config):
     for i in range(iterations):
         parse(formats, model, test_passage, train=True)
         finalized = model.finalize(finished_epoch=True)
+        assert not getattr(finalized.feature_extractor, "node_dropout", 0), finalized.feature_extractor.node_dropout
         parse(formats, model, test_passage, train=False)
         finalized.save()
     loaded = Model(filename, config=config)
     loaded.load()
+    assert not getattr(loaded.feature_extractor, "node_dropout", 0), loaded.feature_extractor.node_dropout
     for key, param in sorted(model.feature_extractor.params.items()):
         loaded_param = loaded.feature_extractor.params[key]
         assert param == loaded_param

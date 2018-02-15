@@ -28,6 +28,7 @@ def test_parser(config, model_type, formats, default_setting, text=True):
         p.save_init = True
         list(p.train(passages if mode == "train" else None, dev=passages, test=True, iterations=2))
         assert p.model.is_finalized, "Model should be finalized after %sing" % mode
+        assert not getattr(p.model.feature_extractor, "node_dropout", 0), p.model.feature_extractor.node_dropout
         all_params = p.model.get_all_params()
         params.append(all_params)
         param1, param2 = [d.get("W") for d in (all_params, p.model.feature_extractor.params)]
@@ -67,6 +68,7 @@ def test_extra_classifiers(config, model_type, default_setting):
         p = Parser(model_files=filename, config=config)
         list(p.train(passages if mode == "train" else None, dev=passages, test=True, iterations=2))
         assert p.model.is_finalized, "Model should be finalized after %sing" % mode
+        assert not getattr(p.model.feature_extractor, "node_dropout", 0), p.model.feature_extractor.node_dropout
 
 
 @pytest.mark.parametrize("model_type", (BIRNN,))
