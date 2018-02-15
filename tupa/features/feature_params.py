@@ -117,8 +117,8 @@ class FeatureParameters(Labels):
 class NumericFeatureParameters(FeatureParameters):
     SUFFIX = "numeric"
 
-    def __init__(self, num):
-        super().__init__(NumericFeatureParameters.SUFFIX, 1, None, num=num)
+    def __init__(self, num, node_dropout=0):
+        super().__init__(NumericFeatureParameters.SUFFIX, 1, None, num=num, node_dropout=node_dropout)
 
     def __repr__(self):
         return "%s(%d)" % (
@@ -129,4 +129,4 @@ class NumericFeatureParameters(FeatureParameters):
         return True
 
     def copy_with_data(self, copy_dict, copy_init):
-        return NumericFeatureParameters(self.num)
+        return NumericFeatureParameters(self.num, node_dropout=self.node_dropout)

@@ -45,17 +45,20 @@ class DenseFeatureExtractor(FeatureExtractor):
     Object to extract features from the parser state to be used in action classification
     To be used with a NeuralNetwork classifier.
     """
-    def __init__(self, params, indexed, node_dropout=0):
+    def __init__(self, params, indexed, node_dropout=0, init_params=True):
         super().__init__(FEATURE_TEMPLATES)
         self.indexed = indexed
         self.node_dropout = node_dropout
-        self.params = OrderedDict((p.suffix, p) for p in [NumericFeatureParameters(1)] + list(params.values()))
-        for param in self.params.values():
-            self.update_param_indexed(param)
-        param_values = self.get_param_values(all_params=True)
-        for param in self.params.values():
-            param.num = len(param_values[param])
-            param.node_dropout = self.node_dropout
+        if init_params:
+            self.params = OrderedDict((p.suffix, p) for p in [NumericFeatureParameters(1)] + list(params.values()))
+            for param in self.params.values():
+                self.update_param_indexed(param)
+            param_values = self.get_param_values(all_params=True)
+            for param in self.params.values():
+                param.num = len(param_values[param])
+                param.node_dropout = self.node_dropout
+        else:
+            self.params = params
     
     def init_param(self, param):
         self.update_param_indexed(param)
@@ -129,7 +132,7 @@ class DenseFeatureExtractor(FeatureExtractor):
         return ret
 
     def finalize(self):
-        return type(self)(FeatureParameters.copy(self.params, UnknownDict), self.indexed)
+        return type(self)(FeatureParameters.copy(self.params, UnknownDict), self.indexed, init_params=False)
 
     def unfinalize(self):
         """Undo finalize(): replace each feature parameter's data dict with a DropoutDict again, to keep training"""
