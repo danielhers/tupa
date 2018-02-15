@@ -129,4 +129,4 @@ class NumericFeatureParameters(FeatureParameters):
         return True
 
     def copy_with_data(self, copy_dict, copy_init):
-        return NumericFeatureParameters(self.num, node_dropout=self.node_dropout)
+        return NumericFeatureParameters(self.num, node_dropout=getattr(self, "node_dropout", 0))
