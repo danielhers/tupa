@@ -147,3 +147,4 @@ class DenseFeatureExtractor(FeatureExtractor):
     def load(self, filename, order=None):
         super().load(filename, order)
         self.params = FeatureParameters.copy(load_dict(filename + FILENAME_SUFFIX), UnknownDict, order=order)
+        self.node_dropout = 0
