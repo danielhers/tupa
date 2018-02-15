@@ -106,7 +106,7 @@ class FeatureTemplateElement:
 
     def set_node(self, state, node_dropout=0):
         self.node = None
-        if node_dropout > Config().random.random_sample():
+        if state is None or node_dropout and node_dropout > Config().random.random_sample():
             return
         try:
             if self.source == "s":
@@ -124,7 +124,7 @@ class FeatureTemplateElement:
                 else:  # relative.lower() == "l"
                     self.node = nodes[0]
         except (IndexError, TypeError, AttributeError, IndexError, ValueError):
-            if Config().args.missing_node_features or node_dropout > Config().random.random_sample():
+            if Config().args.missing_node_features or node_dropout and node_dropout > Config().random.random_sample():
                 self.node = None
 
     def extract(self, state, default, indexed, as_tuples, node_dropout=0):
