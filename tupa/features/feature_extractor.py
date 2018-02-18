@@ -65,7 +65,7 @@ class FeatureTemplateElement:
                            e: tag of first incoming edge / action tag
                            n: node label
                            c: node label category suffix
-                           ,: unique separator punctuation between nodes
+                           p: unique separator punctuation between nodes
                            q: count of any separator punctuation between nodes
                            x: numeric value of gap type
                            y: sum of gap lengths
