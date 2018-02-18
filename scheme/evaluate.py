@@ -7,6 +7,7 @@ import sys
 from itertools import groupby
 
 import configargparse
+from tqdm import tqdm
 from ucca import evaluation, ioutil
 
 from scheme.cfgutil import add_verbose_argument
@@ -78,20 +79,23 @@ def read_files(files, default_format=None):
             yield passage, passage, passage.ID, converted_format, in_converter, out_converter
 
 
-def evaluate_all(args, evaluate, files):
+def evaluate_all(args, evaluate, files, name=None):
     for ((guessed_converted, guessed_passage, _, guessed_format, guessed_converter, _),
          (ref_converted, ref_passage, passage_id, ref_format, _, ref_converter)) in \
-            zip(*[read_files(f, args.format) for f in files]):
+            tqdm(zip(*[read_files(f, args.format) for f in files]), unit=" passages", desc=name, total=len(files[-1])):
         if not args.quiet:
-            print(passage_id, end=" ")
+            with tqdm.external_write_mode():
+                print(passage_id, end=" ")
         if guessed_format != ref_format:
             guessed_passage = next(iter(guessed_converter(guessed_passage + [""], passage_id=passage_id))) if \
                 ref_converter is None else ref_converter(guessed_converted)
         result = evaluate(guessed_passage, ref_passage, verbose=args.verbose > 1)
         if not args.quiet:
-            print("F1: %.3f" % result.average_f1())
+            with tqdm.external_write_mode():
+                print("F1: %.3f" % result.average_f1())
         if args.verbose:
-            result.print()
+            with tqdm.external_write_mode():
+                result.print()
         yield result
 
 
