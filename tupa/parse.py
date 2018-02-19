@@ -61,6 +61,7 @@ class PassageParser(AbstractParser):
     def __init__(self, config, models, training, passage):
         super().__init__(config, models, training)
         self.passage = passage
+        self.format = self.passage.extra.get("format")
         self.config.args.lang = passage.attrib.get("lang", self.config.args.lang)
         WIKIFIER.enabled = self.config.args.wikification
         self.state = State(passage)
@@ -210,12 +211,17 @@ class PassageParser(AbstractParser):
         yield scores.argmax()
         yield from scores.argsort()[::-1]  # Contains the max, but otherwise items might be missed (different order)
 
-    def finish(self, evaluate, status, display=True):
+    def finish(self, evaluate, status, display=True, write=False):
         self.model.classifier.finished_item(self.training)
         for model in self.models[1:]:
             model.classifier.finished_item(renew=False)  # So that dynet.renew_cg happens only once
         if not self.training or self.config.args.verify:
             self.out = self.state.create_passage(verify=self.config.args.verify)
+        if write:
+            for out_format in self.config.args.formats or ["ucca"] if self.format in (None, "text") else [self.format]:
+                ioutil.write_passage(self.out, output_format=out_format, binary=out_format == "pickle",
+                                     outdir=self.config.args.outdir, prefix=self.config.args.prefix,
+                                     converter=get_output_converter(out_format, default=to_text))
         if self.oracle and self.config.args.verify:
             self.verify(self.out, self.passage)
         ret = (self.out,)
@@ -236,12 +242,11 @@ class PassageParser(AbstractParser):
         return ""
 
     def evaluate(self, mode=ParseMode.test):
-        ref_format = self.passage.extra.get("format")
-        if ref_format:
-            self.print("Converting to %s and evaluating..." % ref_format)
-        self.eval_type = UNLABELED if self.config.is_unlabeled(ref_format or "ucca") else LABELED
-        score = EVALUATORS.get(ref_format, evaluation).evaluate(
-            self.out, self.passage, converter=get_output_converter(ref_format),
+        if self.format:
+            self.print("Converting to %s and evaluating..." % self.format)
+        self.eval_type = UNLABELED if self.config.is_unlabeled(self.format or "ucca") else LABELED
+        score = EVALUATORS.get(self.format, evaluation).evaluate(
+            self.out, self.passage, converter=get_output_converter(self.format),
             verbose=self.out and self.config.args.verbose > 3, constructions=self.config.args.constructions,
             eval_types=(self.eval_type,) if mode is ParseMode.dev else (LABELED, UNLABELED))
         self.f1 = average_f1(score, self.eval_type)
@@ -288,7 +293,7 @@ class BatchParser(AbstractParser):
         self.seen_per_format = defaultdict(int)
         self.num_passages = 0
 
-    def parse(self, passages, evaluate, display=True):
+    def parse(self, passages, evaluate, display=True, write=False):
         passages, total = self.passage_generator(passages, display=display)
         id_width = 1
         for i, passage in enumerate(passages, start=1):
@@ -318,7 +323,7 @@ class BatchParser(AbstractParser):
                 continue
             assert not (self.training and pformat == "text"), "Cannot train on unannotated plain text"
             self.config.set_format(pformat)
-            yield self.parse_with_timeout(passage, evaluate, display=display)
+            yield self.parse_with_timeout(passage, evaluate, display=display, write=write)
         if display:
             self.summary()
 
@@ -332,7 +337,7 @@ class BatchParser(AbstractParser):
             passages = tqdm(passages, unit=self.config.passages_word, total=total, file=sys.stdout, desc="Initializing")
         return passages, total
 
-    def parse_with_timeout(self, passage, evaluate, display=True):
+    def parse_with_timeout(self, passage, evaluate, display=True, write=False):
         parser = PassageParser(self.config, self.models, self.training, passage)
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
@@ -347,7 +352,7 @@ class BatchParser(AbstractParser):
             self.config.log("%s %s: timeout (%fs)" % (self.config.passage_word, passage.ID, self.config.args.timeout))
             status = "(timeout)"
         self.update_counts(parser)
-        return parser.finish(evaluate, status, display=display)
+        return parser.finish(evaluate, status, display=display, write=write)
 
     def update_counts(self, parser):
         self.correct_action_count += parser.correct_action_count
@@ -479,7 +484,7 @@ class Parser(AbstractParser):
         print_scores(scores, scores_filename, prefix=prefix, prefix_title="iteration")
         return average_score, scores
 
-    def parse(self, passages, mode=ParseMode.test, evaluate=False, display=True):
+    def parse(self, passages, mode=ParseMode.test, evaluate=False, display=True, write=False):
         """
         Parse given passages
         :param passages: iterable of passages to parse
@@ -489,6 +494,7 @@ class Parser(AbstractParser):
         :param evaluate: whether to evaluate parsed passages with respect to given ones.
                          Only possible when given passages are annotated.
         :param display: whether to display information on each parsed passage
+        :param: write: whether to write output passages to file
         :return: generator of parsed passages (or in train mode, the original ones),
                  or, if evaluate=True, of pairs of (Passage, Scores).
         """
@@ -499,7 +505,7 @@ class Parser(AbstractParser):
             list(self.train())  # Try to load model from file
         parser = BatchParser(self.config, self.models, training)
         for i, passage in enumerate(parser.parse(passages, mode if mode is ParseMode.dev else evaluate,
-                                                 display=display), start=1):
+                                                 display=display, write=write), start=1):
             if training and self.config.args.save_every and i % self.config.args.save_every == 0:
                 self.eval_and_save()
                 self.batch += 1
@@ -527,15 +533,9 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
             print("Evaluating on test passages")
         passage_scores = []
         evaluate = args.evaluate or train_passages
-        for result in p.parse(test_passages, evaluate=evaluate):
-            guessed_passage, *score = result
+        for result in p.parse(test_passages, evaluate=evaluate, write=args.write):
+            _, *score = result
             passage_scores += score
-            if guessed_passage is not None and args.write:
-                passage_format = guessed_passage.extra.get("format")
-                for out_format in args.formats or ("ucca",) if passage_format in (None, "text") else (passage_format,):
-                    ioutil.write_passage(guessed_passage, output_format=out_format, binary=out_format == "pickle",
-                                         outdir=args.outdir, prefix=args.prefix,
-                                         converter=get_output_converter(out_format, default=to_text))
         if passage_scores:
             scores = Scores(passage_scores)
             if args.verbose <= 1 or len(passage_scores) > 1:
