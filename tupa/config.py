@@ -209,7 +209,7 @@ class Config(object, metaclass=Singleton):
         argparser.add_argument("-C", "--config", is_config_file=True, help="configuration file to get arguments from")
         argparser.add_argument("-m", "--models", nargs="+", help="model file basename(s) to load/save, ensemble if >1 "
                                                                  "(default: <format>_<model_type>")
-        argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=SPARSE, help="model type")
+        argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=BIRNN, help="model type")
         argparser.add_argument("-B", "--beam", type=int, choices=(1,), default=1, help="beam size for beam search")
         add_boolean_option(argparser, "evaluate", "evaluation of parsed passages", short="e")
         add_verbose_argument(argparser, help="detailed parse output")
