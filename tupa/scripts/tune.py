@@ -73,12 +73,12 @@ def main():
     domains = (
         # Parameter name            Shared  Domain of possible values
         ("seed",                    False,  2147483647),  # max value for int
-        ("classifier",              False,  [config.BIRNN]),
+        ("classifier",              False,  [config.BIRNN, config.HIGHWAY_RNN]),
         ("learning_rate",           False,  [None]),
-        ("learning_rate_decay",     False,  [0, 0.01]),
+        ("learning_rate_decay",     False,  5 * [0] + [0.01]),
         ("update_word_vectors",     False,  [True, False]),
         ("word_vectors",            False,  [None] + word_vectors_files),
-        ("word_dim_external",       False,  (0, 300)),
+        ("word_dim_external",       False,  [0] + 5 * [300]),
         ("word_dim",                False,  range(150, 251)),
         ("tag_dim",                 False,  range(15, 26)),
         ("dep_dim",                 False,  range(5, 16)),
@@ -86,7 +86,7 @@ def main():
         ("node_label_dim",          False,  get_values_based_on_format(range(15, 30))),
         ("node_category_dim",       False,  get_values_based_on_format(range(5, 15))),
         ("max_node_categories",     False,  get_values_based_on_format(range(10, 26))),
-        ("punct_dim",               False,  range(3)),
+        ("punct_dim",               False,  3),
         ("action_dim",              False,  range(2, 6)),
         ("ner_dim",                 False,  range(3, 9)),
         ("max_node_labels",         False,  get_values_based_on_format(range(1000, 4001))),
@@ -117,7 +117,7 @@ def main():
         ("swap",                    False,  [config.REGULAR, config.COMPOUND]),
         ("max_swap",                False,  range(2, 6)),
         ("max_words",               False,  range(8000, 30001)),
-        ("max_words_external",      False,  [None, 1000000]),
+        ("max_words_external",      False,  [None] + list(range(50000, 1000000))),
         ("rnn",                     True,   [config.DEFAULT_RNN]),
     )
     params = [Params(p, shared=s) for p, s in zip(*[map(OrderedDict, zip(*[sample(name, domain, size)
