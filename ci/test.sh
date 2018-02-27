@@ -44,7 +44,7 @@ unit)  # unit tests
     ;;
 toy-*)  # basic parser tests
     for m in "" --sentences --paragraphs; do
-      python -m tupa -I 10 -t "$TOY_DATA" -d "$TOY_DATA" $m -m "model_$FORMAT$m" -v || exit 1
+      python -m tupa -c sparse -I 10 -t "$TOY_DATA" -d "$TOY_DATA" $m -m "model_$FORMAT$m" -v || exit 1
       python -m tupa "$TOY_DATA" $m -em "model_$FORMAT$m" -v || exit 1
     done
     ;;
