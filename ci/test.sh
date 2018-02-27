@@ -51,7 +51,7 @@ toy-*)  # basic parser tests
 tune-*)
     export PARAMS_NUM=3 MAX_ITERATIONS=3
     while :; do
-      python -m tupa.scripts.tune "$TOY_DATA" -t "$TOY_DATA" -f "$FORMAT" && break
+      python -m tupa.scripts.tune "$TOY_DATA" -t "$TOY_DATA" -f "$FORMAT" --max-action-ratio 10 && break
     done
     column -t -s, params.csv
     ;;
