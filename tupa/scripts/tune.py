@@ -117,7 +117,7 @@ def main():
         ("swap",                    False,  [config.REGULAR, config.COMPOUND]),
         ("max_swap",                False,  range(2, 6)),
         ("max_words",               False,  range(8000, 30001)),
-        ("max_words_external",      False,  [None] + list(range(50000, 1000000))),
+        ("max_words_external",      False,  [None] + list(range(50000, 250000))),
         ("rnn",                     True,   [config.DEFAULT_RNN]),
     )
     params = [Params(p, shared=s) for p, s in zip(*[map(OrderedDict, zip(*[sample(name, domain, size)
