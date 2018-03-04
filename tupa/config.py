@@ -119,7 +119,7 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
     add(group, "--minibatch-size", type=int, default=200, help="mini-batch size for optimization")
     add(group, "--optimizer", choices=TRAINERS, default=DEFAULT_TRAINER, help="algorithm for optimization")
     add(group, "--loss", choices=LOSSES, default=DEFAULT_LOSS, help="loss function for training")
-    add(group, "--max-words-external", type=int, help="max external word vectors to use")
+    add(group, "--max-words-external", type=int, default=250000, help="max external word vectors to use")
     add(group, "--max-words", type=int, default=10000, help="max number of words to keep embeddings for")
     add(group, "--max-tags", type=int, default=100, help="max number of POS tags to keep embeddings for")
     add(group, "--max-deps", type=int, default=100, help="max number of dep labels to keep embeddings for")
@@ -221,7 +221,7 @@ class Config(object, metaclass=Singleton):
         group = argparser.add_argument_group(title="Training parameters")
         group.add_argument("-t", "--train", nargs="+", default=(), help="passage files/directories to train on")
         group.add_argument("-d", "--dev", nargs="+", default=(), help="passage files/directories to tune on")
-        group.add_argument("-I", "--iterations", nargs="+", type=Iterations, default=(Iterations(1),),
+        group.add_argument("-I", "--iterations", nargs="+", type=Iterations, default=(Iterations(50), Iterations("100 --optimizer=" + EXTRA_TRAINER)),
                            help="number of training iterations along with optional hyperparameters per part")
         group.add_argument("--folds", type=int, choices=(3, 5, 10), help="#folds for cross validation")
         group.add_argument("--seed", type=int, default=1, help="random number generator seed")
