@@ -30,48 +30,45 @@ Having a directory with UCCA passage files
 (for example, [the Wiki corpus](https://github.com/huji-nlp/ucca-corpus/tree/master/wiki/pickle)),
 run:
 
-    python -m tupa -t <train_dir> -d <dev_dir> -c <model_type> -m <model_filename>
+    tupa -t <train_dir> -d <dev_dir> -c <model_type> -m <model_filename>
 
-The possible model types are `sparse`, `mlp` and `bilstm`.
+The possible model types are `sparse`, `mlp`, `bilstm` and `highway`.
 
 ### Parse a text file
 
 Run the parser on a text file (here named `example.txt`) using a trained model:
 
-    python -m tupa example.txt -m <model_filename>
+    tupa example.txt -m <model_filename>
 
 An `xml` file will be created per passage (separate by blank lines in the text file).
 
 ### Pre-trained models
 
-To download and extract models pre-trained on the Wiki corpus, run:
+To download and extract a model pre-trained on the Wiki corpus, run:
 
-    curl --remote-name-all http://www.cs.huji.ac.il/~danielh/ucca/{sparse,mlp,bilstm}-1.2.tar.gz
-    tar xvzf sparse-1.2.tar.gz
-    tar xvzf mlp-1.2.tar.gz
-    tar xvzf bilstm-1.2.tar.gz
+    curl -O http://www.cs.huji.ac.il/~danielh/ucca/bilstm-1.3.tar.gz
+    tar xvzf bilstm-1.3.tar.gz
 
-Run the parser using any of them:
+Run the parser using the model:
 
-    python -m tupa example.txt -c sparse -m models/sparse
-    python -m tupa example.txt -c mlp -m models/mlp
-    python -m tupa example.txt -c bilstm -m models/bilstm
+    tupa example.txt -m models/bilstm
     
 ### Other languages
 
-To get a French/German model pre-trained on [the *20K Leagues* corpus](https://github.com/huji-nlp/ucca-corpus/tree/master/vmlslm/fr), run:
+To get a French/German model pre-trained on [the *20K Leagues* corpus](https://github.com/huji-nlp/ucca-corpus/tree/master), run:
 
-    curl -O http://www.cs.huji.ac.il/~danielh/ucca/sparse-1.2-{fr,de}.tar.gz
-    tar xvzf sparse-1.2-fr.tar.gz
-    tar xvzf sparse-1.2-de.tar.gz
+    curl -O http://www.cs.huji.ac.il/~danielh/ucca/bilstm-1.3-fr.tar.gz
+    tar xvzf bilstm-1.3-fr.tar.gz
+    curl -O http://www.cs.huji.ac.il/~danielh/ucca/bilstm-1.3-de.tar.gz
+    tar xvzf bilstm-1.3-de.tar.gz
 
 Run the parser on a French/German text file, using the French/German spaCy models too:
 
     export SPACY_MODEL=fr_core_news_md
-    python -m tupa exemple.txt -m models/sparse-fr
+    python -m tupa exemple.txt -m models/bilstm-fr
 
     export SPACY_MODEL=de_core_news_sm
-    python -m tupa beispiel.txt -m models/sparse-de
+    python -m tupa beispiel.txt -m models/bilstm-de
 
 Author
 ------
