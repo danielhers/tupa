@@ -104,7 +104,7 @@ def main():
         ("minibatch_size",          False,  range(50, 201)),
         ("optimizer",               False,  [config.DEFAULT_TRAINER]),
         ("swap_importance",         False,  np.arange(1, 2, step=.1)),
-        ("iterations",              False,  list(map(Iterations, range(1, MAX_ITERATIONS + 1)))),
+        ("iterations",              False,  [Iterations(MAX_ITERATIONS)]),
         ("word_dropout",            False,  np.arange(.41, step=.01)),
         ("word_dropout_external",   False,  np.arange(.51, step=.01)),
         ("tag_dropout",             False,  np.arange(.41, step=.01)),
