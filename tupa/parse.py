@@ -97,6 +97,7 @@ class PassageParser(AbstractParser):
             true_actions = self.get_true_actions()
             action, predicted_action = self.choose(true_actions)
             self.state.transition(action)
+            self.model.classifier.transition(action, axis=self.config.format)
             need_label, label, predicted_label, true_label = self.label_node(action)
             if self.config.args.action_stats:
                 with open(self.config.args.action_stats, "a") as f:

@@ -31,10 +31,11 @@ class FeatureTemplate:
     def __str__(self):
         return self.name
 
-    def extract(self, state, default=None, indexed=(), as_tuples=False, node_dropout=0):
+    def extract(self, state, default=None, indexed=(), as_tuples=False, node_dropout=0, hierarchical=False):
         try:
             return [value for element in self.elements for value in element.extract(state, default, indexed, as_tuples,
-                                                                                    node_dropout=node_dropout)]
+                                                                                    node_dropout=node_dropout,
+                                                                                    hierarchical=hierarchical)]
         except ValueError:
             return None
 
@@ -127,13 +128,13 @@ class FeatureTemplateElement:
             if Config().args.missing_node_features or node_dropout and node_dropout > Config().random.random_sample():
                 self.node = None
 
-    def extract(self, state, default, indexed, as_tuples, node_dropout=0):
+    def extract(self, state, default, indexed, as_tuples, node_dropout=0, hierarchical=False):
         self.set_node(state, node_dropout=node_dropout)
         for prop, getter in zip(self.properties, self.getters):
             suffix = prop
             if indexed and not self.is_numeric(prop):
                 if prop == indexed[0]:
-                    prop, getter = "i", None
+                    prop, getter = ("j" if hierarchical else "i"), None
                 elif prop in indexed[1:]:
                     continue
             value = self.get_prop(state, prop, getter, default)
@@ -306,6 +307,7 @@ NODE_PROP_GETTERS = {
     "d": lambda node, prev, binary: dep_distance(prev, node) if binary else head_terminal(node).tok[Attr.DEP.value],
     "h": height,
     "i": lambda node, *_: head_terminal(node).index - 1,
+    "j": lambda node, *_: node.index,
     "e": lambda node, prev, binary: next(e.tag for e in node.incoming if not binary or e.parent == prev),
     "n": lambda node, *_: node.label,
     "c": lambda node, *_: node.category,

@@ -45,9 +45,10 @@ class DenseFeatureExtractor(FeatureExtractor):
     Object to extract features from the parser state to be used in action classification
     To be used with a NeuralNetwork classifier.
     """
-    def __init__(self, params, indexed, node_dropout=0, init_params=True):
+    def __init__(self, params, indexed, hierarchical=False, node_dropout=0, init_params=True):
         super().__init__(FEATURE_TEMPLATES)
         self.indexed = indexed
+        self.hierarchical = hierarchical
         self.node_dropout = node_dropout
         if init_params:
             self.params = OrderedDict((p.suffix, p) for p in [NumericFeatureParameters(1)] + list(params.values()))
@@ -111,7 +112,8 @@ class DenseFeatureExtractor(FeatureExtractor):
                     NumericFeatureParameters.SUFFIX if param.numeric else param.effective_suffix,
                     ([state.node_ratio()] if state else [1] if all_params else []) if param.numeric else [])
         for e, prop, value in self.feature_template.extract(state, DEFAULT, "".join(indexed), as_tuples=True,
-                                                            node_dropout=self.node_dropout):
+                                                            node_dropout=self.node_dropout,
+                                                            hierarchical=self.hierarchical):
             vs = values.get(NumericFeatureParameters.SUFFIX if e.is_numeric(prop) else prop)
             if vs is not None:
                 vs.append(value if state else (e, prop))

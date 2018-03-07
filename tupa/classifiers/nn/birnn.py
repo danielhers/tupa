@@ -74,9 +74,14 @@ class BiRNN(SubModel):
         """
         if self.params:
             assert len(indices) == self.indexed_num, "Input size mismatch: %d != %d" % (len(indices), self.indexed_num)
-            return [self.empty_rep if i == MISSING_VALUE else
-                    self.input_reps[min(i, self.max_length - 1)] for i in indices]
+            return [self.empty_rep if i == MISSING_VALUE else self.get_representation(i) for i in indices]
         return []
+
+    def get_representation(self, i):
+        return self.input_reps[min(i, self.max_length - 1)]
+
+    def transition(self, action):
+        pass
 
     def save_sub_model(self, d, *args):
         values = super().save_sub_model(
@@ -182,3 +187,44 @@ class HighwayRNN(BiRNN):
             x = dy.dropout_dim(dy.concatenate(xs, 1), 1, self.dropout)
             xs = [dy.pick(x, i, 1) for i in range(len(xs))]
         return xs
+
+
+class HierarchicalBiRNN(BiRNN):
+    RNN_NAMES = "lrnn", "rrnn"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.internal_reps = {}
+
+    def add_node(self, i):
+        self.internal_reps[i] = [self.params[n].initial_state() for n in self.RNN_NAMES]
+
+    def add_edge(self, i, j, direction):
+        self.internal_reps[i][direction] = self.internal_reps[i][direction].add_input(self.get_representation(j))
+
+    def transition(self, action):
+        if self.params:
+            if action.node:
+                self.add_node(action.node.index)
+            elif action.edge:
+                self.add_edge(action.edge.parent.index, action.edge.child.index, "RIGHT" in action.type)
+
+    def init_features(self, embeddings, train=False):
+        super().init_features(embeddings, train)
+        self.internal_reps.clear()
+        if self.params:
+            self.add_node(0)  # Root
+
+    def init_rnn_params(self, indexed_dim):
+        params = super().init_rnn_params(indexed_dim)
+        for name in self.RNN_NAMES:
+            rnn = self.rnn_builder()(1, self.lstm_layer_dim, self.lstm_layer_dim / 2, self.model)
+            self.params[name] = rnn
+            params += [p for l in rnn.get_parameters() for p in l]
+        return params
+
+    def get_representation(self, i):
+        states = self.internal_reps.get(i)
+        if states:
+            return dy.concatenate([s.output() or self.empty_rep[:self.lstm_layer_dim / 2] for s in states])
+        return super().get_representation(i - 1)  # Terminal index is (node index-1)

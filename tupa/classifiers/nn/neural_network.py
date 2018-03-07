@@ -7,13 +7,15 @@ import dynet as dy
 import numpy as np
 from tqdm import tqdm
 
-from .birnn import EmptyRNN, BiRNN, HighwayRNN
+from .birnn import EmptyRNN, BiRNN, HighwayRNN, HierarchicalBiRNN
 from .constants import TRAINERS, TRAINER_LEARNING_RATE_PARAM_NAMES, TRAINER_KWARGS, CategoricalParameter
 from .mlp import MultilayerPerceptron
 from .sub_model import SubModel
 from ..classifier import Classifier
-from ...config import Config, BIRNN, HIGHWAY_RNN
+from ...config import Config, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN
 from ...model_util import MISSING_VALUE, remove_existing
+
+BIRNN_TYPES = {BIRNN: BiRNN, HIGHWAY_RNN: HighwayRNN, HIERARCHICAL_RNN: HierarchicalBiRNN}
 
 tqdm.monitor_interval = 0
 
@@ -63,7 +65,7 @@ class NeuralNetwork(Classifier, SubModel):
     
     @property
     def birnn_type(self):
-        return {BIRNN: BiRNN, HIGHWAY_RNN: HighwayRNN}.get(self.model_type, EmptyRNN)
+        return BIRNN_TYPES.get(self.model_type, EmptyRNN)
 
     def resize(self):
         for axis, labels in self.labels.items():
@@ -245,6 +247,10 @@ class NeuralNetwork(Classifier, SubModel):
         elif not train:
             self.init_cg(renew)
         self.finished_step(train)
+
+    def transition(self, action, axis):
+        for birnn in self.get_birnns(axis):
+            birnn.transition(action)
 
     def finalize(self, finished_epoch=False, **kwargs):
         """

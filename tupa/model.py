@@ -3,7 +3,7 @@ from enum import Enum
 
 from .action import Actions
 from .classifiers.classifier import Classifier
-from .config import Config, SPARSE, MLP, BIRNN, HIGHWAY_RNN, NOOP
+from .config import Config, SPARSE, MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN, NOOP
 from .features.feature_params import FeatureParameters
 from .model_util import UnknownDict, AutoIncrementDict, remove_backup
 
@@ -65,6 +65,7 @@ CLASSIFIER_PROPERTIES = {
     MLP: (ClassifierProperty.trainable_after_saving,),
     BIRNN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
     HIGHWAY_RNN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
+    HIERARCHICAL_RNN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
     NOOP: (ClassifierProperty.trainable_after_saving,),
 }
 
@@ -131,6 +132,7 @@ class Model:
             from .classifiers.nn.neural_network import NeuralNetwork
             self.feature_extractor = DenseFeatureExtractor(self.feature_params,
                                                            indexed=self.config.args.classifier != MLP,
+                                                           hierarchical=self.config.args.classifier == HIERARCHICAL_RNN,
                                                            node_dropout=self.config.args.node_dropout)
             self.classifier = NeuralNetwork(self.config, labels)
         else:
@@ -139,7 +141,7 @@ class Model:
     
     @property
     def is_neural_network(self):
-        return self.config.args.classifier in (MLP, BIRNN, HIGHWAY_RNN)
+        return self.config.args.classifier in (MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN)
 
     def is_retrainable(self):
         return ClassifierProperty.trainable_after_saving in self.get_classifier_properties()

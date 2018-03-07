@@ -6,6 +6,7 @@ import numpy as np
 
 from tupa import parse, config
 from tupa.config import Config, Iterations
+from tupa.model import CLASSIFIER_PROPERTIES, ClassifierProperty
 
 MODELS_DIR = "models"
 MAX_ITERATIONS = int(os.environ.get("MAX_ITERATIONS", 50))
@@ -15,7 +16,7 @@ class Params:
     def __init__(self, params, **hyperparams):
         self.params = params
         self.hyperparams = hyperparams
-        if self.params["classifier"] != config.BIRNN:
+        if ClassifierProperty.require_init_features not in CLASSIFIER_PROPERTIES[self.params["classifier"]]:
             for p in [self.params] + list(self.hyperparams.values()):
                 p["rnn"] = None
                 p["lstm_layer_dim"] = p["lstm_layers"] = p["embedding_layer_dim"] = p["embedding_layers"] = 0
