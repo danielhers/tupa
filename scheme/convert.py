@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
-import configargparse
-import glob
 import os
 import re
 import sys
+from glob import glob
 
+import configargparse
+from tqdm import tqdm
 from ucca import convert, ioutil
 
+from scheme.cfgutil import add_verbose_argument
 from scheme.conversion.amr import from_amr, to_amr
 from scheme.conversion.conllu import from_conllu, to_conllu
 from scheme.conversion.sdp import from_sdp, to_sdp
@@ -30,33 +32,40 @@ UCCA_EXT = (".xml", ".pickle")
 
 
 def main(args):
-    for pattern in args.filenames:
-        filenames = glob.glob(pattern)
+    os.makedirs(args.outdir, exist_ok=True)
+    for filename in tqdm(list(iter_files(args.filenames)), unit="file", desc="Converting"):
+        no_ext, ext = os.path.splitext(filename)
+        if ext in UCCA_EXT:  # UCCA input
+            write_passage(ioutil.file2passage(filename), args)
+        else:
+            basename = os.path.basename(no_ext)
+            try:
+                passage_id = re.search(r"\d+", basename).group(0)
+            except AttributeError:
+                passage_id = basename
+            converter = CONVERTERS.get(args.input_format or ext.lstrip("."))
+            if converter is None:
+                raise IOError("Unknown extension '%s'. Specify format using -f" % ext)
+            converter = converter[0]
+            with open(filename, encoding="utf-8") as f:
+                for passage in converter(f, passage_id, split=args.split, mark_aux=args.mark_aux):
+                    write_passage(passage, args)
+
+
+def iter_files(patterns):
+    for pattern in patterns:
+        filenames = glob(pattern)
         if not filenames:
             raise IOError("Not found: " + pattern)
-        for filename in filenames:
-            no_ext, ext = os.path.splitext(filename)
-            if ext in UCCA_EXT:  # UCCA input
-                write_passage(ioutil.file2passage(filename), args)
-            else:
-                basename = os.path.basename(no_ext)
-                try:
-                    passage_id = re.search(r"\d+", basename).group(0)
-                except AttributeError:
-                    passage_id = basename
-                converter = CONVERTERS.get(args.input_format or ext.lstrip("."))
-                if converter is None:
-                    raise IOError("Unknown extension '%s'. Specify format using -f" % ext)
-                converter = converter[0]
-                with open(filename, encoding="utf-8") as f:
-                    for passage in converter(f, passage_id, split=args.split, mark_aux=args.mark_aux):
-                        write_passage(passage, args)
+        yield from filenames
 
 
 def write_passage(passage, args):
     ext = {None: UCCA_EXT[args.binary], "amr": ".txt"}.get(args.output_format) or "." + args.output_format
     outfile = args.outdir + os.path.sep + args.prefix + passage.ID + ext
-    sys.stderr.write("Writing '%s'...\n" % outfile)
+    if args.verbose:
+        with tqdm.external_write_mode():
+            print("Writing '%s'..." % outfile, file=sys.stderr)
     if args.output_format is None:  # UCCA output
         ioutil.passage2file(passage, outfile, args.binary)
     else:
@@ -81,5 +90,6 @@ if __name__ == '__main__':
     argparser.add_argument("-T", "--tree", action="store_true", help="remove multiple parents to get a tree")
     argparser.add_argument("-s", "--split", action="store_true", help="split each sentence to its own passage")
     argparser.add_argument("-m", "--mark-aux", action="store_true", help="mark auxiliary edges introduced/omit edges")
+    add_verbose_argument(argparser, help="detailed output")
     main(argparser.parse_args())
     sys.exit(0)
