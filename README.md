@@ -46,8 +46,8 @@ An `xml` file will be created per passage (separate by blank lines in the text f
 
 To download and extract a model pre-trained on the Wiki corpus, run:
 
-    curl -O http://www.cs.huji.ac.il/~danielh/ucca/bilstm-1.3.tar.gz
-    tar xvzf bilstm-1.3.tar.gz
+    curl -O http://www.cs.huji.ac.il/~danielh/ucca/bilstm-1.3.1.tar.gz
+    tar xvzf bilstm-1.3.1.tar.gz
 
 Run the parser using the model:
 
@@ -57,18 +57,15 @@ Run the parser using the model:
 
 To get a French/German model pre-trained on [the *20K Leagues* corpus](https://github.com/huji-nlp/ucca-corpus/tree/master), run:
 
-    curl -O http://www.cs.huji.ac.il/~danielh/ucca/bilstm-1.3-fr.tar.gz
-    tar xvzf bilstm-1.3-fr.tar.gz
-    curl -O http://www.cs.huji.ac.il/~danielh/ucca/bilstm-1.3-de.tar.gz
-    tar xvzf bilstm-1.3-de.tar.gz
+    curl -O http://www.cs.huji.ac.il/~danielh/ucca/bilstm-1.3.1-fr.tar.gz
+    tar xvzf bilstm-1.3.1-fr.tar.gz
+    curl -O http://www.cs.huji.ac.il/~danielh/ucca/bilstm-1.3.1-de.tar.gz
+    tar xvzf bilstm-1.3.1-de.tar.gz
 
 Run the parser on a French/German text file, using the French/German spaCy models too:
 
-    export SPACY_MODEL=fr_core_news_md
-    python -m tupa exemple.txt -m models/bilstm-fr
-
-    export SPACY_MODEL=de_core_news_sm
-    python -m tupa beispiel.txt -m models/bilstm-de
+    python -m tupa exemple.txt -m models/bilstm-fr --lang fr
+    python -m tupa beispiel.txt -m models/bilstm-de --lang de
 
 Author
 ------
