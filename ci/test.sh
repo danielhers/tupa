@@ -44,14 +44,16 @@ unit)  # unit tests
     ;;
 toy-*)  # basic parser tests
     for m in "" --sentences --paragraphs; do
-      python -m tupa -c sparse -I 10 -t "$TOY_DATA" -d "$TOY_DATA" $m -m "model_$FORMAT$m" -v || exit 1
-      python -m tupa "$TOY_DATA" $m -em "model_$FORMAT$m" -v || exit 1
+      args=$m -m "model_$FORMAT$m" -v
+      tupa -c sparse -I 10 -t "$TOY_DATA" -d "$TOY_DATA" $args || exit 1
+      tupa "$TOY_DATA" -e $args || exit 1
+      tupa test_files/example.txt $args || exit 1
     done
     ;;
 tune-*)
     export PARAMS_NUM=3 MAX_ITERATIONS=3
     while :; do
-      python -m tupa.scripts.tune "$TOY_DATA" -t "$TOY_DATA" -f "$FORMAT" --max-action-ratio 10 && break
+      tupa.scripts.tune "$TOY_DATA" -t "$TOY_DATA" -f "$FORMAT" --max-action-ratio 10 && break
       rm -fv models/*
     done
     column -t -s, params.csv
@@ -60,13 +62,13 @@ convert-*)
     python -m scheme.scripts.convert_and_evaluate "$CONVERT_DATA" -v
     ;;
 noop-amr)
-    python -m tupa -vv -c noop --implicit -We -I 1 -t "$TRAIN_DATA" "$DEV_DATA"
+    tupa -vv -c noop --implicit -We -I 1 -t "$TRAIN_DATA" "$DEV_DATA"
     ;;
 *-amr)
-    python -m tupa -vv -c "$ACTION" --implicit -We "$TOY_DATA" -I 1 -t "alignment-release-training-bio/*10.amr" --max-node-labels=250
+    tupa -vv -c "$ACTION" --implicit -We "$TOY_DATA" -I 1 -t "alignment-release-training-bio/*10.amr" --max-node-labels=250
     ;;
 *)
-    python -m tupa -vv -c "$ACTION" -We "$DEV_DATA" -I 1 -t "$TRAIN_DATA" --max-words-external=5000 --word-dim=100 --lstm-layer-dim=100 --embedding-layer-dim=100 || exit 1
-    python -m tupa -vv -m "$ACTION" -We "$DEV_DATA"
+    tupa -vv -c "$ACTION" -We "$DEV_DATA" -I 1 -t "$TRAIN_DATA" --max-words-external=5000 --word-dim=100 --lstm-layer-dim=100 --embedding-layer-dim=100 || exit 1
+    tupa -vv -m "$ACTION" -We "$DEV_DATA"
     ;;
 esac
