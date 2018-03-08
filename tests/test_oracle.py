@@ -12,7 +12,7 @@ from .conftest import load_passages, Settings, passage_id
 @pytest.mark.parametrize("passage", load_passages(), ids=passage_id)
 def test_oracle(config, setting, passage, write_oracle_actions):
     config.update(setting.dict())
-    config.set_format(passage.extra.get("format"))
+    config.set_format(passage.extra.get("format") or "ucca")
     oracle = Oracle(passage)
     state = State(passage)
     actions = Actions()

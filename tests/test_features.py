@@ -38,7 +38,7 @@ FEATURE_EXTRACTORS = [
 @pytest.mark.parametrize("passage", load_passages(), ids=passage_id)
 def test_features(config, feature_extractor_creator, passage, write_features):
     textutil.annotate(passage, as_array=True, verbose=True)
-    config.set_format(passage.extra.get("format"))
+    config.set_format(passage.extra.get("format") or "ucca")
     feature_extractor = feature_extractor_creator(config)
     oracle = Oracle(passage)
     state = State(passage)
