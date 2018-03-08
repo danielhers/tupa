@@ -96,7 +96,8 @@ def default_setting():
 
 def load_passages(*formats):
     WIKIFIER.enabled = False
-    files = [f for fo in formats or ["*"] for f in glob("test_files/*." + ("xml" if fo == "ucca" else fo))]
+    files = [f for fo in formats or ["*"] for f in glob("test_files/*." + ("xml" if fo == "ucca" else fo))
+             if not f.endswith(".txt")]
     return ioutil.read_files_and_dirs(files, converters=FROM_FORMAT)
 
 
