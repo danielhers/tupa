@@ -1,11 +1,13 @@
 from collections import OrderedDict
 from enum import Enum
 
+from ucca import textutil
+
 from .action import Actions
 from .classifiers.classifier import Classifier
 from .config import Config, SPARSE, MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN, NOOP
 from .features.feature_params import FeatureParameters
-from .model_util import UnknownDict, AutoIncrementDict, remove_backup
+from .model_util import UnknownDict, AutoIncrementDict, remove_backup, save_json, load_json
 
 
 class ParameterDefinition:
@@ -195,6 +197,7 @@ class Model:
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
                 skip_labels = (NODE_LABEL_KEY,) if node_labels and node_labels.size else ()
                 self.classifier.save(self.filename, skip_labels=skip_labels)
+                save_json(self.filename + ".nlp.json", textutil.models)
                 self.config.save(self.filename)
                 remove_backup(self.filename)
             except Exception as e:
@@ -216,6 +219,10 @@ class Model:
                 self.classifier.load(self.filename)
                 self.is_finalized = is_finalized
                 self.load_labels()
+                try:
+                    textutil.models.update(load_json(self.filename + ".nlp.json"))
+                except FileNotFoundError:
+                    pass
                 if self.config.args.verbose:
                     print("\n".join("%s: %s" % i for i in self.feature_params.items()))
                 for param in self.param_defs:
