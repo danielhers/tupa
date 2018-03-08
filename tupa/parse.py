@@ -15,7 +15,7 @@ from ucca.evaluation import LABELED, UNLABELED
 from scheme.convert import FROM_FORMAT, TO_FORMAT
 from scheme.evaluate import EVALUATORS, Scores
 from scheme.util.amr import LABEL_ATTRIB, WIKIFIER
-from tupa.__version__ import VERSION
+from tupa.__version__ import GIT_VERSION
 from tupa.config import Config, Iterations
 from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
 from tupa.oracle import Oracle
@@ -648,5 +648,5 @@ def main():
 
 
 if __name__ == "__main__":
-    print("TUPA version " + VERSION)
+    print("TUPA version " + GIT_VERSION)
     main()
