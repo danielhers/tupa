@@ -9,7 +9,7 @@ from glob import glob
 
 from tqdm import tqdm
 from ucca import diffutil, ioutil, textutil, layer1, evaluation
-from ucca.convert import from_text, to_text
+from ucca.convert import from_text
 from ucca.evaluation import LABELED, UNLABELED
 
 from scheme.convert import FROM_FORMAT, TO_FORMAT
@@ -222,7 +222,7 @@ class PassageParser(AbstractParser):
             for out_format in self.config.args.formats or ["ucca"] if self.format in (None, "text") else [self.format]:
                 ioutil.write_passage(self.out, output_format=out_format, binary=out_format == "pickle",
                                      outdir=self.config.args.outdir, prefix=self.config.args.prefix,
-                                     converter=get_output_converter(out_format, default=to_text))
+                                     converter=get_output_converter(out_format))
         if self.oracle and self.config.args.verify:
             self.verify(self.out, self.passage)
         ret = (self.out,)
@@ -296,11 +296,12 @@ class BatchParser(AbstractParser):
 
     def parse(self, passages, evaluate, display=True, write=False):
         passages, total = self.passage_generator(passages, display=display)
+        pr_width = len(str(total))
         id_width = 1
         for i, passage in enumerate(passages, start=1):
             pformat = passage.extra.get("format") or "ucca"
             if self.config.args.verbose and display:
-                progress = "%3d%% %*d/%d" % (i / total * 100, len(str(total)), i, total) if total else "%d" % i
+                progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) if total and i <= total else "%d" % i
                 id_width = max(id_width, len(str(passage.ID)))
                 print("%s %-6s %s %-*s" % (progress, pformat, self.config.passage_word, id_width, passage.ID),
                       end=self.config.line_end)

@@ -39,7 +39,7 @@ DYNET_ARG_NAMES = set()
 RESTORED_ARGS = set()
 
 
-def add_param_arguments(argparser=None, arg_default=None):  # arguments with possible format-specific parameter values
+def add_param_arguments(ap=None, arg_default=None):  # arguments with possible format-specific parameter values
 
     def add_argument(a, *args, **kwargs):
         return a.add_argument(*args, **kwargs)
@@ -54,10 +54,10 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
     def add_boolean(a, *args, **kwargs):
         add(a, *args, func=add_boolean_option, **kwargs)
 
-    if not argparser:
-        argparser = ArgParser()
+    if not ap:
+        ap = ArgParser()
 
-    group = argparser.add_argument_group(title="Node labels")
+    group = ap.add_argument_group(title="Node labels")
     add(group, "--max-node-labels", type=int, default=0, help="max number of node labels to allow")
     add(group, "--max-node-categories", type=int, default=0, help="max node categories to allow")
     add(group, "--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
@@ -65,7 +65,7 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
     add_boolean(group, "wikification", "use Spotlight to wikify any named node")
     add_boolean(group, "node-labels", "prediction of node labels, if supported by format", default=True)
 
-    group = argparser.add_argument_group(title="Structural constraints")
+    group = ap.add_argument_group(title="Structural constraints")
     add_boolean(group, "linkage", "linkage nodes and edges")
     add_boolean(group, "implicit", "implicit nodes and edges")
     add_boolean(group, "remote", "remote edges", default=True)
@@ -76,23 +76,23 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
     add(group, "--max-node-ratio", type=float, default=10, help="max node/terminal ratio")
     add(group, "--max-height", type=int, default=20, help="max graph height")
 
-    group = argparser.add_mutually_exclusive_group()
+    group = ap.add_mutually_exclusive_group()
     add(group, "--swap", choices=(REGULAR, COMPOUND), default=REGULAR, help="swap transitions")
     add(group, "--no-swap", action="store_false", dest="swap", help="exclude swap transitions")
-    add(argparser, "--max-swap", type=int, default=15, help="if compound swap enabled, maximum swap size")
+    add(ap, "--max-swap", type=int, default=15, help="if compound swap enabled, maximum swap size")
 
-    group = argparser.add_argument_group(title="General classifier training parameters")
+    group = ap.add_argument_group(title="General classifier training parameters")
     add(group, "--learning-rate", type=float, help="rate for model weight updates (default: by trainer/1)")
     add(group, "--learning-rate-decay", type=float, default=0, help="learning rate decay per iteration")
     add(group, "--swap-importance", type=float, default=1, help="learning rate factor for Swap")
     add(group, "--max-training-per-format", type=int, help="max number of training passages per format per iteration")
     add_boolean(group, "missing-node-features", "allow node features to be missing if not available", default=True)
 
-    group = argparser.add_argument_group(title="Perceptron parameters")
+    group = ap.add_argument_group(title="Perceptron parameters")
     add(group, "--min-update", type=int, default=5, help="minimum #updates for using a feature")
     SPARSE_ARG_NAMES.update(get_group_arg_names(group))
 
-    group = argparser.add_argument_group(title="Neural network parameters")
+    group = ap.add_argument_group(title="Neural network parameters")
     add(group, "--word-dim-external", type=int, default=300, help="dimension for external word embeddings")
     add(group, "--word-vectors", help="file to load external word embeddings from (default: GloVe)")
     add_boolean(group, "update-word-vectors", "external word vectors in training parameters", default=True)
@@ -142,8 +142,7 @@ def add_param_arguments(argparser=None, arg_default=None):  # arguments with pos
     add(group, "--max-length", type=int, default=120, help="maximum length of input sentence")
     add(group, "--rnn", choices=["None"] + list(RNNS), default=DEFAULT_RNN, help="type of recurrent neural network")
     NN_ARG_NAMES.update(get_group_arg_names(group))
-
-    return argparser
+    return ap
 
 
 class FallbackNamespace(Namespace):
@@ -204,25 +203,26 @@ class Iterations:
 
 class Config(object, metaclass=Singleton):
     def __init__(self, *args):
-        argparser = ArgParser(description="Transition-based parser for UCCA.",
-                              formatter_class=ArgumentDefaultsHelpFormatter)
-        argparser.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
-        argparser.add_argument("-C", "--config", is_config_file=True, help="configuration file to get arguments from")
-        argparser.add_argument("-m", "--models", nargs="+", help="model file basename(s) to load/save, ensemble if >1 "
-                                                                 "(default: <format>_<model_type>")
-        argparser.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=BIRNN, help="model type")
-        argparser.add_argument("-B", "--beam", type=int, choices=(1,), default=1, help="beam size for beam search")
-        add_boolean_option(argparser, "evaluate", "evaluation of parsed passages", short="e")
-        add_verbose_argument(argparser, help="detailed parse output")
-        constructions.add_argument(argparser)
-        add_boolean_option(argparser, "sentences", "split to sentences")
-        add_boolean_option(argparser, "paragraphs", "split to paragraphs")
-        argparser.add_argument("--timeout", type=float, help="max number of seconds to wait for a single passage")
+        self.arg_parser = ap = ArgParser(description="Transition-based parser for UCCA.",
+                                         formatter_class=ArgumentDefaultsHelpFormatter)
+        ap.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
+        ap.add_argument("-C", "--config", is_config_file=True, help="configuration file to get arguments from")
+        ap.add_argument("-m", "--models", nargs="+", help="model file basename(s) to load/save, ensemble if >1 "
+                                                          "(default: <format>_<model_type>")
+        ap.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=BIRNN, help="model type")
+        ap.add_argument("-B", "--beam", type=int, choices=(1,), default=1, help="beam size for beam search")
+        add_boolean_option(ap, "evaluate", "evaluation of parsed passages", short="e")
+        add_verbose_argument(ap, help="detailed parse output")
+        constructions.add_argument(ap)
+        add_boolean_option(ap, "sentences", "split to sentences")
+        add_boolean_option(ap, "paragraphs", "split to paragraphs")
+        ap.add_argument("--timeout", type=float, help="max number of seconds to wait for a single passage")
 
-        group = argparser.add_argument_group(title="Training parameters")
+        group = ap.add_argument_group(title="Training parameters")
         group.add_argument("-t", "--train", nargs="+", default=(), help="passage files/directories to train on")
         group.add_argument("-d", "--dev", nargs="+", default=(), help="passage files/directories to tune on")
-        group.add_argument("-I", "--iterations", nargs="+", type=Iterations, default=(Iterations(50), Iterations("100 --optimizer=" + EXTRA_TRAINER)),
+        group.add_argument("-I", "--iterations", nargs="+", type=Iterations,
+                           default=(Iterations(50), Iterations("100 --optimizer=" + EXTRA_TRAINER)),
                            help="number of training iterations along with optional hyperparameters per part")
         group.add_argument("--folds", type=int, choices=(3, 5, 10), help="#folds for cross validation")
         group.add_argument("--seed", type=int, default=1, help="random number generator seed")
@@ -230,7 +230,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--save-every", type=int, help="every this many passages, evaluate on dev and save model")
         add_boolean_option(group, "eval-test", "evaluate on test whenever evaluating on dev, but keep results hidden")
 
-        group = argparser.add_argument_group(title="Output files")
+        group = ap.add_argument_group(title="Output files")
         group.add_argument("-o", "--outdir", default=".", help="output directory for parsed files")
         group.add_argument("-p", "--prefix", default="", help="output filename prefix")
         add_boolean_option(group, "write", "writing parsed output to files", default=True, short_no="W")
@@ -238,19 +238,19 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--devscores", help="output CSV file for dev scores (default: model filename + .dev.csv)")
         group.add_argument("--testscores", help="output CSV file for test scores (default: model filename + .test.csv)")
         group.add_argument("--action-stats", help="output CSV file for action statistics")
-        argparser.add_argument("-f", "--formats", nargs="+", choices=FILE_FORMATS, default=(),
-                               help="input formats for creating all parameters before training starts "
-                                    "(otherwise created dynamically based on filename suffix), "
-                                    "and output formats for written files (each will be written; default: UCCA XML)")
-        argparser.add_argument("-u", "--unlabeled", nargs="*", choices=FORMATS, help="to ignore labels in")
-        argparser.add_argument("--lang", default="en", help="two-letter language code to use as the default language")
+        ap.add_argument("-f", "--formats", nargs="+", choices=FILE_FORMATS, default=(),
+                        help="input formats for creating all parameters before training starts "
+                             "(otherwise created dynamically based on filename suffix), "
+                             "and output formats for written files (each will be written; default: UCCA XML)")
+        ap.add_argument("-u", "--unlabeled", nargs="*", choices=FORMATS, help="to ignore labels in")
+        ap.add_argument("--lang", default="en", help="two-letter language code to use as the default language")
 
-        group = argparser.add_argument_group(title="Sanity checks")
+        group = ap.add_argument_group(title="Sanity checks")
         add_boolean_option(group, "check-loops", "check for parser state loop")
         add_boolean_option(group, "verify", "check for oracle reproducing original passage")
-        add_param_arguments(argparser)
+        add_param_arguments(ap)
 
-        group = argparser.add_argument_group(title="DyNet parameters")
+        group = ap.add_argument_group(title="DyNet parameters")
         group.add_argument("--dynet-mem", help="memory for dynet")
         group.add_argument("--dynet-weight-decay", type=float, default=1e-5, help="weight decay for parameters")
         add_boolean_option(group, "dynet-apply-weight-decay-on-load", "workaround for clab/dynet#1206", default=False)
@@ -259,14 +259,13 @@ class Config(object, metaclass=Singleton):
         add_boolean_option(group, "dynet-autobatch", "auto-batching of training examples")
         DYNET_ARG_NAMES.update(get_group_arg_names(group))
 
-        argparser.add_argument("-H", "--hyperparams", type=HyperparamsInitializer.action, nargs="*",
-                               help="shared hyperparameters or hyperparameters for specific formats, "
-                                    'e.g., "shared --lstm-layer-dim=100 --lstm-layers=1" "ucca --word-dim=300"',
-                               default=[HyperparamsInitializer.action("shared --lstm-layers 2")])
-        argparser.add_argument("--copy-shared", nargs="*", choices=FORMATS, help="formats whose parameters shall be "
-                                                                                 "copied from loaded shared parameters")
-
-        self.args = argparser.parse_args(args if args else None)
+        ap.add_argument("-H", "--hyperparams", type=HyperparamsInitializer.action, nargs="*",
+                        help="shared hyperparameters or hyperparameters for specific formats, "
+                             'e.g., "shared --lstm-layer-dim=100 --lstm-layers=1" "ucca --word-dim=300"',
+                        default=[HyperparamsInitializer.action("shared --lstm-layers 2")])
+        ap.add_argument("--copy-shared", nargs="*", choices=FORMATS, help="formats whose parameters shall be "
+                                                                          "copied from loaded shared parameters")
+        self.args = ap.parse_args(args if args else None)
 
         if self.args.config:
             print("Loading configuration from '%s'." % self.args.config)
@@ -294,7 +293,8 @@ class Config(object, metaclass=Singleton):
         if f in (None, "text") and not self.format:  # In update or parsing UCCA (with no extra["format"]) or plain text
             f = "ucca"  # Default output format is UCCA
         if update or self.format != f:
-            self.format = f
+            if f not in (None, "text"):
+                self.format = f
             self.update_by_hyperparams()
         for config in self.sub_configs:
             config.set_format(f=f, update=update)
@@ -428,6 +428,7 @@ class Config(object, metaclass=Singleton):
     def copy(self):
         cls = self.__class__
         ret = cls.__new__(cls)
+        ret.arg_parser = self.arg_parser
         ret.args = deepcopy(self.args)
         ret.original_values = deepcopy(self.original_values)
         ret.hyperparams = deepcopy(self.hyperparams)
@@ -445,7 +446,7 @@ class Config(object, metaclass=Singleton):
                         ("" if v is False or v is True else
                          (" " + str(" ".join(map(str, v)) if hasattr(v, "__iter__") and not isinstance(v, str) else v)))
                         for (k, v) in sorted(vars(self.args).items()) if
-                        v not in (None, (), "")
+                        v not in (None, (), "", self.arg_parser.get_default(k))
                         and not k.startswith("_")
                         and (self.args.node_labels or ("node_label" not in k and "node_categor" not in k))
                         and (self.args.swap or "swap_" not in k)
