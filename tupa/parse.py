@@ -15,6 +15,7 @@ from ucca.evaluation import LABELED, UNLABELED
 from scheme.convert import FROM_FORMAT, TO_FORMAT
 from scheme.evaluate import EVALUATORS, Scores
 from scheme.util.amr import LABEL_ATTRIB, WIKIFIER
+from tupa.__version__ import VERSION
 from tupa.config import Config, Iterations
 from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
 from tupa.oracle import Oracle
@@ -496,7 +497,7 @@ class Parser(AbstractParser):
         :param evaluate: whether to evaluate parsed passages with respect to given ones.
                          Only possible when given passages are annotated.
         :param display: whether to display information on each parsed passage
-        :param: write: whether to write output passages to file
+        :param write: whether to write output passages to file
         :return: generator of parsed passages (or in train mode, the original ones),
                  or, if evaluate=True, of pairs of (Passage, Scores).
         """
@@ -514,7 +515,7 @@ class Parser(AbstractParser):
             yield passage
 
     def print_config(self):
-        print("%s %s" % (os.path.basename(__file__), self.model.config if self.model else self.config))
+        print("tupa %s" % (self.model.config if self.model else self.config))
 
 
 def train_test(train_passages, dev_passages, test_passages, args, model_suffix=""):
@@ -647,4 +648,5 @@ def main():
 
 
 if __name__ == "__main__":
+    print("TUPA version " + VERSION)
     main()
