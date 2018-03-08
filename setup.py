@@ -7,6 +7,8 @@ from subprocess import run
 from setuptools import setup, find_packages
 from setuptools.command.install import install as _install
 
+from tupa.__version__ import VERSION
+
 try:
     this_file = __file__
 except NameError:
@@ -55,7 +57,7 @@ class install(_install):
 
 
 setup(name="TUPA",
-      version="1.3.0",
+      version=VERSION,
       description="Transition-based UCCA Parser",
       long_description=long_description,
       classifiers=[
