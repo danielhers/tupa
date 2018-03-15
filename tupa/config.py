@@ -435,7 +435,7 @@ class Config(object, metaclass=Singleton):
         ret.iteration_hyperparams = deepcopy(self.iteration_hyperparams)
         ret.format = self.format
         ret.random = self.random
-        self._logger = self._logger
+        ret._logger = self._logger
         ret.sub_configs = []
         self.sub_configs.append(ret)
         return ret
