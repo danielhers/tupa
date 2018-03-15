@@ -182,7 +182,7 @@ class Model:
         if self.config.args.verbose > 1:
             print("Finalizing model")
         self.init_model()
-        return Model(None, model=self, is_finalized=True,
+        return Model(None, config=self.config.copy(), model=self, is_finalized=True,
                      feature_extractor=self.feature_extractor.finalize(),
                      classifier=self.classifier.finalize(finished_epoch=finished_epoch))
 
