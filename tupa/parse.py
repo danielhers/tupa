@@ -304,8 +304,7 @@ class BatchParser(AbstractParser):
             if self.config.args.verbose and display:
                 progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) if total and i <= total else "%d" % i
                 id_width = max(id_width, len(str(passage.ID)))
-                print("%s %-6s %s %-*s" % (progress, pformat, self.config.passage_word, id_width, passage.ID),
-                      end=self.config.line_end)
+                print("%s %-6s %-*s" % (progress, pformat, id_width, passage.ID), end=self.config.line_end)
             else:
                 passages.set_description()
                 postfix = {pformat: passage.ID}
