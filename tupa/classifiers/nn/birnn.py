@@ -206,7 +206,7 @@ class HierarchicalBiRNN(BiRNN):
         if self.params:
             if action.node:
                 self.add_node(action.node.index)
-            elif action.edge:
+            if action.edge:
                 self.add_edge(action.edge.parent.index, action.edge.child.index, "RIGHT" in action.type)
 
     def init_features(self, embeddings, train=False):
