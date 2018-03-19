@@ -65,15 +65,15 @@ class PassageParser(AbstractParser):
         self.format = self.passage.extra.get("format")
         self.in_format = self.format or "ucca"
         self.out_format = "ucca" if self.format in (None, "text") else self.format
-        self.config.set_format(self.in_format)
-        self.lang = self.config.args.lang = self.passage.attrib.get("lang", self.config.args.lang)
-        WIKIFIER.enabled = self.config.args.wikification
+        self.lang = self.passage.attrib.get("lang", self.config.args.lang)
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
         self.ignore_node = None if self.config.args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
         self.state_hash_history = set()
         self.state = self.oracle = self.eval_type = None
 
     def init(self):
+        self.config.set_format(self.in_format)
+        WIKIFIER.enabled = self.config.args.wikification
         self.state = State(self.passage)
         # Passage is considered labeled if there are any edges or node labels in it
         edges, node_labels = map(any, zip(*[(n.outgoing, n.attrib.get(LABEL_ATTRIB))
