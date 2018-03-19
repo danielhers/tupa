@@ -63,7 +63,9 @@ class PassageParser(AbstractParser):
         super().__init__(config, models, training)
         self.passage = self.out = passage
         self.format = self.passage.extra.get("format")
-        self.config.set_format(self.format or "ucca")
+        self.in_format = self.format or "ucca"
+        self.out_format = "ucca" if self.format in (None, "text") else self.format
+        self.config.set_format(self.in_format)
         self.lang = self.config.args.lang = self.passage.attrib.get("lang", self.config.args.lang)
         WIKIFIER.enabled = self.config.args.wikification
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
@@ -239,7 +241,7 @@ class PassageParser(AbstractParser):
         if not self.training or self.config.args.verify:
             self.out = self.state.create_passage(verify=self.config.args.verify)
         if write:
-            for out_format in self.config.args.formats or ["ucca"] if self.format in (None, "text") else [self.format]:
+            for out_format in self.config.args.formats or [self.out_format]:
                 ioutil.write_passage(self.out, output_format=out_format, binary=out_format == "pickle",
                                      outdir=self.config.args.outdir, prefix=self.config.args.prefix,
                                      converter=get_output_converter(out_format))
@@ -265,7 +267,7 @@ class PassageParser(AbstractParser):
     def evaluate(self, mode=ParseMode.test):
         if self.format:
             self.print("Converting to %s and evaluating..." % self.format)
-        self.eval_type = UNLABELED if self.config.is_unlabeled(self.format or "ucca") else LABELED
+        self.eval_type = UNLABELED if self.config.is_unlabeled(self.in_format) else LABELED
         score = EVALUATORS.get(self.format, evaluation).evaluate(
             self.out, self.passage, converter=get_output_converter(self.format),
             verbose=self.out and self.config.args.verbose > 3, constructions=self.config.args.constructions,
@@ -320,14 +322,13 @@ class BatchParser(AbstractParser):
         id_width = 1
         for i, passage in enumerate(passages, start=1):
             parser = PassageParser(self.config, self.models, self.training, passage)
-            pformat = passage.extra.get("format") or "ucca"
             if self.config.args.verbose and display:
                 progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) if total and i <= total else "%d" % i
                 id_width = max(id_width, len(str(passage.ID)))
-                print("%s %-6s %-*s" % (progress, pformat, id_width, passage.ID), end=self.config.line_end)
+                print("%s %-6s %-*s" % (progress, parser.in_format, id_width, passage.ID), end=self.config.line_end)
             else:
                 passages.set_description()
-                postfix = {pformat: passage.ID}
+                postfix = {parser.in_format: passage.ID}
                 if display:
                     postfix["|t/s|"] = self.tokens_per_second()
                     if self.correct_action_count:
@@ -337,13 +338,13 @@ class BatchParser(AbstractParser):
                     if evaluate and self.num_passages:
                         postfix["|F1|"] = self.f1 / self.num_passages
                 passages.set_postfix(**postfix)
-            self.seen_per_format[pformat] += 1
+            self.seen_per_format[parser.in_format] += 1
             if self.training and self.config.args.max_training_per_format and \
-                    self.seen_per_format[pformat] > self.config.args.max_training_per_format:
+                    self.seen_per_format[parser.in_format] > self.config.args.max_training_per_format:
                 if self.config.args.verbose:
                     print("skipped")
                 continue
-            assert not (self.training and pformat == "text"), "Cannot train on unannotated plain text"
+            assert not (self.training and parser.in_format == "text"), "Cannot train on unannotated plain text"
             yield parser.parse_with_timeout(evaluate, display=display, write=write)
             self.update_counts(parser)
         if display:
