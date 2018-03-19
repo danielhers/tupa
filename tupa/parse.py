@@ -61,18 +61,22 @@ class PassageParser(AbstractParser):
     """ Parser for a single passage, has a state and optionally an oracle """
     def __init__(self, config, models, training, passage):
         super().__init__(config, models, training)
-        self.passage = passage
+        self.passage = self.out = passage
         self.format = self.passage.extra.get("format")
-        self.config.args.lang = passage.attrib.get("lang", self.config.args.lang)
+        self.config.set_format(self.format or "ucca")
+        self.lang = self.config.args.lang = self.passage.attrib.get("lang", self.config.args.lang)
         WIKIFIER.enabled = self.config.args.wikification
-        self.state = State(passage)
-        self.state_hash_history = set()
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
         self.ignore_node = None if self.config.args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
+        self.state_hash_history = set()
+        self.state = self.oracle = self.eval_type = None
+
+    def init(self):
+        self.state = State(self.passage)
         # Passage is considered labeled if there are any edges or node labels in it
         edges, node_labels = map(any, zip(*[(n.outgoing, n.attrib.get(LABEL_ATTRIB))
-                                            for n in passage.layer(layer1.LAYER_ID).all]))
-        self.oracle = Oracle(passage) if self.training or self.config.args.verify or (
+                                            for n in self.passage.layer(layer1.LAYER_ID).all]))
+        self.oracle = Oracle(self.passage) if self.training or self.config.args.verify or (
                 (self.config.args.verbose > 1 or self.config.args.use_gold_node_labels or self.config.args.action_stats)
                 and (edges or node_labels)) else None
         for model in self.models:
@@ -82,8 +86,23 @@ class PassageParser(AbstractParser):
                 if self.config.args.node_labels and not self.config.args.use_gold_node_labels:
                     axes.append(NODE_LABEL_KEY)
                 model.init_features(self.state, axes, self.training)
-        self.out = self.passage
-        self.eval_type = None
+
+    def parse_with_timeout(self, evaluate, display=True, write=False):
+        self.init()
+        passage_id = self.passage.ID
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                executor.submit(self.parse).result(self.config.args.timeout)
+            status = "(%d tokens/s)" % self.tokens_per_second()
+        except ParserException as e:
+            if self.training:
+                raise
+            self.config.log("%s %s: %s" % (self.config.passage_word, passage_id, e))
+            status = "(failed)"
+        except concurrent.futures.TimeoutError:
+            self.config.log("%s %s: timeout (%fs)" % (self.config.passage_word, passage_id, self.config.args.timeout))
+            status = "(timeout)"
+        return self.finish(evaluate, status, display=display, write=write)
 
     def parse(self):
         """
@@ -300,6 +319,7 @@ class BatchParser(AbstractParser):
         pr_width = len(str(total))
         id_width = 1
         for i, passage in enumerate(passages, start=1):
+            parser = PassageParser(self.config, self.models, self.training, passage)
             pformat = passage.extra.get("format") or "ucca"
             if self.config.args.verbose and display:
                 progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) if total and i <= total else "%d" % i
@@ -324,8 +344,8 @@ class BatchParser(AbstractParser):
                     print("skipped")
                 continue
             assert not (self.training and pformat == "text"), "Cannot train on unannotated plain text"
-            self.config.set_format(pformat)
-            yield self.parse_with_timeout(passage, evaluate, display=display, write=write)
+            yield parser.parse_with_timeout(evaluate, display=display, write=write)
+            self.update_counts(parser)
         if display:
             self.summary()
 
@@ -338,23 +358,6 @@ class BatchParser(AbstractParser):
         if not self.config.args.verbose or not display:
             passages = tqdm(passages, unit=self.config.passages_word, total=total, file=sys.stdout, desc="Initializing")
         return passages, total
-
-    def parse_with_timeout(self, passage, evaluate, display=True, write=False):
-        parser = PassageParser(self.config, self.models, self.training, passage)
-        try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                executor.submit(parser.parse).result(self.config.args.timeout)
-            status = "(%d tokens/s)" % parser.tokens_per_second()
-        except ParserException as e:
-            if self.training:
-                raise
-            self.config.log("%s %s: %s" % (self.config.passage_word, passage.ID, e))
-            status = "(failed)"
-        except concurrent.futures.TimeoutError:
-            self.config.log("%s %s: timeout (%fs)" % (self.config.passage_word, passage.ID, self.config.args.timeout))
-            status = "(timeout)"
-        self.update_counts(parser)
-        return parser.finish(evaluate, status, display=display, write=write)
 
     def update_counts(self, parser):
         self.correct_action_count += parser.correct_action_count
