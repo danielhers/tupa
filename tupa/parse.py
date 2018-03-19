@@ -325,10 +325,11 @@ class BatchParser(AbstractParser):
             if self.config.args.verbose and display:
                 progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) if total and i <= total else "%d" % i
                 id_width = max(id_width, len(str(passage.ID)))
-                print("%s %-6s %-*s" % (progress, parser.in_format, id_width, passage.ID), end=self.config.line_end)
+                print("%s %2s %-6s %-*s" % (progress, parser.lang, parser.in_format, id_width, passage.ID),
+                      end=self.config.line_end)
             else:
                 passages.set_description()
-                postfix = {parser.in_format: passage.ID}
+                postfix = {parser.lang + " " + parser.in_format: passage.ID}
                 if display:
                     postfix["|t/s|"] = self.tokens_per_second()
                     if self.correct_action_count:
