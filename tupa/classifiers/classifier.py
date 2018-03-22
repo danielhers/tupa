@@ -135,6 +135,10 @@ class Classifier:
     def get_model_type(cls, filename):
         return cls.load_file(filename).get("type")
 
+    @classmethod
+    def is_multilingual(cls, filename):
+        return cls.load_file(filename).get("multilingual", False)
+
     LOADED = {}  # Cache for loaded JSON files
 
     @classmethod

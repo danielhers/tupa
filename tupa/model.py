@@ -211,6 +211,7 @@ class Model:
         if self.filename is not None:
             try:
                 self.config.args.classifier = Classifier.get_model_type(self.filename)
+                self.config.args.multilingual = Classifier.is_multilingual(self.filename)
                 self.init_model(init_params=False)
                 self.feature_extractor.load(self.filename, order=[p.name for p in self.param_defs])
                 if not is_finalized:
