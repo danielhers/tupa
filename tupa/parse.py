@@ -89,12 +89,12 @@ class PassageParser(AbstractParser):
                     axes.append(NODE_LABEL_KEY)
                 model.init_features(self.state, axes, self.training)
 
-    def parse_with_timeout(self, evaluate, display=True, write=False):
+    def parse(self, evaluate, display=True, write=False):
         self.init()
         passage_id = self.passage.ID
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                executor.submit(self.parse).result(self.config.args.timeout)
+                executor.submit(self.parse_internal).result(self.config.args.timeout)
             status = "(%d tokens/s)" % self.tokens_per_second()
         except ParserException as e:
             if self.training:
@@ -106,7 +106,7 @@ class PassageParser(AbstractParser):
             status = "(timeout)"
         return self.finish(evaluate, status, display=display, write=write)
 
-    def parse(self):
+    def parse_internal(self):
         """
         Internal method to parse a single passage.
         If training, use oracle to train on given passages. Otherwise just parse with classifier.
@@ -346,7 +346,7 @@ class BatchParser(AbstractParser):
                     print("skipped")
                 continue
             assert not (self.training and parser.in_format == "text"), "Cannot train on unannotated plain text"
-            yield parser.parse_with_timeout(evaluate, display=display, write=write)
+            yield parser.parse(evaluate, display=display, write=write)
             self.update_counts(parser)
         if display:
             self.summary()
