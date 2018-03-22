@@ -119,7 +119,6 @@ class PassageParser(AbstractParser):
             true_actions = self.get_true_actions()
             action, predicted_action = self.choose(true_actions)
             self.state.transition(action)
-            self.model.classifier.transition(action, axis=self.config.format)
             need_label, label, predicted_label, true_label = self.label_node(action)
             if self.config.args.action_stats:
                 with open(self.config.args.action_stats, "a") as f:
@@ -192,6 +191,8 @@ class PassageParser(AbstractParser):
                 self.state.finished = True
         for model in self.models:
             model.classifier.finished_step(self.training)
+            if axis != NODE_LABEL_KEY:
+                model.classifier.transition(label, axis=axis)
         return label, pred
 
     def correct(self, axis, label, pred, scores, true, true_keys):
