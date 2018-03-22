@@ -1,5 +1,4 @@
 import sys
-import time
 from collections import OrderedDict
 from itertools import repeat
 
@@ -89,10 +88,7 @@ class NeuralNetwork(Classifier, SubModel):
             self.finished_step()
 
     def set_weight_decay_lambda(self, weight_decay=None):
-        try:
-            self.model.set_weight_decay_lambda(self.weight_decay if weight_decay is None else weight_decay)
-        except AttributeError:
-            pass  # Supported from DyNet commit a094a59
+        self.model.set_weight_decay_lambda(self.weight_decay if weight_decay is None else weight_decay)
 
     def init_trainer(self):
         if self.trainer_type is None or str(self.trainer_type) != self.config.args.optimizer:
@@ -351,15 +347,8 @@ class NeuralNetwork(Classifier, SubModel):
             print(self)
 
     def load_param_values(self, filename):
-        try:
-            return list(tqdm(dy.load_generator(filename, self.model),
-                             desc="Loading model from '%s'" % filename, unit="param", file=sys.stdout))
-        except AttributeError:
-            print("Loading model from '%s'... " % filename, end="", flush=True)
-            started = time.time()
-            values = dy.load(filename, self.model)  # All sub-model parameter values, concatenated
-            print("Done (%.3fs)." % (time.time() - started))
-            return values
+        return list(tqdm(dy.load_generator(filename, self.model),
+                         desc="Loading model from '%s'" % filename, unit="param", file=sys.stdout))
 
     def copy_shared_birnn(self, filename, d):
         shared_values = None
