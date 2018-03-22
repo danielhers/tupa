@@ -244,7 +244,7 @@ class Config(object, metaclass=Singleton):
                              "and output formats for written files (each will be written; default: UCCA XML)")
         ap.add_argument("-u", "--unlabeled", nargs="*", choices=FORMATS, help="to ignore labels in")
         ap.add_argument("--lang", default="en", help="two-letter language code to use as the default language")
-        add_boolean_option(ap, "--multilingual", "separate model parameters per language (passage.attrib['lang'])")
+        add_boolean_option(ap, "multilingual", "separate model parameters per language (passage.attrib['lang'])")
 
         group = ap.add_argument_group(title="Sanity checks")
         add_boolean_option(group, "check-loops", "check for parser state loop")
