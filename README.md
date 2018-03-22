@@ -30,7 +30,7 @@ Having a directory with UCCA passage files
 (for example, [the Wiki corpus](https://github.com/huji-nlp/ucca-corpus/tree/master/wiki/pickle)),
 run:
 
-    tupa -t <train_dir> -d <dev_dir> -c <model_type> -m <model_filename>
+    python -m tupa -t <train_dir> -d <dev_dir> -c <model_type> -m <model_filename>
 
 The possible model types are `sparse`, `mlp`, `bilstm` and `highway`.
 
@@ -38,7 +38,7 @@ The possible model types are `sparse`, `mlp`, `bilstm` and `highway`.
 
 Run the parser on a text file (here named `example.txt`) using a trained model:
 
-    tupa example.txt -m <model_filename>
+    python -m tupa example.txt -m <model_filename>
 
 An `xml` file will be created per passage (separate by blank lines in the text file).
 
@@ -51,7 +51,7 @@ To download and extract a model pre-trained on the Wiki corpus, run:
 
 Run the parser using the model:
 
-    tupa example.txt -m models/bilstm
+    python -m tupa example.txt -m models/bilstm
     
 ### Other languages
 
