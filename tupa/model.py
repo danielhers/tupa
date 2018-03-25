@@ -11,9 +11,12 @@ from .model_util import UnknownDict, AutoIncrementDict, remove_backup, save_json
 
 
 class ParameterDefinition:
-    def __init__(self, config, name, **param_attr_to_arg):
+    def __init__(self, config, name, copy_from="", **param_attr_to_arg):
         self.config = config
         self.name = name
+        self.param_attr_to_value = {}
+        if copy_from:
+            self.param_attr_to_value["copy_from"] = copy_from
         self.param_attr_to_arg = param_attr_to_arg
 
     @property
@@ -35,15 +38,14 @@ class ParameterDefinition:
         setattr(self.config.args, self.dim_arg, 0)
 
     def create_from_config(self):
-        args = self.config.args
-        return FeatureParameters(self.name, **{k: getattr(args, v) if hasattr(args, v) else v
-                                               for k, v in self.param_attr_to_arg.items()})
+        kwargs = dict(self.param_attr_to_value)
+        kwargs.update({k: getattr(self.config.args, v) for k, v in self.param_attr_to_arg.items()})
+        return FeatureParameters(self.name, **kwargs)
 
     def load_to_config(self, params):
         param = params.get(self.name)
-        self.config.update({self.dim_arg: 0, self.size_arg: 0} if param is None else {v: getattr(param, k) for k, v in
-                                                                                      self.param_attr_to_arg.items()
-                                                                                      if hasattr(self.config.args, v)})
+        self.config.update({self.dim_arg: 0, self.size_arg: 0} if param is None else
+                           {v: getattr(param, k) for k, v in self.param_attr_to_arg.items()})
 
     def __str__(self):
         return self.name
