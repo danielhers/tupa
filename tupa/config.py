@@ -346,10 +346,9 @@ class Config(object, metaclass=Singleton):
         for f, num in EDGE_LABELS_NUM.items():
             self.hyperparams.specific[f].max_edge_labels = num
         amr_hyperparams = self.hyperparams.specific["amr"]
-        amr_hyperparams.node_label_dim = 20
-        amr_hyperparams.max_node_labels = 1000
-        amr_hyperparams.node_category_dim = 5
-        amr_hyperparams.max_node_categories = 25
+        for k, v in dict(amr_hyperparams=20, max_node_labels=1000, node_category_dim=5, max_node_categories=25).items():
+            if k not in amr_hyperparams and not getattr(amr_hyperparams, k, None):
+                setattr(amr_hyperparams, k, v)
         self.set_format(update=True)
         self.set_dynet_arguments()
 
