@@ -1,7 +1,5 @@
 import shlex
-from collections import defaultdict
 from copy import deepcopy
-from functools import partial
 
 import dynet_config
 import numpy as np
@@ -149,21 +147,33 @@ class FallbackNamespace(Namespace):
     def __init__(self, fallback, kwargs=None):
         super().__init__(**(kwargs or {}))
         self._fallback = fallback
+        self._children = {}
 
     def __getattr__(self, item):
-        if item.startswith("__"):
+        if item.startswith("_"):
             return getattr(super(), item)
         return getattr(super(), item, getattr(self._fallback, item))
 
+    def __getitem__(self, item):
+        return self._children.setdefault(item, FallbackNamespace(self))
+
     def items(self):
         return vars(self).items()
+
+    def update(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 class Hyperparams:
     def __init__(self, parent, shared=None, **kwargs):
         self.shared = FallbackNamespace(parent, shared)
-        self.specific = defaultdict(partial(FallbackNamespace, parent),
-                                    **{k: FallbackNamespace(parent, v) for k, v in kwargs.items()})
+        self.specific = FallbackNamespace(parent)
+        for name, args in kwargs.items():
+            namespace = self.specific
+            for part in name.split("."):
+                namespace = namespace[part]
+                namespace.update(**args)
 
 
 class HyperparamsInitializer:
@@ -333,6 +343,13 @@ class Config(object, metaclass=Singleton):
                 setattr(self.args, name, value)
         self.original_values.update(self.create_original_values(params))
         self.hyperparams = self.create_hyperparams()
+        for f, num in EDGE_LABELS_NUM.items():
+            self.hyperparams.specific[f].max_edge_labels = num
+        amr_hyperparams = self.hyperparams.specific["amr"]
+        amr_hyperparams.node_label_dim = 20
+        amr_hyperparams.max_node_labels = 1000
+        amr_hyperparams.node_category_dim = 5
+        amr_hyperparams.max_node_categories = 25
         self.set_format(update=True)
         self.set_dynet_arguments()
 
@@ -373,13 +390,11 @@ class Config(object, metaclass=Singleton):
             self.args.node_labels = False
             self.args.node_label_dim = self.args.max_node_labels = \
                 self.args.node_category_dim = self.args.max_node_categories = 0
-        required_edge_labels = EDGE_LABELS_NUM.get(self.format)
         if self.is_unlabeled():
             self.args.max_edge_labels = self.args.edge_label_dim = 0
             self.args.max_action_labels = self.max_actions_unlabeled()
-        elif required_edge_labels is not None:
-            self.args.max_edge_labels = max(self.args.max_edge_labels, required_edge_labels)
-            self.args.max_action_labels = max(self.args.max_action_labels, 6 * required_edge_labels)
+        else:
+            self.args.max_action_labels = max(self.args.max_action_labels, 6 * self.args.max_edge_labels)
 
     @property
     def line_end(self):
