@@ -161,7 +161,7 @@ class PassageParser(AbstractParser):
 
     def choose(self, true, axis=None, name="action"):
         if axis is None:
-            axis = self.config.format + (("_" + self.lang) if self.config.args.multilingual else "")
+            axis = self.config.format + (("." + self.lang) if self.config.args.multilingual else "")
         if axis == NODE_LABEL_KEY and self.config.args.use_gold_node_labels:
             return true, true
         labels = self.model.classifier.labels[axis]

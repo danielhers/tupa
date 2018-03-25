@@ -155,7 +155,10 @@ class FallbackNamespace(Namespace):
         return getattr(super(), item, getattr(self._fallback, item))
 
     def __getitem__(self, item):
-        return self._children.setdefault(item, FallbackNamespace(self))
+        if item:
+            name, _, rest = item.partition(".")
+            return self._children.setdefault(name, FallbackNamespace(self))[rest]
+        return self
 
     def items(self):
         return vars(self).items()
@@ -170,10 +173,7 @@ class Hyperparams:
         self.shared = FallbackNamespace(parent, shared)
         self.specific = FallbackNamespace(parent)
         for name, args in kwargs.items():
-            namespace = self.specific
-            for part in name.split("."):
-                namespace = namespace[part]
-                namespace.update(**args)
+            self.specific[name].update(**args)
 
 
 class HyperparamsInitializer:
