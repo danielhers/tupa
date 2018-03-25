@@ -461,23 +461,27 @@ class Parser(AbstractParser):
         self.model = finalized = model.finalize(finished_epoch=finished_epoch)
         if self.dev:
             if not self.best_score:
-                finalized.save(save_init=self.save_init)
+                self.save(finalized)
             average_score, scores = self.eval(self.dev, ParseMode.dev, self.config.args.devscores)
             if average_score >= self.best_score:
                 print("Better than previous best score (%.3f)" % self.best_score)
                 finalized.classifier.best_score = average_score
                 if self.best_score:
-                    finalized.save(save_init=self.save_init)
+                    self.save(finalized)
                 self.best_score = average_score
                 if self.test and self.test is not True:  # There are actual passages to parse
                     self.eval(self.test, ParseMode.test, self.config.args.testscores, display=False)
             else:
                 print("Not better than previous best score (%.3f)" % self.best_score)
         elif last or self.config.args.save_every is not None:
-            finalized.save(save_init=self.save_init)
+            self.save(finalized)
         if not last:
             finalized.restore(model)  # Restore non-finalized model
         return scores
+
+    def save(self, model):
+        self.config.save(model.filename)
+        model.save(save_init=self.save_init)
 
     def eval(self, passages, mode, scores_filename, display=True):
         print("Evaluating on %s passages" % mode.name)

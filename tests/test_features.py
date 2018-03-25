@@ -25,7 +25,7 @@ class FeatureExtractorCreator:
         if self.name == "sparse":
             return SparseFeatureExtractor()
         return DenseFeatureExtractor(OrderedDict((p.name, p.create_from_config())
-                                                 for p in Model(None, config=config).param_defs),
+                                                 for p in Model(None, config=config).param_defs()),
                                      indexed=self.indexed, node_dropout=0)
 
 
