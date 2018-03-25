@@ -376,16 +376,7 @@ class Config(object, metaclass=Singleton):
             if self.args.verbose > 3:
                 print("Setting %s=%s" % (attr, value))
             setattr(self.args, attr, value)
-        if self.format == "amr":
-            if not self.args.node_label_dim:
-                self.args.node_label_dim = 20
-            if not self.args.max_node_labels:
-                self.args.max_node_labels = 1000
-            if not self.args.node_category_dim:
-                self.args.node_category_dim = 5
-            if not self.args.max_node_categories:
-                self.args.max_node_categories = 25
-        else:  # All other formats do not use node labels
+        if self.format != "amr":
             self.args.node_labels = False
             self.args.node_label_dim = self.args.max_node_labels = \
                 self.args.node_category_dim = self.args.max_node_categories = 0
