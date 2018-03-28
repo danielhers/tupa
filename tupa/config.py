@@ -133,7 +133,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--word-dropout", type=float, default=0.2, help="word dropout parameter")
     add(group, "--word-dropout-external", type=float, default=0, help="word dropout for word vectors")
     add(group, "--tag-dropout", type=float, default=0.2, help="POS tag dropout parameter")
-    add(group, "--dep-dropout", type=float, default=0.7, help="dependency label dropout parameter")
+    add(group, "--dep-dropout", type=float, default=0.5, help="dependency label dropout parameter")
     add(group, "--node-label-dropout", type=float, default=0.2, help="node label dropout parameter")
     add(group, "--node-dropout", type=float, default=0.1, help="probability to drop features for a whole node")
     add(group, "--dropout", type=float, default=0.4, help="dropout parameter between layers")
