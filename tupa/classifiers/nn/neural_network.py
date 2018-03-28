@@ -331,7 +331,7 @@ class NeuralNetwork(Classifier, SubModel):
         self.copy_shared_birnn(filename, d)
         assert not values, "Loaded values: %d more than expected" % len(values)
         if self.weight_decay and self.config.args.dynet_apply_weight_decay_on_load:
-            t = tqdm(self.get_all_params(as_array=False).items(),
+            t = tqdm(self.all_params(as_array=False).items(),
                      desc="Applying weight decay of %g" % self.weight_decay, unit="param", file=sys.stdout)
             for key, param in t:
                 t.set_postfix(param=key)
@@ -364,8 +364,8 @@ class NeuralNetwork(Classifier, SubModel):
                     print("Copied from %s to %s" % ("/".join(self.birnn.save_path), model.birnn.params_str()))
                 self.init_axis_model(axis, init=False)  # Update input_dim
 
-    def get_all_params(self, as_array=True):
-        d = super().get_all_params()
+    def all_params(self, as_array=True):
+        d = super().all_params()
         for model in self.sub_models():
             for key, value in model.params.items():
                 for name, param in ((key, value),) if isinstance(value, (dy.Parameters, dy.LookupParameters)) else [

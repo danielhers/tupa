@@ -11,19 +11,19 @@ from .model_util import UnknownDict, AutoIncrementDict, remove_backup, save_json
 
 
 class ParameterDefinition:
-    def __init__(self, args, name, param_attr_to_arg, param_attr_to_value=None):
+    def __init__(self, args, name, attr_to_arg, attr_to_val=None):
         self.args = args
         self.name = name
-        self.param_attr_to_arg = param_attr_to_arg
-        self.param_attr_to_value = param_attr_to_value or {}
+        self.attr_to_arg = attr_to_arg
+        self.attr_to_val = attr_to_val or {}
 
     @property
     def dim_arg(self):
-        return self.param_attr_to_arg["dim"]
+        return self.attr_to_arg["dim"]
 
     @property
     def size_arg(self):
-        return self.param_attr_to_arg["size"]
+        return self.attr_to_arg["size"]
 
     @property
     def enabled(self):
@@ -36,21 +36,21 @@ class ParameterDefinition:
         setattr(self.args, self.dim_arg, 0)
 
     def create_from_config(self):
-        kwargs = dict(self.param_attr_to_value)
-        kwargs.update({k: getattr(self.args, v) for k, v in self.param_attr_to_arg.items()})
+        kwargs = dict(self.attr_to_val)
+        kwargs.update({k: getattr(self.args, v) for k, v in self.attr_to_arg.items()})
         return FeatureParameters(self.name, **kwargs)
 
     def load_to_config(self, params):
         param = params.get(self.name)
         self.args.update({self.dim_arg: 0, self.size_arg: 0} if param is None else
-                         {v: getattr(param, k) for k, v in self.param_attr_to_arg.items()})
+                         {v: getattr(param, k) for k, v in self.attr_to_arg.items()})
 
     def __str__(self):
         return self.name
 
     def __repr__(self):
         return "%s(%s, %s)" % (type(self).__name__, self.name,
-                               ", ".join("%s='%s'" % i for i in self.param_attr_to_arg.items()))
+                               ", ".join("%s='%s'" % i for i in self.attr_to_arg.items()))
 
 
 NODE_LABEL_KEY = "n"
@@ -155,7 +155,7 @@ class Model:
         return self.config.args.classifier in (MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN)
 
     def is_retrainable(self):
-        return ClassifierProperty.trainable_after_saving in self.get_classifier_properties()
+        return ClassifierProperty.trainable_after_saving in self.classifier_properties()
 
     def init_actions(self):
         return Actions(size=self.config.args.max_action_labels)
@@ -280,15 +280,15 @@ class Model:
                 labels = Actions(*all_size)
             self.classifier.labels[axis] = labels
 
-    def get_classifier_properties(self):
+    def classifier_properties(self):
         return CLASSIFIER_PROPERTIES[self.config.args.classifier]
 
     def _update_input_params(self):
         self.feature_params = self.classifier.input_params = self.feature_extractor.params
 
-    def get_all_params(self):
+    def all_params(self):
         d = OrderedDict()
-        d["features"] = self.feature_extractor.get_all_features()
+        d["features"] = self.feature_extractor.all_features()
         d.update(("input_" + s, p.data.all) for s, p in self.feature_extractor.params.items() if p.data)
-        d.update(self.classifier.get_all_params())
+        d.update(self.classifier.all_params())
         return d

@@ -122,8 +122,7 @@ class NumericFeatureParameters(FeatureParameters):
         super().__init__(NumericFeatureParameters.SUFFIX, 1, None, num=num, node_dropout=node_dropout)
 
     def __repr__(self):
-        return "%s(%d)" % (
-            type(self).__name__, self.num)
+        return "%s(%d)" % (type(self).__name__, self.num)
 
     @property
     def numeric(self):

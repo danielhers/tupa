@@ -27,7 +27,7 @@ def smooth(x, s=100000):
 
 
 def visualize(model, filename):
-    values = model.get_all_params()
+    values = model.all_params()
     cols = OrderedDict()
     for key, value in values.items():
         if isinstance(value, np.ndarray):  # TODO group by prefix, showing W and b side by side

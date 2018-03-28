@@ -198,7 +198,7 @@ class FeatureExtractor:
     def load(self, filename, order=None):
         pass
 
-    def get_all_features(self):
+    def all_features(self):
         return sorted(list(map(str, self.feature_templates)))
 
 

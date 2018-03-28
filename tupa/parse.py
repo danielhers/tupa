@@ -83,7 +83,7 @@ class PassageParser(AbstractParser):
                 and (edges or node_labels)) else None
         for model in self.models:
             model.init_model()
-            if ClassifierProperty.require_init_features in model.get_classifier_properties():
+            if ClassifierProperty.require_init_features in model.classifier_properties():
                 axes = [self.config.format]
                 if self.config.args.node_labels and not self.config.args.use_gold_node_labels:
                     axes.append(NODE_LABEL_KEY)
@@ -182,7 +182,7 @@ class PassageParser(AbstractParser):
             raise ParserException("No valid %s available\n%s" % (name, self.oracle.log if self.oracle else "")) from e
         label, is_correct, true_keys, true_values = self.correct(axis, label, pred, scores, true, true_keys)
         if self.training:
-            if not (is_correct and ClassifierProperty.update_only_on_error in self.model.get_classifier_properties()):
+            if not (is_correct and ClassifierProperty.update_only_on_error in self.model.classifier_properties()):
                 assert not self.model.is_finalized, "Updating finalized model"
                 self.model.classifier.update(
                     features, axis=axis, true=true_keys, pred=labels[pred] if axis == NODE_LABEL_KEY else pred.id,

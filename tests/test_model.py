@@ -14,7 +14,7 @@ def parse(formats, model, passage, train):
         model.config.set_format(axis)
         model.init_model()
         state = State(passage)
-        if ClassifierProperty.require_init_features in model.get_classifier_properties():
+        if ClassifierProperty.require_init_features in model.classifier_properties():
             model.init_features(state, axes, train=train)
         features = model.feature_extractor.extract_features(state)
         for a in axes:
@@ -44,4 +44,4 @@ def test_model(model_type, formats, test_passage, iterations, config):
     for key, param in sorted(model.feature_extractor.params.items()):
         loaded_param = loaded.feature_extractor.params[key]
         assert param == loaded_param
-    assert_all_params_equal(finalized.get_all_params(), loaded.get_all_params(), decay=weight_decay(model))
+    assert_all_params_equal(finalized.all_params(), loaded.all_params(), decay=weight_decay(model))

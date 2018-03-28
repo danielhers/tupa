@@ -79,7 +79,7 @@ def extract_features(feature_extractor, state, features):
 def test_feature_templates(config, feature_extractor_creator, write_features):
     config.set_format("amr")
     feature_extractor = feature_extractor_creator(config)
-    features = ["%s\n" % i for i in feature_extractor.get_all_features()]
+    features = ["%s\n" % i for i in feature_extractor.all_features()]
     compare_file = "test_files/features/templates-%s.txt" % str(feature_extractor_creator)
     if write_features:
         with open(compare_file, "w") as f:

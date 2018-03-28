@@ -29,7 +29,7 @@ def test_parser(config, model_type, formats, default_setting, text=True):
         list(p.train(passages if mode == "train" else None, dev=passages, test=True, iterations=2))
         assert p.model.is_finalized, "Model should be finalized after %sing" % mode
         assert not getattr(p.model.feature_extractor, "node_dropout", 0), p.model.feature_extractor.node_dropout
-        all_params = p.model.get_all_params()
+        all_params = p.model.all_params()
         params.append(all_params)
         param1, param2 = [d.get("W") for d in (all_params, p.model.feature_extractor.params)]
         if param1 is not None and param2 and param2.init is not None and not config.args.update_word_vectors:

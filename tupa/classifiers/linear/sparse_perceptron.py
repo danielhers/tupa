@@ -207,8 +207,8 @@ class SparsePerceptron(Classifier):
         self.config.args.min_update = self.min_update = d["min_update"]
         super().load_model(filename, d)
 
-    def get_all_params(self):
-        d = super().get_all_params()
+    def all_params(self):
+        d = super().all_params()
         d.update(("_".join((axis, k)), v.weights) for axis, model in self.model.items() for k, v in model.items())
         return d
 

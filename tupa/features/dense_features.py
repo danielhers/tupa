@@ -42,8 +42,7 @@ FILENAME_SUFFIX = ".enum"
 
 class DenseFeatureExtractor(FeatureExtractor):
     """
-    Object to extract features from the parser state to be used in action classification
-    To be used with a NeuralNetwork classifier.
+    Extracts features from the parser state for classification. To be used with a NeuralNetwork classifier.
     """
     def __init__(self, params, indexed, hierarchical=False, node_dropout=0, init_params=True):
         super().__init__(FEATURE_TEMPLATES)
@@ -54,16 +53,19 @@ class DenseFeatureExtractor(FeatureExtractor):
             self.params = OrderedDict((p.suffix, p) for p in [NumericFeatureParameters(1)] + list(params.values()))
             for param in self.params.values():
                 self.update_param_indexed(param)
-            param_values = self.get_param_values(all_params=True)
+            num_values = self.num_values()
             for param in self.params.values():
-                param.num = len(param_values[param])
+                param.num = num_values[param]
                 param.node_dropout = self.node_dropout
         else:
             self.params = params
     
     def init_param(self, param):
         self.update_param_indexed(param)
-        param.num = len(self.get_param_values(all_params=True)[param])
+        param.num = self.num_values()[param]
+
+    def num_values(self):
+        return {k: len(v) for k, v in self.param_values(all_params=True).items()}
 
     def update_param_indexed(self, param):
         param.indexed = self.indexed and param.effective_suffix in INDEXED
@@ -88,14 +90,14 @@ class DenseFeatureExtractor(FeatureExtractor):
         :return dict of feature name -> list of numeric values
         """
         features = OrderedDict()
-        for param, vs in self.get_param_values(state).items():
+        for param, vs in self.param_values(state).items():
             param.init_data()  # Replace categorical values with their values in data dict:
             features[param.suffix] = [(UNKNOWN_VALUE if v == DEFAULT else v) if param.numeric else
                                       (MISSING_VALUE if v == DEFAULT else (v if param.indexed else param.data[v]))
                                       for v in vs]
         return features
 
-    def get_param_values(self, state=None, all_params=False):
+    def param_values(self, state=None, all_params=False):
         indexed = []
         param_values = OrderedDict()
         values = OrderedDict()
@@ -119,8 +121,8 @@ class DenseFeatureExtractor(FeatureExtractor):
                 vs.append(value if state else (e, prop))
         return param_values
 
-    def get_all_features(self):
-        return ["".join(self.join_props(vs)) for _, vs in sorted(self.get_param_values().items(),
+    def all_features(self):
+        return ["".join(self.join_props(vs)) for _, vs in sorted(self.param_values().items(),
                                                                  key=lambda x: x[0].suffix)]
 
     @staticmethod

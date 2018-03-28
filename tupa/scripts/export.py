@@ -12,7 +12,7 @@ def load_model(filename):
 
 def save_model(model, filename):
     out_file = filename + ".npz"
-    np.savez_compressed(out_file, **model.get_all_params())
+    np.savez_compressed(out_file, **model.all_params())
     print("Wrote '%s'" % out_file)
 
 

@@ -151,7 +151,7 @@ class Classifier:
             cls.LOADED.clear()
         return d
 
-    def get_all_params(self):
+    def all_params(self):
         return OrderedDict((k, v.all) for k, v in self.labels.items())
 
     def __str__(self):
