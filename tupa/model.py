@@ -11,13 +11,11 @@ from .model_util import UnknownDict, AutoIncrementDict, remove_backup, save_json
 
 
 class ParameterDefinition:
-    def __init__(self, args, name, copy_from="", **param_attr_to_arg):
+    def __init__(self, args, name, param_attr_to_arg, param_attr_to_value=None):
         self.args = args
         self.name = name
-        self.param_attr_to_value = {}
-        if copy_from:
-            self.param_attr_to_value["copy_from"] = copy_from
         self.param_attr_to_arg = param_attr_to_arg
+        self.param_attr_to_value = param_attr_to_value or {}
 
     @property
     def dim_arg(self):
@@ -80,7 +78,7 @@ NODE_LABEL_PARAM_DEFS = [
 PARAM_DEFS = [
     ("c",            dict(dim="node_category_dim", size="max_node_categories")),
     ("W",            dict(dim="word_dim_external", size="max_words_external", dropout="word_dropout_external",
-                          updated="update_word_vectors", filename="word_vectors", copy_from="w")),
+                          updated="update_word_vectors", filename="word_vectors"), dict(copy_from="w")),
     ("w",            dict(dim="word_dim",          size="max_words",          dropout="word_dropout")),
     ("t",            dict(dim="tag_dim",           size="max_tags",           dropout="tag_dropout")),
     ("d",            dict(dim="dep_dim",           size="max_deps",           dropout="dep_dropout")),
@@ -110,7 +108,7 @@ class Model:
     def param_defs(self, args=None, only_node_labels=False):
         if args is None:
             args = self.config.args
-        return [ParameterDefinition(args, n, **k) for n, k in NODE_LABEL_PARAM_DEFS +
+        return [ParameterDefinition(args, n, *k) for n, *k in NODE_LABEL_PARAM_DEFS +
                 ([] if only_node_labels else PARAM_DEFS)]
 
     def init_model(self, init_params=True):
