@@ -78,7 +78,7 @@ NODE_LABEL_PARAM_DEFS = [
 PARAM_DEFS = [
     ("c",            dict(dim="node_category_dim", size="max_node_categories")),
     ("W",            dict(dim="word_dim_external", size="max_words_external", dropout="word_dropout_external",
-                          updated="update_word_vectors", filename="word_vectors"), dict(copy_from="w")),
+                          updated="update_word_vectors", filename="word_vectors", vocab="vocab"), dict(copy_from="w")),
     ("w",            dict(dim="word_dim",          size="max_words",          dropout="word_dropout")),
     ("t",            dict(dim="tag_dim",           size="max_tags",           dropout="tag_dropout")),
     ("d",            dict(dim="dep_dim",           size="max_deps",           dropout="dep_dropout")),

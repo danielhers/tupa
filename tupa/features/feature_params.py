@@ -1,6 +1,9 @@
+import csv
+import sys
 from collections import OrderedDict
 
 import numpy as np
+from tqdm import tqdm
 from ucca.textutil import get_word_vectors
 
 from ..config import Config
@@ -10,7 +13,7 @@ from ..model_util import DropoutDict
 
 class FeatureParameters(Labels):
     def __init__(self, suffix, dim, size, dropout=0, updated=True, num=1, init=None, data=None, indexed=False,
-                 copy_from=None, filename=None, min_count=1, enabled=True, node_dropout=0):
+                 copy_from=None, filename=None, min_count=1, enabled=True, node_dropout=0, vocab=None):
         """
         :param suffix: one-character title for feature
         :param dim: vector dimension or, filename to load vectors from, or Word2Vec object
@@ -26,6 +29,7 @@ class FeatureParameters(Labels):
         :param min_count: minimum number of occurrences for a feature value before it is actually added
         :param enabled: whether to actually use this parameter in feature extraction
         :param node_dropout: probability to drop whole node in feature extraction
+        :param vocab: name of file to load mapping of integer ID to word form (to avoid loading spaCy)
         """
         super().__init__(size)
         self.suffix = suffix
@@ -42,12 +46,13 @@ class FeatureParameters(Labels):
         self.min_count = min_count
         self.enabled = enabled
         self.node_dropout = node_dropout
+        self.vocab = vocab
 
     def __repr__(self):
         return type(self).__name__ + "(" + ", ".join(
             map(str, (self.suffix, self.dim, self.size, self.dropout, self.updated, self.num, self.init, self.data,
-                      self.indexed, self.copy_from, self.filename, self.min_count, self.enabled, self.node_dropout))) +\
-               ")"
+                      self.indexed, self.copy_from, self.filename, self.min_count, self.enabled, self.node_dropout,
+                      self.vocab))) + ")"
 
     def __eq__(self, other):
         return self.suffix == other.suffix and self.dim == other.dim and self.size == other.size and \
@@ -68,13 +73,21 @@ class FeatureParameters(Labels):
             self.data = DropoutDict(size=self.size, keys=keys, dropout=self.dropout, min_count=self.min_count)
 
     def word_vectors(self):
-        vectors, self.dim = get_word_vectors(self.dim, self.size, self.filename, Config().args.lang)
+        lang = Config().args.lang
+        vectors, self.dim = get_word_vectors(self.dim, self.size, self.filename, self.read_vocab() or lang)
         if self.size is not None:
             assert len(vectors) <= self.size, "Wrong number of loaded vectors: %d > %d" % (len(vectors), self.size)
         assert vectors, "Cannot load word vectors. Install using `python -m spacy download %s` or choose a file " \
-                        "using the --word-vectors option." % Config().args.lang
+                        "using the --word-vectors option." % lang
         self.size = len(vectors)
         return vectors
+
+    def read_vocab(self):
+        if self.vocab:
+            with open(self.vocab, encoding="utf-8") as f:
+                return {v: int(k) for k, v in tqdm(csv.reader(f),
+                                                   desc="Loading '%s'" % self.vocab, file=sys.stdout, unit=" rows")}
+        return None
 
     @property
     def all(self):

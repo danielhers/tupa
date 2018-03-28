@@ -93,6 +93,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     group = ap.add_argument_group(title="Neural network parameters")
     add(group, "--word-dim-external", type=int, default=300, help="dimension for external word embeddings")
     add(group, "--word-vectors", help="file to load external word embeddings from (default: GloVe)")
+    add(group, "--vocab", help="file to load mapping of integer ID to word form (to avoid loading spaCy)")
     add_boolean(group, "update-word-vectors", "external word vectors in training parameters", default=True)
     add(group, "--word-dim", type=int, default=200, help="dimension for learned word embeddings")
     add(group, "--tag-dim", type=int, default=20, help="dimension for POS tag embeddings")
