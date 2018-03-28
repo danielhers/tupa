@@ -12,10 +12,10 @@ def parse(formats, model, passage, train):
     for axis in formats:
         axes = (axis,) + ((NODE_LABEL_KEY,) if axis == "amr" else ())
         model.config.set_format(axis)
-        model.init_model()
+        model.init_model(axis)
         state = State(passage)
         if ClassifierProperty.require_init_features in model.classifier_properties():
-            model.init_features(state, axes, train=train)
+            model.init_features(state, train=train)
         features = model.feature_extractor.extract_features(state)
         for a in axes:
             pred = model.classifier.score(features, axis=a).argmax()

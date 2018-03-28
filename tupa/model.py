@@ -96,7 +96,7 @@ class Model:
     def __init__(self, filename, config=None, *args, **kwargs):
         self.config = config or Config().copy()
         self.filename = filename
-        self.feature_extractor = self.classifier = None
+        self.feature_extractor = self.classifier = self.axis = None
         self.feature_params = OrderedDict()
         self.is_finalized = False
         if args or kwargs:
@@ -111,7 +111,11 @@ class Model:
         return [ParameterDefinition(args, n, *k) for n, *k in NODE_LABEL_PARAM_DEFS +
                 ([] if only_node_labels else PARAM_DEFS)]
 
-    def init_model(self, init_params=True):
+    def init_model(self, axis=None, init_params=True):
+        if axis is not None:
+            self.axis = axis
+        if self.axis is None:
+            self.axis = self.config.format
         labels = self.classifier.labels if self.classifier else OrderedDict()
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
             for param_def in self.param_defs():
@@ -121,8 +125,8 @@ class Model:
                 elif self.is_neural_network and param_def.enabled:
                     self.feature_params[param_def.name] = param = param_def.create_from_config()
                     self.init_param(param)
-            if self.config.format not in labels:
-                labels[self.config.format] = self.init_actions()  # Uses config to determine actions
+            if self.axis not in labels:
+                labels[self.axis] = self.init_actions()  # Uses config to determine actions
             if self.config.args.node_labels and not self.config.args.use_gold_node_labels and \
                     NODE_LABEL_KEY not in labels:
                 labels[NODE_LABEL_KEY] = self.init_node_labels()  # Updates self.feature_params
@@ -176,10 +180,17 @@ class Model:
 
     @property
     def actions(self):
-        return self.classifier.labels[self.config.format]
+        return self.classifier.labels[self.axis]
 
-    def init_features(self, state, axes, train):
+    def score(self, state, axis):
+        features = self.feature_extractor.extract_features(state)
+        return self.classifier.score(features, axis=axis), features  # scores is a NumPy array
+
+    def init_features(self, state, train):
         self.init_model()
+        axes = [self.axis]
+        if self.config.args.node_labels and not self.config.args.use_gold_node_labels:
+            axes.append(NODE_LABEL_KEY)
         self.classifier.init_features(self.feature_extractor.init_features(state), axes, train)
 
     def finalize(self, finished_epoch):

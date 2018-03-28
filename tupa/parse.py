@@ -82,12 +82,9 @@ class PassageParser(AbstractParser):
                 (self.config.args.verbose > 1 or self.config.args.use_gold_node_labels or self.config.args.action_stats)
                 and (edges or node_labels)) else None
         for model in self.models:
-            model.init_model()
+            model.init_model(self.config.format + (("." + self.lang) if self.config.args.multilingual else ""))
             if ClassifierProperty.require_init_features in model.classifier_properties():
-                axes = [self.config.format]
-                if self.config.args.node_labels and not self.config.args.use_gold_node_labels:
-                    axes.append(NODE_LABEL_KEY)
-                model.init_features(self.state, axes, self.training)
+                model.init_features(self.state, self.training)
 
     def parse(self, evaluate, display=True, write=False):
         self.init()
@@ -161,8 +158,8 @@ class PassageParser(AbstractParser):
 
     def choose(self, true, axis=None, name="action"):
         if axis is None:
-            axis = self.config.format + (("." + self.lang) if self.config.args.multilingual else "")
-        if axis == NODE_LABEL_KEY and self.config.args.use_gold_node_labels:
+            axis = self.model.axis
+        elif axis == NODE_LABEL_KEY and self.config.args.use_gold_node_labels:
             return true, true
         labels = self.model.classifier.labels[axis]
         if axis == NODE_LABEL_KEY:
@@ -171,9 +168,9 @@ class PassageParser(AbstractParser):
         else:
             true_keys = None
             is_valid = self.state.is_valid_action
-        scores, features = self.score(self.model, axis)
-        for model in self.models[1:]:  # Ensemble if given more than one model
-            label_scores = dict(zip(model.classifier.labels[axis].all, self.score(model, axis)[0]))  # Align label order
+        scores, features = self.model.score(self.state, axis)
+        for model in self.models[1:]:  # Ensemble if given more than one model; align label order and add scores
+            label_scores = dict(zip(model.classifier.labels[axis].all, self.model.score(self.state, axis)[0]))
             scores += [label_scores.get(a, 0) for a in labels.all]  # Product of Experts, assuming log(softmax)
         self.print(lambda: "  %s scores: %s" % (name, tuple(zip(labels.all, scores))), level=4)
         try:
@@ -215,10 +212,6 @@ class PassageParser(AbstractParser):
                 label = true_values[scores[true_keys].argmax()] if self.training else pred
             self.action_count += 1
         return label, is_correct, true_keys, true_values
-
-    def score(self, model, axis):
-        features = model.feature_extractor.extract_features(self.state)
-        return model.classifier.score(features, axis=axis), features  # scores is a NumPy array
 
     @staticmethod
     def predict(scores, values, is_valid=None):
@@ -449,9 +442,9 @@ class Parser(AbstractParser):
                 self.model.load(is_finalized=False)
             except FileNotFoundError:
                 print("not found, starting from untrained model.")
-        for f in self.config.args.formats:
-            self.config.set_format(f)
-            self.model.init_model()
+        # for f in self.config.args.formats:  FIXME is this still needed? (Workaround for clab/dynet#889)
+        #     self.config.set_format(f)
+        #     self.model.init_model(self.config.format)
         self.print_config()
         self.best_score = self.model.classifier.best_score if self.model.classifier else 0
 
