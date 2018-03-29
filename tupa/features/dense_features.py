@@ -50,37 +50,39 @@ class DenseFeatureExtractor(FeatureExtractor):
         self.hierarchical = hierarchical
         self.node_dropout = node_dropout
         if init_params:
-            self.params = OrderedDict((p.suffix, p) for p in [NumericFeatureParameters(1)] + list(params.values()))
+            self.params = OrderedDict((k, p) for k, p in [(NumericFeatureParameters.SUFFIX, NumericFeatureParameters(1))
+                                                          ] + list(params.items()))
             for param in self.params.values():
                 self.update_param_indexed(param)
             num_values = self.num_values()
-            for param in self.params.values():
-                param.num = num_values[param]
+            for key, param in self.params.items():
+                param.num = num_values[key]
                 param.node_dropout = self.node_dropout
         else:
             self.params = params
     
-    def init_param(self, param):
+    def init_param(self, key):
+        param = self.params[key]
         self.update_param_indexed(param)
-        param.num = self.num_values()[param]
+        param.num = self.num_values()[key]
 
     def num_values(self):
         return {k: len(v) for k, v in self.param_values(all_params=True).items()}
 
     def update_param_indexed(self, param):
-        param.indexed = self.indexed and param.effective_suffix in INDEXED
+        param.indexed = self.indexed and param.prop in INDEXED
 
     @property
     def feature_template(self):
         return self.feature_templates[0]
 
-    def init_features(self, state, suffix=None):
+    def init_features(self, state):
         features = OrderedDict()
-        for suffix, param in self.params.items():
+        for key, param in self.params.items():
             if param.indexed and param.enabled:
-                values = [calc(n, state, param.effective_suffix) for n in state.terminals]
+                values = [calc(n, state, param.prop) for n in state.terminals]
                 param.init_data()
-                features[suffix] = [param.data[v] for v in values]
+                features[key] = [param.data[v] for v in values]
         return features
 
     def extract_features(self, state):
@@ -90,40 +92,40 @@ class DenseFeatureExtractor(FeatureExtractor):
         :return dict of feature name -> list of numeric values
         """
         features = OrderedDict()
-        for param, vs in self.param_values(state).items():
+        for key, values in self.param_values(state).items():
+            param = self.params[key]
             param.init_data()  # Replace categorical values with their values in data dict:
-            features[param.suffix] = [(UNKNOWN_VALUE if v == DEFAULT else v) if param.numeric else
-                                      (MISSING_VALUE if v == DEFAULT else (v if param.indexed else param.data[v]))
-                                      for v in vs]
+            features[key] = [(UNKNOWN_VALUE if v == DEFAULT else v) if param.numeric else
+                             (MISSING_VALUE if v == DEFAULT else (v if param.indexed else param.data[v]))
+                             for v in values]
         return features
 
     def param_values(self, state=None, all_params=False):
         indexed = []
-        param_values = OrderedDict()
-        values = OrderedDict()
-        for suffix, param in self.params.items():
+        by_key = OrderedDict()
+        by_prop = OrderedDict()
+        for key, param in self.params.items():
             if param.enabled and param.dim or all_params:
                 if param.indexed:
                     if param.copy_from:
                         copy_from = self.params.get(param.copy_from)
                         if copy_from and copy_from.enabled and copy_from.dim and not all_params:
                             continue
-                    if param.effective_suffix not in indexed:
-                        indexed.append(param.effective_suffix)  # Only need one copy of indices
-                param_values[param] = values.setdefault(
-                    NumericFeatureParameters.SUFFIX if param.numeric else param.effective_suffix,
+                    if param.prop not in indexed:
+                        indexed.append(param.prop)  # Only need one copy of indices
+                by_key[key] = by_prop.setdefault(
+                    NumericFeatureParameters.SUFFIX if param.numeric else param.prop,
                     ([state.node_ratio()] if state else [1] if all_params else []) if param.numeric else [])
         for e, prop, value in self.feature_template.extract(state, DEFAULT, "".join(indexed), as_tuples=True,
                                                             node_dropout=self.node_dropout,
                                                             hierarchical=self.hierarchical):
-            vs = values.get(NumericFeatureParameters.SUFFIX if e.is_numeric(prop) else prop)
+            vs = by_prop.get(NumericFeatureParameters.SUFFIX if e.is_numeric(prop) else prop)
             if vs is not None:
                 vs.append(value if state else (e, prop))
-        return param_values
+        return by_key
 
     def all_features(self):
-        return ["".join(self.join_props(vs)) for _, vs in sorted(self.param_values().items(),
-                                                                 key=lambda x: x[0].suffix)]
+        return ["".join(self.join_props(vs)) for _, vs in sorted(self.param_values().items(), key=lambda x: x[0])]
 
     @staticmethod
     def join_props(values):

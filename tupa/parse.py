@@ -82,7 +82,7 @@ class PassageParser(AbstractParser):
                 (self.config.args.verbose > 1 or self.config.args.use_gold_node_labels or self.config.args.action_stats)
                 and (edges or node_labels)) else None
         for model in self.models:
-            model.init_model(self.config.format + (("." + self.lang) if self.config.args.multilingual else ""))
+            model.init_model(self.config.format, lang=self.lang if self.config.args.multilingual else None)
             if ClassifierProperty.require_init_features in model.classifier_properties():
                 model.init_features(self.state, self.training)
 

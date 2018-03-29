@@ -56,7 +56,7 @@ class MultilayerPerceptron(SubModel):
                     print("Initializing MLP: %s" % self)
 
     def evaluate(self, inputs, train=False):
-        x = dy.concatenate(list(inputs))
+        x = dy.concatenate(list(inputs))  # TODO add interaction terms for biaffine attention
         dim = x.dim()[0][0]
         assert dim == self.input_dim, "Input dim mismatch: %d != %d" % (dim, self.input_dim)
         if self.args.verbose > 3:

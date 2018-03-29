@@ -52,7 +52,7 @@ class NeuralNetwork(Classifier, SubModel):
         self.minibatch_size = self.config.args.minibatch_size
         self.loss = self.config.args.loss
         self.weight_decay = self.config.args.dynet_weight_decay
-        self.empty_values = OrderedDict()  # string (feature suffix) -> expression
+        self.empty_values = OrderedDict()  # string (feature param key) -> expression
         self.axes = OrderedDict()  # string (axis) -> AxisModel
         self.losses = []
         self.steps = 0
@@ -116,19 +116,19 @@ class NeuralNetwork(Classifier, SubModel):
         input_dim = 0
         indexed_dim = np.array([0, 0], dtype=int)  # specific, shared
         indexed_num = np.array([0, 0], dtype=int)
-        for suffix, param in sorted(self.input_params.items()):
+        for key, param in sorted(self.input_params.items()):
             if not param.enabled:
                 continue
             if self.config.args.verbose > 3:
                 print("Initializing input parameter: %s" % param)
-            if not param.numeric and suffix not in self.params:  # lookup feature
+            if not param.numeric and key not in self.params:  # lookup feature
                 if init:
                     lookup = self.model.add_lookup_parameters((param.size, param.dim))
                     lookup.set_updated(param.updated)
                     param.init_data()
                     if param.init is not None and param.init.size:
                         lookup.init_from_array(param.init)
-                    self.params[suffix] = lookup
+                    self.params[key] = lookup
             if param.indexed:
                 i = self.birnn_indices(param)
                 indexed_dim[i] += param.dim  # add to the input dimensionality at each indexed time point
@@ -147,10 +147,10 @@ class NeuralNetwork(Classifier, SubModel):
             dy.renew_cg()
         self.empty_values.clear()
 
-    def get_empty_values(self, suffix):
-        value = self.empty_values.get(suffix)
+    def get_empty_values(self, key):
+        value = self.empty_values.get(key)
         if value is None:
-            self.empty_values[suffix] = value = dy.inputVector(np.zeros(self.input_params[suffix].dim, dtype=float))
+            self.empty_values[key] = value = dy.inputVector(np.zeros(self.input_params[key].dim, dtype=float))
         return value
 
     def init_features(self, features, axes, train=False):
@@ -159,29 +159,29 @@ class NeuralNetwork(Classifier, SubModel):
         embeddings = [[], []]  # specific, shared
         if self.config.args.verbose > 3:
             print("Initializing %s %s features for %d elements" % (", ".join(axes), self.birnn_type, len(features)))
-        for suffix, indices in sorted(features.items()):
-            param = self.input_params[suffix]
-            vectors = [dy.lookup(self.params[suffix], k, update=param.updated) for k in indices]
+        for key, indices in sorted(features.items()):
+            param = self.input_params[key]
+            vectors = [dy.lookup(self.params[key], k, update=param.updated) for k in indices]
             for i in self.birnn_indices(param):
                 embeddings[i].append(vectors)
             if self.config.args.verbose > 3:
-                print("%s: %s %s" % (suffix, indices, [e.npvalue().tolist() for e in vectors]))
+                print("%s: %s %s" % (key, indices, [e.npvalue().tolist() for e in vectors]))
         for birnn in self.get_birnns(*axes):
             birnn.init_features(embeddings[birnn.shared], train)
 
     def generate_inputs(self, features, axis):
         indices = []  # list, not set, in order to maintain consistent order
-        for suffix, values in sorted(features.items()):
-            param = self.input_params[suffix]
+        for key, values in sorted(features.items()):
+            param = self.input_params[key]
             if param.numeric:
                 yield dy.inputVector(values)
             elif param.indexed:  # collect indices to be looked up
                 indices += values  # DenseFeatureExtractor collapsed features so there are no repetitions between them
             else:  # lookup feature
-                yield from (self.get_empty_values(suffix) if x == MISSING_VALUE else
-                            dy.lookup(self.params[suffix], x, update=param.updated) for x in values)
+                yield from (self.get_empty_values(key) if x == MISSING_VALUE else
+                            dy.lookup(self.params[key], x, update=param.updated) for x in values)
             if self.config.args.verbose > 3:
-                print("%s: %s" % (suffix, values))
+                print("%s: %s" % (key, values))
         if indices:
             for birnn in self.get_birnns(axis):
                 yield from birnn.evaluate(indices)
@@ -193,7 +193,7 @@ class NeuralNetwork(Classifier, SubModel):
     def evaluate(self, features, axis, train=False):
         """
         Apply MLP and log softmax to input features
-        :param features: dictionary of suffix, values for each feature type
+        :param features: dictionary of key, values for each feature type
         :param axis: axis of the label we are predicting
         :param train: whether to apply dropout
         :return: expression corresponding to log softmax applied to MLP output

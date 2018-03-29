@@ -131,14 +131,13 @@ class FeatureTemplateElement:
     def extract(self, state, default, indexed, as_tuples, node_dropout=0, hierarchical=False):
         self.set_node(state, node_dropout=node_dropout)
         for prop, getter in zip(self.properties, self.getters):
-            suffix = prop
             if indexed and not self.is_numeric(prop):
                 if prop == indexed[0]:
-                    prop, getter = ("j" if hierarchical else "i"), None
+                    getter = NODE_PROP_GETTERS["j" if hierarchical else "i"]
                 elif prop in indexed[1:]:
                     continue
             value = self.get_prop(state, prop, getter, default)
-            yield (self, suffix, value) if as_tuples else value
+            yield (self, prop, value) if as_tuples else value
 
     def get_prop(self, state, prop, getter, default):
         value = calc(self.node, state, prop, getter, self.previous)
@@ -175,15 +174,14 @@ class FeatureExtractor:
         """
         raise NotImplementedError()
 
-    def init_features(self, state, suffix=None):
+    def init_features(self, state):
         """
         Calculate feature values for initial state
         :param state: initial state of the parser
-        :param suffix: feature suffix to get
         """
         pass
 
-    def init_param(self, param):
+    def init_param(self, key):
         pass
 
     def finalize(self):

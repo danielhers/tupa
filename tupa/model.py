@@ -35,6 +35,10 @@ class ParameterDefinition:
             raise ValueError("Can only disable parameter configuration by setting 'enabled' to False")
         setattr(self.args, self.dim_arg, 0)
 
+    @property
+    def lang_specific(self):
+        return self.attr_to_val.get("lang_specific")
+
     def create_from_config(self):
         kwargs = dict(self.attr_to_val)
         kwargs.update({k: getattr(self.args, v) for k, v in self.attr_to_arg.items()})
@@ -98,7 +102,7 @@ class Model:
     def __init__(self, filename, config=None, *args, **kwargs):
         self.config = config or Config().copy()
         self.filename = filename
-        self.feature_extractor = self.classifier = self.axis = None
+        self.feature_extractor = self.classifier = self.axis = self.lang = None
         self.feature_params = OrderedDict()
         self.is_finalized = False
         if args or kwargs:
@@ -108,25 +112,26 @@ class Model:
         return self.param_defs(args, only_node_labels=True)[0]
 
     def param_defs(self, args=None, only_node_labels=False):
-        if args is None:
-            args = self.config.args
-        return [ParameterDefinition(args, n, *k) for n, *k in NODE_LABEL_PARAM_DEFS +
+        return [ParameterDefinition(args or self.config.args, n, *k) for n, *k in NODE_LABEL_PARAM_DEFS +
                 ([] if only_node_labels else PARAM_DEFS)]
 
-    def init_model(self, axis=None, init_params=True):
-        if axis is not None:
-            self.axis = axis
-        if self.axis is None:
-            self.axis = self.config.format
+    def init_model(self, axis=None, lang=None, init_params=True):
+        self.set_axis(axis, lang)
         labels = self.classifier.labels if self.classifier else OrderedDict()
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
             for param_def in self.param_defs():
-                param = self.feature_params.get(param_def.name)
-                if param:
-                    param.enabled = param_def.enabled
-                elif self.is_neural_network and param_def.enabled:
-                    self.feature_params[param_def.name] = param = param_def.create_from_config()
-                    self.init_param(param)
+                key = param_def.name
+                for param_lang in (self.param_langs(key) if self.lang else []) \
+                        if param_def.lang_specific and self.config.args.multilingual else [None]:
+                    if param_lang:
+                        key += "." + param_lang
+                    param = self.feature_params.get(key)
+                    enabled = param_def.enabled and (not param_lang or param_lang == self.lang)
+                    if param:
+                        param.enabled = enabled
+                    elif self.is_neural_network and enabled:
+                        self.feature_params[key] = param_def.create_from_config()  # TODO use hyperparams[lang]
+                        self.init_param(key)
             if axis and self.axis not in labels:
                 labels[self.axis] = self.init_actions()  # Uses config to determine actions
             if self.config.args.node_labels and not self.config.args.use_gold_node_labels and \
@@ -155,7 +160,25 @@ class Model:
         else:
             raise ValueError("Invalid model type: '%s'" % self.config.args.classifier)
         self._update_input_params()
-    
+
+    def set_axis(self, axis, lang):
+        if axis is not None:
+            self.axis = axis
+        if self.axis is None:
+            self.axis = self.config.format
+        if lang is not None:
+            self.lang = lang
+        if self.lang is not None:
+            suffix = "." + self.lang
+            if not self.axis.endswith(suffix):
+                self.axis += suffix
+
+    def param_langs(self, name):
+        for key in self.feature_params:
+            param_name, _, lang = key.partition(".")
+            if param_name == name and lang:
+                yield lang
+
     @property
     def is_neural_network(self):
         return self.config.args.classifier in (MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN)
@@ -166,9 +189,9 @@ class Model:
     def init_actions(self):
         return Actions(size=self.config.args.max_action_labels)
 
-    def init_param(self, param):
+    def init_param(self, key):
         if self.feature_extractor:
-            self.feature_extractor.init_param(param)
+            self.feature_extractor.init_param(key)
 
     def init_node_labels(self):
         node_labels = self.feature_params.get(NODE_LABEL_KEY)
@@ -176,7 +199,7 @@ class Model:
             node_labels = self.node_label_param_def().create_from_config()
             if self.is_neural_network:
                 self.feature_params[NODE_LABEL_KEY] = node_labels
-        self.init_param(node_labels)
+        self.init_param(NODE_LABEL_KEY)
         node_labels.init_data()
         return node_labels.data
 
@@ -302,6 +325,6 @@ class Model:
     def all_params(self):
         d = OrderedDict()
         d["features"] = self.feature_extractor.all_features()
-        d.update(("input_" + s, p.data.all) for s, p in self.feature_extractor.params.items() if p.data)
+        d.update(("input_" + k, p.data.all) for k, p in self.feature_extractor.params.items() if p.data)
         d.update(self.classifier.all_params())
         return d

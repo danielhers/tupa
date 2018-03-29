@@ -106,7 +106,7 @@ class FeatureParameters(Labels):
         return False
 
     @property
-    def effective_suffix(self):
+    def prop(self):
         return self.copy_from or self.suffix
 
     @property
@@ -115,8 +115,9 @@ class FeatureParameters(Labels):
 
     @staticmethod
     def copy(params, copy_dict=dict, copy_init=True, order=None):
-        return OrderedDict((suffix, params[suffix].copy_with_data(copy_dict, copy_init)) for suffix in
-                           (params if order is None else [NumericFeatureParameters.SUFFIX] + order) if suffix in params)
+        return OrderedDict((key, param.copy_with_data(copy_dict, copy_init)) for key, param in
+                           (params.items() if order is None else sorted(params.items(), key=lambda x:
+                            -1 if x[0] == NumericFeatureParameters.SUFFIX else order.index(x[0][0]))))
 
     def copy_with_data(self, copy_dict, copy_init):
         data = None if self.data is None else copy_dict(self.data)

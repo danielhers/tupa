@@ -43,10 +43,10 @@ def test_features(config, feature_extractor_creator, passage, write_features):
     oracle = Oracle(passage)
     state = State(passage)
     actions = Actions()
-    for param in feature_extractor.params.values():
+    for key, param in feature_extractor.params.items():
         if not param.numeric:
             param.dropout = 0
-            feature_extractor.init_param(param)
+            feature_extractor.init_param(key)
     features = [feature_extractor.init_features(state)]
     while True:
         extract_features(feature_extractor, state, features)
@@ -70,8 +70,8 @@ def test_features(config, feature_extractor_creator, passage, write_features):
 def extract_features(feature_extractor, state, features):
     values = feature_extractor.extract_features(state)
     if feature_extractor.params:
-        for suffix, vs in values.items():
-            assert len(vs) == feature_extractor.params[suffix].num, suffix
+        for key, vs in values.items():
+            assert len(vs) == feature_extractor.params[key].num, key
     features.append(values)
 
 
