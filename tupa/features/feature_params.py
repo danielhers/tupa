@@ -126,8 +126,10 @@ class FeatureParameters(Labels):
         return FeatureParameters(suffix=self.suffix, dim=self.dim, size=self.size, dropout=self.dropout,
                                  updated=self.updated, num=self.num, init=self.init if copy_init else None, data=data,
                                  indexed=self.indexed, copy_from=self.copy_from, filename=self.filename,
-                                 min_count=self.min_count, enabled=self.enabled, vocab=self.vocab,
-                                 node_dropout=getattr(self, "node_dropout", 0), lang_specific=self.lang_specific)
+                                 min_count=self.min_count, enabled=self.enabled,
+                                 node_dropout=getattr(self, "node_dropout", 0),
+                                 vocab=getattr(self, "vocab", None),
+                                 lang_specific=getattr(self, "lang_specific", False))
 
     def unfinalize(self):
         self.data = DropoutDict(self.data, size=self.size, dropout=self.dropout, min_count=self.min_count)
