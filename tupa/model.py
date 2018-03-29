@@ -5,11 +5,9 @@ from ucca import textutil
 
 from .action import Actions
 from .classifiers.classifier import Classifier
-from .config import Config, SPARSE, MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN, NOOP
+from .config import Config, SEPARATOR, SPARSE, MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN, NOOP
 from .features.feature_params import FeatureParameters
 from .model_util import UnknownDict, AutoIncrementDict, remove_backup, save_json, load_json
-
-SEPARATOR = "."
 
 
 class ParameterDefinition:
@@ -62,10 +60,7 @@ class ParameterDefinition:
                 yield lang
 
     def key(self, lang=None):
-        ret = self.name
-        if lang:
-            ret += SEPARATOR + lang
-        return ret
+        return SEPARATOR.join(filter(None, (self.name, lang)))
 
     def __str__(self):
         return self.name

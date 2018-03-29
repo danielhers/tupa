@@ -36,6 +36,8 @@ NN_ARG_NAMES = set()
 DYNET_ARG_NAMES = set()
 RESTORED_ARGS = set()
 
+SEPARATOR = "."
+
 
 def add_param_arguments(ap=None, arg_default=None):  # arguments with possible format-specific parameter values
 
@@ -157,16 +159,25 @@ class FallbackNamespace(Namespace):
 
     def __getitem__(self, item):
         if item:
-            name, _, rest = item.partition(".")
+            name, _, rest = item.partition(SEPARATOR)
             return self._children.setdefault(name, FallbackNamespace(self))[rest]
         return self
 
+    def vars(self):
+        return {k: v for k, v in vars(self).items() if not k.startswith("_")}
+
     def items(self):
-        return vars(self).items()
+        return self.vars().items()
 
     def update(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+    def traverse(self, prefix=None):
+        if prefix and self.vars():
+            yield (prefix, self)
+        for name, child in self._children.items():
+            yield from child.traverse(SEPARATOR.join(filter(None, (prefix, name))))
 
 
 class Hyperparams:
@@ -175,6 +186,9 @@ class Hyperparams:
         self.specific = FallbackNamespace(parent)
         for name, args in kwargs.items():
             self.specific[name].update(**args)
+
+    def items(self):
+        return ([("shared", self.shared)] if self.shared.vars() else []) + list(self.specific.traverse())
 
 
 class HyperparamsInitializer:
@@ -277,7 +291,7 @@ class Config(object, metaclass=Singleton):
                         default=[HyperparamsInitializer.action("shared --lstm-layers 2")])
         ap.add_argument("--copy-shared", nargs="*", choices=FORMATS, help="formats whose parameters shall be "
                                                                           "copied from loaded shared parameters")
-        self.args = ap.parse_args(args if args else None)
+        self.args = FallbackNamespace(ap.parse_args(args if args else None))
 
         if self.args.config:
             print("Loading configuration from '%s'." % self.args.config)
@@ -347,7 +361,7 @@ class Config(object, metaclass=Singleton):
         for f, num in EDGE_LABELS_NUM.items():
             self.hyperparams.specific[f].max_edge_labels = num
         amr_hyperparams = self.hyperparams.specific["amr"]
-        for k, v in dict(amr_hyperparams=20, max_node_labels=1000, node_category_dim=5, max_node_categories=25).items():
+        for k, v in dict(node_label_dim=20, max_node_labels=1000, node_category_dim=5, max_node_categories=25).items():
             if k not in amr_hyperparams and not getattr(amr_hyperparams, k, None):
                 setattr(amr_hyperparams, k, v)
         self.set_format(update=True)
@@ -357,7 +371,7 @@ class Config(object, metaclass=Singleton):
         return Hyperparams(parent=self.args, **{h.name: h.args for h in self.args.hyperparams or ()})
 
     def update_hyperparams(self, **kwargs):
-        self.update({"hyperparams": [HyperparamsInitializer(k, **v) for k, v in kwargs.items()]})
+        self.update(dict(hyperparams=[HyperparamsInitializer(k, **v) for k, v in kwargs.items()]))
 
     def update_iteration(self, iteration, print_message=True):
         if iteration.hyperparams:
@@ -447,19 +461,21 @@ class Config(object, metaclass=Singleton):
         self.sub_configs.append(ret)
         return ret
 
+    def args_str(self, args):
+        return ["--" + ("no-" if v is False else "") + k.replace("_", "-") +
+                ("" if v is False or v is True else
+                 (" " + str(" ".join(map(str, v)) if hasattr(v, "__iter__") and not isinstance(v, str) else v)))
+                for (k, v) in sorted(args.items()) if
+                v not in (None, (), "", self.arg_parser.get_default(k))
+                and not k.startswith("_")
+                and (args.node_labels or ("node_label" not in k and "node_categor" not in k))
+                and (args.swap or "swap_" not in k)
+                and (args.swap == COMPOUND or k != "max_swap")
+                and (not args.require_connected or k != "orphan_label")
+                and (args.classifier == SPARSE or k not in SPARSE_ARG_NAMES)
+                and (args.classifier in NN_CLASSIFIERS or k not in NN_ARG_NAMES | DYNET_ARG_NAMES)
+                and k != "passages"]
+
     def __str__(self):
-        return " ".join(list(self.args.passages) + [""]) + \
-               " ".join("--" + ("no-" if v is False else "") + k.replace("_", "-") +
-                        ("" if v is False or v is True else
-                         (" " + str(" ".join(map(str, v)) if hasattr(v, "__iter__") and not isinstance(v, str) else v)))
-                        for (k, v) in sorted(vars(self.args).items()) if
-                        v not in (None, (), "", self.arg_parser.get_default(k))
-                        and not k.startswith("_")
-                        and (self.args.node_labels or ("node_label" not in k and "node_categor" not in k))
-                        and (self.args.swap or "swap_" not in k)
-                        and (self.args.swap == COMPOUND or k != "max_swap")
-                        and (not self.args.require_connected or k != "orphan_label")
-                        and (self.args.classifier == SPARSE or k not in SPARSE_ARG_NAMES)
-                        and (
-                            self.args.classifier in NN_CLASSIFIERS or k not in NN_ARG_NAMES | DYNET_ARG_NAMES)
-                        and k != "passages")
+        self.args.hyperparams = [HyperparamsInitializer(name, **args.vars()) for name, args in self.hyperparams.items()]
+        return " ".join(list(self.args.passages) + self.args_str(self.args))
