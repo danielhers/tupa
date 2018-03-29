@@ -136,7 +136,7 @@ class NeuralNetwork(Classifier, SubModel):
             else:
                 input_dim += param.num * param.dim
         for birnn in self.get_birnns(axis):
-            input_dim += birnn.init_params(indexed_dim[birnn.shared], indexed_num[birnn.shared])
+            input_dim += birnn.init_params(indexed_dim[int(birnn.shared)], indexed_num[int(birnn.shared)])
         model.mlp.init_params(input_dim)
 
     def birnn_indices(self, param):  # both specific and shared or just specific
@@ -167,7 +167,7 @@ class NeuralNetwork(Classifier, SubModel):
             if self.config.args.verbose > 3:
                 print("%s: %s %s" % (key, indices, [e.npvalue().tolist() for e in vectors]))
         for birnn in self.get_birnns(*axes):
-            birnn.init_features(embeddings[birnn.shared], train)
+            birnn.init_features(embeddings[int(birnn.shared)], train)
 
     def generate_inputs(self, features, axis):
         indices = []  # list, not set, in order to maintain consistent order

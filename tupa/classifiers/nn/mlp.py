@@ -25,6 +25,7 @@ class MultilayerPerceptron(SubModel):
         return self.layers + (1 if self.num_labels else 0)
 
     def init_params(self, input_dim):
+        assert input_dim, "Zero input dimension to MLP"
         self.input_dim = input_dim
         if self.layers > 0:
             if self.params:
@@ -114,8 +115,7 @@ class MultilayerPerceptron(SubModel):
 
     def verify_dims(self):
         if self.layers > 0:
-            self.verify_dim("input_dim", sum(W.as_array().shape[1] for W in filter(
-                None, (self.params.get(key) for key in ("W0", "W0+")))))
+            self.verify_dim("input_dim", sum(W.as_array().shape[1] for W in map(self.params.get, ("W0", "W0+")) if W))
             self.verify_dim("output_dim", self.params["W" + str(self.layers - 1)].as_array().shape[0])
             if self.num_labels:
                 self.verify_dim("num_labels", self.params["W" + str(self.layers)].as_array().shape[0])
