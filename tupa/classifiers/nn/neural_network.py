@@ -77,7 +77,8 @@ class NeuralNetwork(Classifier, SubModel):
         init = self.model is None
         if init:
             self.model = dy.ParameterCollection()
-            self.birnn = self.birnn_type(Config().hyperparams.shared, self.model, save_path=("shared", "birnn"))
+            self.birnn = self.birnn_type(Config().hyperparams.shared, self.model, save_path=("shared", "birnn"),
+                                         shared=True)
             self.set_weight_decay_lambda()
         if train:
             self.init_trainer()
@@ -112,7 +113,9 @@ class NeuralNetwork(Classifier, SubModel):
             model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.config, self.model, self.birnn_type)
             if self.config.args.verbose > 3:
                 print("Initializing %s model with %d labels" % (axis, self.labels[axis].size))
-        input_dim = indexed_dim = indexed_num = 0
+        input_dim = 0
+        indexed_dim = np.array([0, 0], dtype=int)  # specific, shared
+        indexed_num = np.array([0, 0], dtype=int)
         for suffix, param in sorted(self.input_params.items()):
             if not param.enabled:
                 continue
@@ -127,13 +130,17 @@ class NeuralNetwork(Classifier, SubModel):
                         lookup.init_from_array(param.init)
                     self.params[suffix] = lookup
             if param.indexed:
-                indexed_dim += param.dim  # add to the input dimensionality at each indexed time point
-                indexed_num = max(indexed_num, param.num)  # indices to be looked up are collected
+                i = self.birnn_indices(param)
+                indexed_dim[i] += param.dim  # add to the input dimensionality at each indexed time point
+                indexed_num[i] = np.fmax(indexed_num[i], param.num)  # indices to be looked up are collected
             else:
                 input_dim += param.num * param.dim
         for birnn in self.get_birnns(axis):
-            input_dim += birnn.init_params(indexed_dim, indexed_num)
+            input_dim += birnn.init_params(indexed_dim[birnn.shared], indexed_num[birnn.shared])
         model.mlp.init_params(input_dim)
+
+    def birnn_indices(self, param):  # both specific and shared or just specific
+        return [0, 1] if not self.config.args.multilingual or not param.lang_specific else [0]
 
     def init_cg(self, renew=True):
         if renew:
@@ -149,14 +156,18 @@ class NeuralNetwork(Classifier, SubModel):
     def init_features(self, features, axes, train=False):
         for axis in axes:
             self.init_model(axis, train)
-        embeddings = [[dy.lookup(self.params[s], k, update=self.input_params[s].updated) for k in ks]
-                      for s, ks in sorted(features.items())]  # lists of vectors
+        embeddings = [[], []]  # specific, shared
         if self.config.args.verbose > 3:
-            print("Initializing %s %s features for %d elements" % (", ".join(axes), self.birnn_type, len(embeddings)))
-            for (suffix, values), embs in zip(sorted(features.items()), embeddings):
-                print("%s: %s %s" % (suffix, values, [e.npvalue().tolist() for e in embs]))
+            print("Initializing %s %s features for %d elements" % (", ".join(axes), self.birnn_type, len(features)))
+        for suffix, indices in sorted(features.items()):
+            param = self.input_params[suffix]
+            vectors = [dy.lookup(self.params[suffix], k, update=param.updated) for k in indices]
+            for i in self.birnn_indices(param):
+                embeddings[i].append(vectors)
+            if self.config.args.verbose > 3:
+                print("%s: %s %s" % (suffix, indices, [e.npvalue().tolist() for e in vectors]))
         for birnn in self.get_birnns(*axes):
-            birnn.init_features(embeddings, train)
+            birnn.init_features(embeddings[birnn.shared], train)
 
     def generate_inputs(self, features, axis):
         indices = []  # list, not set, in order to maintain consistent order

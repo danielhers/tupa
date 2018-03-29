@@ -13,7 +13,8 @@ from ..model_util import DropoutDict
 
 class FeatureParameters(Labels):
     def __init__(self, suffix, dim, size, dropout=0, updated=True, num=1, init=None, data=None, indexed=False,
-                 copy_from=None, filename=None, min_count=1, enabled=True, node_dropout=0, vocab=None):
+                 copy_from=None, filename=None, min_count=1, enabled=True, node_dropout=0, vocab=None,
+                 lang_specific=False):
         """
         :param suffix: one-character title for feature
         :param dim: vector dimension or, filename to load vectors from, or Word2Vec object
@@ -30,6 +31,7 @@ class FeatureParameters(Labels):
         :param enabled: whether to actually use this parameter in feature extraction
         :param node_dropout: probability to drop whole node in feature extraction
         :param vocab: name of file to load mapping of integer ID to word form (to avoid loading spaCy)
+        :param lang_specific: whether the feature params should be separate per language
         """
         super().__init__(size)
         self.suffix = suffix
@@ -47,18 +49,20 @@ class FeatureParameters(Labels):
         self.enabled = enabled
         self.node_dropout = node_dropout
         self.vocab = vocab
+        self.lang_specific = lang_specific
 
     def __repr__(self):
         return type(self).__name__ + "(" + ", ".join(
             map(str, (self.suffix, self.dim, self.size, self.dropout, self.updated, self.num, self.init, self.data,
                       self.indexed, self.copy_from, self.filename, self.min_count, self.enabled, self.node_dropout,
-                      self.vocab))) + ")"
+                      self.vocab, self.lang_specific))) + ")"
 
     def __eq__(self, other):
         return self.suffix == other.suffix and self.dim == other.dim and self.size == other.size and \
                self.dropout == other.dropout and self.updated == other.updated and self.num == other.num and \
                self.indexed == other.indexed and self.min_count == other.min_count and \
-               self.numeric == other.numeric and self.node_dropout == other.node_dropout
+               self.numeric == other.numeric and self.node_dropout == other.node_dropout and \
+               self.lang_specific == other.lang_specific
 
     def __hash__(self):
         return hash(self.suffix)

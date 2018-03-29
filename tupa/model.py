@@ -78,8 +78,10 @@ NODE_LABEL_PARAM_DEFS = [
 PARAM_DEFS = [
     ("c",            dict(dim="node_category_dim", size="max_node_categories")),
     ("W",            dict(dim="word_dim_external", size="max_words_external", dropout="word_dropout_external",
-                          updated="update_word_vectors", filename="word_vectors", vocab="vocab"), dict(copy_from="w")),
-    ("w",            dict(dim="word_dim",          size="max_words",          dropout="word_dropout")),
+                          updated="update_word_vectors", filename="word_vectors", vocab="vocab"),
+        dict(lang_specific=True, copy_from="w")),
+    ("w",            dict(dim="word_dim",          size="max_words",          dropout="word_dropout"),
+        dict(lang_specific=True)),
     ("t",            dict(dim="tag_dim",           size="max_tags",           dropout="tag_dropout")),
     ("d",            dict(dim="dep_dim",           size="max_deps",           dropout="dep_dropout")),
     ("e",            dict(dim="edge_label_dim",    size="max_edge_labels")),
@@ -125,7 +127,7 @@ class Model:
                 elif self.is_neural_network and param_def.enabled:
                     self.feature_params[param_def.name] = param = param_def.create_from_config()
                     self.init_param(param)
-            if self.axis not in labels:
+            if axis and self.axis not in labels:
                 labels[self.axis] = self.init_actions()  # Uses config to determine actions
             if self.config.args.node_labels and not self.config.args.use_gold_node_labels and \
                     NODE_LABEL_KEY not in labels:
