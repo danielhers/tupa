@@ -27,35 +27,37 @@ EVALUATORS = {
 
 class Scores:
     """
-    Keeps score objects from multiple formats
+    Keeps score objects from multiple formats and/or languages
     """
     def __init__(self, scores):
-        self.scores_by_format = [t.aggregate(s) for t, s in groupby(scores, type)]
-        self.name = "Multiple formats" if len(self.scores_by_format) != 1 else self.scores_by_format[0].name
-        self.format = None if len(self.scores_by_format) != 1 else self.scores_by_format[0].format
+        self.elements = [(t.aggregate(s), l) for (t, l), s in groupby(scores,
+                                                                      lambda x: (type(x), getattr(x, "lang", None)))]
+        element, _ = self.elements[0] if len(self.elements) == 1 else (None, None)
+        self.name = element.name if element else "Multiple"
+        self.format = element.format if element else None
 
     @staticmethod
     def aggregate(scores):
-        return Scores([s for score in scores for s in score.scores_by_format])
+        return Scores([e for s in scores for e, _ in s.elements])
 
     def average_f1(self, *args, **kwargs):
-        return sum(s.average_f1(*args, **kwargs) for s in self.scores_by_format) / len(self.scores_by_format)
+        return sum(e.average_f1(*args, **kwargs) for e, _ in self.elements) / len(self.elements)
 
     def print(self, *args, **kwargs):
-        for s in self.scores_by_format:
-            if len(self.scores_by_format):
-                print(s.name + ":", *args, **kwargs)
-            s.print(*args, **kwargs)
+        for element, lang in self.elements:
+            if len(self.elements):
+                print(element.name + ((" (" + lang + ")") if lang else "") + ":", *args, **kwargs)
+            element.print(*args, **kwargs)
 
     def fields(self):
-        return [f for s in self.scores_by_format for f in s.fields()]
+        return [f for e, _ in self.elements for f in e.fields()]
 
     def titles(self):
-        return [(s.name + "_" + f) for s in self.scores_by_format for f in s.titles()]
+        return [(e.name + (("_" + l) if l else "") + "_" + f) for e, l in self.elements for f in e.titles()]
 
     def details(self, average_f1):
-        return "" if len(self.scores_by_format) < 2 else \
-            " (" + ", ".join("%.3f" % average_f1(s) for s in self.scores_by_format) + ")"
+        return "" if len(self.elements) < 2 else \
+            " (" + ", ".join("%.3f" % average_f1(e) for e, _ in self.elements) + ")"
 
     def __str__(self):
         print(",".join(self.fields()))

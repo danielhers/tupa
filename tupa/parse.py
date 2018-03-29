@@ -267,6 +267,7 @@ class PassageParser(AbstractParser):
             verbose=self.out and self.config.args.verbose > 3, constructions=self.config.args.constructions,
             eval_types=(self.eval_type,) if mode is ParseMode.dev else (LABELED, UNLABELED))
         self.f1 = average_f1(score, self.eval_type)
+        score.lang = self.lang
         return score
 
     def check_loop(self):
