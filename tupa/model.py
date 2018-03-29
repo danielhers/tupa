@@ -9,6 +9,8 @@ from .config import Config, SPARSE, MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN, N
 from .features.feature_params import FeatureParameters
 from .model_util import UnknownDict, AutoIncrementDict, remove_backup, save_json, load_json
 
+SEPARATOR = "."
+
 
 class ParameterDefinition:
     def __init__(self, args, name, attr_to_arg, attr_to_val=None):
@@ -39,22 +41,38 @@ class ParameterDefinition:
     def lang_specific(self):
         return self.attr_to_val.get("lang_specific")
 
-    def create_from_config(self):
+    def create_from_config(self, lang=None):
         kwargs = dict(self.attr_to_val)
-        kwargs.update({k: getattr(self.args, v) for k, v in self.attr_to_arg.items()})
+        kwargs.update({k: getattr(self.get_args(lang), v) for k, v in self.attr_to_arg.items()})
         return FeatureParameters(self.name, **kwargs)
 
     def load_to_config(self, params):
-        param = params.get(self.name)
-        self.args.update({self.dim_arg: 0, self.size_arg: 0} if param is None else
-                         {v: getattr(param, k) for k, v in self.attr_to_arg.items()})
+        for lang in list(self.all_langs(params)) or [None]:
+            param = params.get(self.key(lang))
+            self.get_args(lang).update({self.dim_arg: 0, self.size_arg: 0} if param is None else
+                                       {v: getattr(param, k) for k, v in self.attr_to_arg.items()})
+
+    def get_args(self, lang):
+        return self.args.hyperparams.specific[lang] if lang else self.args
+
+    def all_langs(self, params):
+        for key in params:
+            param_name, _, lang = key.partition(SEPARATOR)
+            if param_name == self.name and lang:
+                yield lang
+
+    def key(self, lang=None):
+        ret = self.name
+        if lang:
+            ret += SEPARATOR + lang
+        return ret
 
     def __str__(self):
         return self.name
 
     def __repr__(self):
-        return "%s(%s, %s)" % (type(self).__name__, self.name,
-                               ", ".join("%s='%s'" % i for i in self.attr_to_arg.items()))
+        return "%s(%s, %s)" % (type(self).__name__, self.name, ", ".join(
+            "%s=%s" % i for i in list(self.attr_to_arg.items()) + list(self.attr_to_val.items())))
 
 
 NODE_LABEL_KEY = "n"
@@ -120,17 +138,15 @@ class Model:
         labels = self.classifier.labels if self.classifier else OrderedDict()
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
             for param_def in self.param_defs():
-                key = param_def.name
-                for param_lang in (self.param_langs(key) if self.lang else []) \
+                for param_lang in (param_def.all_langs(self.feature_params) if self.lang else []) \
                         if param_def.lang_specific and self.config.args.multilingual else [None]:
-                    if param_lang:
-                        key += "." + param_lang
+                    key = param_def.key(param_lang)
                     param = self.feature_params.get(key)
                     enabled = param_def.enabled and (not param_lang or param_lang == self.lang)
                     if param:
                         param.enabled = enabled
                     elif self.is_neural_network and enabled:
-                        self.feature_params[key] = param_def.create_from_config()  # TODO use hyperparams[lang]
+                        self.feature_params[key] = param_def.create_from_config(param_lang)
                         self.init_param(key)
             if axis and self.axis not in labels:
                 labels[self.axis] = self.init_actions()  # Uses config to determine actions
@@ -169,15 +185,9 @@ class Model:
         if lang is not None:
             self.lang = lang
         if self.lang is not None:
-            suffix = "." + self.lang
+            suffix = SEPARATOR + self.lang
             if not self.axis.endswith(suffix):
                 self.axis += suffix
-
-    def param_langs(self, name):
-        for key in self.feature_params:
-            param_name, _, lang = key.partition(".")
-            if param_name == name and lang:
-                yield lang
 
     @property
     def is_neural_network(self):
@@ -270,8 +280,8 @@ class Model:
                     pass
                 if self.config.args.verbose:
                     print("\n".join("%s: %s" % i for i in self.feature_params.items()))
-                for param in self.param_defs(self.config):
-                    param.load_to_config(self.feature_extractor.params)
+                for param_def in self.param_defs(self.config):
+                    param_def.load_to_config(self.feature_extractor.params)
             except FileNotFoundError:
                 self.feature_extractor = self.classifier = None
                 raise
