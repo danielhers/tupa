@@ -34,6 +34,8 @@ UCCA_EXT = (".xml", ".pickle")
 def main(args):
     os.makedirs(args.outdir, exist_ok=True)
     for filename in tqdm(list(iter_files(args.filenames)), unit="file", desc="Converting"):
+        if not os.path.isfile(filename):
+            raise IOError("Not a file: %s" % filename)
         no_ext, ext = os.path.splitext(filename)
         if ext in UCCA_EXT:  # UCCA input
             write_passage(ioutil.file2passage(filename), args)
