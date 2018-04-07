@@ -9,6 +9,7 @@ from itertools import groupby
 import configargparse
 from tqdm import tqdm
 from ucca import evaluation, ioutil
+from ucca.evaluation import LABELED, UNLABELED
 
 from scheme.cfgutil import add_verbose_argument
 from scheme.convert import CONVERTERS, UCCA_EXT
@@ -94,7 +95,7 @@ def evaluate_all(args, evaluate, files, name=None):
         result = evaluate(guessed_passage, ref_passage, verbose=args.verbose > 1)
         if not args.quiet:
             with tqdm.external_write_mode():
-                print("F1: %.3f" % result.average_f1())
+                print("F1: %.3f" % result.average_f1(UNLABELED if args.unlabeled else LABELED))
         if args.verbose:
             with tqdm.external_write_mode():
                 result.print()
@@ -129,8 +130,9 @@ if __name__ == '__main__':
     argparser.add_argument("guessed", help="filename/directory for the guessed annotation(s)")
     argparser.add_argument("ref", help="filename/directory for the reference annotation(s)")
     argparser.add_argument("-f", "--format", default="amr", help="default format (if cannot determine by suffix)")
-    argparser.add_argument("-o", "--out-file", help="file to write results for each evaluated passage to, in CSV format")
+    argparser.add_argument("-o", "--out-file", help="file to write results for each evaluated passage to in CSV format")
     argparser.add_argument("-s", "--summary-file", help="file to write aggregated results to, in CSV format")
+    argparser.add_argument("-u", "--unlabeled", action="store_true", help="print unlabeled F1 for individual passages")
     group = argparser.add_mutually_exclusive_group()
     add_verbose_argument(group, help="detailed evaluation output")
     group.add_argument("-q", "--quiet", action="store_true", help="do not print anything")
