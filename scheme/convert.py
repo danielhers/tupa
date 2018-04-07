@@ -42,7 +42,7 @@ def main(args):
         else:
             basename = os.path.basename(no_ext)
             try:
-                passage_id = re.search(r"\d+", basename).group(0)
+                passage_id = re.search(r"\d+(\.\d+)*", basename).group(0)
             except AttributeError:
                 passage_id = basename
             converter = CONVERTERS.get(args.input_format or ext.lstrip("."))
