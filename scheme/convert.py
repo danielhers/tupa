@@ -50,7 +50,7 @@ def main(args):
                 raise IOError("Unknown extension '%s'. Specify format using -f" % ext)
             converter = converter[0]
             with open(filename, encoding="utf-8") as f:
-                for passage in converter(f, passage_id, split=args.split, mark_aux=args.mark_aux):
+                for passage in converter(f, args.prefix + passage_id, split=args.split, mark_aux=args.mark_aux):
                     write_passage(passage, args)
 
 
@@ -64,7 +64,7 @@ def iter_files(patterns):
 
 def write_passage(passage, args):
     ext = {None: UCCA_EXT[args.binary], "amr": ".txt"}.get(args.output_format) or "." + args.output_format
-    outfile = args.outdir + os.path.sep + args.prefix + passage.ID + ext
+    outfile = args.outdir + os.path.sep + passage.ID + ext
     if args.verbose:
         with tqdm.external_write_mode():
             print("Writing '%s'..." % outfile, file=sys.stderr)
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     argparser.add_argument("-i", "--input-format", choices=CONVERTERS, help="input file format (detected by extension)")
     argparser.add_argument("-f", "--output-format", choices=CONVERTERS, help="output file format (default: UCCA)")
     argparser.add_argument("-o", "--outdir", default=".", help="output directory")
-    argparser.add_argument("-p", "--prefix", default="", help="output filename prefix")
+    argparser.add_argument("-p", "--prefix", default="", help="output passage ID prefix")
     argparser.add_argument("-b", "--binary", action="store_true", help="write in binary format (.%s)" % UCCA_EXT[1])
     argparser.add_argument("-t", "--test", action="store_true",
                            help="omit prediction columns (head and deprel for conll; top, pred, frame, etc. for sdp)")
