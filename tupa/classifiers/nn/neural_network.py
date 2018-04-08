@@ -161,7 +161,10 @@ class NeuralNetwork(Classifier, SubModel):
             print("Initializing %s %s features for %d elements" % (", ".join(axes), self.birnn_type, len(features)))
         for key, indices in sorted(features.items()):
             param = self.input_params[key]
-            vectors = [dy.lookup(self.params[key], k, update=param.updated) for k in indices]
+            lookup = self.params.get(key)
+            if not param.indexed or lookup is None:
+                continue
+            vectors = [lookup[k] for k in indices]
             for i in self.birnn_indices(param):
                 embeddings[i].append(vectors)
             if self.config.args.verbose > 3:
@@ -173,13 +176,15 @@ class NeuralNetwork(Classifier, SubModel):
         indices = []  # list, not set, in order to maintain consistent order
         for key, values in sorted(features.items()):
             param = self.input_params[key]
+            lookup = self.params.get(key)
             if param.numeric:
                 yield dy.inputVector(values)
             elif param.indexed:  # collect indices to be looked up
                 indices += values  # DenseFeatureExtractor collapsed features so there are no repetitions between them
+            elif lookup is None:  # ignored
+                continue
             else:  # lookup feature
-                yield from (self.get_empty_values(key) if x == MISSING_VALUE else
-                            dy.lookup(self.params[key], x, update=param.updated) for x in values)
+                yield from (self.get_empty_values(key) if x == MISSING_VALUE else lookup[x] for x in values)
             if self.config.args.verbose > 3:
                 print("%s: %s" % (key, values))
         if indices:
