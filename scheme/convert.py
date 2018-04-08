@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import csv
 import os
 import re
 import sys
@@ -7,7 +8,7 @@ from glob import glob
 
 import configargparse
 from tqdm import tqdm
-from ucca import convert, ioutil
+from ucca import convert, ioutil, layer1
 
 from scheme.cfgutil import add_verbose_argument
 from scheme.conversion.amr import from_amr, to_amr
@@ -62,7 +63,19 @@ def iter_files(patterns):
         yield from filenames
 
 
+def map_labels(passage, label_map_file):
+    if label_map_file:
+        with open(label_map_file, encoding="utf-8") as f:
+            label_map = dict(csv.reader(f))
+        for node in passage.layer(layer1.LAYER_ID).all:
+            for edge in node:
+                mapped = label_map.get(edge.tag) or label_map.get(edge.tag.partition(":")[0])
+                if mapped is not None:
+                    edge.tag = mapped
+
+
 def write_passage(passage, args):
+    map_labels(passage, args.label_map)
     ext = {None: UCCA_EXT[args.binary], "amr": ".txt"}.get(args.output_format) or "." + args.output_format
     outfile = args.outdir + os.path.sep + passage.ID + ext
     if args.verbose:
@@ -92,6 +105,7 @@ if __name__ == '__main__':
     argparser.add_argument("-T", "--tree", action="store_true", help="remove multiple parents to get a tree")
     argparser.add_argument("-s", "--split", action="store_true", help="split each sentence to its own passage")
     argparser.add_argument("-m", "--mark-aux", action="store_true", help="mark auxiliary edges introduced/omit edges")
+    argparser.add_argument("--label-map", help="CSV file specifying mapping of input edge labels to output edge labels")
     add_verbose_argument(argparser, help="detailed output")
     main(argparser.parse_args())
     sys.exit(0)
