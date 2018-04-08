@@ -16,6 +16,9 @@ class SdpConverter(DependencyConverter, convert.SdpConverter):
     def edges_for_orphan(self, top):
         return [self.Edge(0, self.TOP, False)] if top else []
 
+    def is_punct(self, dep_node):
+        return dep_node.token.tag == "_"
+
 
 def from_sdp(lines, passage_id, split=True, mark_aux=False, return_original=False, *args, **kwargs):
     """Converts from parsed text in SemEval 2015 SDP format to a Passage object.
