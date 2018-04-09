@@ -5,10 +5,10 @@ import dynet_config
 import numpy as np
 from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
 from logbook import Logger, FileHandler, StderrHandler
+from semstr.cfgutil import Singleton, add_verbose_arg, add_boolean_option, get_group_arg_names
+from semstr.convert import UCCA_EXT, CONVERTERS
 from ucca import constructions
 
-from semstr.cfgutil import Singleton, add_verbose_argument, add_boolean_option, get_group_arg_names
-from semstr.convert import UCCA_EXT, CONVERTERS
 from tupa.classifiers.nn.constants import *
 
 # Classifiers
@@ -237,7 +237,7 @@ class Config(object, metaclass=Singleton):
         ap.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=BIRNN, help="model type")
         ap.add_argument("-B", "--beam", type=int, choices=(1,), default=1, help="beam size for beam search")
         add_boolean_option(ap, "evaluate", "evaluation of parsed passages", short="e")
-        add_verbose_argument(ap, help="detailed parse output")
+        add_verbose_arg(ap, help="detailed parse output")
         constructions.add_argument(ap)
         add_boolean_option(ap, "sentences", "split to sentences")
         add_boolean_option(ap, "paragraphs", "split to paragraphs")
