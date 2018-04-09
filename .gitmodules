@@ -1,6 +1,0 @@
-[submodule "smatch"]
-	path = semstr/smatch
-	url = https://github.com/danielhers/pSMATCH
-[submodule "amr"]
-	path = semstr/amr
-	url = https://github.com/danielhers/amr-hackathon

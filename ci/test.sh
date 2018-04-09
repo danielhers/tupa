@@ -58,9 +58,6 @@ tune-*)
     done
     column -t -s, params.csv
     ;;
-convert-*)
-    python -m semstr.scripts.convert_and_evaluate "$CONVERT_DATA" -v
-    ;;
 noop-amr)
     tupa -vv -c noop --implicit -We -I 1 -t "$TRAIN_DATA" "$DEV_DATA"
     ;;

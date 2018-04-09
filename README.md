@@ -3,7 +3,7 @@ Transition-based UCCA Parser
 TUPA is a transition-based parser for [Universal Conceptual Cognitive Annotation (UCCA)][1].
 
 ### Requirements
-* Python 3.x
+* Python 3.6
 * All [dependencies for DyNet](http://dynet.readthedocs.io/en/latest/python.html)
 
 ### Install
