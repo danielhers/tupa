@@ -1,6 +1,6 @@
 from ucca import layer1
 
-from scheme.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
+from semstr.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
 from .action import Actions
 from .config import Config, COMPOUND
 from .states.state import InvalidActionError

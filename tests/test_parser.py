@@ -4,7 +4,7 @@ import pytest
 from numpy.testing import assert_allclose
 from ucca import convert
 
-from scheme.evaluate import Scores
+from semstr.evaluate import Scores
 from tupa.config import SPARSE, MLP, BIRNN, HIGHWAY_RNN, NOOP, Iterations
 from tupa.parse import Parser
 from .conftest import FORMATS, remove_existing, load_passages, weight_decay, assert_all_params_equal

@@ -7,9 +7,9 @@ from glob import glob
 import configargparse
 from ucca import ioutil
 
-from scheme.cfgutil import add_verbose_argument, add_boolean_option
-from scheme.convert import CONVERTERS
-from scheme.evaluate import EVALUATORS, Scores
+from semstr.cfgutil import add_verbose_argument, add_boolean_option
+from semstr.convert import CONVERTERS
+from semstr.evaluate import EVALUATORS, Scores
 
 desc = """Convert files to UCCA standard format, convert back to the original format and evaluate.
 """

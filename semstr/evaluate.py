@@ -11,9 +11,9 @@ from tqdm import tqdm
 from ucca import evaluation, ioutil
 from ucca.evaluation import LABELED, UNLABELED
 
-from scheme.cfgutil import add_verbose_argument
-from scheme.convert import CONVERTERS, UCCA_EXT
-from scheme.evaluation import amr, sdp, conllu
+from semstr.cfgutil import add_verbose_argument
+from semstr.convert import CONVERTERS, UCCA_EXT
+from semstr.evaluation import amr, sdp, conllu
 
 desc = """Parses files in any format, and evaluates using the proper evaluator."""
 

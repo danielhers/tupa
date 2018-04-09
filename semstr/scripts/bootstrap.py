@@ -7,8 +7,8 @@ import numpy as np
 from tqdm import tqdm
 from ucca import evaluation
 
-from scheme.cfgutil import add_verbose_argument
-from scheme.evaluate import EVALUATORS, passage_format, evaluate_all, Scores
+from semstr.cfgutil import add_verbose_argument
+from semstr.evaluate import EVALUATORS, passage_format, evaluate_all, Scores
 
 desc = """Evaluates statistical significance of F1 scores between two systems."""
 

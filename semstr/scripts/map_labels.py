@@ -7,7 +7,7 @@ from tqdm import tqdm
 from ucca import ioutil
 from ucca.evaluation import evaluate, Scores, LABELED, PRIMARY
 
-from scheme.convert import CONVERTERS
+from semstr.convert import CONVERTERS
 
 desc = "Create confusion matrix of labels between two datasets, " \
        "and use it to create a CSV file mapping labels by most-frequent"

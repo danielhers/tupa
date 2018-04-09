@@ -4,8 +4,8 @@ import unittest
 
 from ucca.convert import split2sentences
 
-from scheme.conversion.sdp import from_sdp, to_sdp
-from scheme.evaluation.sdp import evaluate
+from semstr.conversion.sdp import from_sdp, to_sdp
+from semstr.evaluation.sdp import evaluate
 
 
 class ConversionTests(unittest.TestCase):

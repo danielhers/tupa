@@ -5,9 +5,9 @@ from ucca import core, layer0, layer1
 from ucca.layer0 import NodeTags
 from ucca.layer1 import EdgeTags
 
-from scheme.constrain import CONSTRAINTS
-from scheme.constraints import Constraints, Direction
-from scheme.util.amr import LABEL_ATTRIB
+from semstr.constrain import CONSTRAINTS
+from semstr.constraints import Constraints, Direction
+from semstr.util.amr import LABEL_ATTRIB
 from .edge import Edge
 from .node import Node
 from ..action import Actions

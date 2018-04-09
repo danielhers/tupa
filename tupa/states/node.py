@@ -4,7 +4,7 @@ from operator import attrgetter
 from ucca import core, layer0
 from ucca.layer1 import EdgeTags
 
-from scheme.util.amr import LABEL_ATTRIB, UNKNOWN_LABEL, LABEL_SEPARATOR
+from semstr.util.amr import LABEL_ATTRIB, UNKNOWN_LABEL, LABEL_SEPARATOR
 from ..config import Config
 
 

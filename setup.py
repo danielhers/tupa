@@ -44,7 +44,7 @@ class install(_install):
         # Install AMR resource
         for filename in ("have-org-role-91-roles-v1.06.txt", "have-rel-role-91-roles-v1.06.txt",
                          "verbalization-list-v1.06.txt", "morph-verbalization-v1.01.txt"):
-            out_file = os.path.join("scheme", "util", "resources", filename)
+            out_file = os.path.join("semstr", "util", "resources", filename)
             if not os.path.exists(out_file):
                 self.announce("Getting '%s'..." % filename)
                 try:
@@ -79,10 +79,10 @@ setup(name="TUPA",
                       "viz": ["scipy", "pillow", "matplotlib"]},
       packages=find_packages() + ["src", "smatch"],
       package_dir={
-          "src": os.path.join("scheme", "amr", "src"),
-          "smatch": os.path.join("scheme", "smatch"),
+          "src": os.path.join("semstr", "amr", "src"),
+          "smatch": os.path.join("semstr", "smatch"),
       },
-      package_data={"src": ["amr.peg"], "scheme.util": ["resources/*.txt"]},
+      package_data={"src": ["amr.peg"], "semstr.util": ["resources/*.txt"]},
       cmdclass={"install": install},
       entry_points={"console_scripts": ["tupa = tupa.__main__:main"]},
       )

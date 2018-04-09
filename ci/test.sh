@@ -20,7 +20,7 @@ if ! [[ "$ACTION" =~ ^(toy|unit)$ ]]; then
     amr)
         curl --remote-name-all https://amr.isi.edu/download/2016-03-14/alignment-release-{training,dev,test}-bio.txt
         rename 's/.txt/.amr/' alignment-release-*-bio.txt
-        python -m scheme.scripts.split -q alignment-release-training-bio.amr alignment-release-training-bio
+        python -m semstr.scripts.split -q alignment-release-training-bio.amr alignment-release-training-bio
         CONVERT_DATA=alignment-release-dev-bio.amr
         TRAIN_DATA=alignment-release-training-bio
         DEV_DATA=alignment-release-dev-bio.amr
@@ -28,7 +28,7 @@ if ! [[ "$ACTION" =~ ^(toy|unit)$ ]]; then
     sdp)
         mkdir data
         curl -L http://svn.delph-in.net/sdp/public/2015/trial/current.tgz | tar xz -C data
-        python -m scheme.scripts.split -q data/sdp/trial/dm.sdp data/sdp/trial/dm
+        python -m semstr.scripts.split -q data/sdp/trial/dm.sdp data/sdp/trial/dm
         python -m scripts.split_corpus -q data/sdp/trial/dm -t 120 -d 36 -l
         CONVERT_DATA=data/sdp/trial/*.sdp
         TRAIN_DATA=data/sdp/trial/dm/train
@@ -59,7 +59,7 @@ tune-*)
     column -t -s, params.csv
     ;;
 convert-*)
-    python -m scheme.scripts.convert_and_evaluate "$CONVERT_DATA" -v
+    python -m semstr.scripts.convert_and_evaluate "$CONVERT_DATA" -v
     ;;
 noop-amr)
     tupa -vv -c noop --implicit -We -I 1 -t "$TRAIN_DATA" "$DEV_DATA"

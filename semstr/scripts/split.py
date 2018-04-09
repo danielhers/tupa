@@ -5,7 +5,7 @@ import re
 
 import configargparse
 
-from scheme.util.amr import ID_PATTERN, COMMENT_PREFIX
+from semstr.util.amr import ID_PATTERN, COMMENT_PREFIX
 
 desc = """Split sentences/passages to separate files (important for shuffling before training the parser)"""
 

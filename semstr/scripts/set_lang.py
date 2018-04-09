@@ -5,7 +5,7 @@ import argparse
 from tqdm import tqdm
 from ucca.ioutil import write_passage
 
-from scheme.scripts.annotate import add_specs_args, read_specs
+from semstr.scripts.annotate import add_specs_args, read_specs
 
 desc = """Read passages in any format, and write back with attrib['lang'] set."""
 

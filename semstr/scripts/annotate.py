@@ -8,7 +8,7 @@ from tqdm import tqdm
 from ucca.ioutil import read_files_and_dirs, write_passage
 from ucca.textutil import annotate_all
 
-from scheme.convert import FROM_FORMAT, UCCA_EXT
+from semstr.convert import FROM_FORMAT, UCCA_EXT
 
 desc = """Read passages in any format, and write back with spaCy annotations."""
 

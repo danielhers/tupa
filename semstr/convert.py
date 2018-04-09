@@ -10,10 +10,10 @@ import configargparse
 from tqdm import tqdm
 from ucca import convert, ioutil, layer1
 
-from scheme.cfgutil import add_verbose_argument
-from scheme.conversion.amr import from_amr, to_amr
-from scheme.conversion.conllu import from_conllu, to_conllu
-from scheme.conversion.sdp import from_sdp, to_sdp
+from semstr.cfgutil import add_verbose_argument
+from semstr.conversion.amr import from_amr, to_amr
+from semstr.conversion.conllu import from_conllu, to_conllu
+from semstr.conversion.sdp import from_sdp, to_sdp
 
 desc = """Parses files in the specified format, and writes as the specified format.
 Each passage is written to the file: <outdir>/<prefix><passage_id>.<extension> """

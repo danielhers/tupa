@@ -7,8 +7,8 @@ import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 from ucca import ioutil
 
-from scheme.convert import FROM_FORMAT
-from scheme.util.amr import WIKIFIER
+from semstr.convert import FROM_FORMAT
+from semstr.util.amr import WIKIFIER
 from tupa.config import Config
 
 FORMATS = ("ucca", "amr", "conllu", "sdp")

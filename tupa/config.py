@@ -7,8 +7,8 @@ from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, 
 from logbook import Logger, FileHandler, StderrHandler
 from ucca import constructions
 
-from scheme.cfgutil import Singleton, add_verbose_argument, add_boolean_option, get_group_arg_names
-from scheme.convert import UCCA_EXT, CONVERTERS
+from semstr.cfgutil import Singleton, add_verbose_argument, add_boolean_option, get_group_arg_names
+from semstr.convert import UCCA_EXT, CONVERTERS
 from tupa.classifiers.nn.constants import *
 
 # Classifiers

@@ -16,7 +16,7 @@ from ucca.visualization import draw
 from webassets import Environment as AssetsEnvironment
 from webassets.ext.jinja2 import AssetsExtension
 
-from scheme.convert import TO_FORMAT
+from semstr.convert import TO_FORMAT
 from tupa.parse import Parser
 
 matplotlib.use("Agg")
