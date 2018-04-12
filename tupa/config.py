@@ -1,3 +1,4 @@
+import os
 import shlex
 from copy import deepcopy
 
@@ -295,6 +296,9 @@ class Config(object, metaclass=Singleton):
 
         if self.args.config:
             print("Loading configuration from '%s'." % self.args.config)
+
+        if self.args.passages and self.args.write:
+            os.makedirs(self.args.outdir, exist_ok=True)
 
         if self.args.models:
             if not self.args.log:
