@@ -1,8 +1,8 @@
 numpy
 cython
-tqdm
-configargparse
-ucca
+tqdm>=4.22.0
+configargparse>=0.13.0
+ucca>=1.0.58
 semstr==1.0.3
 dynet==2.0.3
 logbook==1.3.0
