@@ -11,7 +11,7 @@ from semstr.convert import FROM_FORMAT, TO_FORMAT
 from semstr.evaluate import EVALUATORS, Scores
 from semstr.util.amr import LABEL_ATTRIB, WIKIFIER
 from tqdm import tqdm
-from ucca import diffutil, ioutil, textutil, layer0, layer1, evaluation
+from ucca import diffutil, ioutil, textutil, layer0, layer1, evaluation as ucca_evaluation
 from ucca.convert import from_text
 from ucca.evaluation import LABELED, UNLABELED
 
@@ -33,10 +33,11 @@ class ParseMode(Enum):
 
 
 class AbstractParser:
-    def __init__(self, config, models, training):
+    def __init__(self, config, models, training=False, evaluation=False):
         self.config = config
         self.models = models
         self.training = training
+        self.evaluation = evaluation
         self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = \
             self.num_tokens = self.f1 = 0
         self.started = time.time()
@@ -59,10 +60,10 @@ class AbstractParser:
 
 class PassageParser(AbstractParser):
     """ Parser for a single passage, has a state and optionally an oracle """
-    def __init__(self, config, models, training, passage):
-        super().__init__(config, models, training)
+    def __init__(self, passage, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.passage = self.out = passage
-        self.format = self.passage.extra.get("format") if training else \
+        self.format = self.passage.extra.get("format") if self.training or self.evaluation else \
             sorted(set.intersection(*map(set, filter(None, (self.model.formats, self.config.args.formats)))) or
                    self.model.formats)[0]
         self.in_format = self.format or "ucca"
@@ -88,7 +89,7 @@ class PassageParser(AbstractParser):
             if ClassifierProperty.require_init_features in model.classifier_properties:
                 model.init_features(self.state, self.training)
 
-    def parse(self, evaluate, display=True, write=False):
+    def parse(self, display=True, write=False):
         self.init()
         passage_id = self.passage.ID
         try:
@@ -103,7 +104,7 @@ class PassageParser(AbstractParser):
         except concurrent.futures.TimeoutError:
             self.config.log("%s %s: timeout (%fs)" % (self.config.passage_word, passage_id, self.config.args.timeout))
             status = "(timeout)"
-        return self.finish(evaluate, status, display=display, write=write)
+        return self.finish(status, display=display, write=write)
 
     def parse_internal(self):
         """
@@ -230,7 +231,7 @@ class PassageParser(AbstractParser):
         yield scores.argmax()
         yield from scores.argsort()[::-1]  # Contains the max, but otherwise items might be missed (different order)
 
-    def finish(self, evaluate, status, display=True, write=False):
+    def finish(self, status, display=True, write=False):
         self.model.classifier.finished_item(self.training)
         for model in self.models[1:]:
             model.classifier.finished_item(renew=False)  # So that dynet.renew_cg happens only once
@@ -244,8 +245,8 @@ class PassageParser(AbstractParser):
         if self.oracle and self.config.args.verify:
             self.verify(self.out, self.passage)
         ret = (self.out,)
-        if evaluate:
-            ret += (self.evaluate(evaluate),)
+        if self.evaluation:
+            ret += (self.evaluate(self.evaluation),)
             status = "%-14s %s F1=%.3f" % (status, self.eval_type, self.f1)
         if display:
             self.print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), level=1)
@@ -264,7 +265,7 @@ class PassageParser(AbstractParser):
         if self.format:
             self.print("Converting to %s and evaluating..." % self.format)
         self.eval_type = UNLABELED if self.config.is_unlabeled(self.in_format) else LABELED
-        score = EVALUATORS.get(self.format, evaluation).evaluate(
+        score = EVALUATORS.get(self.format, ucca_evaluation).evaluate(
             self.out, self.passage, converter=get_output_converter(self.format),
             verbose=self.out and self.config.args.verbose > 3, constructions=self.config.args.constructions,
             eval_types=(self.eval_type,) if mode is ParseMode.dev else (LABELED, UNLABELED))
@@ -308,17 +309,17 @@ class PassageParser(AbstractParser):
 
 class BatchParser(AbstractParser):
     """ Parser for a single training iteration or single pass over dev/test passages """
-    def __init__(self, config, models, training):
-        super().__init__(config, models, training)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.seen_per_format = defaultdict(int)
         self.num_passages = 0
 
-    def parse(self, passages, evaluate, display=True, write=False):
+    def parse(self, passages, display=True, write=False):
         passages, total = self.passage_generator(passages, display=display)
         pr_width = len(str(total))
         id_width = 1
         for i, passage in enumerate(passages, start=1):
-            parser = PassageParser(self.config, self.models, self.training, passage)
+            parser = PassageParser(passage, self.config, self.models, self.training, self.evaluation)
             if self.config.args.verbose and display:
                 progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) if total and i <= total else "%d" % i
                 id_width = max(id_width, len(str(passage.ID)))
@@ -333,7 +334,7 @@ class BatchParser(AbstractParser):
                         postfix["|a|"] = percents_str(self.correct_action_count, self.action_count, fraction=False)
                     if self.correct_label_count:
                         postfix["|l|"] = percents_str(self.correct_label_count, self.label_count, fraction=False)
-                    if evaluate and self.num_passages:
+                    if self.evaluation and self.num_passages:
                         postfix["|F1|"] = self.f1 / self.num_passages
                 passages.set_postfix(**postfix)
             self.seen_per_format[parser.in_format] += 1
@@ -343,7 +344,7 @@ class BatchParser(AbstractParser):
                     print("skipped")
                 continue
             assert not (self.training and parser.in_format == "text"), "Cannot train on unannotated plain text"
-            yield parser.parse(evaluate, display=display, write=write)
+            yield parser.parse(display=display, write=write)
             self.update_counts(parser)
         if display:
             self.summary()
@@ -395,7 +396,7 @@ class BatchParser(AbstractParser):
 class Parser(AbstractParser):
     """ Main class to implement transition-based UCCA parser """
     def __init__(self, model_files=None, config=None, beam=1):
-        super().__init__(config=config or Config(), training=False,
+        super().__init__(config=config or Config(),
                          models=list(map(Model, (model_files,) if isinstance(model_files, str) else model_files)))
         self.beam = beam  # Currently unused
         self.best_score = self.dev = self.test = self.iteration = self.epoch = self.batch = None
@@ -506,20 +507,19 @@ class Parser(AbstractParser):
                      If train, use oracle to train on given passages.
                      Otherwise, just parse with classifier.
         :param evaluate: whether to evaluate parsed passages with respect to given ones.
-                         Only possible when given passages are annotated.
+                           Only possible when given passages are annotated.
         :param display: whether to display information on each parsed passage
         :param write: whether to write output passages to file
         :return: generator of parsed passages (or in train mode, the original ones),
-                 or, if evaluate=True, of pairs of (Passage, Scores).
+                 or, if evaluation=True, of pairs of (Passage, Scores).
         """
         self.batch = 0
         assert mode in ParseMode, "Invalid parse mode: %s" % mode
         training = (mode is ParseMode.train)
         if not training and not self.trained:
             list(self.train())  # Try to load model from file
-        parser = BatchParser(self.config, self.models, training)
-        for i, passage in enumerate(parser.parse(passages, mode if mode is ParseMode.dev else evaluate,
-                                                 display=display, write=write), start=1):
+        parser = BatchParser(self.config, self.models, training, mode if mode is ParseMode.dev else evaluate)
+        for i, passage in enumerate(parser.parse(passages, display=display, write=write), start=1):
             if training and self.config.args.save_every and i % self.config.args.save_every == 0:
                 self.eval_and_save()
                 self.batch += 1
