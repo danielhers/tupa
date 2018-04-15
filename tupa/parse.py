@@ -590,14 +590,15 @@ def get_eval_type(scores):
 
 class TextReader:  # Marks input passages as text so that we don't accidentally train on them
     def __call__(self, *args, **kwargs):
-        for passage in from_text(*args, lang=Config().args.lang, **kwargs):
+        for passage in from_text(*args, **kwargs):
             passage.extra["format"] = "text"
             yield passage
 
 
 def read_passages(args, files):
     expanded = [f for pattern in files for f in glob(pattern) or (pattern,)]
-    return ioutil.read_files_and_dirs(expanded, args.sentences, args.paragraphs, defaultdict(TextReader, **FROM_FORMAT))
+    return ioutil.read_files_and_dirs(expanded, sentences=args.sentences, paragraphs=args.paragraphs,
+                                      converters=defaultdict(TextReader, **FROM_FORMAT), lang=Config().args.lang)
 
 
 # noinspection PyTypeChecker,PyStringFormat
