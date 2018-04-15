@@ -11,7 +11,7 @@ from semstr.convert import FROM_FORMAT, TO_FORMAT
 from semstr.evaluate import EVALUATORS, Scores
 from semstr.util.amr import LABEL_ATTRIB, WIKIFIER
 from tqdm import tqdm
-from ucca import diffutil, ioutil, textutil, layer1, evaluation
+from ucca import diffutil, ioutil, textutil, layer0, layer1, evaluation
 from ucca.convert import from_text
 from ucca.evaluation import LABELED, UNLABELED
 
@@ -350,11 +350,20 @@ class BatchParser(AbstractParser):
         if not hasattr(passages, "__iter__"):  # Single passage given
             passages = (passages,)
         total = len(passages) if hasattr(passages, "__len__") else None
+        if self.config.args.ignore_case:
+            passages = self.to_lower_case(passages)
         passages = textutil.annotate_all(passages, as_array=True, lang=self.config.args.lang,
                                          verbose=self.config.args.verbose > 2)
         if not self.config.args.verbose or not display:
             passages = tqdm(passages, unit=self.config.passages_word, total=total, file=sys.stdout, desc="Initializing")
         return passages, total
+
+    @staticmethod
+    def to_lower_case(passages):
+        for passage in passages:
+            for terminal in passage.layer(layer0.LAYER_ID).all:
+                terminal.text = terminal.text.lower()
+            yield passage
 
     def update_counts(self, parser):
         self.correct_action_count += parser.correct_action_count
