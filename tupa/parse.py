@@ -7,14 +7,14 @@ from enum import Enum
 from functools import partial
 from glob import glob
 
+from semstr.convert import FROM_FORMAT, TO_FORMAT
+from semstr.evaluate import EVALUATORS, Scores
+from semstr.util.amr import LABEL_ATTRIB, WIKIFIER
 from tqdm import tqdm
 from ucca import diffutil, ioutil, textutil, layer1, evaluation
 from ucca.convert import from_text
 from ucca.evaluation import LABELED, UNLABELED
 
-from semstr.convert import FROM_FORMAT, TO_FORMAT
-from semstr.evaluate import EVALUATORS, Scores
-from semstr.util.amr import LABEL_ATTRIB, WIKIFIER
 from tupa.__version__ import GIT_VERSION
 from tupa.config import Config, Iterations
 from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
@@ -590,7 +590,7 @@ def get_eval_type(scores):
 
 class TextReader:  # Marks input passages as text so that we don't accidentally train on them
     def __call__(self, *args, **kwargs):
-        for passage in from_text(*args, **kwargs):
+        for passage in from_text(*args, lang=Config().args.lang, **kwargs):
             passage.extra["format"] = "text"
             yield passage
 
