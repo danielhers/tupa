@@ -105,9 +105,9 @@ PARAM_DEFS = [
     ("p",            dict(dim="punct_dim",         size="max_puncts")),
     ("A",            dict(dim="action_dim",        size="max_action_types")),
     ("T",            dict(dim="ner_dim",           size="max_ner_types")),
-    ("#",            dict(dim="shape_dim",         size="max_shapes")),
-    ("^",            dict(dim="prefix_dim",        size="max_prefixes")),
-    ("$",            dict(dim="suffix_dim",        size="max_suffixes")),
+    ("#",            dict(dim="shape_dim",         size="max_shapes"),   dict(lang_specific=True)),
+    ("^",            dict(dim="prefix_dim",        size="max_prefixes"), dict(lang_specific=True)),
+    ("$",            dict(dim="suffix_dim",        size="max_suffixes"), dict(lang_specific=True)),
 ]
 
 
