@@ -454,9 +454,6 @@ class Parser(AbstractParser):
                 self.model.load(is_finalized=False)
             except FileNotFoundError:
                 print("not found, starting from untrained model.")
-        # for f in self.config.args.formats:  FIXME is this still needed? (Workaround for clab/dynet#889)
-        #     self.config.set_format(f)
-        #     self.model.init_model(self.config.format)
         self.print_config()
         self.best_score = self.model.classifier.best_score if self.model.classifier else 0
 
