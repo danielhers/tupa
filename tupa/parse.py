@@ -62,7 +62,9 @@ class PassageParser(AbstractParser):
     def __init__(self, config, models, training, passage):
         super().__init__(config, models, training)
         self.passage = self.out = passage
-        self.format = self.passage.extra.get("format")
+        self.format = self.passage.extra.get("format") if training else \
+            sorted(set.intersection(*map(set, filter(None, (self.model.formats, self.config.args.formats)))) or
+                   self.model.formats)[0]
         self.in_format = self.format or "ucca"
         self.out_format = "ucca" if self.format in (None, "text") else self.format
         self.lang = self.passage.attrib.get("lang", self.config.args.lang)
@@ -83,7 +85,7 @@ class PassageParser(AbstractParser):
                 and (edges or node_labels)) else None
         for model in self.models:
             model.init_model(self.config.format, lang=self.lang if self.config.args.multilingual else None)
-            if ClassifierProperty.require_init_features in model.classifier_properties():
+            if ClassifierProperty.require_init_features in model.classifier_properties:
                 model.init_features(self.state, self.training)
 
     def parse(self, evaluate, display=True, write=False):
@@ -179,7 +181,7 @@ class PassageParser(AbstractParser):
             raise ParserException("No valid %s available\n%s" % (name, self.oracle.log if self.oracle else "")) from e
         label, is_correct, true_keys, true_values = self.correct(axis, label, pred, scores, true, true_keys)
         if self.training:
-            if not (is_correct and ClassifierProperty.update_only_on_error in self.model.classifier_properties()):
+            if not (is_correct and ClassifierProperty.update_only_on_error in self.model.classifier_properties):
                 assert not self.model.is_finalized, "Updating finalized model"
                 self.model.classifier.update(
                     features, axis=axis, true=true_keys, pred=labels[pred] if axis == NODE_LABEL_KEY else pred.id,
@@ -436,7 +438,7 @@ class Parser(AbstractParser):
                 print("Trained %d epochs" % (end - 1))
                 if dev:
                     if self.iteration < len(iterations):
-                        if self.model.is_retrainable():
+                        if self.model.is_retrainable:
                             self.model.load(is_finalized=False)  # Load best model to prepare for next iteration
                     elif test:
                         self.model.load()  # Load best model to prepare for test
@@ -447,7 +449,7 @@ class Parser(AbstractParser):
 
     def init_train(self):
         assert len(self.models) == 1, "Can only train one model at a time"
-        if self.model.is_retrainable():
+        if self.model.is_retrainable:
             try:
                 self.model.load(is_finalized=False)
             except FileNotFoundError:

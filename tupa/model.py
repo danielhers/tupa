@@ -185,11 +185,24 @@ class Model:
                 self.axis += suffix
 
     @property
+    def formats(self):
+        return [k.partition(SEPARATOR)[0] for k in self.classifier.labels]
+
+    @property
     def is_neural_network(self):
         return self.config.args.classifier in (MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN)
 
+    @property
     def is_retrainable(self):
-        return ClassifierProperty.trainable_after_saving in self.classifier_properties()
+        return ClassifierProperty.trainable_after_saving in self.classifier_properties
+
+    @property
+    def classifier_properties(self):
+        return CLASSIFIER_PROPERTIES[self.config.args.classifier]
+
+    @property
+    def actions(self):
+        return self.classifier.labels[self.axis]
 
     def init_actions(self):
         return Actions(size=self.config.args.max_action_labels)
@@ -207,10 +220,6 @@ class Model:
         self.init_param(NODE_LABEL_KEY)
         node_labels.init_data()
         return node_labels.data
-
-    @property
-    def actions(self):
-        return self.classifier.labels[self.axis]
 
     def score(self, state, axis):
         features = self.feature_extractor.extract_features(state)
@@ -320,9 +329,6 @@ class Model:
             else:  # Action labels for format determined by axis
                 labels = Actions(*all_size)
             self.classifier.labels[axis] = labels
-
-    def classifier_properties(self):
-        return CLASSIFIER_PROPERTIES[self.config.args.classifier]
 
     def _update_input_params(self):
         self.feature_params = self.classifier.input_params = self.feature_extractor.params

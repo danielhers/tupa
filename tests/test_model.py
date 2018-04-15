@@ -14,7 +14,7 @@ def parse(formats, model, passage, train):
         model.config.set_format(axis)
         model.init_model(axis)
         state = State(passage)
-        if ClassifierProperty.require_init_features in model.classifier_properties():
+        if ClassifierProperty.require_init_features in model.classifier_properties:
             model.init_features(state, train=train)
         features = model.feature_extractor.extract_features(state)
         for a in axes:
