@@ -6,9 +6,9 @@ from ucca.textutil import Attr
 
 from tupa.config import Config
 
-FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([wtdhencpqxyAPCIEMNT#^$]*)")
+FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([wtudhencpqxyAPCIEMNT#^$]*)")
 FEATURE_TEMPLATE_PATTERN = re.compile(r"^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
-NON_NUMERIC = "wtdencpAT#^$"
+NON_NUMERIC = "wtudencpAT#^$"
 
 
 class FeatureTemplate:
@@ -60,7 +60,8 @@ class FeatureTemplateElement:
                            R: rightmost parent
         :param properties: the actual values to choose, if available (else omit feature), out of:
                            w: node text
-                           t: node POS tag
+                           t: node fine POS tag
+                           u: node coarse/universal POS tag
                            d: node dependency relation
                            h: node height
                            e: tag of first incoming edge / action tag
@@ -302,6 +303,7 @@ ACTION_PROP_GETTERS = {
 NODE_PROP_GETTERS = {
     "w": lambda node, *_: head_terminal(node).tok[Attr.ORTH.value],
     "t": lambda node, *_: head_terminal(node).tok[Attr.TAG.value],
+    "u": lambda node, *_: head_terminal(node).tok[Attr.POS.value],
     "d": lambda node, prev, binary: dep_distance(prev, node) if binary else head_terminal(node).tok[Attr.DEP.value],
     "h": height,
     "i": lambda node, *_: head_terminal(node).index - 1,

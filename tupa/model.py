@@ -100,6 +100,7 @@ PARAM_DEFS = [
     ("w",            dict(dim="word_dim",          size="max_words",          dropout="word_dropout"),
         dict(lang_specific=True)),
     ("t",            dict(dim="tag_dim",           size="max_tags",           dropout="tag_dropout")),
+    ("u",            dict(dim="pos_dim",           size="max_pos",            dropout="pos_dropout")),
     ("d",            dict(dim="dep_dim",           size="max_deps",           dropout="dep_dropout")),
     ("e",            dict(dim="edge_label_dim",    size="max_edge_labels")),
     ("p",            dict(dim="punct_dim",         size="max_puncts")),

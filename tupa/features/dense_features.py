@@ -6,14 +6,14 @@ from ..model_util import UNKNOWN_VALUE, MISSING_VALUE, UnknownDict, save_dict, l
 
 FEATURE_TEMPLATES = (
     "s0s1xd" "s1s0x" "s0b0xd" "b0s0x"  # specific edges
-    "s0wtdencpT#^$xhqyPCIEMN"
-    "s1wtdencT#^$xhyN"
-    "s2wtdencT#^$xhy"
-    "s3wtdencT#^$xhyN"
-    "b0wtdncT#^$hPCIEMN"
-    "b1wtdncT#^$"
-    "b2wtdncT#^$"
-    "b3wtdncT#^$"
+    "s0wtudencpT#^$xhqyPCIEMN"
+    "s1wtudencT#^$xhyN"
+    "s2wtudencT#^$xhy"
+    "s3wtudencT#^$xhyN"
+    "b0wtudncT#^$hPCIEMN"
+    "b1wtudncT#^$"
+    "b2wtudncT#^$"
+    "b3wtudncT#^$"
     "s0lwenc#^$"
     "s0rwenc#^$"
     "s1lwenc#^$"
@@ -35,7 +35,7 @@ FEATURE_TEMPLATES = (
     "s0b0e" "b0s0e"  # specific edges
     "a0eAa1eA",  # past actions
 )
-INDEXED = "wtdT"  # words, POS tags, dep rels, entity type
+INDEXED = "wtudT"  # words, fine POS tags, coarse/universal POS tags, dep rels, entity type
 DEFAULT = ()  # intermediate value for missing features
 FILENAME_SUFFIX = ".enum"
 
