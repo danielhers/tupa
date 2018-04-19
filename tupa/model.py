@@ -97,17 +97,18 @@ PARAM_DEFS = [
     ("W",            dict(dim="word_dim_external", size="max_words_external", dropout="word_dropout_external",
                           updated="update_word_vectors", filename="word_vectors", vocab="vocab"), dict(
                                                                                  copy_from="w", lang_specific=True)),
-    ("w",            dict(dim="word_dim",       size="max_words", dropout="word_dropout"), dict(lang_specific=True)),
-    ("t",            dict(dim="tag_dim",        size="max_tags",  dropout="tag_dropout"),  dict(lang_specific=True)),
-    ("u",            dict(dim="pos_dim",        size="max_pos",   dropout="pos_dropout")),
-    ("d",            dict(dim="dep_dim",        size="max_deps",  dropout="dep_dropout")),
+    ("w",            dict(dim="word_dim",       size="max_words",  dropout="word_dropout"),  dict(lang_specific=True)),
+    ("m",            dict(dim="lemma_dim",      size="max_lemmas", dropout="lemma_dropout"), dict(lang_specific=True)),
+    ("t",            dict(dim="tag_dim",        size="max_tags",   dropout="tag_dropout"),   dict(lang_specific=True)),
+    ("u",            dict(dim="pos_dim",        size="max_pos",    dropout="pos_dropout")),
+    ("d",            dict(dim="dep_dim",        size="max_deps",   dropout="dep_dropout")),
     ("e",            dict(dim="edge_label_dim", size="max_edge_labels")),
     ("p",            dict(dim="punct_dim",      size="max_puncts")),
     ("A",            dict(dim="action_dim",     size="max_action_types")),
     ("T",            dict(dim="ner_dim",        size="max_ner_types")),
-    ("#",            dict(dim="shape_dim",      size="max_shapes"),                        dict(lang_specific=True)),
-    ("^",            dict(dim="prefix_dim",     size="max_prefixes"),                      dict(lang_specific=True)),
-    ("$",            dict(dim="suffix_dim",     size="max_suffixes"),                      dict(lang_specific=True)),
+    ("#",            dict(dim="shape_dim",      size="max_shapes"),                          dict(lang_specific=True)),
+    ("^",            dict(dim="prefix_dim",     size="max_prefixes"),                        dict(lang_specific=True)),
+    ("$",            dict(dim="suffix_dim",     size="max_suffixes"),                        dict(lang_specific=True)),
 ]
 
 

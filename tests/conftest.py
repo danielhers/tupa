@@ -41,9 +41,9 @@ def pytest_generate_tests(metafunc):
 @pytest.fixture
 def config():
     c = Config("", "-m", "test")
-    c.update({"verbose": 2, "timeout": 1, "embedding_layer_dim": 1, "ner_dim": 1, "action_dim": 1,
-              "max_words_external": 3, "word_dim_external": 1, "word_dim": 1, "max_words": 3, "max_tags": 3,
-              "max_pos": 3, "max_deps": 3, "max_edge_labels": 3, "max_puncts": 3, "max_action_types": 3,
+    c.update({"verbose": 2, "timeout": 1, "embedding_layer_dim": 1, "ner_dim": 1, "action_dim": 1, "lemma_dim": 1,
+              "max_words_external": 3, "word_dim_external": 1, "word_dim": 1, "max_words": 3, "max_lemmas": 3,
+              "max_tags": 3, "max_pos": 3, "max_deps": 3, "max_edge_labels": 3, "max_puncts": 3, "max_action_types": 3,
               "max_ner_types": 3, "edge_label_dim": 1, "tag_dim": 1, "pos_dim": 1, "dep_dim": 1, "optimizer": "sgd",
               "output_dim": 1, "layer_dim": 2, "layers": 3, "lstm_layer_dim": 2, "lstm_layers": 3,
               "max_action_ratio": 10, "update_word_vectors": False})
@@ -56,7 +56,7 @@ def config():
 @pytest.fixture
 def empty_features_config():
     c = config()
-    c.update({"ner_dim": 0, "action_dim": 0, "word_dim_external": 0, "word_dim": 0, "node_label_dim": 0,
+    c.update({"ner_dim": 0, "action_dim": 0, "word_dim_external": 0, "word_dim": 0, "lemma_dim": 0, "node_label_dim": 0,
               "node_category_dim": 0, "edge_label_dim": 0, "tag_dim": 0, "pos_dim": 0, "dep_dim": 0})
     return c
 
