@@ -11,6 +11,14 @@ from ..labels import Labels
 from ..model_util import DropoutDict
 
 
+class IdentityVocab:
+    def __contains__(self, item):
+        return True
+
+    def __getitem__(self, item):
+        return item
+
+
 class FeatureParameters(Labels):
     def __init__(self, suffix, dim, size, dropout=0, updated=True, num=1, init=None, data=None, indexed=False,
                  copy_from=None, filename=None, min_count=1, enabled=True, node_dropout=0, vocab=None,
@@ -88,6 +96,8 @@ class FeatureParameters(Labels):
 
     def read_vocab(self):
         if self.vocab:
+            if self.vocab == "-":
+                return IdentityVocab()
             with open(self.vocab, encoding="utf-8") as f:
                 return {v: int(k) for k, v in tqdm(csv.reader(f),
                                                    desc="Loading '%s'" % self.vocab, file=sys.stdout, unit=" rows")}
