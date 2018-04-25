@@ -183,9 +183,9 @@ class HighwayRNN(BiRNN):
                 Wr, br, Wh = [dy.parameter(self.params["%s%d%s" % (p, i, n)]) for p in ("Wr", "br", "Wh")]
                 rs = [dy.logistic(Wr * dy.concatenate([h, x]) + br) for h, x in zip(hs[:-1], xs[::d][1:])]
                 xs = [hs[0]] + [dy.cmult(r, h) + dy.cmult(1 - r, Wh * x) for r, h, x in zip(rs, hs[1:], xs[::d][1:])]
-        if train:
-            x = dy.dropout_dim(dy.concatenate(xs, 1), 1, self.dropout)
-            xs = [dy.pick(x, i, 1) for i in range(len(xs))]
+                if train:
+                    x = dy.dropout_dim(dy.concatenate(xs, 1), 1, self.dropout)
+                    xs = [dy.pick(x, i, 1) for i in range(len(xs))]
         return xs
 
 
