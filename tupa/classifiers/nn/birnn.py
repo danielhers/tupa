@@ -179,10 +179,13 @@ class HighwayRNN(BiRNN):
             return []
         for i in range(self.lstm_layers):
             for n, d in ("f", 1), ("b", -1):
-                hs = self.params["rnn%d%s" % (i, n)].initial_state().transduce(xs[::d])
                 Wr, br, Wh = [dy.parameter(self.params["%s%d%s" % (p, i, n)]) for p in ("Wr", "br", "Wh")]
-                rs = [dy.logistic(Wr * dy.concatenate([h, x]) + br) for h, x in zip(hs[:-1], xs[::d][1:])]
-                xs = [hs[0]] + [dy.cmult(r, h) + dy.cmult(1 - r, Wh * x) for r, h, x in zip(rs, hs[1:], xs[::d][1:])]
+                hs_ = self.params["rnn%d%s" % (i, n)].initial_state().transduce(xs[::d])
+                hs = [hs_[0]]
+                for t in range(1, len(hs_)):
+                    r = dy.logistic(Wr * dy.concatenate([hs[t - 1], xs[t]]) + br)
+                    hs.append(dy.cmult(r, hs_[t]) + dy.cmult(1 - r, Wh * xs[t]))
+                xs = hs
                 if train:
                     x = dy.dropout_dim(dy.concatenate(xs, 1), 1, self.dropout)
                     xs = [dy.pick(x, i, 1) for i in range(len(xs))]
