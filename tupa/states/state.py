@@ -1,13 +1,13 @@
 import sys
 from collections import deque, defaultdict
 
+from semstr.constraints import Constraints, Direction
+from semstr.util.amr import LABEL_ATTRIB
+from semstr.validate import CONSTRAINTS
 from ucca import core, layer0, layer1
 from ucca.layer0 import NodeTags
 from ucca.layer1 import EdgeTags
 
-from semstr.constrain import CONSTRAINTS
-from semstr.constraints import Constraints, Direction
-from semstr.util.amr import LABEL_ATTRIB
 from .edge import Edge
 from .node import Node
 from ..action import Actions
@@ -170,7 +170,7 @@ class State:
                                    message and "Reducing parentless non-terminal %s" % s0, is_type=True)
                         self.check(not self.constraints.required_outgoing or
                                    s0.outgoing_tags.intersection((EdgeTags.Terminal, EdgeTags.Punctuation, "")) or
-                                   s0.outgoing_tags.issuperset(self.constraints.required_outgoing),
+                                   s0.outgoing_tags.intersection(self.constraints.required_outgoing),
                                    message and "Reducing non-terminal %s without %s edge" % (
                                        s0, self.constraints.required_outgoing), is_type=True)
                     self.check(not self.args.node_labels or s0.text or s0.labeled,

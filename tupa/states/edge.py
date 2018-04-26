@@ -29,7 +29,7 @@ class Edge:
                                   " (remote)" if self.remote else "")
 
     def __eq__(self, other):
-        return self.parent.index == other.parent.index and self.child == other.child and \
+        return other and self.parent.index == other.parent.index and self.child == other.child and \
                self.tag == other.tag and self.remote == other.remote
 
     def __hash__(self):

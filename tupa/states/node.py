@@ -1,10 +1,10 @@
 from collections import deque
 from operator import attrgetter
 
+from semstr.util.amr import LABEL_ATTRIB, UNKNOWN_LABEL, LABEL_SEPARATOR
 from ucca import core, layer0
 from ucca.layer1 import EdgeTags
 
-from semstr.util.amr import LABEL_ATTRIB, UNKNOWN_LABEL, LABEL_SEPARATOR
 from ..config import Config
 
 
@@ -154,3 +154,6 @@ class Node:
 
     def __hash__(self):
         return hash((self.index, tuple(self.outgoing)))
+
+    def __iter__(self):
+        return iter(self.outgoing)
