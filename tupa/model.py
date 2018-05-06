@@ -1,6 +1,6 @@
 from collections import OrderedDict
-from enum import Enum
 
+from enum import Enum
 from ucca import textutil
 
 from .action import Actions
@@ -239,8 +239,7 @@ class Model:
         :param finished_epoch: whether this is the end of an epoch (or just intermediate checkpoint), for bookkeeping
         :return: a copy of this model with a new feature extractor and classifier (actually classifier may be the same)
         """
-        if self.config.args.verbose > 1:
-            print("Finalizing model")
+        self.config.print("Finalizing model", level=1)
         self.init_model()
         return Model(None, config=self.config.copy(), model=self, is_finalized=True,
                      feature_extractor=self.feature_extractor.finalize(),
@@ -283,8 +282,7 @@ class Model:
                     textutil.models.update(load_json(self.filename + ".nlp.json"))
                 except FileNotFoundError:
                     pass
-                if self.config.args.verbose:
-                    print("\n".join("%s: %s" % i for i in self.feature_params.items()))
+                self.config.print("\n".join("%s: %s" % i for i in self.feature_params.items()), level=1)
                 for param_def in self.param_defs(self.config):
                     param_def.load_to_config(self.feature_extractor.params)
             except FileNotFoundError:
@@ -303,8 +301,7 @@ class Model:
         """
         if is_finalized is None:
             is_finalized = model.is_finalized
-        if self.config.args.verbose > 1:
-            print("Restoring %sfinalized model" % ("" if is_finalized else "non-"))
+        self.config.print("Restoring %sfinalized model" % ("" if is_finalized else "non-"), level=1)
         self.filename = model.filename
         self.feature_extractor = feature_extractor or model.feature_extractor
         self.classifier = classifier or model.classifier

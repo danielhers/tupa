@@ -9,8 +9,9 @@ from ...model_util import MISSING_VALUE
 
 
 class BiRNN(SubModel):
-    def __init__(self, args, model, **kwargs):
+    def __init__(self, config, args, model, **kwargs):
         super().__init__(**kwargs)
+        self.config = config
         self.args = args
         self.model = model
         self.dropout = self.args.dropout
@@ -40,8 +41,7 @@ class BiRNN(SubModel):
                 self.indexed_num = indexed_num
                 self.mlp.init_params(indexed_dim)
                 randomize_orthonormal(*self.init_rnn_params(indexed_dim), activation=self.activation)
-                if self.args.verbose > 3:
-                    print("Initializing BiRNN: %s" % self)
+                self.config.print("Initializing BiRNN: %s" % self, level=4)
             return indexed_num * self.lstm_layer_dim
         return 0
 
@@ -54,8 +54,8 @@ class BiRNN(SubModel):
     def init_features(self, embeddings, train=False):
         if self.params:
             inputs = [self.mlp.evaluate(e, train=train) for e in zip(*embeddings)]  # join each time step to a vector
-            if self.args.verbose > 3:
-                print("Transducing %d inputs with dropout %s" % (len(inputs), self.dropout if train else "disabled"))
+            self.config.print("Transducing %d inputs with dropout %s" %
+                              (len(inputs), self.dropout if train else "disabled"), level=4)
             self.input_reps = self.transduce(inputs, train)
             self.empty_rep = dy.inputVector(np.zeros(self.lstm_layer_dim, dtype=float))
 
@@ -98,8 +98,7 @@ class BiRNN(SubModel):
             ("indexed_dim", self.indexed_dim),
             ("indexed_num", self.indexed_num),
         ) if self.lstm_layer_dim and self.lstm_layers else []
-        if self.args.verbose > 3:
-            print("Saving BiRNN: %s" % self)
+        self.config.print("Saving BiRNN: %s" % self, level=4)
         return values
 
     def load_sub_model(self, d, *args, **kwargs):
@@ -118,8 +117,7 @@ class BiRNN(SubModel):
             self.indexed_num = d["indexed_num"]
         else:
             self.args.lstm_layers = self.lstm_layers = self.args.lstm_layer_dim = self.lstm_layer_dim = 0
-        if self.args.verbose > 3:
-            print("Loading BiRNN: %s" % self)
+        self.config.print("Loading BiRNN: %s" % self, level=4)
 
     def __str__(self):
         return "%s lstm_layers: %d, lstm_layer_dim: %d, embedding_layers: %d, embedding_layer_dim: %d, " \

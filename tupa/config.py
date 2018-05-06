@@ -1,10 +1,9 @@
-import os
-import shlex
-from copy import deepcopy
-
 import dynet_config
 import numpy as np
+import os
+import shlex
 from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
+from copy import deepcopy
 from logbook import Logger, FileHandler, StderrHandler
 from semstr.cfgutil import Singleton, add_verbose_arg, add_boolean_option, get_group_arg_names
 from semstr.convert import UCCA_EXT, CONVERTERS
@@ -399,8 +398,7 @@ class Config(object, metaclass=Singleton):
             if hyperparams:
                 format_values.update({k: v for k, v in hyperparams.items() if not k.startswith("_")})
         for attr, value in sorted(format_values.items()):
-            if self.args.verbose > 3:
-                print("Setting %s=%s" % (attr, value))
+            self.print("Setting %s=%s" % (attr, value))
             setattr(self.args, attr, value)
         if self.format != "amr":
             self.args.node_labels = False
@@ -435,6 +433,13 @@ class Config(object, metaclass=Singleton):
             self._logger.warn(message)
         except OSError:
             pass
+
+    def print(self, message, level=3):
+        if self.args.verbose >= level:
+            try:
+                print(message() if hasattr(message, "__call__") else message, flush=True)
+            except UnicodeEncodeError:
+                pass
 
     def save(self, filename):
         out_file = filename + ".yml"

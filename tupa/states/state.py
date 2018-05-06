@@ -1,4 +1,3 @@
-import sys
 from collections import deque, defaultdict
 
 from semstr.constraints import Constraints, Direction
@@ -338,8 +337,7 @@ class State:
         :param verify: fail if this results in an improper passage
         :return: core.Passage created from self.nodes
         """
-        if self.args.verbose > 2:
-            print("Creating passage %s from state..." % self.passage.ID)
+        Config().print("Creating passage %s from state..." % self.passage.ID, level=2)
         passage = core.Passage(self.passage.ID)
         passage_format = self.passage.extra.get("format")
         if passage_format:
@@ -406,9 +404,7 @@ class State:
     def fix_terminal_tags(self, terminals):
         for terminal, orig_terminal in zip(terminals, self.terminals):
             if terminal.tag != orig_terminal.tag:
-                if self.args.verbose > 2:
-                    print("%s is the wrong tag for terminal: %s" % (terminal.tag, terminal.text),
-                          file=sys.stderr)
+                Config().log("%s is the wrong tag for terminal: %s" % (terminal.tag, terminal.text))
                 terminal.tag = orig_terminal.tag
 
     def topological_sort(self):

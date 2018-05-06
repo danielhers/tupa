@@ -6,9 +6,10 @@ from .util import randomize_orthonormal
 
 
 class MultilayerPerceptron(SubModel):
-    def __init__(self, args, model, layers=None, layer_dim=None, output_dim=None, num_labels=None, params=None,
+    def __init__(self, config, args, model, layers=None, layer_dim=None, output_dim=None, num_labels=None, params=None,
                  **kwargs):
         super().__init__(params=params, **kwargs)
+        self.config = config
         self.args = args
         self.model = model
         self.layers = self.args.layers if layers is None else layers
@@ -53,15 +54,13 @@ class MultilayerPerceptron(SubModel):
                                    for i, dim in enumerate(dims))
                 self.verify_dims()
                 randomize_orthonormal(*self.params.values(), activation=self.activation)
-                if self.args.verbose > 3:
-                    print("Initializing MLP: %s" % self)
+                self.config.print("Initializing MLP: %s" % self, level=4)
 
     def evaluate(self, inputs, train=False):
         x = dy.concatenate(list(inputs))  # TODO add interaction terms for biaffine attention
         dim = x.dim()[0][0]
         assert dim == self.input_dim, "Input dim mismatch: %d != %d" % (dim, self.input_dim)
-        if self.args.verbose > 3:
-            print(self)
+        self.config.print(self, level=4)
         if self.total_layers:
             if self.weights is None:
                 self.weights = [[dy.parameter(self.params[prefix + str(i)]) for prefix in ("W", "b")]
@@ -69,16 +68,14 @@ class MultilayerPerceptron(SubModel):
                 if self.weights[0][0].dim()[0][1] < dim:  # number of columns in W0
                     self.weights[0][0] = dy.concatenate_cols([self.weights[0][0], dy.parameter(self.params["W0+"])])
             for i, (W, b) in enumerate(self.weights):
-                if self.args.verbose > 3:
-                    print(x.npvalue().tolist())
+                self.config.print(lambda: x.npvalue().tolist(), level=4)
                 try:
                     if train and self.dropout:
                         x = dy.dropout(x, self.dropout)
                     x = self.activation()(W * x + b)
                 except ValueError as e:
                     raise ValueError("Error in evaluating layer %d of %d" % (i + 1, self.total_layers)) from e
-        if self.args.verbose > 3:
-            print(x.npvalue().tolist())
+        self.config.print(lambda: x.npvalue().tolist(), level=4)
         return x
 
     def save_sub_model(self, d, *args):
@@ -95,8 +92,7 @@ class MultilayerPerceptron(SubModel):
             ("num_labels", self.num_labels),
             ("input_dim", self.input_dim),
         )
-        if self.args.verbose > 3:
-            print("Saving MLP: %s" % self)
+        self.config.print("Saving MLP: %s" % self, level=4)
         return values
 
     def load_sub_model(self, d, *args, **kwargs):
@@ -110,8 +106,7 @@ class MultilayerPerceptron(SubModel):
         self.num_labels = d["num_labels"]
         self.input_dim = d["input_dim"]
         self.verify_dims()
-        if self.args.verbose > 3:
-            print("Loading MLP: %s" % self)
+        self.config.print("Loading MLP: %s" % self, level=4)
 
     def verify_dims(self):
         if self.layers > 0:

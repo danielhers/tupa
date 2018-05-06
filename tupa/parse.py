@@ -1,12 +1,12 @@
-import concurrent.futures
-import os
 import sys
 import time
 from collections import defaultdict
+
+import concurrent.futures
+import os
 from enum import Enum
 from functools import partial
 from glob import glob
-
 from semstr.convert import FROM_FORMAT, TO_FORMAT
 from semstr.evaluate import EVALUATORS, Scores
 from semstr.util.amr import LABEL_ATTRIB, WIKIFIER
@@ -111,7 +111,7 @@ class PassageParser(AbstractParser):
         Internal method to parse a single passage.
         If training, use oracle to train on given passages. Otherwise just parse with classifier.
         """
-        self.print("  initial state: %s" % self.state)
+        self.config.print("  initial state: %s" % self.state)
         while True:
             if self.config.args.check_loops:
                 self.check_loop()
@@ -123,7 +123,7 @@ class PassageParser(AbstractParser):
             if self.config.args.action_stats:
                 with open(self.config.args.action_stats, "a") as f:
                     print(",".join(map(str, [predicted_action, action] + list(true_actions.values()))), file=f)
-            self.print(lambda: "\n".join(["  predicted: %-15s true: %-15s taken: %-15s %s" % (
+            self.config.print(lambda: "\n".join(["  predicted: %-15s true: %-15s taken: %-15s %s" % (
                 predicted_action, "|".join(map(str, true_actions.values())), action, self.state) if self.oracle else
                                           "  action: %-15s %s" % (action, self.state)] + (
                 ["  predicted label: %-9s true label: %s" % (predicted_label, true_label) if self.oracle and not
@@ -175,7 +175,7 @@ class PassageParser(AbstractParser):
         for model in self.models[1:]:  # Ensemble if given more than one model; align label order and add scores
             label_scores = dict(zip(model.classifier.labels[axis].all, self.model.score(self.state, axis)[0]))
             scores += [label_scores.get(a, 0) for a in labels.all]  # Product of Experts, assuming log(softmax)
-        self.print(lambda: "  %s scores: %s" % (name, tuple(zip(labels.all, scores))), level=4)
+        self.config.print(lambda: "  %s scores: %s" % (name, tuple(zip(labels.all, scores))), level=4)
         try:
             label = pred = self.predict(scores, labels.all, is_valid)
         except StopIteration as e:
@@ -249,7 +249,7 @@ class PassageParser(AbstractParser):
             ret += (self.evaluate(self.evaluation),)
             status = "%-14s %s F1=%.3f" % (status, self.eval_type, self.f1)
         if display:
-            self.print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), level=1)
+            self.config.print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), level=1)
         return ret
 
     @property
@@ -263,7 +263,7 @@ class PassageParser(AbstractParser):
 
     def evaluate(self, mode=ParseMode.test):
         if self.format:
-            self.print("Converting to %s and evaluating..." % self.format)
+            self.config.print("Converting to %s and evaluating..." % self.format)
         self.eval_type = UNLABELED if self.config.is_unlabeled(self.in_format) else LABELED
         score = EVALUATORS.get(self.format, ucca_evaluation).evaluate(
             self.out, self.passage, converter=get_output_converter(self.format),
@@ -299,13 +299,6 @@ class PassageParser(AbstractParser):
     def num_tokens(self, _):
         pass
 
-    def print(self, message, level=3):
-        if self.config.args.verbose >= level:
-            try:
-                print(message() if hasattr(message, "__call__") else message, flush=True)
-            except UnicodeEncodeError:
-                pass
-
 
 class BatchParser(AbstractParser):
     """ Parser for a single training iteration or single pass over dev/test passages """
@@ -340,8 +333,7 @@ class BatchParser(AbstractParser):
             self.seen_per_format[parser.in_format] += 1
             if self.training and self.config.args.max_training_per_format and \
                     self.seen_per_format[parser.in_format] > self.config.args.max_training_per_format:
-                if self.config.args.verbose:
-                    print("skipped")
+                self.config.print("skipped", level=1)
                 continue
             assert not (self.training and parser.in_format == "text"), "Cannot train on unannotated plain text"
             yield parser.parse(display=display, write=write)
@@ -446,7 +438,7 @@ class Parser(AbstractParser):
         else:  # No passages to train on, just load model
             for model in self.models:
                 model.load()
-            self.print_config()
+            self.config.print_config()
 
     def init_train(self):
         assert len(self.models) == 1, "Can only train one model at a time"
@@ -455,7 +447,7 @@ class Parser(AbstractParser):
                 self.model.load(is_finalized=False)
             except FileNotFoundError:
                 print("not found, starting from untrained model.")
-        self.print_config()
+        self.config.print_config()
         self.best_score = self.model.classifier.best_score if self.model.classifier else 0
 
     def eval_and_save(self, last=False, finished_epoch=False):
