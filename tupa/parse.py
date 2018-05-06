@@ -438,7 +438,7 @@ class Parser(AbstractParser):
         else:  # No passages to train on, just load model
             for model in self.models:
                 model.load()
-            self.config.print_config()
+            self.print_config()
 
     def init_train(self):
         assert len(self.models) == 1, "Can only train one model at a time"
@@ -447,7 +447,7 @@ class Parser(AbstractParser):
                 self.model.load(is_finalized=False)
             except FileNotFoundError:
                 print("not found, starting from untrained model.")
-        self.config.print_config()
+        self.print_config()
         self.best_score = self.model.classifier.best_score if self.model.classifier else 0
 
     def eval_and_save(self, last=False, finished_epoch=False):
@@ -518,7 +518,7 @@ class Parser(AbstractParser):
             yield passage
 
     def print_config(self):
-        print("tupa %s" % (self.model.config if self.model else self.config))
+        self.config.print("tupa %s" % (self.model.config if self.model else self.config), level=0)
 
 
 def train_test(train_passages, dev_passages, test_passages, args, model_suffix=""):
