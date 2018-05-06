@@ -24,8 +24,9 @@ class BiRNN(SubModel):
         self.init = CategoricalParameter(INITIALIZERS, self.args.init)
         self.rnn_builder = CategoricalParameter(RNNS, self.args.rnn)
         self.input_reps = self.empty_rep = self.indexed_dim = self.indexed_num = None
-        self.mlp = MultilayerPerceptron(self.args, self.model, params=self.params, layers=self.embedding_layers,
-                                        layer_dim=self.embedding_layer_dim, output_dim=self.lstm_layer_dim)
+        self.mlp = MultilayerPerceptron(self.config, self.args, self.model, params=self.params,
+                                        layers=self.embedding_layers, layer_dim=self.embedding_layer_dim,
+                                        output_dim=self.lstm_layer_dim)
 
     def init_params(self, indexed_dim, indexed_num):
         """
