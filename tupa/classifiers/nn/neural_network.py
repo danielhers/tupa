@@ -77,8 +77,8 @@ class NeuralNetwork(Classifier, SubModel):
         init = self.model is None
         if init:
             self.model = dy.ParameterCollection()
-            self.birnn = self.birnn_type(Config().hyperparams.shared, self.model, save_path=("shared", "birnn"),
-                                         shared=True)
+            self.birnn = self.birnn_type(self.config, Config().hyperparams.shared, self.model,
+                                         save_path=("shared", "birnn"), shared=True)
             self.set_weight_decay_lambda()
         if train:
             self.init_trainer()
