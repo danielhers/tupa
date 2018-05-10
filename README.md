@@ -90,7 +90,6 @@ To reproduce the experiments, run:
 
     curl https://github.com/huji-nlp/tupa/blob/master/experiments/acl2017.sh | bash
     
--
 
 If you use the French, German or multitask models, please cite
 [the following paper](http://www.cs.huji.ac.il/~danielh/acl2018.pdf):
