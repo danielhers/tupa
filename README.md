@@ -4,7 +4,6 @@ TUPA is a transition-based parser for [Universal Conceptual Cognitive Annotation
 
 ### Requirements
 * Python 3.6
-* All [dependencies for DyNet](http://dynet.readthedocs.io/en/latest/python.html)
 
 ### Install
 
@@ -27,7 +26,7 @@ Alternatively, install the latest code from GitHub (may be unstable):
 ### Train the parser
 
 Having a directory with UCCA passage files
-(for example, [the Wiki corpus](https://github.com/huji-nlp/ucca-corpus/tree/master/wiki/pickle)),
+(for example, [the Wiki corpus](https://github.com/huji-nlp/ucca-corpora/tree/master/wiki/xml)),
 run:
 
     python -m tupa -t <train_dir> -d <dev_dir> -c <model_type> -m <model_filename>
@@ -46,26 +45,27 @@ An `xml` file will be created per passage (separate by blank lines in the text f
 
 To download and extract a model pre-trained on the Wiki corpus, run:
 
-    curl -O http://www.cs.huji.ac.il/~danielh/ucca/bilstm-1.3.1.tar.gz
-    tar xvzf bilstm-1.3.1.tar.gz
+    curl -O https://github.com/huji-nlp/tupa/releases/download/v1.3.2/ucca-bilstm-1.3.2.tar.gz
+    tar xvzf ucca-bilstm-1.3.2.tar.gz
 
 Run the parser using the model:
 
-    python -m tupa example.txt -m models/bilstm
+    python -m tupa example.txt -m models/ucca-bilstm
     
 ### Other languages
 
-To get a French/German model pre-trained on [the *20K Leagues* corpus](https://github.com/huji-nlp/ucca-corpus/tree/master), run:
+To get a model pre-trained on the [French *20K Leagues* corpus](https://github.com/huji-nlp/ucca-corpora/tree/master/vmlslm/fr)
+or the [German *20K Leagues* corpus](https://github.com/huji-nlp/ucca-corpora/tree/master/20k_de), run:
 
-    curl -O http://www.cs.huji.ac.il/~danielh/ucca/bilstm-1.3.1-fr.tar.gz
-    tar xvzf bilstm-1.3.1-fr.tar.gz
-    curl -O http://www.cs.huji.ac.il/~danielh/ucca/bilstm-1.3.1-de.tar.gz
-    tar xvzf bilstm-1.3.1-de.tar.gz
+    curl -O https://github.com/huji-nlp/tupa/releases/download/v1.3.2/ucca-bilstm-1.3.2-fr.tar.gz
+    tar xvzf ucca-bilstm-1.3.2-fr.tar.gz
+    curl -O https://github.com/huji-nlp/tupa/releases/download/v1.3.2/ucca-bilstm-1.3.2-de.tar.gz
+    tar xvzf ucca-bilstm-1.3.2-de.tar.gz
 
-Run the parser on a French/German text file, using the French/German spaCy models too:
+Run the parser on a French/German text file (separate passages by blank lines):
 
-    python -m tupa exemple.txt -m models/bilstm-fr --lang fr
-    python -m tupa beispiel.txt -m models/bilstm-de --lang de
+    python -m tupa exemple.txt -m models/ucca-bilstm-fr --lang fr
+    python -m tupa beispiel.txt -m models/ucca-bilstm-de --lang de
 
 Author
 ------
@@ -74,7 +74,7 @@ Author
 
 Citation
 --------
-If you make use of this software, please cite [the following paper](http://www.cs.huji.ac.il/~danielh/acl2017.pdf):
+If you make use of this software, please cite [the following paper](http://aclweb.org/anthology/P17-1104):
 
     @InProceedings{hershcovich2017a,
       author    = {Hershcovich, Daniel  and  Abend, Omri  and  Rappoport, Ari},
@@ -86,20 +86,28 @@ If you make use of this software, please cite [the following paper](http://www.c
     }
 
 The version of the parser used in the paper is [v1.0](https://github.com/huji-nlp/tupa/releases/tag/v1.0).
-To reproduce the experiments from the paper, run in an empty directory (with a new virtualenv):
+To reproduce the experiments, run:
 
-    pip install "tupa>=1.0,<1.1"
-    mkdir pickle models
-    curl -L http://www.cs.huji.ac.il/~danielh/ucca/ucca_corpus_pickle.tgz | tar xz -C pickle
-    curl --remote-name-all http://www.cs.huji.ac.il/~danielh/ucca/{sparse,mlp,bilstm}.tgz
-    tar xvzf sparse.tgz
-    tar xvzf mlp.tgz
-    tar xvzf bilstm.tgz
-    python -m spacy download en_core_web_lg
-    python -m scripts.split_corpus pickle -t 4282 -d 454 -l
-    python -m tupa.parse -c sparse -m models/ucca-sparse -Web pickle/test
-    python -m tupa.parse -c mlp -m models/ucca-mlp -Web pickle/test
-    python -m tupa.parse -c bilstm -m models/ucca-bilstm -Web pickle/test
+    curl https://github.com/huji-nlp/tupa/blob/master/experiments/acl2017.sh | bash
+    
+-
+
+If you use the French, German or multitask models, please cite
+[the following paper](http://www.cs.huji.ac.il/~danielh/acl2018.pdf):
+
+    @InProceedings{hershcovich2018multitask,
+      author    = {Hershcovich, Daniel  and  Abend, Omri  and  Rappoport, Ari},
+      title     = {Multitask Parsing Across Semantic Representations},
+      booktitle = {Proc. of ACL},
+      year      = {2018},
+      url       = {http://www.cs.huji.ac.il/~danielh/acl2018.pdf}
+    }
+
+The version of the parser used in the paper is [v1.3.2](https://github.com/huji-nlp/tupa/releases/tag/v1.3.2).
+To reproduce the experiments, run:
+
+    curl https://github.com/huji-nlp/tupa/blob/master/experiments/acl2018.sh | bash
+
 
 License
 -------
