@@ -8,7 +8,7 @@ TUPA is a transition-based parser for [Universal Conceptual Cognitive Annotation
 
 ### Install
 
-Create a Python virtual environment:
+Create a Python virtual environment. For example, on Linux:
     
     virtualenv --python=/usr/bin/python3 venv
     . venv/bin/activate              # on bash
@@ -32,7 +32,7 @@ run:
 
     python -m tupa -t <train_dir> -d <dev_dir> -c <model_type> -m <model_filename>
 
-The possible model types are `sparse`, `mlp`, `bilstm` and `highway`.
+The possible model types are `sparse`, `mlp`, and `bilstm`.
 
 ### Parse a text file
 
