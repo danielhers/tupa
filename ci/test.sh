@@ -40,14 +40,14 @@ export TOY_DATA="test_files/*.$SUFFIX"
 
 case "$TEST_SUITE" in
 unit)  # unit tests
-    pytest --durations=0 -v tests $TEST_OPTIONS || exit 1
+    pytest --durations=0 -v tests ${TEST_OPTIONS} || exit 1
     ;;
 toy-*)  # basic parser tests
     for m in "" --sentences --paragraphs; do
       args="$m -m model_$FORMAT$m -v"
-      tupa -c sparse -I 10 -t "$TOY_DATA" -d "$TOY_DATA" $args || exit 1
-      tupa "$TOY_DATA" -e $args || exit 1
-      tupa test_files/example.txt $args || exit 1
+      tupa -c sparse -I 10 -t "$TOY_DATA" -d "$TOY_DATA" ${args} || exit 1
+      tupa "$TOY_DATA" -e ${args} || exit 1
+      tupa test_files/example.txt ${args} || exit 1
     done
     ;;
 tune-*)
