@@ -7,12 +7,11 @@ import os
 from enum import Enum
 from functools import partial
 from glob import glob
-from semstr.convert import FROM_FORMAT, TO_FORMAT
+from semstr.convert import FROM_FORMAT, TO_FORMAT, from_text
 from semstr.evaluate import EVALUATORS, Scores
 from semstr.util.amr import LABEL_ATTRIB, WIKIFIER
 from tqdm import tqdm
 from ucca import diffutil, ioutil, textutil, layer0, layer1, evaluation as ucca_evaluation
-from ucca.convert import from_text
 from ucca.evaluation import LABELED, UNLABELED
 
 from tupa.__version__ import GIT_VERSION
@@ -588,17 +587,21 @@ def get_eval_type(scores):
     return UNLABELED if Config().is_unlabeled(scores.format) else LABELED
 
 
-class TextReader:  # Marks input passages as text so that we don't accidentally train on them
-    def __call__(self, *args, **kwargs):
-        for passage in from_text(*args, **kwargs):
-            passage.extra["format"] = "text"
-            yield passage
+# Marks input passages as text so that we don't accidentally train on them
+def from_text_format(*args, **kwargs):
+    for passage in from_text(*args, **kwargs):
+        passage.extra["format"] = "text"
+        yield passage
+
+
+CONVERTERS = FROM_FORMAT
+CONVERTERS[""] = CONVERTERS["txt"] = from_text_format
 
 
 def read_passages(args, files):
     expanded = [f for pattern in files for f in glob(pattern) or (pattern,)]
     return ioutil.read_files_and_dirs(expanded, sentences=args.sentences, paragraphs=args.paragraphs,
-                                      converters=defaultdict(TextReader, **FROM_FORMAT), lang=Config().args.lang)
+                                      converters=CONVERTERS, lang=Config().args.lang)
 
 
 # noinspection PyTypeChecker,PyStringFormat
