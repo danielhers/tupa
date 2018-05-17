@@ -342,16 +342,14 @@ class State:
         passage_format = self.passage.extra.get("format")
         if passage_format:
             passage.extra["format"] = passage_format
-        l0 = layer0.Layer0(passage)
-        terminals = [l0.add_terminal(text=terminal.text, punct=terminal.tag == layer0.NodeTags.Punct,
-                                     paragraph=terminal.paragraph) for terminal in self.terminals]
+        self.passage.layer(layer0.LAYER_ID).copy(passage)
+        l0 = passage.layer(layer0.LAYER_ID)
         l1 = layer1.Layer1(passage)
         self.root.node = l1.heads[0]
         if self.args.node_labels:
             self.root.set_node_label()
         if self.labeled:  # We have a reference passage
             self.root.set_node_id()
-            self.fix_terminal_tags(terminals)
         remotes = []  # To be handled after all nodes are created
         linkages = []  # To be handled after all non-linkage nodes are created
         self.topological_sort()  # Sort self.nodes
@@ -365,7 +363,7 @@ class State:
                     if edge.remote:
                         remotes.append((node, edge))
                     else:
-                        edge.child.add_to_l1(l1, node, edge.tag, terminals, self.labeled, self.args.node_labels)
+                        edge.child.add_to_l1(l0, l1, node, edge.tag, self.labeled, self.args.node_labels)
 
         for node, edge in remotes:  # Add remote edges
             try:
@@ -400,12 +398,6 @@ class State:
                     raise
 
         return passage
-
-    def fix_terminal_tags(self, terminals):
-        for terminal, orig_terminal in zip(terminals, self.terminals):
-            if terminal.tag != orig_terminal.tag:
-                Config().log("%s is the wrong tag for terminal: %s" % (terminal.tag, terminal.text))
-                terminal.tag = orig_terminal.tag
 
     def topological_sort(self):
         """

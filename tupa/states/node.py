@@ -1,6 +1,6 @@
 from collections import deque
-from operator import attrgetter
 
+from operator import attrgetter
 from semstr.util.amr import LABEL_ATTRIB, UNKNOWN_LABEL, LABEL_SEPARATOR
 from ucca import core, layer0
 from ucca.layer1 import EdgeTags
@@ -55,13 +55,13 @@ class Node:
         self.height = max(self.height, edge.child.height + 1)
         self._terminals = None  # Invalidate terminals because we might have added some
 
-    def add_to_l1(self, l1, parent, tag, terminals, labeled, node_labels):
+    def add_to_l1(self, l0, l1, parent, tag, labeled, node_labels):
         """
         Called when creating final Passage to add a new core.Node
+        :param l0: Layer0 of the passage
         :param l1: Layer1 of the passage
         :param parent: node
         :param tag: edge tag to link to parent
-        :param terminals: all terminals strings in the passage
         :param labeled: there is a reference passage, so keep original node IDs in the "remarks" field
         :param node_labels: whether to add a node label
         """
@@ -69,15 +69,15 @@ class Node:
         if self.text:  # For Word terminals (Punctuation already created by add_punct for parent)
             if parent.node is not None:
                 if self.node is None:
-                    self.node = parent.node.add(EdgeTags.Terminal, terminals[self.index - 1]).child
+                    self.node = parent.node.add(EdgeTags.Terminal, self.get_terminal(l0)).child
                 elif self.node not in parent.node.children:
                     parent.node.add(EdgeTags.Terminal, self.node)
-        elif edge and edge.child.text and layer0.is_punct(terminals[edge.child.index - 1]):
+        elif edge and edge.child.text and layer0.is_punct(edge.child.get_terminal(l0)):
             if Config().args.verify:
                 assert tag == EdgeTags.Punctuation, "Punctuation parent %s's edge tag is %s" % (parent.node_id, tag)
                 assert edge.tag == EdgeTags.Terminal, "Punctuation %s's edge tag is %s" % (self.node_id, edge.tag)
             if self.node is None:
-                self.node = l1.add_punct(parent.node, terminals[edge.child.index - 1])
+                self.node = l1.add_punct(parent.node, edge.child.get_terminal(l0))
                 edge.child.node = self.node[0].child
             elif parent.node is not None and self.node not in parent.node.children:
                 parent.node.add(EdgeTags.Punctuation, self.node)
@@ -85,12 +85,15 @@ class Node:
             assert self.node is None, "Trying to create the same node twice (multiple incoming primary edges): " + \
                                       ", ".join(map(str, self.incoming))
             if parent is not None and parent.label and parent.node is None:  # If parent is an orphan and has a a label,
-                parent.add_to_l1(l1, None, Config().args.orphan_label, terminals, labeled, node_labels)  # link to root
+                parent.add_to_l1(l0, l1, None, Config().args.orphan_label, labeled, node_labels)  # link to root
             self.node = l1.add_fnode(None if parent is None else parent.node, tag, implicit=self.implicit)
         if labeled:  # In training
             self.set_node_id()
         if node_labels:
             self.set_node_label()
+
+    def get_terminal(self, l0):
+        return l0.by_position(self.index)
 
     def set_node_id(self):
         if self.node is not None and self.node_id is not None:
