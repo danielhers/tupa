@@ -6,6 +6,7 @@ from semstr.validate import CONSTRAINTS
 from ucca import core, layer0, layer1
 from ucca.layer0 import NodeTags
 from ucca.layer1 import EdgeTags
+from ucca.normalization import normalize
 
 from .edge import Edge
 from .node import Node
@@ -397,6 +398,7 @@ class State:
                 if verify:
                     raise
 
+        normalize(passage)
         return passage
 
     def topological_sort(self):
