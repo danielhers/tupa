@@ -594,7 +594,7 @@ def from_text_format(*args, **kwargs):
         yield passage
 
 
-CONVERTERS = FROM_FORMAT
+CONVERTERS = {k: partial(c, annotate=True) for k, c in FROM_FORMAT.items()}
 CONVERTERS[""] = CONVERTERS["txt"] = from_text_format
 
 
