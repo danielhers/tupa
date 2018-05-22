@@ -6,7 +6,6 @@ from semstr.validate import CONSTRAINTS
 from ucca import core, layer0, layer1
 from ucca.layer0 import NodeTags
 from ucca.layer1 import EdgeTags
-from ucca.normalization import normalize
 
 from .edge import Edge
 from .node import Node
@@ -352,7 +351,6 @@ class State:
         if self.labeled:  # We have a reference passage
             self.root.set_node_id()
         Node.attach_nodes(l0, l1, self.nodes, self.labeled, self.args.node_labels, verify)
-        normalize(passage)
         return passage
 
     def node_ratio(self):

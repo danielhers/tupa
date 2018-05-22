@@ -13,6 +13,7 @@ from semstr.util.amr import LABEL_ATTRIB, WIKIFIER
 from tqdm import tqdm
 from ucca import diffutil, ioutil, textutil, layer0, layer1, evaluation as ucca_evaluation
 from ucca.evaluation import LABELED, UNLABELED
+from ucca.normalization import normalize
 
 from tupa.__version__ import GIT_VERSION
 from tupa.config import Config, Iterations
@@ -238,6 +239,8 @@ class PassageParser(AbstractParser):
             self.out = self.state.create_passage(verify=self.config.args.verify)
         if write:
             for out_format in self.config.args.formats or [self.out_format]:
+                if out_format == "ucca":
+                    normalize(self.out)
                 ioutil.write_passage(self.out, output_format=out_format, binary=out_format == "pickle",
                                      outdir=self.config.args.outdir, prefix=self.config.args.prefix,
                                      converter=get_output_converter(out_format))
