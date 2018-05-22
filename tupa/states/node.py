@@ -55,6 +55,58 @@ class Node:
         self.height = max(self.height, edge.child.height + 1)
         self._terminals = None  # Invalidate terminals because we might have added some
 
+    @staticmethod
+    def attach_nodes(l0, l1, nodes, labeled=True, node_labels=False, verify=False):
+        remotes = []  # To be handled after all nodes are created
+        linkages = []  # To be handled after all non-linkage nodes are created
+        for node in Node.topological_sort(nodes):
+            if labeled and verify:
+                assert node.text or node.outgoing or node.implicit, "Non-terminal leaf node: %s" % node
+            if node.is_linkage:
+                linkages.append(node)
+            else:
+                for edge in node.outgoing:
+                    if edge.remote:
+                        remotes.append((node, edge))
+                    else:
+                        edge.child.add_to_l1(l0, l1, node, edge.tag, labeled, node_labels)
+        Node.attach_remotes(l1, remotes, verify)
+        Node.attach_linkages(l1, linkages, verify)
+
+    @staticmethod
+    def topological_sort(nodes):
+        """
+        Sort self.nodes topologically, each node appearing as early as possible
+        Also sort each node's outgoing and incoming edge according to the node order
+        """
+        levels = {}
+        level_by_index = {}
+        stack = [node for node in nodes if not node.outgoing]
+        while stack:
+            node = stack.pop()
+            if node.index not in level_by_index:
+                parents = [edge.parent for edge in node.incoming]
+                if parents:
+                    unexplored_parents = [parent for parent in parents
+                                          if parent.index not in level_by_index]
+                    if unexplored_parents:
+                        for parent in unexplored_parents:
+                            stack.append(node)
+                            stack.append(parent)
+                    else:
+                        level = 1 + max(level_by_index[parent.index] for parent in parents)
+                        levels.setdefault(level, []).append(node)
+                        level_by_index[node.index] = level
+                else:
+                    levels.setdefault(0, []).append(node)
+                    level_by_index[node.index] = 0
+        nodes = [node for level, level_nodes in sorted(levels.items())
+                 for node in sorted(level_nodes, key=lambda x: x.node_index or x.index)]
+        for node in nodes:
+            node.outgoing.sort(key=lambda x: x.child.node_index or nodes.index(x.child))
+            node.incoming.sort(key=lambda x: x.parent.node_index or nodes.index(x.parent))
+        return nodes
+
     def add_to_l1(self, l0, l1, parent, tag, labeled, node_labels):
         """
         Called when creating final Passage to add a new core.Node
@@ -91,6 +143,42 @@ class Node:
             self.set_node_id()
         if node_labels:
             self.set_node_label()
+
+    @staticmethod
+    def attach_remotes(l1, remotes, verify=False):
+        for node, edge in remotes:  # Add remote edges
+            try:
+                assert node.node is not None, "Remote edge from nonexistent node"
+                assert edge.child.node is not None, "Remote edge to nonexistent node"
+                l1.add_remote(node.node, edge.tag, edge.child.node)
+            except AssertionError:
+                if verify:
+                    raise
+
+    @staticmethod
+    def attach_linkages(l1, linkages, verify=False):
+        for node in linkages:  # Add linkage nodes and edges
+            try:
+                link_relation = None
+                link_args = []
+                for edge in node.outgoing:
+                    assert edge.child.node, "Linkage edge to nonexistent node"
+                    if edge.tag == EdgeTags.LinkRelation:
+                        assert not link_relation, "Multiple link relations: %s, %s" % (link_relation, edge.child.node)
+                        link_relation = edge.child.node
+                    elif edge.tag == EdgeTags.LinkArgument:
+                        link_args.append(edge.child.node)
+                    else:
+                        Config().log("Ignored non-linkage edge %s from linkage node %s" % (edge, node))
+                assert link_relation is not None, "No link relations: %s" % node
+                # if len(link_args) < 2:
+                #     Config().log("Less than two link arguments for linkage node %s" % node)
+                node.node = l1.add_linkage(link_relation, *link_args)
+                if node.node_id:  # We are in training and we have a gold passage
+                    node.node.extra["remarks"] = node.node_id  # For reference
+            except AssertionError:
+                if verify:
+                    raise
 
     def get_terminal(self, l0):
         return l0.by_position(self.index)

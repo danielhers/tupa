@@ -1,4 +1,4 @@
-from collections import deque, defaultdict
+from collections import deque
 
 from semstr.constraints import Constraints, Direction
 from semstr.util.amr import LABEL_ATTRIB
@@ -351,87 +351,9 @@ class State:
             self.root.set_node_label()
         if self.labeled:  # We have a reference passage
             self.root.set_node_id()
-        remotes = []  # To be handled after all nodes are created
-        linkages = []  # To be handled after all non-linkage nodes are created
-        self.topological_sort()  # Sort self.nodes
-        for node in self.nodes:
-            if self.labeled and verify:
-                assert node.text or node.outgoing or node.implicit, "Non-terminal leaf node: %s" % node
-            if node.is_linkage:
-                linkages.append(node)
-            else:
-                for edge in node.outgoing:
-                    if edge.remote:
-                        remotes.append((node, edge))
-                    else:
-                        edge.child.add_to_l1(l0, l1, node, edge.tag, self.labeled, self.args.node_labels)
-
-        for node, edge in remotes:  # Add remote edges
-            try:
-                assert node.node is not None, "Remote edge from nonexistent node"
-                assert edge.child.node is not None, "Remote edge to nonexistent node"
-                l1.add_remote(node.node, edge.tag, edge.child.node)
-            except AssertionError:
-                if verify:
-                    raise
-
-        for node in linkages:  # Add linkage nodes and edges
-            try:
-                link_relation = None
-                link_args = []
-                for edge in node.outgoing:
-                    assert edge.child.node, "Linkage edge to nonexistent node"
-                    if edge.tag == EdgeTags.LinkRelation:
-                        assert not link_relation, "Multiple link relations: %s, %s" % (link_relation, edge.child.node)
-                        link_relation = edge.child.node
-                    elif edge.tag == EdgeTags.LinkArgument:
-                        link_args.append(edge.child.node)
-                    else:
-                        Config().log("Ignored non-linkage edge %s from linkage node %s" % (edge, node))
-                assert link_relation is not None, "No link relations: %s" % node
-                # if len(link_args) < 2:
-                #     Config().log("Less than two link arguments for linkage node %s" % node)
-                node.node = l1.add_linkage(link_relation, *link_args)
-                if node.node_id:  # We are in training and we have a gold passage
-                    node.node.extra["remarks"] = node.node_id  # For reference
-            except AssertionError:
-                if verify:
-                    raise
-
+        Node.attach_nodes(l0, l1, self.nodes, self.labeled, self.args.node_labels, verify)
         normalize(passage)
         return passage
-
-    def topological_sort(self):
-        """
-        Sort self.nodes topologically, each node appearing as early as possible
-        Also sort each node's outgoing and incoming edge according to the node order
-        """
-        levels = defaultdict(list)
-        level_by_index = {}
-        stack = [node for node in self.nodes if not node.outgoing]
-        while stack:
-            node = stack.pop()
-            if node.index not in level_by_index:
-                parents = [edge.parent for edge in node.incoming]
-                if parents:
-                    unexplored_parents = [parent for parent in parents
-                                          if parent.index not in level_by_index]
-                    if unexplored_parents:
-                        for parent in unexplored_parents:
-                            stack.append(node)
-                            stack.append(parent)
-                    else:
-                        level = 1 + max(level_by_index[parent.index] for parent in parents)
-                        levels[level].append(node)
-                        level_by_index[node.index] = level
-                else:
-                    levels[0].append(node)
-                    level_by_index[node.index] = 0
-        self.nodes = [node for level, level_nodes in sorted(levels.items())
-                      for node in sorted(level_nodes, key=lambda x: x.node_index or x.index)]
-        for node in self.nodes:
-            node.outgoing.sort(key=lambda x: x.child.node_index or self.nodes.index(x.child))
-            node.incoming.sort(key=lambda x: x.parent.node_index or self.nodes.index(x.parent))
 
     def node_ratio(self):
         return (len(self.nodes) / len(self.terminals) - 1) if self.terminals else 0
