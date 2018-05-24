@@ -91,7 +91,7 @@ class State:
             self.check(node is not self.root, message and "Root may not have parents", is_type=True)
             if self.args.constraints and t is not None:
                 self.check(not t or (node.text is None) != (t == EdgeTags.Terminal),
-                           message and "Edge tag must be %s iff child is terminal, but node is %s and edge tag is %s" %
+                           message and "Edge tag must be %s iff child is terminal, but node %s has edge tag %s" %
                            (EdgeTags.Terminal, node, t))
                 for rule in self.constraints.tag_rules:
                     violation = rule.violation(node, t, Direction.incoming, message=message)
