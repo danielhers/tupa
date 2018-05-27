@@ -175,7 +175,7 @@ class FallbackNamespace(Namespace):
     def items(self):
         return self.vars().items()
 
-    def update(self, **kwargs):
+    def update(self, kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
