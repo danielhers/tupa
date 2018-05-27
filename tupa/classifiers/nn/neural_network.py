@@ -155,7 +155,7 @@ class NeuralNetwork(Classifier, SubModel):
             self.init_model(axis, train)
         embeddings = [[], []]  # specific, shared
         self.config.print("Initializing %s %s features for %d elements" %
-                          (", ".join(axes), self.birnn_type, len(features)), level=4)
+                          (", ".join(axes), self.birnn_type.__name__, len(features)), level=4)
         for key, indices in sorted(features.items()):
             param = self.input_params[key]
             lookup = self.params.get(key)
