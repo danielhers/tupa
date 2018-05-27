@@ -162,9 +162,10 @@ class NeuralNetwork(Classifier, SubModel):
             if not param.indexed or lookup is None:
                 continue
             vectors = [lookup[k] for k in indices]
-            for i in self.birnn_indices(param):
-                embeddings[i].append(vectors)
-            self.config.print(lambda: "%s: %s %s" % (key, indices, [e.npvalue().tolist() for e in vectors]), level=4)
+            for index in self.birnn_indices(param):
+                embeddings[index].append(vectors)
+            self.config.print(lambda: "%s: %s" % (key, ", ".join("%d->%s" % (i, e.npvalue().tolist())
+                                                                 for i, e in zip(indices, vectors))), level=4)
         for birnn in self.get_birnns(*axes):
             birnn.init_features(embeddings[int(birnn.shared)], train)
 
