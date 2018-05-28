@@ -56,10 +56,10 @@ toy-*)  # basic parser tests
     tupa -We ${ALL_DATA} -t ${ALL_DATA} -d ${ALL_DATA} -m multilingual --layer-dim=2 --lstm-layer-dim=2 --pos-dim=2 \
         --lemma-dim=2 --tag-dim=2 --word-dim-external=0 --dep-dim=2 --edge-label-dim=2 --ner-dim=2 --node-label-dim=2 \
         --iterations 5=--optimizer=sgd 10=--optimizer=adam --eval-test --hyperparam de=--lemma-dim=4 --multilingual -v \
-        -u "$FORMAT" || exit 1
-    tupa -We ${ALL_DATA} -m multilingual || exit 1
+        -u "$FORMAT" --timeout=1 || exit 1
+    tupa -We ${ALL_DATA} -m multilingual --timeout=1 || exit 1
     python -m tupa.scripts.strip_multitask multilingual || exit 1
-    tupa -We ${TOY_DATA} -m multilingual || exit 1
+    tupa -We ${TOY_DATA} -m multilingual --timeout=1 || exit 1
     ;;
 tune-*)
     export PARAMS_NUM=3 MAX_ITERATIONS=3
