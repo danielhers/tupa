@@ -53,7 +53,7 @@ toy-*)  # basic parser tests
       tupa test_files/example.txt ${args} || exit 1
     done
     ALL_DATA="test_files/*.xml test_files/*.sdp test_files/*.amr test_files/*.conllu"
-    tupa -We ${ALL_DATA} -t ${ALL_DATA} -d ${ALL_DATA} -m multilingual --layer-dim=2 --lstm-layer-dim=2 --pos-dim=2 \
+    tupa -We ${ALL_DATA} -t ${ALL_DATA} -m multilingual --layer-dim=2 --lstm-layer-dim=2 --pos-dim=2 \
         --lemma-dim=2 --tag-dim=2 --word-dim-external=0 --dep-dim=2 --edge-label-dim=2 --ner-dim=2 --node-label-dim=2 \
         --iterations 5=--optimizer=sgd 10=--optimizer=adam --eval-test --hyperparam de=--lemma-dim=4 --multilingual -v \
         -u "$FORMAT" --timeout=1 || exit 1
