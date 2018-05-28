@@ -12,7 +12,7 @@ from semstr.evaluate import EVALUATORS, Scores
 from semstr.util.amr import LABEL_ATTRIB, WIKIFIER
 from tqdm import tqdm
 from ucca import diffutil, ioutil, textutil, layer0, layer1, evaluation as ucca_evaluation
-from ucca.evaluation import LABELED, UNLABELED
+from ucca.evaluation import LABELED, UNLABELED, EVAL_TYPES
 from ucca.normalization import normalize
 
 from tupa.__version__ import GIT_VERSION
@@ -583,7 +583,12 @@ def print_scores(scores, filename, prefix=None, prefix_title=None):
 
 
 def average_f1(scores, eval_type=None):
-    return scores.average_f1(eval_type or get_eval_type(scores))
+    for e in (eval_type or get_eval_type(scores),) + EVAL_TYPES:
+        try:
+            return scores.average_f1(e)
+        except ValueError:
+            pass
+    return 0
 
 
 def get_eval_type(scores):
