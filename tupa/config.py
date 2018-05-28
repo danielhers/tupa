@@ -191,7 +191,7 @@ class Hyperparams:
         self.shared = FallbackNamespace(parent, shared)
         self.specific = FallbackNamespace(parent)
         for name, args in kwargs.items():
-            self.specific[name].update(**args)
+            self.specific[name].update(args)
 
     def items(self):
         return ([("shared", self.shared)] if self.shared.vars() else []) + list(self.specific.traverse())
