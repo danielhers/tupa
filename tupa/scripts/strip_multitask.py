@@ -9,10 +9,16 @@ def strip_multitask(model, keep):
     if "amr" not in keep:
         for d in (model.feature_params, model.classifier.params):
             for key in (NODE_LABEL_KEY, "c"):
-                del d[key]
+                try:
+                    del d[key]
+                except KeyError:
+                    pass
     for d in (model.classifier.labels, model.classifier.axes):
         for axis in set(d).difference(keep):
-            del d[axis]
+            try:
+                del d[axis]
+            except KeyError:
+                pass
 
 
 def main(args):
