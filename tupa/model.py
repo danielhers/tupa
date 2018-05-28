@@ -133,7 +133,7 @@ class Model:
         self.set_axis(axis, lang)
         labels = self.classifier.labels if self.classifier else OrderedDict()
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
-            for param_def in self.param_defs():
+            for param_def in self.param_defs():  # FIXME save parameters separately per format, not just per language
                 for param_lang in (param_def.all_langs(self.feature_params) if self.lang else []) \
                         if param_def.lang_specific and self.config.args.multilingual else [None]:
                     key = param_def.key(param_lang)
