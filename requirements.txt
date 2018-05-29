@@ -3,6 +3,6 @@ cython>=0.26.1
 tqdm>=4.23.3
 configargparse>=0.13.0
 ucca>=1.0.80
-semstr[amr]==1.0.25
+semstr[amr]==1.0.26
 dynet==2.0.3
 logbook==1.4.0
