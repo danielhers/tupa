@@ -121,8 +121,11 @@ class PassageParser(AbstractParser):
             self.state.transition(action)
             need_label, label, predicted_label, true_label = self.label_node(action)
             if self.config.args.action_stats:
-                with open(self.config.args.action_stats, "a") as f:
-                    print(",".join(map(str, [predicted_action, action] + list(true_actions.values()))), file=f)
+                try:
+                    with open(self.config.args.action_stats, "a") as f:
+                        print(",".join(map(str, [predicted_action, action] + list(true_actions.values()))), file=f)
+                except OSError:
+                    pass
             self.config.print(lambda: "\n".join(["  predicted: %-15s true: %-15s taken: %-15s %s" % (
                 predicted_action, "|".join(map(str, true_actions.values())), action, self.state) if self.oracle else
                                           "  action: %-15s %s" % (action, self.state)] + (
@@ -570,16 +573,19 @@ def percents_str(part, total, infix="", fraction=True):
 def print_scores(scores, filename, prefix=None, prefix_title=None):
     if filename:
         print_title = not os.path.exists(filename)
-        with open(filename, "a") as f:
-            if print_title:
-                titles = scores.titles()
-                if prefix_title is not None:
-                    titles = [prefix_title] + titles
-                print(",".join(titles), file=f)
-            fields = scores.fields()
-            if prefix is not None:
-                fields.insert(0, prefix)
-            print(",".join(fields), file=f)
+        try:
+            with open(filename, "a") as f:
+                if print_title:
+                    titles = scores.titles()
+                    if prefix_title is not None:
+                        titles = [prefix_title] + titles
+                    print(",".join(titles), file=f)
+                fields = scores.fields()
+                if prefix is not None:
+                    fields.insert(0, prefix)
+                print(",".join(fields), file=f)
+        except OSError:
+            pass
 
 
 def average_f1(scores, eval_type=None):
