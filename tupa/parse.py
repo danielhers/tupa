@@ -242,7 +242,7 @@ class PassageParser(AbstractParser):
             self.out = self.state.create_passage(verify=self.config.args.verify)
         if write:
             for out_format in self.config.args.formats or [self.out_format]:
-                if out_format == "ucca":
+                if self.config.args.normalize and out_format == "ucca":
                     normalize(self.out)
                 ioutil.write_passage(self.out, output_format=out_format, binary=out_format == "pickle",
                                      outdir=self.config.args.outdir, prefix=self.config.args.prefix,
