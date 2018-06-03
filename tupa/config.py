@@ -10,8 +10,10 @@ from semstr.convert import UCCA_EXT, CONVERTERS
 from ucca import constructions
 
 from tupa.classifiers.nn.constants import *
+from tupa.model_util import load_enum
 
 # Classifiers
+
 SPARSE = "sparse"
 MLP = "mlp"
 BIRNN = "bilstm"
@@ -232,6 +234,14 @@ class Iterations:
         return str(self.hyperparams or self.epochs)
 
 
+class IdentityVocab:
+    def __contains__(self, item):
+        return True
+
+    def __getitem__(self, item):
+        return item
+
+
 class Config(object, metaclass=Singleton):
     def __init__(self, *args):
         self.arg_parser = ap = ArgParser(description="Transition-based parser for UCCA.",
@@ -318,6 +328,7 @@ class Config(object, metaclass=Singleton):
             self.args.log = "parse.log"
         self.sub_configs = []  # Copies to be stored in Models so that they do not interfere with each other
         self._logger = self.format = self.hyperparams = self.iteration_hyperparams = None
+        self._vocab = {}
         self.original_values = {}
         self.random = np.random
         self.update()
@@ -434,6 +445,22 @@ class Config(object, metaclass=Singleton):
             self._logger.warn(message)
         except OSError:
             pass
+
+    def vocab(self, filename=None, lang=None):
+        if filename is None:
+            args = self.hyperparams.specific[lang] if lang else self.args
+            filename = args.vocab
+        if not filename:
+            return None
+        vocab = self._vocab.get(filename)
+        if vocab:
+            return vocab
+        if filename == "-":
+            vocab = IdentityVocab()
+        else:
+            vocab = load_enum(filename)
+        self._vocab[filename] = vocab
+        return vocab
 
     def print(self, message, level=3):
         if self.args.verbose >= level:
