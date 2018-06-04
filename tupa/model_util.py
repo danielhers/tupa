@@ -255,7 +255,7 @@ class Strings:
 
     def __getitem__(self, item):
         lex = self.vocab[item]
-        return lex.index if isinstance(item, basestring) else lex.text
+        return (lex.index if isinstance(item, str) else lex.text) if isinstance(lex, Lexeme) else lex
 
 
 class Vocab(dict):
@@ -266,6 +266,20 @@ class Vocab(dict):
         self.strings = Strings(self)
 
 
+class IdentityVocab(Vocab):
+    def __init__(self):
+        super().__init__(())
+
+    def __contains__(self, item):
+        return True
+
+    def __getitem__(self, item):
+        return item
+
+
 def load_enum(filename):
-    with open(filename, encoding="utf-8") as f:
-        return Vocab(tqdm(csv.reader(f), desc="Loading '%s'" % filename, file=sys.stdout, unit=" rows"))
+    if filename == "-":
+        return IdentityVocab()
+    else:
+        with open(filename, encoding="utf-8") as f:
+            return Vocab(tqdm(csv.reader(f), desc="Loading '%s'" % filename, file=sys.stdout, unit=" rows"))

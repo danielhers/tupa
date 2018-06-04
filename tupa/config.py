@@ -234,14 +234,6 @@ class Iterations:
         return str(self.hyperparams or self.epochs)
 
 
-class IdentityVocab:
-    def __contains__(self, item):
-        return True
-
-    def __getitem__(self, item):
-        return item
-
-
 class Config(object, metaclass=Singleton):
     def __init__(self, *args):
         self.arg_parser = ap = ArgParser(description="Transition-based parser for UCCA.",
@@ -455,10 +447,7 @@ class Config(object, metaclass=Singleton):
         vocab = self._vocab.get(filename)
         if vocab:
             return vocab
-        if filename == "-":
-            vocab = IdentityVocab()
-        else:
-            vocab = load_enum(filename)
+        vocab = load_enum(filename)
         self._vocab[filename] = vocab
         return vocab
 
