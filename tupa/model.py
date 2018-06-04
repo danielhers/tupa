@@ -256,6 +256,7 @@ class Model:
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
                 skip_labels = (NODE_LABEL_KEY,) if node_labels and node_labels.size else ()
                 self.classifier.save(self.filename, skip_labels=skip_labels)
+                textutil.models["vocab"] = self.config.args.vocab
                 save_json(self.filename + ".nlp.json", textutil.models)
                 remove_backup(self.filename)
             except Exception as e:
@@ -280,6 +281,7 @@ class Model:
                 self.load_labels()
                 try:
                     textutil.models.update(load_json(self.filename + ".nlp.json"))
+                    self.config.args.vocab = textutil.models["vocab"]
                 except FileNotFoundError:
                     pass
                 self.config.print("\n".join("%s: %s" % i for i in self.feature_params.items()), level=1)
