@@ -1,4 +1,5 @@
 import os
+from functools import partial
 from glob import glob
 from itertools import combinations
 
@@ -98,9 +99,10 @@ def passage_files(*formats):
             if not f.endswith(".txt")]
 
 
-def load_passage(filename):
+def load_passage(filename, annotate=False):
     WIKIFIER.enabled = False
-    return next(iter(ioutil.read_files_and_dirs(filename, converters=FROM_FORMAT)))
+    converters = {k: partial(c, annotate=annotate) for k, c in FROM_FORMAT.items()}
+    return next(iter(ioutil.read_files_and_dirs(filename, converters=converters)))
 
 
 def basename(filename):
