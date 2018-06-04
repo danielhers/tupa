@@ -281,7 +281,9 @@ class Model:
                 self.load_labels()
                 try:
                     textutil.models.update(load_json(self.filename + ".nlp.json"))
-                    self.config.args.vocab = textutil.models["vocab"]
+                    vocab = textutil.models.get("vocab")
+                    if vocab:
+                        self.config.args.vocab = vocab
                 except FileNotFoundError:
                     pass
                 self.config.print("\n".join("%s: %s" % i for i in self.feature_params.items()), level=1)
