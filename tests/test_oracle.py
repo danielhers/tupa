@@ -14,7 +14,7 @@ def test_oracle(config, setting, filename, write_oracle_actions):
     passage = load_passage(filename)
     config.update(setting.dict())
     config.set_format(passage.extra.get("format") or "ucca")
-    compare_file = "test_files/oracle_actions/%s%s.txt" % (passage.ID, setting.suffix())
+    compare_file = "test_files/oracle_actions/%s%s.txt" % (basename(filename), setting.suffix())
     actions_taken = []
     with open(compare_file, "rw"[write_oracle_actions]) as f:
         for i, action in enumerate(gen_actions(passage)):
@@ -24,6 +24,7 @@ def test_oracle(config, setting, filename, write_oracle_actions):
                 assert action == f.readline().strip(), "Action %d does not match expected (all actions taken: %s)" % (
                     i, ", ".join(actions_taken) or "none")
             actions_taken.append(action)
+    assert len(actions_taken) > 2, passage
 
 
 def gen_actions(passage):

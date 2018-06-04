@@ -60,7 +60,7 @@ def test_features(config, feature_extractor_creator, filename, write_features):
         if state.finished:
             break
     features = ["%s %s\n" % i for f in features if f for i in (sorted(f.items()) + [("", "")])]
-    compare_file = "test_files/features/%s-%s.txt" % (passage.ID, str(feature_extractor_creator))
+    compare_file = "test_files/features/%s-%s.txt" % (basename(filename), str(feature_extractor_creator))
     if write_features:
         with open(compare_file, "w") as f:
             f.writelines(features)
