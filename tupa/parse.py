@@ -352,9 +352,9 @@ class BatchParser(AbstractParser):
         total = len(passages) if hasattr(passages, "__len__") else None
         if self.config.args.ignore_case:
             passages = self.to_lower_case(passages)
-        passages = textutil.annotate_all(passages, as_array=True, lang=self.config.args.lang,
-                                         vocab=self.config.vocab(lang=self.config.args.lang),
-                                         verbose=self.config.args.verbose > 2)
+        vocab = self.config.vocab(lang=self.config.args.lang)
+        passages = textutil.annotate_all(passages, as_array=vocab is None or vocab.as_array, lang=self.config.args.lang,
+                                         vocab=vocab, verbose=self.config.args.verbose > 2)
         if not self.config.args.verbose or not display:
             passages = tqdm(passages, unit=self.config.passages_word, total=total, file=sys.stdout, desc="Initializing")
         return passages, total

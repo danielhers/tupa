@@ -255,26 +255,27 @@ class Strings:
 
     def __getitem__(self, item):
         lex = self.vocab[item]
-        return (lex.index if isinstance(item, str) else lex.text) if isinstance(lex, Lexeme) else lex
+        return lex.index if isinstance(item, str) else lex.text
 
 
 class Vocab(dict):
-    def __init__(self, tuples):
+    def __init__(self, tuples, as_array=True):
         super().__init__()
         for k, v in tuples:
             self[int(k)] = self[v] = Lexeme(int(k), v)
         self.strings = Strings(self)
+        self.as_array = as_array
 
 
 class IdentityVocab(Vocab):
     def __init__(self):
-        super().__init__(())
+        super().__init__((), as_array=False)
 
     def __contains__(self, item):
         return True
 
     def __getitem__(self, item):
-        return item
+        return Lexeme(item, item)
 
 
 def load_enum(filename):
