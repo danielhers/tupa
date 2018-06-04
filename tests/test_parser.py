@@ -7,7 +7,7 @@ from ucca import convert
 from semstr.evaluate import Scores
 from tupa.config import SPARSE, MLP, BIRNN, HIGHWAY_RNN, NOOP, Iterations
 from tupa.parse import Parser
-from .conftest import FORMATS, remove_existing, load_passages, weight_decay, assert_all_params_equal
+from .conftest import FORMATS, remove_existing, passage_files, weight_decay, assert_all_params_equal
 
 CLASSIFIERS = (SPARSE, BIRNN, NOOP)
 
@@ -19,7 +19,7 @@ def test_parser(config, model_type, formats, default_setting, text=True):
     config.update(default_setting.dict())
     scores = []
     params = []
-    passages = load_passages(*formats)
+    passages = passage_files(*formats)
     evaluate = ("amr" not in formats)
     for mode in "train", "load":
         print("-- %sing %s" % (mode, model_type))
@@ -61,7 +61,7 @@ def test_extra_classifiers(config, model_type, default_setting):
     filename = "test_files/models/%s_%s%s" % (FORMATS[0], model_type, default_setting.suffix())
     remove_existing(filename)
     config.update(default_setting.dict())
-    passages = load_passages(FORMATS[0])
+    passages = passage_files(FORMATS[0])
     for mode in "train", "load":
         print("-- %sing %s" % (mode, model_type))
         config.update(dict(classifier=model_type, copy_shared=None))
@@ -78,7 +78,7 @@ def test_copy_shared(config, model_type):
     config.update(dict(classifier=model_type, lstm_layers=0, copy_shared=[FORMATS[0]]))
     for formats in ((FORMATS[0],), FORMATS):
         p = Parser(model_files=filename, config=config)
-        passages = load_passages(*formats)
+        passages = passage_files(*formats)
         list(p.train(passages, dev=passages, test=True, iterations=2))
         config.update_hyperparams(ucca={"lstm_layers": 1})
 
@@ -87,7 +87,7 @@ def test_copy_shared(config, model_type):
 def test_ensemble(config, model_type):
     config.update(dict(classifier=model_type, lstm_layers=0))
     filenames = ["test_files/models/%s_%s_ensemble%d" % (FORMATS[0], model_type, i) for i in range(1, 3)]
-    passages = load_passages(FORMATS[0])
+    passages = passage_files(FORMATS[0])
     for i, filename in enumerate(filenames, start=1):
         config.update(dict(seed=i))
         remove_existing(filename)
@@ -100,7 +100,7 @@ def test_empty_features(empty_features_config, model_type):
     filename = "test_files/models/%s_%s_empty_features" % (FORMATS[0], model_type)
     remove_existing(filename)
     empty_features_config.update(dict(classifier=model_type))
-    passages = load_passages(FORMATS[0])
+    passages = passage_files(FORMATS[0])
     p = Parser(model_files=filename, config=empty_features_config)
     list(p.train(passages, dev=passages, test=True, iterations=2))
     list(p.parse(passages, evaluate=True))
@@ -111,7 +111,7 @@ def test_iterations(config, model_type):
     filename = "test_files/models/%s_%s_iterations" % (FORMATS[0], model_type)
     remove_existing(filename)
     config.update(dict(classifier=model_type))
-    passages = load_passages(FORMATS[0])
+    passages = passage_files(FORMATS[0])
     last = 0
     iterations = []
     for i in 2, 5, 9, (11, True), (4, True):

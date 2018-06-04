@@ -93,15 +93,18 @@ def default_setting():
     return Settings()
 
 
-def load_passages(*formats):
+def passage_files(*formats):
+    return [f for fo in formats or ["*"] for f in glob("test_files/*." + ("xml" if fo == "ucca" else fo))
+            if not f.endswith(".txt")]
+
+
+def load_passage(filename):
     WIKIFIER.enabled = False
-    files = [f for fo in formats or ["*"] for f in glob("test_files/*." + ("xml" if fo == "ucca" else fo))
-             if not f.endswith(".txt")]
-    return ioutil.read_files_and_dirs(files, converters=FROM_FORMAT)
+    return next(iter(ioutil.read_files_and_dirs(filename, converters=FROM_FORMAT)))
 
 
-def passage_id(passage):
-    return passage.extra.get("format", "ucca")
+def basename(filename):
+    return os.path.basename(os.path.splitext(filename)[0])
 
 
 @pytest.fixture

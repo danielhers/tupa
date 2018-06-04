@@ -5,12 +5,13 @@ import pytest
 from tupa.action import Actions
 from tupa.oracle import Oracle
 from tupa.states.state import State
-from .conftest import load_passages, Settings, passage_id
+from .conftest import passage_files, Settings, load_passage, basename
 
 
 @pytest.mark.parametrize("setting", Settings.all(), ids=str)
-@pytest.mark.parametrize("passage", load_passages(), ids=passage_id)
-def test_oracle(config, setting, passage, write_oracle_actions):
+@pytest.mark.parametrize("filename", passage_files(), ids=basename)
+def test_oracle(config, setting, filename, write_oracle_actions):
+    passage = load_passage(filename)
     config.update(setting.dict())
     config.set_format(passage.extra.get("format") or "ucca")
     compare_file = "test_files/oracle_actions/%s%s.txt" % (passage.ID, setting.suffix())
