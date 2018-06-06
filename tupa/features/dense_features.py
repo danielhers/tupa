@@ -146,7 +146,7 @@ class DenseFeatureExtractor(FeatureExtractor):
             param.unfinalize()
             self.node_dropout = param.node_dropout
 
-    def save(self, filename, save_init=True):
+    def save(self, filename, save_init=True):  # TODO Save to JSON instead of pickle, with data as list (not dict)
         super().save(filename, save_init=save_init)
         save_dict(filename + FILENAME_SUFFIX, FeatureParameters.copy(self.params, copy_init=save_init))
 

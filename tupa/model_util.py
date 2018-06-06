@@ -245,8 +245,8 @@ def load_json(filename):
 
 class Lexeme:
     def __init__(self, index, text):
-        self.index = index
-        self.text = self.orth = text
+        self.index = self.orth = index
+        self.text = self.orth_ = text
 
 
 class Strings:
@@ -259,17 +259,16 @@ class Strings:
 
 
 class Vocab(dict):
-    def __init__(self, tuples, as_array=True):
+    def __init__(self, tuples):
         super().__init__()
         for k, v in tuples:
             self[int(k)] = self[v] = Lexeme(int(k), v)
         self.strings = Strings(self)
-        self.as_array = as_array
 
 
 class IdentityVocab(Vocab):
     def __init__(self):
-        super().__init__((), as_array=False)
+        super().__init__(())
 
     def __contains__(self, item):
         return True
