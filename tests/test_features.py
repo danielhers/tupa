@@ -16,27 +16,31 @@ from .conftest import passage_files, load_passage, basename
 SPARSE = "sparse"
 DENSE = "dense"
 VOCAB = os.path.join("test_files", "vocab", "en_core_web_lg.csv")
+WORD_VECTORS = os.path.join("test_files", "vocab", "wiki.en.vec")
 
 
 class FeatureExtractorCreator:
-    def __init__(self, name, indexed=False, annotated=False, vocab=None):
+    def __init__(self, name, indexed=False, annotated=False, vocab=None, wordvectors=None):
         self.name = name
         self.indexed = indexed
         self.annotated = annotated
         self.vocab = vocab
         self.id = vocab == "-"
+        self.wordvectors = wordvectors
 
     def __str__(self):
-        return "-".join([self.name] + [attr for attr in ("indexed", "annotated", "vocab", "id") if getattr(self, attr)])
+        return "-".join([self.name] + [attr for attr in ("indexed", "annotated", "vocab", "id", "wordvectors")
+                                       if getattr(self, attr)])
 
     def __call__(self, config):
         config.args.vocab = self.vocab
+        config.args.word_vectors = self.wordvectors
         return SparseFeatureExtractor() if self.name == SPARSE else DenseFeatureExtractor(
             OrderedDict((p.name, p.create_from_config()) for p in Model(None, config=config).param_defs()),
             indexed=self.indexed, node_dropout=0)
 
 
-def all_feature_extractors(*args, **kwargs):
+def feature_extractors(*args, **kwargs):
     return [FeatureExtractorCreator(SPARSE, *args, **kwargs), FeatureExtractorCreator(DENSE, *args, **kwargs),
             FeatureExtractorCreator(DENSE, *args, indexed=True, **kwargs)]
 
@@ -82,8 +86,10 @@ def _test_features(config, feature_extractor_creator, filename, write_features):
 
 
 @pytest.mark.parametrize("feature_extractor_creator",
-                         all_feature_extractors() + all_feature_extractors(vocab="-") +
-                         all_feature_extractors(vocab=VOCAB),
+                         feature_extractors() + feature_extractors(vocab="-") + feature_extractors(vocab=VOCAB) +
+                         feature_extractors(wordvectors=WORD_VECTORS) +
+                         feature_extractors(vocab="-", wordvectors=WORD_VECTORS) +
+                         feature_extractors(vocab=VOCAB, wordvectors=WORD_VECTORS),
                          ids=str)
 @pytest.mark.parametrize("filename", passage_files(), ids=basename)
 def test_features(config, feature_extractor_creator, filename, write_features):
@@ -91,15 +97,17 @@ def test_features(config, feature_extractor_creator, filename, write_features):
 
 
 @pytest.mark.parametrize("feature_extractor_creator",
-                         all_feature_extractors(annotated=True, vocab="-") +
-                         all_feature_extractors(annotated=True, vocab=VOCAB),
+                         feature_extractors(annotated=True, vocab="-") +
+                         feature_extractors(annotated=True, vocab=VOCAB) +
+                         feature_extractors(annotated=True, vocab="-", wordvectors=WORD_VECTORS) +
+                         feature_extractors(annotated=True, vocab=VOCAB, wordvectors=WORD_VECTORS),
                          ids=str)
 @pytest.mark.parametrize("filename", passage_files("conllu"), ids=basename)
 def test_features_conllu(config, feature_extractor_creator, filename, write_features):
     _test_features(config, feature_extractor_creator, filename, write_features)
 
 
-@pytest.mark.parametrize("feature_extractor_creator", all_feature_extractors()[:-1], ids=str)
+@pytest.mark.parametrize("feature_extractor_creator", feature_extractors()[:-1], ids=str)
 def test_feature_templates(config, feature_extractor_creator, write_features):
     config.set_format("amr")
     feature_extractor = feature_extractor_creator(config)
