@@ -1,6 +1,7 @@
 """Testing code for the tupa.features package, unit-testing only."""
 from collections import OrderedDict
 
+import os
 import pytest
 from ucca import textutil
 
@@ -14,6 +15,7 @@ from .conftest import passage_files, load_passage, basename
 
 SPARSE = "sparse"
 DENSE = "dense"
+VOCAB = os.path.join("test_files", "vocab", "en_core_web_lg.csv")
 
 
 class FeatureExtractorCreator:
@@ -79,15 +81,21 @@ def _test_features(config, feature_extractor_creator, filename, write_features):
         assert f.readlines() == features, compare_file
 
 
-@pytest.mark.parametrize("feature_extractor_creator", all_feature_extractors(), ids=str)
+@pytest.mark.parametrize("feature_extractor_creator",
+                         all_feature_extractors() + all_feature_extractors(vocab="-") +
+                         all_feature_extractors(vocab=VOCAB),
+                         ids=str)
 @pytest.mark.parametrize("filename", passage_files(), ids=basename)
 def test_features(config, feature_extractor_creator, filename, write_features):
     _test_features(config, feature_extractor_creator, filename, write_features)
 
 
-@pytest.mark.parametrize("feature_extractor_creator", all_feature_extractors(annotated=True, vocab="-"), ids=str)
+@pytest.mark.parametrize("feature_extractor_creator",
+                         all_feature_extractors(annotated=True, vocab="-") +
+                         all_feature_extractors(annotated=True, vocab=VOCAB),
+                         ids=str)
 @pytest.mark.parametrize("filename", passage_files("conllu"), ids=basename)
-def test_features_annotated(config, feature_extractor_creator, filename, write_features):
+def test_features_conllu(config, feature_extractor_creator, filename, write_features):
     _test_features(config, feature_extractor_creator, filename, write_features)
 
 
