@@ -490,6 +490,7 @@ class Config(object, metaclass=Singleton):
         ret.format = self.format
         ret.random = self.random
         ret._logger = self._logger
+        ret._vocab = dict(self._vocab)
         ret.sub_configs = []
         self.sub_configs.append(ret)
         return ret
