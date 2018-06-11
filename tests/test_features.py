@@ -17,27 +17,30 @@ SPARSE = "sparse"
 DENSE = "dense"
 VOCAB = os.path.join("test_files", "vocab", "en_core_web_lg.csv")
 WORD_VECTORS = os.path.join("test_files", "vocab", "wiki.en.vec")
+OMITTED = "d"
 
 
 class FeatureExtractorCreator:
-    def __init__(self, name, indexed=False, annotated=False, vocab=None, wordvectors=None):
+    def __init__(self, name, indexed=False, annotated=False, vocab=None, wordvectors=None, omit=None):
         self.name = name
         self.indexed = indexed
         self.annotated = annotated
         self.vocab = vocab
         self.id = vocab == "-"
         self.wordvectors = wordvectors
+        self.omit = omit
 
     def __str__(self):
-        return "-".join([self.name] + [attr for attr in ("indexed", "annotated", "vocab", "id", "wordvectors")
+        return "-".join([self.name] + [attr for attr in ("indexed", "annotated", "vocab", "id", "wordvectors", "omit")
                                        if getattr(self, attr)])
 
     def __call__(self, config):
         config.args.vocab = self.vocab
         config.args.word_vectors = self.wordvectors
-        return SparseFeatureExtractor() if self.name == SPARSE else DenseFeatureExtractor(
+        config.args.omit_features = self.omit
+        return SparseFeatureExtractor(omit_features=self.omit) if self.name == SPARSE else DenseFeatureExtractor(
             OrderedDict((p.name, p.create_from_config()) for p in Model(None, config=config).param_defs()),
-            indexed=self.indexed, node_dropout=0)
+            indexed=self.indexed, node_dropout=0, omit_features=self.omit)
 
 
 def feature_extractors(*args, **kwargs):
@@ -77,7 +80,8 @@ def _test_features(config, feature_extractor_creator, filename, write_features):
         if state.finished:
             break
     features = ["%s %s\n" % i for f in features if f for i in (sorted(f.items()) + [("", "")])]
-    compare_file = "test_files/features/%s-%s.txt" % (basename(filename), str(feature_extractor_creator))
+    compare_file = os.path.join("test_files", "features", "-".join((basename(filename), str(feature_extractor_creator)))
+                                + ".txt")
     if write_features:
         with open(compare_file, "w") as f:
             f.writelines(features)
@@ -86,33 +90,28 @@ def _test_features(config, feature_extractor_creator, filename, write_features):
 
 
 @pytest.mark.parametrize("feature_extractor_creator",
-                         feature_extractors() + feature_extractors(vocab="-") + feature_extractors(vocab=VOCAB) +
-                         feature_extractors(wordvectors=WORD_VECTORS) +
-                         feature_extractors(vocab="-", wordvectors=WORD_VECTORS) +
-                         feature_extractors(vocab=VOCAB, wordvectors=WORD_VECTORS),
-                         ids=str)
+                         [f for v in (None, "-", VOCAB) for w in (None, WORD_VECTORS) for o in (None, OMITTED)
+                          for f in feature_extractors(vocab=v, wordvectors=w, omit=o)], ids=str)
 @pytest.mark.parametrize("filename", passage_files(), ids=basename)
 def test_features(config, feature_extractor_creator, filename, write_features):
     _test_features(config, feature_extractor_creator, filename, write_features)
 
 
 @pytest.mark.parametrize("feature_extractor_creator",
-                         feature_extractors(annotated=True, vocab="-") +
-                         feature_extractors(annotated=True, vocab=VOCAB) +
-                         feature_extractors(annotated=True, vocab="-", wordvectors=WORD_VECTORS) +
-                         feature_extractors(annotated=True, vocab=VOCAB, wordvectors=WORD_VECTORS),
-                         ids=str)
+                         [f for v in ("-", VOCAB) for w in (None, WORD_VECTORS) for o in (None, OMITTED)
+                          for f in feature_extractors(annotated=True, vocab=v, wordvectors=w, omit=o)], ids=str)
 @pytest.mark.parametrize("filename", passage_files("conllu"), ids=basename)
 def test_features_conllu(config, feature_extractor_creator, filename, write_features):
     _test_features(config, feature_extractor_creator, filename, write_features)
 
 
-@pytest.mark.parametrize("feature_extractor_creator", feature_extractors()[:-1], ids=str)
+@pytest.mark.parametrize("feature_extractor_creator", [f for o in (None, OMITTED)
+                                                       for f in feature_extractors(omit=o)[:-1]], ids=str)
 def test_feature_templates(config, feature_extractor_creator, write_features):
     config.set_format("amr")
     feature_extractor = feature_extractor_creator(config)
     features = ["%s\n" % i for i in feature_extractor.all_features()]
-    compare_file = "test_files/features/templates-%s.txt" % str(feature_extractor_creator)
+    compare_file = os.path.join("test_files", "features", "templates-%s.txt" % str(feature_extractor_creator))
     if write_features:
         with open(compare_file, "w") as f:
             f.writelines(features)

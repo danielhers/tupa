@@ -1,0 +1,6930 @@
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=17831099778462416609 0 1
+b0wE=17831099778462416609 0 1
+b0wI=17831099778462416609 0 1
+b0wM=17831099778462416609 0 1
+b0wP=17831099778462416609 0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.02941176470588225
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.02941176470588225
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0wC=17831099778462416609 0 1
+s0wE=17831099778462416609 0 1
+s0wI=17831099778462416609 0 1
+s0wM=17831099778462416609 0 1
+s0wP=17831099778462416609 0 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b0wC=17831099778462416609 1 1
+b0wE=17831099778462416609 0 1
+b0wI=17831099778462416609 0 1
+b0wM=17831099778462416609 0 1
+b0wP=17831099778462416609 0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.05882352941176472
+s0#e=12204527652707022206 Terminal 1
+s0$e=17831099778462416609 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=4690420944186131903 Terminal 1
+s0b0x=0 1
+s0eb0w=Terminal 17831099778462416609 1
+s0h=0 1
+s0s1x=0 1
+s0wC=17831099778462416609 0 1
+s0wE=17831099778462416609 0 1
+s0wI=17831099778462416609 0 1
+s0wM=17831099778462416609 0 1
+s0wP=17831099778462416609 1 1
+s0wb0w=17831099778462416609 17831099778462416609 1
+s0we=17831099778462416609 Terminal 1
+s0xb0w=0 17831099778462416609 1
+s0xwe=0 17831099778462416609 Terminal 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b0wC=17831099778462416609 1 1
+b0wE=17831099778462416609 0 1
+b0wI=17831099778462416609 0 1
+b0wM=17831099778462416609 0 1
+b0wP=17831099778462416609 0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.05882352941176472
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.05882352941176472
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0lwe=17831099778462416609 Terminal 1
+s0s1x=0 1
+s0wC=17831099778462416609 1 1
+s0wE=17831099778462416609 0 1
+s0wI=17831099778462416609 0 1
+s0wM=17831099778462416609 0 1
+s0wP=17831099778462416609 0 1
+s1s0x=0 1
+ 
+a0Ae=NODE case 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=case 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.08823529411764697
+s0#e=12204527652707022206 case 1
+s0$e=17831099778462416609 case 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=4690420944186131903 case 1
+s0b0x=0 1
+s0h=1 1
+s0lwe=17831099778462416609 Terminal 1
+s0s1x=0 1
+s0wC=17831099778462416609 1 1
+s0wE=17831099778462416609 0 1
+s0wI=17831099778462416609 0 1
+s0wM=17831099778462416609 0 1
+s0wP=17831099778462416609 1 1
+s0we=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE case 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.08823529411764697
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.08823529411764697
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0llwe=17831099778462416609 Terminal 1
+s0lwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=NODE nmod 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=nmod 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.11764705882352944
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0llwe=17831099778462416609 Terminal 1
+s0lwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a1Ae=NODE nmod 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.11764705882352944
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=1 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 381 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=1 381 1
+b1h=0 1
+n/t 0.11764705882352944
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs2e=0 nmod 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.1470588235294117
+s0#e=4088098365541558500 Terminal 1
+s0$e=16957618830852774490 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=8148669997605808657 Terminal 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs2e=0 nmod 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.1470588235294117
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=1 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 381 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=1 381 1
+b1h=0 1
+n/t 0.1470588235294117
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.1470588235294117
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE det 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.1470588235294117
+s0#e=4088098365541558500 det 1
+s0$e=16957618830852774490 det 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=8148669997605808657 det 1
+s0b0x=0 1
+s0es1e=det nmod 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE det 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=nmod 1
+b0s0x=1 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.1470588235294117
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0llwe=17831099778462416609 Terminal 1
+s0lwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 381 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=1 381 1
+b1h=0 1
+n/t 0.1470588235294117
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=1 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=1 381 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.1470588235294117
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 381 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs2e=0 nmod 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 381 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=1 381 1
+b1h=0 1
+n/t 0.17647058823529416
+s0#e=16072095006890171862 Terminal 1
+s0$e=5870647784995216628 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 381 1
+s0P=1 1
+s0^e=18003918085672799305 Terminal 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs2e=0 nmod 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 381 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=1 381 1
+b1h=0 1
+n/t 0.17647058823529416
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=1 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=1 381 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.17647058823529416
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 381 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=1 381 1
+b1h=0 1
+n/t 0.17647058823529416
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 381 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE head 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=1 381 1
+b1h=0 1
+n/t 0.17647058823529416
+s0#e=16072095006890171862 head 1
+s0$e=5870647784995216628 head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 381 1
+s0P=1 1
+s0^e=18003918085672799305 head 1
+s0b0x=0 1
+s0es1e=head nmod 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE head 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=nmod 1
+b0s0x=1 1
+b1NT=1 381 1
+b1h=0 1
+n/t 0.17647058823529416
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0llwe=17831099778462416609 Terminal 1
+s0lwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=1 381 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.17647058823529416
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=1 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 388 1
+b1h=0 1
+n/t 0.17647058823529416
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=1 381 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs2e=0 nmod 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=1 381 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2058823529411764
+s0#e=16540303583526207617 Terminal 1
+s0$e=9935840229106429485 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=1 381 1
+s0P=1 1
+s0^e=5533571732986600803 Terminal 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs2e=0 nmod 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=1 381 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2058823529411764
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=1 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 388 1
+b1h=0 1
+n/t 0.2058823529411764
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=1 381 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2058823529411764
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=1 381 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE nmod 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2058823529411764
+s0#e=16540303583526207617 nmod 1
+s0$e=9935840229106429485 nmod 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=1 381 1
+s0P=1 1
+s0^e=5533571732986600803 nmod 1
+s0b0x=0 1
+s0es1e=nmod nmod 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE nmod 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=nmod 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2058823529411764
+s0C=4 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0llwe=17831099778462416609 Terminal 1
+s0lwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 388 1
+b1h=0 1
+n/t 0.2058823529411764
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=1 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 388 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2058823529411764
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs2e=0 nmod 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=3 388 1
+b1h=0 1
+n/t 0.23529411764705888
+s0#e=4088098365541558500 Terminal 1
+s0$e=9853453377236851768 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=15598372446745583797 Terminal 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs2e=0 nmod 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=3 388 1
+b1h=0 1
+n/t 0.23529411764705888
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=1 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 388 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.23529411764705888
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE case 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=case 1
+b0s0x=1 1
+b1NT=3 388 1
+b1h=0 1
+n/t 0.2647058823529411
+s0#e=4088098365541558500 case 1
+s0$e=9853453377236851768 case 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=15598372446745583797 case 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE case 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=3 388 1
+b1h=0 1
+n/t 0.2647058823529411
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=1 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 388 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2647058823529411
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2647058823529411
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 388 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 388 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2941176470588236
+s0#e=16540303583526207617 Terminal 1
+s0$e=11048616276183016068 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 388 1
+s0P=1 1
+s0^e=5533571732986600803 Terminal 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 388 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2941176470588236
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2941176470588236
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 388 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2941176470588236
+s0#e=16540303583526207617 head 1
+s0$e=11048616276183016068 head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 388 1
+s0P=1 1
+s0^e=5533571732986600803 head 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2941176470588236
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2941176470588236
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=0 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE nmod 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2941176470588236
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod nmod 1
+s0s1x=0 1
+s1llwe=17831099778462416609 Terminal 1
+s1lwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE nmod 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=nmod 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2941176470588236
+s0C=5 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0llwe=17831099778462416609 Terminal 1
+s0lwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2941176470588236
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2941176470588236
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2941176470588236
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.2941176470588236
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 head 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.32352941176470584
+s0#e=4088098365541558500 Terminal 1
+s0$e=1269071886833429403 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=260667111241363922 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal head 1
+s0es1eb0#=Terminal head 4088098365541558500 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 head 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.32352941176470584
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.32352941176470584
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE cop 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.32352941176470584
+s0#e=4088098365541558500 cop 1
+s0$e=1269071886833429403 cop 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=260667111241363922 cop 1
+s0b0x=0 1
+s0es1e=cop head 1
+s0es1eb0#=cop head 4370460163704169311 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE cop 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.32352941176470584
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.32352941176470584
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 head 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.3529411764705883
+s0#e=4370460163704169311 Terminal 1
+s0$e=16042591547380249544 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=1720370409040345145 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal head 1
+s0es1eb0#=Terminal head 4370460163704169311 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 head 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.3529411764705883
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.3529411764705883
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE nsubj 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.3529411764705883
+s0#e=4370460163704169311 nsubj 1
+s0$e=16042591547380249544 nsubj 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=1720370409040345145 nsubj 1
+s0b0x=0 1
+s0es1e=nsubj head 1
+s0es1eb0#=nsubj head 4088098365541558500 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE nsubj 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.3529411764705883
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.3529411764705883
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 head 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.38235294117647056
+s0#e=4088098365541558500 Terminal 1
+s0$e=9727125788672890116 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=11901859001352538922 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal head 1
+s0es1eb0#=Terminal head 4088098365541558500 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 head 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.38235294117647056
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.38235294117647056
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE case 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=case 1
+b0s0x=1 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.41176470588235303
+s0#e=4088098365541558500 case 1
+s0$e=9727125788672890116 case 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=11901859001352538922 case 1
+s0b0x=0 1
+s0es1e=case head 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE case 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.41176470588235303
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.41176470588235303
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE nmod 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.41176470588235303
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 16072095006890171862 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE nmod 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.41176470588235303
+s0#s1es2e=16072095006890171862 nmod head 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.4411764705882353
+s0#e=16072095006890171862 Terminal 1
+s0#s1es2e=16072095006890171862 nmod head 1
+s0$e=15636847292248824302 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=1 1
+s0^e=18003918085672799305 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal nmod 1
+s0es1eb0#=Terminal nmod 16072095006890171862 1
+s0es1es2e=Terminal nmod head 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.4411764705882353
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 16072095006890171862 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.4411764705882353
+s0#s1es2e=16072095006890171862 nmod head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.4411764705882353
+s0#e=16072095006890171862 head 1
+s0#s1es2e=16072095006890171862 nmod head 1
+s0$e=15636847292248824302 head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=1 1
+s0^e=18003918085672799305 head 1
+s0b0x=0 1
+s0es1e=head nmod 1
+s0es1eb0#=head nmod 4088098365541558500 1
+s0es1es2e=head nmod head 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.4411764705882353
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 4088098365541558500 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.4411764705882353
+s0C=4 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.4411764705882353
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 head 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.47058823529411775
+s0#e=4088098365541558500 Terminal 1
+s0$e=15326117512933414518 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=15598372446745583797 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal head 1
+s0es1eb0#=Terminal head 4088098365541558500 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 head 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.47058823529411775
+s0C=4 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.47058823529411775
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE case 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=case 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.5
+s0#e=4088098365541558500 case 1
+s0$e=15326117512933414518 case 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=15598372446745583797 case 1
+s0b0x=0 1
+s0es1e=case head 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE case 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.5
+s0C=4 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0llwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.5
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE nmod 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.5
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 4088098365541558500 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE nmod 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=1 378 1
+b1h=0 1
+n/t 0.5
+s0#s1es2e=4088098365541558500 nmod head 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.5294117647058822
+s0#e=4088098365541558500 Terminal 1
+s0#s1es2e=4088098365541558500 nmod head 1
+s0$e=1471408868295299003 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=8148669997605808657 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal nmod 1
+s0es1eb0#=Terminal nmod 4088098365541558500 1
+s0es1es2e=Terminal nmod head 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.5294117647058822
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 4088098365541558500 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=1 378 1
+b1h=0 1
+n/t 0.5294117647058822
+s0#s1es2e=4088098365541558500 nmod head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE det 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=1 378 1
+b1h=0 1
+n/t 0.5294117647058822
+s0#e=4088098365541558500 det 1
+s0#s1es2e=4088098365541558500 nmod head 1
+s0$e=1471408868295299003 det 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=8148669997605808657 det 1
+s0b0x=0 1
+s0es1e=det nmod 1
+s0es1eb0#=det nmod 16072095006890171862 1
+s0es1es2e=det nmod head 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE det 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=1 378 1
+b1h=0 1
+n/t 0.5294117647058822
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 16072095006890171862 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=1 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.5294117647058822
+s0#s1es2e=16072095006890171862 nmod head 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=1 378 1
+b1h=0 1
+n/t 0.5588235294117647
+s0#e=16072095006890171862 Terminal 1
+s0#s1es2e=16072095006890171862 nmod head 1
+s0$e=15636847292248824302 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=1 1
+s0^e=3209455878668673793 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal nmod 1
+s0es1eb0#=Terminal nmod 16072095006890171862 1
+s0es1es2e=Terminal nmod head 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=1 378 1
+b1h=0 1
+n/t 0.5588235294117647
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 16072095006890171862 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=1 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.5588235294117647
+s0#s1es2e=16072095006890171862 nmod head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE amod 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=1 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.5588235294117647
+s0#e=16072095006890171862 amod 1
+s0#s1es2e=16072095006890171862 nmod head 1
+s0$e=15636847292248824302 amod 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=1 1
+s0^e=3209455878668673793 amod 1
+s0b0x=0 1
+s0es1e=amod nmod 1
+s0es1eb0#=amod nmod 3552942401566437853 1
+s0es1es2e=amod nmod head 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE amod 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=1 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.5588235294117647
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 3552942401566437853 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.5588235294117647
+s0#s1es2e=3552942401566437853 nmod head 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=1 378 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=1 378 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.588235294117647
+s0#e=3552942401566437853 Terminal 1
+s0#s1es2e=3552942401566437853 nmod head 1
+s0$e=2718460087486798026 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=1 378 1
+s0P=1 1
+s0^e=5582244037879929967 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal nmod 1
+s0es1eb0#=Terminal nmod 3552942401566437853 1
+s0es1es2e=Terminal nmod head 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=1 378 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.588235294117647
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 3552942401566437853 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.588235294117647
+s0#s1es2e=3552942401566437853 nmod head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=1 378 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.588235294117647
+s0#e=3552942401566437853 head 1
+s0#s1es2e=3552942401566437853 nmod head 1
+s0$e=2718460087486798026 head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=1 378 1
+s0P=1 1
+s0^e=5582244037879929967 head 1
+s0b0x=0 1
+s0es1e=head nmod 1
+s0es1eb0#=head nmod 16072095006890171862 1
+s0es1es2e=head nmod head 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.588235294117647
+s0C=4 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 16072095006890171862 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.588235294117647
+s0#s1es2e=16072095006890171862 nmod head 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6176470588235294
+s0#e=16072095006890171862 Terminal 1
+s0#s1es2e=16072095006890171862 nmod head 1
+s0$e=16602120460534419010 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=9148987913859918431 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal nmod 1
+s0es1eb0#=Terminal nmod 16072095006890171862 1
+s0es1es2e=Terminal nmod head 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6176470588235294
+s0C=4 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 16072095006890171862 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6176470588235294
+s0#s1es2e=16072095006890171862 nmod head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE appos 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6176470588235294
+s0#e=16072095006890171862 appos 1
+s0#s1es2e=16072095006890171862 nmod head 1
+s0$e=16602120460534419010 appos 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=9148987913859918431 appos 1
+s0b0x=0 1
+s0es1e=appos nmod 1
+s0es1eb0#=appos nmod 13110060611322374290 1
+s0es1es2e=appos nmod head 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE appos 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6176470588235294
+s0C=5 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 13110060611322374290 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=2593208677638477497 0 1
+b0wE=2593208677638477497 0 1
+b0wI=2593208677638477497 0 1
+b0wM=2593208677638477497 0 1
+b0wP=2593208677638477497 0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6176470588235294
+s0#s1es2e=13110060611322374290 nmod head 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xb0w=0 2593208677638477497 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s1eb0w=nmod 2593208677638477497 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6470588235294117
+s0#e=13110060611322374290 Terminal 1
+s0#s1es2e=13110060611322374290 nmod head 1
+s0$e=13462225638602812032 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=11901859001352538922 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal nmod 1
+s0es1eb0#=Terminal nmod 13110060611322374290 1
+s0es1es2e=Terminal nmod head 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6470588235294117
+s0C=5 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 13110060611322374290 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=2593208677638477497 0 1
+b0wE=2593208677638477497 0 1
+b0wI=2593208677638477497 0 1
+b0wM=2593208677638477497 0 1
+b0wP=2593208677638477497 0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6470588235294117
+s0#s1es2e=13110060611322374290 nmod head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1eb0w=nmod 2593208677638477497 1
+s1s0x=0 1
+ 
+b 1
+b0C=5 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6470588235294117
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE head 1
+b 1
+b0C=5 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6470588235294117
+s0#e=13110060611322374290 head 1
+s0$e=13462225638602812032 head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=11901859001352538922 head 1
+s0b0x=0 1
+s0es1e=head head 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE head 1
+b 1
+b0C=5 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6470588235294117
+s0C=6 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0e=nmod 1
+s0b0x=1 1
+s0llwe=17831099778462416609 case 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=2593208677638477497 0 1
+b0wE=2593208677638477497 0 1
+b0wI=2593208677638477497 0 1
+b0wM=2593208677638477497 0 1
+b0wP=2593208677638477497 0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6470588235294117
+s0C=5 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0eb0w=nmod 2593208677638477497 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 2593208677638477497 1
+s0s1x=0 1
+s1eb0w=head 2593208677638477497 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6470588235294117
+s0#s1es2e=2593208677638477497 nmod head 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0wC=2593208677638477497 0 1
+s0wE=2593208677638477497 0 1
+s0wI=2593208677638477497 0 1
+s0wM=2593208677638477497 0 1
+s0wP=2593208677638477497 0 1
+s0ws1e=2593208677638477497 nmod 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b0wC=2593208677638477497 1 1
+b0wE=2593208677638477497 0 1
+b0wI=2593208677638477497 0 1
+b0wM=2593208677638477497 0 1
+b0wP=2593208677638477497 0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6764705882352942
+s0#e=2593208677638477497 Terminal 1
+s0#s1es2e=2593208677638477497 nmod head 1
+s0$e=2593208677638477497 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=2593208677638477497 Terminal 1
+s0b0x=0 1
+s0eb0w=Terminal 2593208677638477497 1
+s0es1e=Terminal nmod 1
+s0es1eb0#=Terminal nmod 2593208677638477497 1
+s0es1es2e=Terminal nmod head 1
+s0h=0 1
+s0s1x=0 1
+s0wC=2593208677638477497 0 1
+s0wE=2593208677638477497 0 1
+s0wI=2593208677638477497 0 1
+s0wM=2593208677638477497 0 1
+s0wP=2593208677638477497 1 1
+s0wb0w=2593208677638477497 2593208677638477497 1
+s0we=2593208677638477497 Terminal 1
+s0ws1e=2593208677638477497 nmod 1
+s0xb0w=0 2593208677638477497 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s0xwe=0 2593208677638477497 Terminal 1
+s1eb0w=nmod 2593208677638477497 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b0wC=2593208677638477497 1 1
+b0wE=2593208677638477497 0 1
+b0wI=2593208677638477497 0 1
+b0wM=2593208677638477497 0 1
+b0wP=2593208677638477497 0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6764705882352942
+s0C=5 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0eb0w=nmod 2593208677638477497 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 2593208677638477497 1
+s0s1x=0 1
+s1eb0w=head 2593208677638477497 1
+s1llwe=17831099778462416609 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6764705882352942
+s0#s1es2e=2593208677638477497 nmod head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0lwe=2593208677638477497 Terminal 1
+s0s1x=0 1
+s0wC=2593208677638477497 1 1
+s0wE=2593208677638477497 0 1
+s0wI=2593208677638477497 0 1
+s0wM=2593208677638477497 0 1
+s0wP=2593208677638477497 0 1
+s0ws1e=2593208677638477497 nmod 1
+s1s0x=0 1
+ 
+b 1
+b0C=5 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6764705882352942
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0lwe=2593208677638477497 Terminal 1
+s0s1x=0 1
+s0wC=2593208677638477497 1 1
+s0wE=2593208677638477497 0 1
+s0wI=2593208677638477497 0 1
+s0wM=2593208677638477497 0 1
+s0wP=2593208677638477497 0 1
+s0ws1e=2593208677638477497 head 1
+s1llwe=17831099778462416609 case 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE U 1
+b 1
+b0C=5 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6764705882352942
+s0#e=2593208677638477497 U 1
+s0$e=2593208677638477497 U 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=2593208677638477497 U 1
+s0b0x=0 1
+s0es1e=U head 1
+s0h=1 1
+s0lwe=2593208677638477497 Terminal 1
+s0s1x=0 1
+s0wC=2593208677638477497 1 1
+s0wE=2593208677638477497 0 1
+s0wI=2593208677638477497 0 1
+s0wM=2593208677638477497 0 1
+s0wP=2593208677638477497 1 1
+s0we=2593208677638477497 U 1
+s0ws1e=2593208677638477497 head 1
+s1llwe=17831099778462416609 case 1
+s1rlwe=2593208677638477497 Terminal 1
+s1rwe=2593208677638477497 U 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE U 1
+b 1
+b0C=5 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6764705882352942
+s0C=7 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0e=nmod 1
+s0b0x=1 1
+s0llwe=17831099778462416609 case 1
+s0rlwe=2593208677638477497 Terminal 1
+s0rwe=2593208677638477497 U 1
+s0s1x=0 1
+s1lrwe=2593208677638477497 U 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6764705882352942
+s0C=5 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 4370460163704169311 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1rlwe=2593208677638477497 Terminal 1
+s1rwe=2593208677638477497 U 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.6764705882352942
+s0#s1es2e=4370460163704169311 nmod head 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.7058823529411764
+s0#e=4370460163704169311 Terminal 1
+s0#s1es2e=4370460163704169311 nmod head 1
+s0$e=15745985092136828842 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=260667111241363922 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal nmod 1
+s0es1eb0#=Terminal nmod 4370460163704169311 1
+s0es1es2e=Terminal nmod head 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 nmod 1
+s0xs2e=0 head 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.7058823529411764
+s0C=5 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 4370460163704169311 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1rlwe=2593208677638477497 Terminal 1
+s1rwe=2593208677638477497 U 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.7058823529411764
+s0#s1es2e=4370460163704169311 nmod head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=NODE advmod 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=advmod 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.7352941176470589
+s0#e=4370460163704169311 advmod 1
+s0#s1es2e=4370460163704169311 nmod head 1
+s0$e=15745985092136828842 advmod 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=260667111241363922 advmod 1
+s0b0x=0 1
+s0es1e=advmod nmod 1
+s0es1es2e=advmod nmod head 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a1Ae=NODE advmod 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.7352941176470589
+s0C=5 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod head 1
+s0s1x=0 1
+s1llwe=17831099778462416609 case 1
+s1rlwe=2593208677638477497 Terminal 1
+s1rwe=2593208677638477497 U 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.7352941176470589
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE acl 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.7352941176470589
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=acl nmod 1
+s0es1eb0#=acl nmod 4370460163704169311 1
+s0es1es2e=acl nmod head 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE acl 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.7352941176470589
+s0#s1es2e=4370460163704169311 acl nmod 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 acl 1
+s0xs2e=0 nmod 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.7647058823529411
+s0#e=4370460163704169311 Terminal 1
+s0#s1es2e=4370460163704169311 acl nmod 1
+s0$e=16042591547380249544 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=1720370409040345145 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal acl 1
+s0es1eb0#=Terminal acl 4370460163704169311 1
+s0es1es2e=Terminal acl nmod 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 acl 1
+s0xs2e=0 nmod 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.7647058823529411
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=acl nmod 1
+s0es1eb0#=acl nmod 4370460163704169311 1
+s0es1es2e=acl nmod head 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.7647058823529411
+s0#s1es2e=4370460163704169311 acl nmod 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE nsubj 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.7647058823529411
+s0#e=4370460163704169311 nsubj 1
+s0#s1es2e=4370460163704169311 acl nmod 1
+s0$e=16042591547380249544 nsubj 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=1720370409040345145 nsubj 1
+s0b0x=0 1
+s0es1e=nsubj acl 1
+s0es1eb0#=nsubj acl 13110060611322374290 1
+s0es1es2e=nsubj acl nmod 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE nsubj 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.7647058823529411
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=acl nmod 1
+s0es1eb0#=acl nmod 13110060611322374290 1
+s0es1es2e=acl nmod head 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 381 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.7647058823529411
+s0#s1es2e=13110060611322374290 acl nmod 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 acl 1
+s0xs2e=0 nmod 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.7941176470588236
+s0#e=13110060611322374290 Terminal 1
+s0#s1es2e=13110060611322374290 acl nmod 1
+s0$e=11197236520932772837 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=16978132545290669629 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal acl 1
+s0es1eb0#=Terminal acl 13110060611322374290 1
+s0es1es2e=Terminal acl nmod 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 acl 1
+s0xs2e=0 nmod 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.7941176470588236
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=acl nmod 1
+s0es1eb0#=acl nmod 13110060611322374290 1
+s0es1es2e=acl nmod head 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 381 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.7941176470588236
+s0#s1es2e=13110060611322374290 acl nmod 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=NODE det 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=det 1
+b0s0x=1 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.8235294117647058
+s0#e=13110060611322374290 det 1
+s0#s1es2e=13110060611322374290 acl nmod 1
+s0$e=11197236520932772837 det 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=16978132545290669629 det 1
+s0b0x=0 1
+s0es1e=det acl 1
+s0es1es2e=det acl nmod 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a1Ae=NODE det 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=3 381 1
+b1h=0 1
+n/t 0.8235294117647058
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=acl nmod 1
+s0es1es2e=acl nmod head 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 381 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.8235294117647058
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE obj 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 381 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.8235294117647058
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=obj acl 1
+s0es1eb0#=obj acl 16072095006890171862 1
+s0es1es2e=obj acl nmod 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE obj 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=15099054000809333061 0 1
+b0wE=15099054000809333061 0 1
+b0wI=15099054000809333061 0 1
+b0wM=15099054000809333061 0 1
+b0wP=15099054000809333061 0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.8235294117647058
+s0#s1es2e=16072095006890171862 obj acl 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 381 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xb0w=0 15099054000809333061 1
+s0xs1e=0 obj 1
+s0xs2e=0 acl 1
+s1eb0w=obj 15099054000809333061 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 381 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.8529411764705883
+s0#e=16072095006890171862 Terminal 1
+s0#s1es2e=16072095006890171862 obj acl 1
+s0$e=7970704286052693043 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 381 1
+s0P=1 1
+s0^e=9148987913859918431 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal obj 1
+s0es1eb0#=Terminal obj 16072095006890171862 1
+s0es1es2e=Terminal obj acl 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 obj 1
+s0xs2e=0 acl 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 381 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.8529411764705883
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=obj acl 1
+s0es1eb0#=obj acl 16072095006890171862 1
+s0es1es2e=obj acl nmod 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=15099054000809333061 0 1
+b0wE=15099054000809333061 0 1
+b0wI=15099054000809333061 0 1
+b0wM=15099054000809333061 0 1
+b0wP=15099054000809333061 0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.8529411764705883
+s0#s1es2e=16072095006890171862 obj acl 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 381 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1eb0w=obj 15099054000809333061 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=15099054000809333061 0 1
+b0wE=15099054000809333061 0 1
+b0wI=15099054000809333061 0 1
+b0wM=15099054000809333061 0 1
+b0wP=15099054000809333061 0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.8529411764705883
+s0#e=16072095006890171862 head 1
+s0#s1es2e=16072095006890171862 obj acl 1
+s0$e=7970704286052693043 head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 381 1
+s0P=1 1
+s0^e=9148987913859918431 head 1
+s0b0x=0 1
+s0eb0w=head 15099054000809333061 1
+s0es1e=head obj 1
+s0es1eb0#=head obj 4370460163704169311 1
+s0es1es2e=head obj acl 1
+s0h=1 1
+s0s1x=0 1
+s1eb0w=obj 15099054000809333061 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=15099054000809333061 0 1
+b0wE=15099054000809333061 0 1
+b0wI=15099054000809333061 0 1
+b0wM=15099054000809333061 0 1
+b0wP=15099054000809333061 0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.8529411764705883
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0eb0w=obj 15099054000809333061 1
+s0es1e=obj acl 1
+s0es1eb0#=obj acl 4370460163704169311 1
+s0es1es2e=obj acl nmod 1
+s0s1x=0 1
+s1eb0w=acl 15099054000809333061 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=15099054000809333061 0 1
+b0wE=15099054000809333061 0 1
+b0wI=15099054000809333061 0 1
+b0wM=15099054000809333061 0 1
+b0wP=15099054000809333061 0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.8529411764705883
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0eb0w=acl 15099054000809333061 1
+s0es1e=acl nmod 1
+s0es1eb0#=acl nmod 4370460163704169311 1
+s0es1es2e=acl nmod head 1
+s0s1x=0 1
+s1eb0w=nmod 15099054000809333061 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.8529411764705883
+s0#s1es2e=4370460163704169311 acl nmod 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0wC=15099054000809333061 0 1
+s0wE=15099054000809333061 0 1
+s0wI=15099054000809333061 0 1
+s0wM=15099054000809333061 0 1
+s0wP=15099054000809333061 0 1
+s0ws1e=15099054000809333061 acl 1
+s0xs1e=0 acl 1
+s0xs2e=0 nmod 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b0wC=15099054000809333061 1 1
+b0wE=15099054000809333061 0 1
+b0wI=15099054000809333061 0 1
+b0wM=15099054000809333061 0 1
+b0wP=15099054000809333061 0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.8823529411764706
+s0#e=4370460163704169311 Terminal 1
+s0#s1es2e=4370460163704169311 acl nmod 1
+s0$e=15099054000809333061 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=11901859001352538922 Terminal 1
+s0b0x=0 1
+s0eb0w=Terminal 15099054000809333061 1
+s0es1e=Terminal acl 1
+s0es1eb0#=Terminal acl 4370460163704169311 1
+s0es1es2e=Terminal acl nmod 1
+s0h=0 1
+s0s1x=0 1
+s0wC=15099054000809333061 0 1
+s0wE=15099054000809333061 0 1
+s0wI=15099054000809333061 0 1
+s0wM=15099054000809333061 0 1
+s0wP=15099054000809333061 1 1
+s0wb0w=15099054000809333061 15099054000809333061 1
+s0we=15099054000809333061 Terminal 1
+s0ws1e=15099054000809333061 acl 1
+s0xb0w=0 15099054000809333061 1
+s0xs1e=0 acl 1
+s0xs2e=0 nmod 1
+s0xwe=0 15099054000809333061 Terminal 1
+s1eb0w=acl 15099054000809333061 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b0wC=15099054000809333061 1 1
+b0wE=15099054000809333061 0 1
+b0wI=15099054000809333061 0 1
+b0wM=15099054000809333061 0 1
+b0wP=15099054000809333061 0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.8823529411764706
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0eb0w=acl 15099054000809333061 1
+s0es1e=acl nmod 1
+s0es1eb0#=acl nmod 4370460163704169311 1
+s0es1es2e=acl nmod head 1
+s0s1x=0 1
+s1eb0w=nmod 15099054000809333061 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.8823529411764706
+s0#s1es2e=4370460163704169311 acl nmod 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0lwe=15099054000809333061 Terminal 1
+s0s1x=0 1
+s0wC=15099054000809333061 1 1
+s0wE=15099054000809333061 0 1
+s0wI=15099054000809333061 0 1
+s0wM=15099054000809333061 0 1
+s0wP=15099054000809333061 0 1
+s0ws1e=15099054000809333061 acl 1
+s1s0x=0 1
+ 
+a0Ae=NODE case 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=case 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.911764705882353
+s0#e=4370460163704169311 case 1
+s0#s1es2e=4370460163704169311 acl nmod 1
+s0$e=15099054000809333061 case 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=11901859001352538922 case 1
+s0b0x=0 1
+s0es1e=case acl 1
+s0es1es2e=case acl nmod 1
+s0h=1 1
+s0lwe=15099054000809333061 Terminal 1
+s0s1x=0 1
+s0wC=15099054000809333061 1 1
+s0wE=15099054000809333061 0 1
+s0wI=15099054000809333061 0 1
+s0wM=15099054000809333061 0 1
+s0wP=15099054000809333061 1 1
+s0we=15099054000809333061 case 1
+s0ws1e=15099054000809333061 acl 1
+s1s0x=0 1
+ 
+a1Ae=NODE case 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.911764705882353
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=acl nmod 1
+s0es1es2e=acl nmod head 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.911764705882353
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0llwe=15099054000809333061 Terminal 1
+s0lwe=15099054000809333061 case 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE obl 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.911764705882353
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=obl acl 1
+s0es1eb0#=obl acl 13110060611322374290 1
+s0es1es2e=obl acl nmod 1
+s0llwe=15099054000809333061 Terminal 1
+s0lwe=15099054000809333061 case 1
+s0s1x=0 1
+s1rlwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE obl 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.911764705882353
+s0#s1es2e=13110060611322374290 obl acl 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 obl 1
+s0xs2e=0 acl 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.9411764705882353
+s0#e=13110060611322374290 Terminal 1
+s0#s1es2e=13110060611322374290 obl acl 1
+s0$e=9520894940047451528 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=16978132545290669629 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal obl 1
+s0es1eb0#=Terminal obl 13110060611322374290 1
+s0es1es2e=Terminal obl acl 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 obl 1
+s0xs2e=0 acl 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 0.9411764705882353
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=obl acl 1
+s0es1eb0#=obl acl 13110060611322374290 1
+s0es1es2e=obl acl nmod 1
+s0llwe=15099054000809333061 Terminal 1
+s0lwe=15099054000809333061 case 1
+s0s1x=0 1
+s1rlwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.9411764705882353
+s0#s1es2e=13110060611322374290 obl acl 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE det 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.9411764705882353
+s0#e=13110060611322374290 det 1
+s0#s1es2e=13110060611322374290 obl acl 1
+s0$e=9520894940047451528 det 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=16978132545290669629 det 1
+s0b0x=0 1
+s0es1e=det obl 1
+s0es1eb0#=det obl 10887629174180191697 1
+s0es1es2e=det obl acl 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE det 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.9411764705882353
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=obl acl 1
+s0es1eb0#=obl acl 10887629174180191697 1
+s0es1es2e=obl acl nmod 1
+s0llwe=15099054000809333061 Terminal 1
+s0lwe=15099054000809333061 case 1
+s0s1x=0 1
+s1rlwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.9411764705882353
+s0#s1es2e=10887629174180191697 obl acl 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 obl 1
+s0xs2e=0 acl 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.9705882352941178
+s0#e=10887629174180191697 Terminal 1
+s0#s1es2e=10887629174180191697 obl acl 1
+s0$e=905484822321688115 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=1 1
+s0^e=12290980237632234855 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal obl 1
+s0es1eb0#=Terminal obl 10887629174180191697 1
+s0es1es2e=Terminal obl acl 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 obl 1
+s0xs2e=0 acl 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.9705882352941178
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=obl acl 1
+s0es1eb0#=obl acl 10887629174180191697 1
+s0es1es2e=obl acl nmod 1
+s0llwe=15099054000809333061 Terminal 1
+s0lwe=15099054000809333061 case 1
+s0s1x=0 1
+s1rlwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.9705882352941178
+s0#s1es2e=10887629174180191697 obl acl 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.9705882352941178
+s0#e=10887629174180191697 head 1
+s0#s1es2e=10887629174180191697 obl acl 1
+s0$e=905484822321688115 head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=1 1
+s0^e=12290980237632234855 head 1
+s0b0x=0 1
+s0es1e=head obl 1
+s0es1eb0#=head obl 4088098365541558500 1
+s0es1es2e=head obl acl 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.9705882352941178
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=obl acl 1
+s0es1eb0#=obl acl 4088098365541558500 1
+s0es1es2e=obl acl nmod 1
+s0llwe=15099054000809333061 Terminal 1
+s0lwe=15099054000809333061 case 1
+s0s1x=0 1
+s1rlwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 0.9705882352941178
+s0#s1es2e=4088098365541558500 obl acl 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 obl 1
+s0xs2e=0 acl 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0
+s0#e=4088098365541558500 Terminal 1
+s0#s1es2e=4088098365541558500 obl acl 1
+s0$e=11593690929944126543 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=12247454108283186160 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal obl 1
+s0es1eb0#=Terminal obl 4088098365541558500 1
+s0es1es2e=Terminal obl acl 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 obl 1
+s0xs2e=0 acl 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=obl acl 1
+s0es1eb0#=obl acl 4088098365541558500 1
+s0es1es2e=obl acl nmod 1
+s0llwe=15099054000809333061 Terminal 1
+s0lwe=15099054000809333061 case 1
+s0s1x=0 1
+s1rlwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0
+s0#s1es2e=4088098365541558500 obl acl 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE cc 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0
+s0#e=4088098365541558500 cc 1
+s0#s1es2e=4088098365541558500 obl acl 1
+s0$e=11593690929944126543 cc 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=12247454108283186160 cc 1
+s0b0x=0 1
+s0es1e=cc obl 1
+s0es1eb0#=cc obl 4088098365541558500 1
+s0es1es2e=cc obl acl 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE cc 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0
+s0C=4 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=obl acl 1
+s0es1eb0#=obl acl 4088098365541558500 1
+s0es1es2e=obl acl nmod 1
+s0llwe=15099054000809333061 Terminal 1
+s0lwe=15099054000809333061 case 1
+s0s1x=0 1
+s1rlwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0
+s0#s1es2e=4088098365541558500 obl acl 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 obl 1
+s0xs2e=0 acl 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0294117647058822
+s0#e=4088098365541558500 Terminal 1
+s0#s1es2e=4088098365541558500 obl acl 1
+s0$e=3573116604670608395 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=8148669997605808657 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal obl 1
+s0es1eb0#=Terminal obl 4088098365541558500 1
+s0es1es2e=Terminal obl acl 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 obl 1
+s0xs2e=0 acl 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0294117647058822
+s0C=4 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=obl acl 1
+s0es1eb0#=obl acl 4088098365541558500 1
+s0es1es2e=obl acl nmod 1
+s0llwe=15099054000809333061 Terminal 1
+s0lwe=15099054000809333061 case 1
+s0s1x=0 1
+s1rlwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0294117647058822
+s0#s1es2e=4088098365541558500 obl acl 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE det 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=det 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0588235294117645
+s0#e=4088098365541558500 det 1
+s0#s1es2e=4088098365541558500 obl acl 1
+s0$e=3573116604670608395 det 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=8148669997605808657 det 1
+s0b0x=0 1
+s0es1e=det obl 1
+s0es1es2e=det obl acl 1
+s0h=1 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE det 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0588235294117645
+s0C=4 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=obl acl 1
+s0es1es2e=obl acl nmod 1
+s0llwe=15099054000809333061 Terminal 1
+s0lwe=15099054000809333061 case 1
+s0s1x=0 1
+s1rlwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0588235294117645
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE conj 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0588235294117645
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=conj obl 1
+s0es1eb0#=conj obl 4088098365541558500 1
+s0es1es2e=conj obl acl 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE conj 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0588235294117645
+s0#s1es2e=4088098365541558500 conj obl 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 conj 1
+s0xs2e=0 obl 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0882352941176472
+s0#e=4088098365541558500 Terminal 1
+s0#s1es2e=4088098365541558500 conj obl 1
+s0$e=7079615728476843702 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=2482183445564601373 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal conj 1
+s0es1eb0#=Terminal conj 4088098365541558500 1
+s0es1es2e=Terminal conj obl 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 conj 1
+s0xs2e=0 obl 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0882352941176472
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=conj obl 1
+s0es1eb0#=conj obl 4088098365541558500 1
+s0es1es2e=conj obl acl 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.0882352941176472
+s0#s1es2e=4088098365541558500 conj obl 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=NODE case 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=case 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.1176470588235294
+s0#e=4088098365541558500 case 1
+s0#s1es2e=4088098365541558500 conj obl 1
+s0$e=7079615728476843702 case 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=2482183445564601373 case 1
+s0b0x=0 1
+s0es1e=case conj 1
+s0es1es2e=case conj obl 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a1Ae=NODE case 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.1176470588235294
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=conj obl 1
+s0es1es2e=conj obl acl 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.1176470588235294
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=NODE nmod 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=nmod 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.1470588235294117
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod conj 1
+s0es1es2e=nmod conj obl 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a1Ae=NODE nmod 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.1470588235294117
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=1 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.1470588235294117
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs2e=0 nmod 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.176470588235294
+s0#e=4088098365541558500 Terminal 1
+s0$e=5835689883812623785 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=5097672513440128799 Terminal 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs2e=0 nmod 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.176470588235294
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=1 1
+s1s0x=0 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.176470588235294
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.176470588235294
+s0#s1es2e=4088098365541558500 nmod conj 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE head 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.176470588235294
+s0#e=4088098365541558500 head 1
+s0#s1es2e=4088098365541558500 nmod conj 1
+s0$e=5835689883812623785 head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=5097672513440128799 head 1
+s0b0x=0 1
+s0es1e=head nmod 1
+s0es1es2e=head nmod conj 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE head 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=nmod 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.176470588235294
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=nmod conj 1
+s0es1es2e=nmod conj obl 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.176470588235294
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=conj obl 1
+s0es1es2e=conj obl acl 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.176470588235294
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE amod 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.176470588235294
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=amod conj 1
+s0es1eb0#=amod conj 13110060611322374290 1
+s0es1es2e=amod conj obl 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE amod 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 1.176470588235294
+s0#s1es2e=13110060611322374290 amod conj 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 amod 1
+s0xs2e=0 conj 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2058823529411766
+s0#e=13110060611322374290 Terminal 1
+s0#s1es2e=13110060611322374290 amod conj 1
+s0$e=7970704286052693043 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=15598372446745583797 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal amod 1
+s0es1eb0#=Terminal amod 13110060611322374290 1
+s0es1es2e=Terminal amod conj 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 amod 1
+s0xs2e=0 conj 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2058823529411766
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=amod conj 1
+s0es1eb0#=amod conj 13110060611322374290 1
+s0es1es2e=amod conj obl 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 1.2058823529411766
+s0#s1es2e=13110060611322374290 amod conj 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 1.2058823529411766
+s0#e=13110060611322374290 head 1
+s0#s1es2e=13110060611322374290 amod conj 1
+s0$e=7970704286052693043 head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=15598372446745583797 head 1
+s0b0x=0 1
+s0es1e=head amod 1
+s0es1eb0#=head amod 13110060611322374290 1
+s0es1es2e=head amod conj 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 1.2058823529411766
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=amod conj 1
+s0es1eb0#=amod conj 13110060611322374290 1
+s0es1es2e=amod conj obl 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 1.2058823529411766
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=conj obl 1
+s0es1eb0#=conj obl 13110060611322374290 1
+s0es1es2e=conj obl acl 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2058823529411766
+s0#s1es2e=13110060611322374290 conj obl 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 conj 1
+s0xs2e=0 obl 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=3 378 1
+b1h=0 1
+n/t 1.2352941176470589
+s0#e=13110060611322374290 Terminal 1
+s0#s1es2e=13110060611322374290 conj obl 1
+s0$e=11090586419576673076 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=8565857220533584986 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal conj 1
+s0es1eb0#=Terminal conj 13110060611322374290 1
+s0es1es2e=Terminal conj obl 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 conj 1
+s0xs2e=0 obl 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=3 378 1
+b1h=0 1
+n/t 1.2352941176470589
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=conj obl 1
+s0es1eb0#=conj obl 13110060611322374290 1
+s0es1es2e=conj obl acl 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2352941176470589
+s0#s1es2e=13110060611322374290 conj obl 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE amod 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2352941176470589
+s0#e=13110060611322374290 amod 1
+s0#s1es2e=13110060611322374290 conj obl 1
+s0$e=11090586419576673076 amod 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=8565857220533584986 amod 1
+s0b0x=0 1
+s0es1e=amod conj 1
+s0es1eb0#=amod conj 16072095006890171862 1
+s0es1es2e=amod conj obl 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE amod 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2352941176470589
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=conj obl 1
+s0es1eb0#=conj obl 16072095006890171862 1
+s0es1es2e=conj obl acl 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2352941176470589
+s0#s1es2e=16072095006890171862 conj obl 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 conj 1
+s0xs2e=0 obl 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2647058823529411
+s0#e=16072095006890171862 Terminal 1
+s0#s1es2e=16072095006890171862 conj obl 1
+s0$e=13917291617986564764 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=1 1
+s0^e=12290980237632234855 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal conj 1
+s0es1eb0#=Terminal conj 16072095006890171862 1
+s0es1es2e=Terminal conj obl 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 conj 1
+s0xs2e=0 obl 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=3 378 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2647058823529411
+s0C=3 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=conj obl 1
+s0es1eb0#=conj obl 16072095006890171862 1
+s0es1es2e=conj obl acl 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2647058823529411
+s0#s1es2e=16072095006890171862 conj obl 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2647058823529411
+s0#e=16072095006890171862 head 1
+s0#s1es2e=16072095006890171862 conj obl 1
+s0$e=13917291617986564764 head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=3 378 1
+s0P=1 1
+s0^e=12290980237632234855 head 1
+s0b0x=0 1
+s0es1e=head conj 1
+s0es1eb0#=head conj 13110060611322374290 1
+s0es1es2e=head conj obl 1
+s0h=1 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2647058823529411
+s0C=4 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=conj obl 1
+s0es1eb0#=conj obl 13110060611322374290 1
+s0es1es2e=conj obl acl 1
+s0s1x=0 1
+s1llwe=15099054000809333061 Terminal 1
+s1lwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2647058823529411
+s0C=5 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=obl acl 1
+s0es1eb0#=obl acl 13110060611322374290 1
+s0es1es2e=obl acl nmod 1
+s0llwe=15099054000809333061 Terminal 1
+s0lwe=15099054000809333061 case 1
+s0s1x=0 1
+s1rlwe=15099054000809333061 case 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2647058823529411
+s0C=4 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=acl nmod 1
+s0es1eb0#=acl nmod 13110060611322374290 1
+s0es1es2e=acl nmod head 1
+s0rlwe=15099054000809333061 case 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2647058823529411
+s0#s1es2e=13110060611322374290 acl nmod 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 acl 1
+s0xs2e=0 nmod 1
+s1rlwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2941176470588234
+s0#e=13110060611322374290 Terminal 1
+s0#s1es2e=13110060611322374290 acl nmod 1
+s0$e=15345770364485153437 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=260667111241363922 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal acl 1
+s0es1eb0#=Terminal acl 13110060611322374290 1
+s0es1es2e=Terminal acl nmod 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 acl 1
+s0xs2e=0 nmod 1
+s1rlwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2941176470588234
+s0C=4 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=acl nmod 1
+s0es1eb0#=acl nmod 13110060611322374290 1
+s0es1es2e=acl nmod head 1
+s0rlwe=15099054000809333061 case 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.2941176470588234
+s0#s1es2e=13110060611322374290 acl nmod 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1rlwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a0Ae=NODE head 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0e=head 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.323529411764706
+s0#e=13110060611322374290 head 1
+s0#s1es2e=13110060611322374290 acl nmod 1
+s0$e=15345770364485153437 head 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=260667111241363922 head 1
+s0b0x=0 1
+s0es1e=head acl 1
+s0es1es2e=head acl nmod 1
+s0h=1 1
+s0s1x=0 1
+s1rlwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a1Ae=NODE head 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0P=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.323529411764706
+s0C=4 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=acl nmod 1
+s0es1es2e=acl nmod head 1
+s0rlwe=15099054000809333061 case 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.323529411764706
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0b0x=0 1
+s0s1x=0 1
+s1rlwe=15099054000809333061 case 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.323529411764706
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=head acl 1
+s0es1eb0#=head acl 13110060611322374290 1
+s0es1es2e=head acl nmod 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=12646065887601541794 0 1
+b0wE=12646065887601541794 0 1
+b0wI=12646065887601541794 0 1
+b0wM=12646065887601541794 0 1
+b0wP=12646065887601541794 0 1
+n/t 1.323529411764706
+s0#s1es2e=13110060611322374290 head acl 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=0 1
+s0s1x=0 1
+s0xb0w=0 12646065887601541794 1
+s0xs1e=0 head 1
+s0xs2e=0 acl 1
+s1eb0w=head 12646065887601541794 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.3529411764705883
+s0#e=13110060611322374290 Terminal 1
+s0#s1es2e=13110060611322374290 head acl 1
+s0$e=9232162645330919472 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=15917291556903334389 Terminal 1
+s0b0x=0 1
+s0es1e=Terminal head 1
+s0es1eb0#=Terminal head 13110060611322374290 1
+s0es1es2e=Terminal head acl 1
+s0h=0 1
+s0s1x=0 1
+s0xs1e=0 head 1
+s0xs2e=0 acl 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b1NT=2 0 1
+b1h=0 1
+n/t 1.3529411764705883
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0es1e=head acl 1
+s0es1eb0#=head acl 13110060611322374290 1
+s0es1es2e=head acl nmod 1
+s0s1x=0 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=12646065887601541794 0 1
+b0wE=12646065887601541794 0 1
+b0wI=12646065887601541794 0 1
+b0wM=12646065887601541794 0 1
+b0wP=12646065887601541794 0 1
+n/t 1.3529411764705883
+s0#s1es2e=13110060611322374290 head acl 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0b0x=0 1
+s0h=1 1
+s0s1x=0 1
+s1eb0w=head 12646065887601541794 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE aux 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=12646065887601541794 0 1
+b0wE=12646065887601541794 0 1
+b0wI=12646065887601541794 0 1
+b0wM=12646065887601541794 0 1
+b0wP=12646065887601541794 0 1
+n/t 1.3529411764705883
+s0#e=13110060611322374290 aux 1
+s0#s1es2e=13110060611322374290 head acl 1
+s0$e=9232162645330919472 aux 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=15917291556903334389 aux 1
+s0b0x=0 1
+s0eb0w=aux 12646065887601541794 1
+s0es1e=aux head 1
+s0es1eb0#=aux head 12646065887601541794 1
+s0es1es2e=aux head acl 1
+s0h=1 1
+s0s1x=0 1
+s1eb0w=head 12646065887601541794 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE aux 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=12646065887601541794 0 1
+b0wE=12646065887601541794 0 1
+b0wI=12646065887601541794 0 1
+b0wM=12646065887601541794 0 1
+b0wP=12646065887601541794 0 1
+n/t 1.3529411764705883
+s0C=2 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0eb0w=head 12646065887601541794 1
+s0es1e=head acl 1
+s0es1eb0#=head acl 12646065887601541794 1
+s0es1es2e=head acl nmod 1
+s0s1x=0 1
+s1eb0w=acl 12646065887601541794 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=12646065887601541794 0 1
+b0wE=12646065887601541794 0 1
+b0wI=12646065887601541794 0 1
+b0wM=12646065887601541794 0 1
+b0wP=12646065887601541794 0 1
+n/t 1.3529411764705883
+s0C=5 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0eb0w=acl 12646065887601541794 1
+s0es1e=acl nmod 1
+s0es1eb0#=acl nmod 12646065887601541794 1
+s0es1es2e=acl nmod head 1
+s0s1x=0 1
+s1eb0w=nmod 12646065887601541794 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=12646065887601541794 0 1
+b0wE=12646065887601541794 0 1
+b0wI=12646065887601541794 0 1
+b0wM=12646065887601541794 0 1
+b0wP=12646065887601541794 0 1
+n/t 1.3529411764705883
+s0C=6 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0eb0w=nmod 12646065887601541794 1
+s0es1e=nmod head 1
+s0es1eb0#=nmod head 12646065887601541794 1
+s0s1x=0 1
+s1eb0w=head 12646065887601541794 1
+s1llwe=17831099778462416609 case 1
+s1rlwe=2593208677638477497 Terminal 1
+s1rwe=2593208677638477497 U 1
+s1s0x=1 1
+ 
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0wC=12646065887601541794 0 1
+b0wE=12646065887601541794 0 1
+b0wI=12646065887601541794 0 1
+b0wM=12646065887601541794 0 1
+b0wP=12646065887601541794 0 1
+n/t 1.3529411764705883
+s0C=7 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0eb0w=head 12646065887601541794 1
+s0llwe=17831099778462416609 case 1
+s0rlwe=2593208677638477497 Terminal 1
+s0rwe=2593208677638477497 U 1
+s0s1x=0 1
+s1lrwe=2593208677638477497 U 1
+s1s0x=1 1
+ 
+b 1
+b0s0x=0 1
+n/t 1.3529411764705883
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0h=0 1
+s0s1x=0 1
+s0wC=12646065887601541794 0 1
+s0wE=12646065887601541794 0 1
+s0wI=12646065887601541794 0 1
+s0wM=12646065887601541794 0 1
+s0wP=12646065887601541794 0 1
+s0ws1e=12646065887601541794 head 1
+s0xs1e=0 head 1
+s1llwe=17831099778462416609 case 1
+s1rlwe=2593208677638477497 Terminal 1
+s1rwe=2593208677638477497 U 1
+s1s0x=0 1
+ 
+a0Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0e=Terminal 1
+b0s0x=1 1
+b0wC=12646065887601541794 1 1
+b0wE=12646065887601541794 0 1
+b0wI=12646065887601541794 0 1
+b0wM=12646065887601541794 0 1
+b0wP=12646065887601541794 0 1
+n/t 1.3823529411764706
+s0#e=12646065887601541794 Terminal 1
+s0$e=12646065887601541794 Terminal 1
+s0C=0 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=12646065887601541794 Terminal 1
+s0b0x=0 1
+s0eb0w=Terminal 12646065887601541794 1
+s0es1e=Terminal head 1
+s0es1eb0#=Terminal head 12646065887601541794 1
+s0h=0 1
+s0s1x=0 1
+s0wC=12646065887601541794 0 1
+s0wE=12646065887601541794 0 1
+s0wI=12646065887601541794 0 1
+s0wM=12646065887601541794 0 1
+s0wP=12646065887601541794 1 1
+s0wb0w=12646065887601541794 12646065887601541794 1
+s0we=12646065887601541794 Terminal 1
+s0ws1e=12646065887601541794 head 1
+s0xb0w=0 12646065887601541794 1
+s0xs1e=0 head 1
+s0xwe=0 12646065887601541794 Terminal 1
+s1eb0w=head 12646065887601541794 1
+s1llwe=17831099778462416609 case 1
+s1rlwe=2593208677638477497 Terminal 1
+s1rwe=2593208677638477497 U 1
+s1s0x=0 1
+ 
+a1Ae=NODE Terminal 1
+b 1
+b0C=1 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=1 1
+b0s0x=0 1
+b0wC=12646065887601541794 1 1
+b0wE=12646065887601541794 0 1
+b0wI=12646065887601541794 0 1
+b0wM=12646065887601541794 0 1
+b0wP=12646065887601541794 0 1
+n/t 1.3823529411764706
+s0C=7 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0eb0w=head 12646065887601541794 1
+s0llwe=17831099778462416609 case 1
+s0rlwe=2593208677638477497 Terminal 1
+s0rwe=2593208677638477497 U 1
+s0s1x=0 1
+s1lrwe=2593208677638477497 U 1
+s1s0x=1 1
+ 
+b 1
+b0s0x=0 1
+n/t 1.3823529411764706
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=0 1
+s0h=1 1
+s0lwe=12646065887601541794 Terminal 1
+s0s1x=0 1
+s0wC=12646065887601541794 1 1
+s0wE=12646065887601541794 0 1
+s0wI=12646065887601541794 0 1
+s0wM=12646065887601541794 0 1
+s0wP=12646065887601541794 0 1
+s0ws1e=12646065887601541794 head 1
+s1llwe=17831099778462416609 case 1
+s1rlwe=2593208677638477497 Terminal 1
+s1rwe=2593208677638477497 U 1
+s1s0x=0 1
+ 
+a0Ae=RIGHT-EDGE U 1
+b 1
+n/t 1.3823529411764706
+s0#e=12646065887601541794 U 1
+s0$e=12646065887601541794 U 1
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0NT=2 0 1
+s0P=1 1
+s0^e=12646065887601541794 U 1
+s0es1e=U head 1
+s0h=1 1
+s0lwe=12646065887601541794 Terminal 1
+s0s1x=0 1
+s0wC=12646065887601541794 1 1
+s0wE=12646065887601541794 0 1
+s0wI=12646065887601541794 0 1
+s0wM=12646065887601541794 0 1
+s0wP=12646065887601541794 1 1
+s0we=12646065887601541794 U 1
+s0ws1e=12646065887601541794 head 1
+s1llwe=17831099778462416609 case 1
+s1rlwe=12646065887601541794 Terminal 1
+s1rwe=12646065887601541794 U 1
+s1s0x=1 1
+ 
+a1Ae=RIGHT-EDGE U 1
+b 1
+n/t 1.3823529411764706
+s0C=8 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0llwe=17831099778462416609 case 1
+s0rlwe=12646065887601541794 Terminal 1
+s0rwe=12646065887601541794 U 1
+s0s1x=0 1
+s1lrwe=12646065887601541794 U 1
+s1s0x=1 1
+ 
+b 1
+b0s0x=0 1
+n/t 1.3823529411764706
+s0C=1 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=0 1
+s0lrwe=12646065887601541794 U 1
+s1s0x=0 1
+ 
+b 1
+n/t 1.3823529411764706
+ 

@@ -1,0 +1,1 @@
+UD_German-dense-indexed-annotated-vocab-id-wordvectors-omit.txt
