@@ -88,7 +88,7 @@ If you make use of this software, please cite [the following paper](http://aclwe
 The version of the parser used in the paper is [v1.0](https://github.com/huji-nlp/tupa/releases/tag/v1.0).
 To reproduce the experiments, run:
 
-    curl https://github.com/huji-nlp/tupa/blob/master/experiments/acl2017.sh | bash
+    curl https://raw.githubusercontent.com/huji-nlp/tupa/master/experiments/acl2017.sh | bash
     
 
 If you use the French, German or multitask models, please cite
@@ -105,7 +105,7 @@ If you use the French, German or multitask models, please cite
 The version of the parser used in the paper is [v1.3.2](https://github.com/huji-nlp/tupa/releases/tag/v1.3.2).
 To reproduce the experiments, run:
 
-    curl https://github.com/huji-nlp/tupa/blob/master/experiments/acl2018.sh | bash
+    curl https://raw.githubusercontent.com/huji-nlp/tupa/master/experiments/acl2018.sh | bash
 
 
 License
