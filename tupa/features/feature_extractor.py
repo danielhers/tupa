@@ -167,6 +167,7 @@ class FeatureExtractor:
                                                 for m in re.finditer(FEATURE_ELEMENT_PATTERN, feature_name)))
             for feature_name in feature_templates]
         self.params = {} if params is None else params
+        self.omit_features = omit_features
 
     def extract_features(self, state):
         """

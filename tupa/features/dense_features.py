@@ -138,7 +138,8 @@ class DenseFeatureExtractor(FeatureExtractor):
         return ret
 
     def finalize(self):
-        return type(self)(FeatureParameters.copy(self.params, UnknownDict), self.indexed, init_params=False)
+        return type(self)(FeatureParameters.copy(self.params, UnknownDict), self.indexed, init_params=False,
+                          omit_features=self.omit_features)
 
     def unfinalize(self):
         """Undo finalize(): replace each feature parameter's data dict with a DropoutDict again, to keep training"""
