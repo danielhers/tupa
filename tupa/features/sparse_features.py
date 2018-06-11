@@ -47,8 +47,8 @@ class SparseFeatureExtractor(FeatureExtractor):
     To be used with SparsePerceptron classifier.
     """
 
-    def __init__(self):
-        super().__init__(FEATURE_TEMPLATES)
+    def __init__(self, omit_features=None):
+        super().__init__(feature_templates=FEATURE_TEMPLATES, omit_features=omit_features)
 
     def extract_features(self, state):
         """

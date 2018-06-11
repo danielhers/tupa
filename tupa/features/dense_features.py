@@ -44,8 +44,8 @@ class DenseFeatureExtractor(FeatureExtractor):
     """
     Extracts features from the parser state for classification. To be used with a NeuralNetwork classifier.
     """
-    def __init__(self, params, indexed, hierarchical=False, node_dropout=0, init_params=True):
-        super().__init__(FEATURE_TEMPLATES)
+    def __init__(self, params, indexed, hierarchical=False, node_dropout=0, init_params=True, omit_features=None):
+        super().__init__(feature_templates=FEATURE_TEMPLATES, omit_features=omit_features)
         self.indexed = indexed
         self.hierarchical = hierarchical
         self.node_dropout = node_dropout
