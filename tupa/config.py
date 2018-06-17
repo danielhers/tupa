@@ -271,6 +271,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("-o", "--outdir", default=".", help="output directory for parsed files")
         group.add_argument("-p", "--prefix", default="", help="output filename prefix")
         add_boolean_option(group, "write", "writing parsed output to files", default=True, short_no="W")
+        group.add_argument("-j", "--join", help="if output format is textual, write all to one file with this basename")
         group.add_argument("-l", "--log", help="output log file (default: model filename + .log)")
         group.add_argument("--devscores", help="output CSV file for dev scores (default: model filename + .dev.csv)")
         group.add_argument("--testscores", help="output CSV file for test scores (default: model filename + .test.csv)")

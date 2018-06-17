@@ -246,7 +246,8 @@ class PassageParser(AbstractParser):
                     normalize(self.out)
                 ioutil.write_passage(self.out, output_format=out_format, binary=out_format == "pickle",
                                      outdir=self.config.args.outdir, prefix=self.config.args.prefix,
-                                     converter=get_output_converter(out_format))
+                                     converter=get_output_converter(out_format),
+                                     append=self.config.args.join, basename=self.config.args.join)
         if self.oracle and self.config.args.verify:
             self.verify(self.out, self.passage)
         ret = (self.out,)
