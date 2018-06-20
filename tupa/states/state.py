@@ -2,7 +2,7 @@ from collections import deque
 
 from semstr.constraints import Constraints, Direction
 from semstr.util.amr import LABEL_ATTRIB
-from semstr.validate import CONSTRAINTS
+from semstr.validation import CONSTRAINTS
 from ucca import core, layer0, layer1
 from ucca.layer0 import NodeTags
 from ucca.layer1 import EdgeTags
@@ -26,7 +26,7 @@ class State:
     """
     def __init__(self, passage):
         self.args = Config().args
-        self.constraints = CONSTRAINTS.get(passage.extra.get("format"), Constraints)(self.args)
+        self.constraints = CONSTRAINTS.get(passage.extra.get("format"), Constraints)(implicit=self.args.implicit)
         self.log = []
         self.finished = False
         self.passage = passage
