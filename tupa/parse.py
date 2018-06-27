@@ -20,6 +20,7 @@ from tupa.config import Config, Iterations
 from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
 from tupa.oracle import Oracle
 from tupa.states.state import State
+from tupa.threadedgenerator import ThreadedGenerator
 
 
 class ParserException(Exception):
@@ -356,6 +357,7 @@ class BatchParser(AbstractParser):
         passages = textutil.annotate_all(passages, as_array=True, lang=self.config.args.lang,
                                          vocab=self.model.config.vocab(lang=self.config.args.lang),
                                          verbose=self.config.args.verbose > 2)
+        passages = ThreadedGenerator(passages, queue_maxsize=100)
         if not self.config.args.verbose or not display:
             passages = tqdm(passages, unit=self.config.passages_word, total=total, file=sys.stdout, desc="Initializing")
         return passages, total
