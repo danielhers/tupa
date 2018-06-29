@@ -26,7 +26,7 @@ Alternatively, install the latest code from GitHub (may be unstable):
 ### Train the parser
 
 Having a directory with UCCA passage files
-(for example, [the Wiki corpus](https://github.com/huji-nlp/ucca-corpora/tree/master/wiki/xml)),
+(for example, [the English Wiki corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_English-Wiki)),
 run:
 
     python -m tupa -t <train_dir> -d <dev_dir> -c <model_type> -m <model_filename>
@@ -43,7 +43,7 @@ An `xml` file will be created per passage (separate by blank lines in the text f
 
 ### Pre-trained models
 
-To download and extract a model pre-trained on the Wiki corpus, run:
+To download and extract [a model pre-trained on the Wiki corpus](https://github.com/huji-nlp/tupa/releases/download/v1.3.2/ucca-bilstm-1.3.2.tar.gz), run:
 
     curl -O https://github.com/huji-nlp/tupa/releases/download/v1.3.2/ucca-bilstm-1.3.2.tar.gz
     tar xvzf ucca-bilstm-1.3.2.tar.gz
@@ -54,8 +54,8 @@ Run the parser using the model:
     
 ### Other languages
 
-To get a model pre-trained on the [French *20K Leagues* corpus](https://github.com/huji-nlp/ucca-corpora/tree/master/vmlslm/fr)
-or the [German *20K Leagues* corpus](https://github.com/huji-nlp/ucca-corpora/tree/master/20k_de), run:
+To get [a model](https://github.com/huji-nlp/tupa/releases/download/v1.3.2/ucca-bilstm-1.3.2-fr.tar.gz) pre-trained on the [French *20K Leagues* corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_French-20K)
+or [a model](https://github.com/huji-nlp/tupa/releases/download/v1.3.2/ucca-bilstm-1.3.2-de.tar.gz) pre-trained on the [German *20K Leagues* corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_German-20K), run:
 
     curl -O https://github.com/huji-nlp/tupa/releases/download/v1.3.2/ucca-bilstm-1.3.2-fr.tar.gz
     tar xvzf ucca-bilstm-1.3.2-fr.tar.gz
