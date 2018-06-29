@@ -16,7 +16,7 @@ def test_oracle(config, setting, filename, write_oracle_actions):
     config.set_format(passage.extra.get("format") or "ucca")
     compare_file = "test_files/oracle_actions/%s%s.txt" % (basename(filename), setting.suffix())
     actions_taken = []
-    with open(compare_file, "rw"[write_oracle_actions]) as f:
+    with open(compare_file, "rw"[write_oracle_actions], encoding="utf-8") as f:
         for i, action in enumerate(gen_actions(passage)):
             if write_oracle_actions:
                 print(action, file=f)

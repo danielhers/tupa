@@ -83,9 +83,9 @@ def _test_features(config, feature_extractor_creator, filename, write_features):
     compare_file = os.path.join("test_files", "features", "-".join((basename(filename), str(feature_extractor_creator)))
                                 + ".txt")
     if write_features:
-        with open(compare_file, "w") as f:
+        with open(compare_file, "w", encoding="utf-8") as f:
             f.writelines(features)
-    with open(compare_file) as f:
+    with open(compare_file, encoding="utf-8") as f:
         assert f.readlines() == features, compare_file
 
 
