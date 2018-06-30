@@ -1,12 +1,11 @@
 import re
-
 from ucca import layer0
 from ucca.layer1 import EdgeTags
 from ucca.textutil import Attr
 
-from tupa.config import Config
+from tupa.config import Config, FEATURE_PROPERTIES
 
-FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([wmtudhencpqxyAPCIEMNT#^$]*)")
+FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([%s]*)" % FEATURE_PROPERTIES)
 FEATURE_TEMPLATE_PATTERN = re.compile(r"^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
 NON_NUMERIC = "wmtudencpAT#^$"
 
@@ -45,7 +44,7 @@ class FeatureTemplateElement:
     One element in the values of a feature, e.g. from one node
     """
 
-    def __init__(self, source, index, relatives, properties):
+    def __init__(self, source, index, relatives, properties, omit_features=None):
         """
         :param source: where to take the data from:
                            s: stack nodes
@@ -93,7 +92,7 @@ class FeatureTemplateElement:
         self.source = source
         self.index = int(index)
         self.relatives = relatives
-        self.properties = properties
+        self.properties = properties.translate(str.maketrans("", "", omit_features)) if omit_features else properties
         self.node = self.previous = None
         self.getters = [prop_getter(prop, self.source) for prop in self.properties]
 
@@ -158,16 +157,17 @@ class FeatureExtractor:
     Object to extract features from the parser state to be used in action classification
     """
 
-    def __init__(self, feature_templates=(), params=None):
+    def __init__(self, feature_templates=(), params=None, omit_features=None):
         assert all(FEATURE_TEMPLATE_PATTERN.match(f) for f in feature_templates), \
             "Features do not match pattern: " + ", ".join(
                 f for f in feature_templates if not FEATURE_TEMPLATE_PATTERN.match(f))
         # convert the list of features textual descriptions to the actual fields
         self.feature_templates = [
-            FeatureTemplate(feature_name, tuple(FeatureTemplateElement(*m.group(1, 2, 3, 4))
+            FeatureTemplate(feature_name, tuple(FeatureTemplateElement(*m.group(1, 2, 3, 4), omit_features)
                                                 for m in re.finditer(FEATURE_ELEMENT_PATTERN, feature_name)))
             for feature_name in feature_templates]
         self.params = {} if params is None else params
+        self.omit_features = omit_features
 
     def extract_features(self, state):
         """

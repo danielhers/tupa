@@ -1,5 +1,6 @@
 """Testing code for the tupa.model module, unit-testing only."""
 
+import os
 import pytest
 
 from tupa.config import CLASSIFIERS
@@ -27,10 +28,11 @@ def parse(formats, model, passage, train):
 
 @pytest.mark.parametrize("iterations", (1, 2))
 @pytest.mark.parametrize("model_type", CLASSIFIERS)
-def test_model(model_type, formats, test_passage, iterations, config):
-    filename = "test_files/models/test_%s_%s" % (model_type, "_".join(formats))
+@pytest.mark.parametrize("omit_features", (None, "d"), ids=("", "omitd"))
+def test_model(model_type, formats, test_passage, iterations, omit_features, config):
+    filename = "_".join(filter(None, [os.path.join("test_files", "models", "test"), model_type, omit_features]+formats))
     remove_existing(filename)
-    config.update(dict(classifier=model_type, copy_shared=None))
+    config.update(dict(classifier=model_type, copy_shared=None, omit_features=omit_features))
     finalized = model = Model(filename, config=config)
     for i in range(iterations):
         parse(formats, model, test_passage, train=True)

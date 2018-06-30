@@ -58,6 +58,9 @@ class BiRNN(SubModel):
             self.config.print("Transducing %d inputs with dropout %s" %
                               (len(inputs), self.dropout if train else "disabled"), level=4)
             self.input_reps = self.transduce(inputs, train)
+            expected = min(len(inputs), self.max_length or np.iinfo(int).max)
+            assert len(self.input_reps) == expected, \
+                "transduce() returned incorrect number of elements: %d != %d" % (len(self.input_reps), expected)
             self.empty_rep = dy.inputVector(np.zeros(self.lstm_layer_dim, dtype=float))
 
     def transduce(self, inputs, train):

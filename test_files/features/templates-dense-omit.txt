@@ -1,0 +1,16 @@
+s0#s1#s2#s3#b0#b1#b2#b3#s0l#s0r#s1l#s1r#s0ll#s0lr#s0rl#s0rr#s1ll#s1lr#s1rl#s1rr#s0L#s0R#s1L#s1R#b0L#b0R#
+s0$s1$s2$s3$b0$b1$b2$b3$s0l$s0r$s1l$s1r$s0ll$s0lr$s0rl$s0rr$s1ll$s1lr$s1rl$s1rr$s0L$s0R$s1L$s1R$b0L$b0R$
+a0Aa1A
+s0Ts1Ts2Ts3Tb0Tb1Tb2Tb3T
+s0ws1ws2ws3wb0wb1wb2wb3ws0lws0rws1lws1rws0llws0lrws0rlws0rrws1llws1lrws1rlws1rrws0Lws0Rws1Lws1Rwb0Lwb0Rw
+s0^s1^s2^s3^b0^b1^b2^b3^s0l^s0r^s1l^s1r^s0ll^s0lr^s0rl^s0rr^s1ll^s1lr^s1rl^s1rr^s0L^s0R^s1L^s1R^b0L^b0R^
+s0cs1cs2cs3cb0cb1cb2cb3cs0lcs0rcs1lcs1rc
+
+s0es1es2es3es0les0res1les1res0lles0lres0rles0rres1lles1lres1rles1rres0Les0Res1Les1Reb0Leb0Res0b0eb0s0ea0ea1e
+s0ms1ms2ms3mb0mb1mb2mb3ms0lms0rms1lms1rms0llms0lrms0rlms0rrms1llms1lrms1rlms1rrms0Lms0Rms1Lms1Rmb0Lmb0Rm
+s0ns1ns2ns3nb0nb1nb2nb3ns0lns0rns1lns1rns0llns0lrns0rlns0rrns1llns1lrns1rlns1rrns0Lns0Rns1Lns1Rnb0Lnb0Rn
+s0s1xs1s0xs0b0xb0s0xs0xhqyPCIEMNs1xhyNs2xhys3xhyNb0hPCIEMN
+s0p
+s0ts1ts2ts3tb0tb1tb2tb3t
+s0us1us2us3ub0ub1ub2ub3u
+s0ws1ws2ws3wb0wb1wb2wb3ws0lws0rws1lws1rws0llws0lrws0rlws0rrws1llws1lrws1rlws1rrws0Lws0Rws1Lws1Rwb0Lwb0Rw

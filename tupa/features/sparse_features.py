@@ -47,8 +47,8 @@ class SparseFeatureExtractor(FeatureExtractor):
     To be used with SparsePerceptron classifier.
     """
 
-    def __init__(self):
-        super().__init__(FEATURE_TEMPLATES)
+    def __init__(self, omit_features=None):
+        super().__init__(feature_templates=FEATURE_TEMPLATES, omit_features=omit_features)
 
     def extract_features(self, state):
         """
@@ -62,6 +62,6 @@ class SparseFeatureExtractor(FeatureExtractor):
         }
         for feature_template in self.feature_templates:
             values = feature_template.extract(state)
-            if values is not None:
+            if values:
                 features["%s=%s" % (feature_template.name, " ".join(map(str, values)))] = 1
         return features

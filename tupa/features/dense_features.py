@@ -44,8 +44,8 @@ class DenseFeatureExtractor(FeatureExtractor):
     """
     Extracts features from the parser state for classification. To be used with a NeuralNetwork classifier.
     """
-    def __init__(self, params, indexed, hierarchical=False, node_dropout=0, init_params=True):
-        super().__init__(FEATURE_TEMPLATES)
+    def __init__(self, params, indexed, hierarchical=False, node_dropout=0, init_params=True, omit_features=None):
+        super().__init__(feature_templates=FEATURE_TEMPLATES, omit_features=omit_features)
         self.indexed = indexed
         self.hierarchical = hierarchical
         self.node_dropout = node_dropout
@@ -138,7 +138,8 @@ class DenseFeatureExtractor(FeatureExtractor):
         return ret
 
     def finalize(self):
-        return type(self)(FeatureParameters.copy(self.params, UnknownDict), self.indexed, init_params=False)
+        return type(self)(FeatureParameters.copy(self.params, UnknownDict), self.indexed, init_params=False,
+                          omit_features=self.omit_features)
 
     def unfinalize(self):
         """Undo finalize(): replace each feature parameter's data dict with a DropoutDict again, to keep training"""
@@ -146,7 +147,7 @@ class DenseFeatureExtractor(FeatureExtractor):
             param.unfinalize()
             self.node_dropout = param.node_dropout
 
-    def save(self, filename, save_init=True):
+    def save(self, filename, save_init=True):  # TODO Save to JSON instead of pickle, with data as list (not dict)
         super().save(filename, save_init=save_init)
         save_dict(filename + FILENAME_SUFFIX, FeatureParameters.copy(self.params, copy_init=save_init))
 

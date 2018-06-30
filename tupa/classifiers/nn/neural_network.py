@@ -155,16 +155,17 @@ class NeuralNetwork(Classifier, SubModel):
             self.init_model(axis, train)
         embeddings = [[], []]  # specific, shared
         self.config.print("Initializing %s %s features for %d elements" %
-                          (", ".join(axes), self.birnn_type, len(features)), level=4)
+                          (", ".join(axes), self.birnn_type.__name__, len(features)), level=4)
         for key, indices in sorted(features.items()):
             param = self.input_params[key]
             lookup = self.params.get(key)
             if not param.indexed or lookup is None:
                 continue
             vectors = [lookup[k] for k in indices]
-            for i in self.birnn_indices(param):
-                embeddings[i].append(vectors)
-            self.config.print(lambda: "%s: %s %s" % (key, indices, [e.npvalue().tolist() for e in vectors]), level=4)
+            for index in self.birnn_indices(param):
+                embeddings[index].append(vectors)
+            self.config.print(lambda: "%s: %s" % (key, ", ".join("%d->%s" % (i, e.npvalue().tolist())
+                                                                 for i, e in zip(indices, vectors))), level=4)
         for birnn in self.get_birnns(*axes):
             birnn.init_features(embeddings[int(birnn.shared)], train)
 
@@ -324,7 +325,7 @@ class NeuralNetwork(Classifier, SubModel):
     def load_model(self, filename, d):
         self.model = None
         self.init_model()
-        values = self.load_param_values(filename)
+        values = self.load_param_values(filename, d)
         self.axes = OrderedDict()
         for axis, labels in self.labels_t.items():
             _, size = labels
@@ -338,7 +339,7 @@ class NeuralNetwork(Classifier, SubModel):
         self.copy_shared_birnn(filename, d)
         assert not values, "Loaded values: %d more than expected" % len(values)
         if self.weight_decay and self.config.args.dynet_apply_weight_decay_on_load:
-            t = tqdm(self.all_params(as_array=False).items(),
+            t = tqdm(list(self.all_params(as_array=False).items()),
                      desc="Applying weight decay of %g" % self.weight_decay, unit="param", file=sys.stdout)
             for key, param in t:
                 t.set_postfix(param=key)
@@ -352,13 +353,13 @@ class NeuralNetwork(Classifier, SubModel):
                     param.init_from_array(value)
         self.config.print(self, level=1)
 
-    def load_param_values(self, filename):
-        return list(tqdm(dy.load_generator(filename, self.model),
+    def load_param_values(self, filename, d=None):
+        return list(tqdm(dy.load_generator(filename, self.model), total=self.params_num(d) if d else None,
                          desc="Loading model from '%s'" % filename, unit="param", file=sys.stdout))
 
     def copy_shared_birnn(self, filename, d):
         shared_values = None
-        values = self.load_param_values(filename)  # Load parameter values again so that shared parameters are copied
+        values = self.load_param_values(filename, d)  # Load parameter values again so that shared parameters are copied
         for model in self.sub_models():
             if model is self.birnn:
                 shared_values = values[:len(model.params)]
@@ -370,6 +371,9 @@ class NeuralNetwork(Classifier, SubModel):
                     self.config.print(lambda: "Copied from %s to %s" %
                                       ("/".join(self.birnn.save_path), model.birnn.params_str()), level=1)
                 self.init_axis_model(axis, init=False)  # Update input_dim
+
+    def params_num(self, d):
+        return sum(len(m.get_sub_dict(d).get("param_keys", ())) for m in self.sub_models())
 
     def all_params(self, as_array=True):
         d = super().all_params()

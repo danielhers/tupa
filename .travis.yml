@@ -1,6 +1,7 @@
 cache: apt
 dist: trusty
 sudo: false
+group: edge
 language: python
 cache:
   pip: true
@@ -10,11 +11,7 @@ python:
   - "3.6"
 addons:
   apt:
-    sources:
-    - ubuntu-toolchain-r-test
     packages:
-    - g++-6
-    - libstdc++6
     - pandoc
 install:
   - python setup.py install

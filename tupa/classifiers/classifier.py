@@ -86,7 +86,7 @@ class Classifier:
     def transition(self, action, axis):
         pass
 
-    def save(self, filename, skip_labels=()):
+    def save(self, filename, skip_labels=(), **kwargs):
         """
         Save all parameters to file
         """
@@ -102,7 +102,7 @@ class Classifier:
             ("updates", self.updates),
             ("epoch", self.epoch),
             ("best_score", self.best_score),
-        ))
+        ) + tuple(kwargs.items()))
         self.save_model(filename, d)
         save_json(filename + ".json", d)
 
@@ -132,12 +132,8 @@ class Classifier:
         pass
 
     @classmethod
-    def get_model_type(cls, filename):
-        return cls.load_file(filename).get("type")
-
-    @classmethod
-    def is_multilingual(cls, filename):
-        return cls.load_file(filename).get("multilingual", False)
+    def get_property(cls, filename, prop):
+        return cls.load_file(filename).get(prop, None)
 
     LOADED = {}  # Cache for loaded JSON files
 

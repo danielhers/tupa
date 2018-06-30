@@ -1,15 +1,17 @@
+import sys
+import time
+from collections import OrderedDict, Counter, defaultdict
+
+import csv
 import json
+import numpy as np
 import os
 import pickle
 import pprint as pp
 import shutil
-import sys
-import time
-from collections import OrderedDict, Counter, defaultdict
 from glob import glob
 from operator import itemgetter
-
-import numpy as np
+from tqdm import tqdm
 
 from .labels import Labels
 
@@ -239,3 +241,45 @@ def load_json(filename):
     with open(filename, "r") as h:
         d = json.load(h)
     return d
+
+
+class Lexeme:
+    def __init__(self, index, text):
+        self.index = self.orth = index
+        self.text = self.orth_ = text
+
+
+class Strings:
+    def __init__(self, vocab):
+        self.vocab = vocab
+
+    def __getitem__(self, item):
+        lex = self.vocab[item]
+        return lex.index if isinstance(item, str) else lex.text
+
+
+class Vocab(dict):
+    def __init__(self, tuples):
+        super().__init__()
+        for k, v in tuples:
+            self[int(k)] = self[v] = Lexeme(int(k), v)
+        self.strings = Strings(self)
+
+
+class IdentityVocab(Vocab):
+    def __init__(self):
+        super().__init__(())
+
+    def __contains__(self, item):
+        return True
+
+    def __getitem__(self, item):
+        return Lexeme(item, item)
+
+
+def load_enum(filename):
+    if filename == "-":
+        return IdentityVocab()
+    else:
+        with open(filename, encoding="utf-8") as f:
+            return Vocab(tqdm(csv.reader(f), desc="Loading '%s'" % filename, file=sys.stdout, unit=" rows"))

@@ -1,22 +1,11 @@
-import csv
-import sys
 from collections import OrderedDict
 
 import numpy as np
-from tqdm import tqdm
 from ucca.textutil import get_word_vectors
 
 from ..config import Config
 from ..labels import Labels
 from ..model_util import DropoutDict
-
-
-class IdentityVocab:
-    def __contains__(self, item):
-        return True
-
-    def __getitem__(self, item):
-        return item
 
 
 class FeatureParameters(Labels):
@@ -86,22 +75,13 @@ class FeatureParameters(Labels):
 
     def word_vectors(self):
         lang = Config().args.lang
-        vectors, self.dim = get_word_vectors(self.dim, self.size, self.filename, self.read_vocab() or lang)
+        vectors, self.dim = get_word_vectors(self.dim, self.size, self.filename, Config().vocab(self.vocab) or lang)
         if self.size is not None:
             assert len(vectors) <= self.size, "Wrong number of loaded vectors: %d > %d" % (len(vectors), self.size)
         assert vectors, "Cannot load word vectors. Install using `python -m spacy download %s` or choose a file " \
                         "using the --word-vectors option." % lang
         self.size = len(vectors)
         return vectors
-
-    def read_vocab(self):
-        if self.vocab:
-            if self.vocab == "-":
-                return IdentityVocab()
-            with open(self.vocab, encoding="utf-8") as f:
-                return {v: int(k) for k, v in tqdm(csv.reader(f),
-                                                   desc="Loading '%s'" % self.vocab, file=sys.stdout, unit=" rows")}
-        return None
 
     @property
     def all(self):

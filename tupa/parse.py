@@ -7,19 +7,20 @@ import os
 from enum import Enum
 from functools import partial
 from glob import glob
-from semstr.convert import FROM_FORMAT, TO_FORMAT
+from semstr.convert import FROM_FORMAT, TO_FORMAT, from_text
 from semstr.evaluate import EVALUATORS, Scores
 from semstr.util.amr import LABEL_ATTRIB, WIKIFIER
 from tqdm import tqdm
 from ucca import diffutil, ioutil, textutil, layer0, layer1, evaluation as ucca_evaluation
-from ucca.convert import from_text
-from ucca.evaluation import LABELED, UNLABELED
+from ucca.evaluation import LABELED, UNLABELED, EVAL_TYPES
+from ucca.normalization import normalize
 
 from tupa.__version__ import GIT_VERSION
 from tupa.config import Config, Iterations
 from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
 from tupa.oracle import Oracle
 from tupa.states.state import State
+from tupa.threadedgenerator import ThreadedGenerator
 
 
 class ParserException(Exception):
@@ -121,8 +122,11 @@ class PassageParser(AbstractParser):
             self.state.transition(action)
             need_label, label, predicted_label, true_label = self.label_node(action)
             if self.config.args.action_stats:
-                with open(self.config.args.action_stats, "a") as f:
-                    print(",".join(map(str, [predicted_action, action] + list(true_actions.values()))), file=f)
+                try:
+                    with open(self.config.args.action_stats, "a") as f:
+                        print(",".join(map(str, [predicted_action, action] + list(true_actions.values()))), file=f)
+                except OSError:
+                    pass
             self.config.print(lambda: "\n".join(["  predicted: %-15s true: %-15s taken: %-15s %s" % (
                 predicted_action, "|".join(map(str, true_actions.values())), action, self.state) if self.oracle else
                                           "  action: %-15s %s" % (action, self.state)] + (
@@ -239,9 +243,12 @@ class PassageParser(AbstractParser):
             self.out = self.state.create_passage(verify=self.config.args.verify)
         if write:
             for out_format in self.config.args.formats or [self.out_format]:
+                if self.config.args.normalize and out_format == "ucca":
+                    normalize(self.out)
                 ioutil.write_passage(self.out, output_format=out_format, binary=out_format == "pickle",
                                      outdir=self.config.args.outdir, prefix=self.config.args.prefix,
-                                     converter=get_output_converter(out_format))
+                                     converter=get_output_converter(out_format), verbose=self.config.args.verbose,
+                                     append=self.config.args.join, basename=self.config.args.join)
         if self.oracle and self.config.args.verify:
             self.verify(self.out, self.passage)
         ret = (self.out,)
@@ -348,7 +355,9 @@ class BatchParser(AbstractParser):
         if self.config.args.ignore_case:
             passages = self.to_lower_case(passages)
         passages = textutil.annotate_all(passages, as_array=True, lang=self.config.args.lang,
+                                         vocab=self.model.config.vocab(lang=self.config.args.lang),
                                          verbose=self.config.args.verbose > 2)
+        passages = ThreadedGenerator(passages, queue_maxsize=100)
         if not self.config.args.verbose or not display:
             passages = tqdm(passages, unit=self.config.passages_word, total=total, file=sys.stdout, desc="Initializing")
         return passages, total
@@ -568,37 +577,49 @@ def percents_str(part, total, infix="", fraction=True):
 def print_scores(scores, filename, prefix=None, prefix_title=None):
     if filename:
         print_title = not os.path.exists(filename)
-        with open(filename, "a") as f:
-            if print_title:
-                titles = scores.titles()
-                if prefix_title is not None:
-                    titles = [prefix_title] + titles
-                print(",".join(titles), file=f)
-            fields = scores.fields()
-            if prefix is not None:
-                fields.insert(0, prefix)
-            print(",".join(fields), file=f)
+        try:
+            with open(filename, "a") as f:
+                if print_title:
+                    titles = scores.titles()
+                    if prefix_title is not None:
+                        titles = [prefix_title] + titles
+                    print(",".join(titles), file=f)
+                fields = scores.fields()
+                if prefix is not None:
+                    fields.insert(0, prefix)
+                print(",".join(fields), file=f)
+        except OSError:
+            pass
 
 
 def average_f1(scores, eval_type=None):
-    return scores.average_f1(eval_type or get_eval_type(scores))
+    for e in (eval_type or get_eval_type(scores),) + EVAL_TYPES:
+        try:
+            return scores.average_f1(e)
+        except ValueError:
+            pass
+    return 0
 
 
 def get_eval_type(scores):
     return UNLABELED if Config().is_unlabeled(scores.format) else LABELED
 
 
-class TextReader:  # Marks input passages as text so that we don't accidentally train on them
-    def __call__(self, *args, **kwargs):
-        for passage in from_text(*args, **kwargs):
-            passage.extra["format"] = "text"
-            yield passage
+# Marks input passages as text so that we don't accidentally train on them
+def from_text_format(*args, **kwargs):
+    for passage in from_text(*args, **kwargs):
+        passage.extra["format"] = "text"
+        yield passage
+
+
+CONVERTERS = {k: partial(c, annotate=True) for k, c in FROM_FORMAT.items()}
+CONVERTERS[""] = CONVERTERS["txt"] = from_text_format
 
 
 def read_passages(args, files):
     expanded = [f for pattern in files for f in glob(pattern) or (pattern,)]
     return ioutil.read_files_and_dirs(expanded, sentences=args.sentences, paragraphs=args.paragraphs,
-                                      converters=defaultdict(TextReader, **FROM_FORMAT), lang=Config().args.lang)
+                                      converters=CONVERTERS, lang=Config().args.lang)
 
 
 # noinspection PyTypeChecker,PyStringFormat

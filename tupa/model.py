@@ -133,7 +133,7 @@ class Model:
         self.set_axis(axis, lang)
         labels = self.classifier.labels if self.classifier else OrderedDict()
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
-            for param_def in self.param_defs():
+            for param_def in self.param_defs():  # FIXME save parameters separately per format, not just per language
                 for param_lang in (param_def.all_langs(self.feature_params) if self.lang else []) \
                         if param_def.lang_specific and self.config.args.multilingual else [None]:
                     key = param_def.key(param_lang)
@@ -154,7 +154,7 @@ class Model:
         elif self.config.args.classifier == SPARSE:
             from .features.sparse_features import SparseFeatureExtractor
             from .classifiers.linear.sparse_perceptron import SparsePerceptron
-            self.feature_extractor = SparseFeatureExtractor()
+            self.feature_extractor = SparseFeatureExtractor(omit_features=self.config.args.omit_features)
             self.classifier = SparsePerceptron(self.config, labels)
         elif self.config.args.classifier == NOOP:
             from .features.empty_features import EmptyFeatureExtractor
@@ -167,7 +167,8 @@ class Model:
             self.feature_extractor = DenseFeatureExtractor(self.feature_params,
                                                            indexed=self.config.args.classifier != MLP,
                                                            hierarchical=self.config.args.classifier == HIERARCHICAL_RNN,
-                                                           node_dropout=self.config.args.node_dropout)
+                                                           node_dropout=self.config.args.node_dropout,
+                                                           omit_features=self.config.args.omit_features)
             self.classifier = NeuralNetwork(self.config, labels)
         else:
             raise ValueError("Invalid model type: '%s'" % self.config.args.classifier)
@@ -255,7 +256,10 @@ class Model:
                 self.feature_extractor.save(self.filename, save_init=save_init)
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
                 skip_labels = (NODE_LABEL_KEY,) if node_labels and node_labels.size else ()
-                self.classifier.save(self.filename, skip_labels=skip_labels)
+                self.classifier.save(self.filename, skip_labels=skip_labels,
+                                     multilingual=self.config.args.multilingual,
+                                     omit_features=self.config.args.omit_features)
+                textutil.models["vocab"] = self.config.args.vocab
                 save_json(self.filename + ".nlp.json", textutil.models)
                 remove_backup(self.filename)
             except Exception as e:
@@ -268,8 +272,9 @@ class Model:
         """
         if self.filename is not None:
             try:
-                self.config.args.classifier = Classifier.get_model_type(self.filename)
-                self.config.args.multilingual = Classifier.is_multilingual(self.filename)
+                self.config.args.classifier = Classifier.get_property(self.filename, "type")
+                self.config.args.multilingual = Classifier.get_property(self.filename, "multilingual")
+                self.config.args.omit_features = Classifier.get_property(self.filename, "omit_features")
                 self.init_model(init_params=False)
                 self.feature_extractor.load(self.filename, order=[p.name for p in self.param_defs()])
                 if not is_finalized:
@@ -280,6 +285,9 @@ class Model:
                 self.load_labels()
                 try:
                     textutil.models.update(load_json(self.filename + ".nlp.json"))
+                    vocab = textutil.models.get("vocab")
+                    if vocab:
+                        self.config.args.vocab = vocab
                 except FileNotFoundError:
                     pass
                 self.config.print("\n".join("%s: %s" % i for i in self.feature_params.items()), level=1)

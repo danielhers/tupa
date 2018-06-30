@@ -1,4 +1,5 @@
 import os
+from functools import partial
 from glob import glob
 from itertools import combinations
 
@@ -93,15 +94,19 @@ def default_setting():
     return Settings()
 
 
-def load_passages(*formats):
+def passage_files(*formats):
+    return [f for fo in formats or ["*"] for f in glob("test_files/*." + ("xml" if fo == "ucca" else fo))
+            if not f.endswith(".txt")]
+
+
+def load_passage(filename, annotate=False):
     WIKIFIER.enabled = False
-    files = [f for fo in formats or ["*"] for f in glob("test_files/*." + ("xml" if fo == "ucca" else fo))
-             if not f.endswith(".txt")]
-    return ioutil.read_files_and_dirs(files, converters=FROM_FORMAT)
+    converters = {k: partial(c, annotate=annotate) for k, c in FROM_FORMAT.items()}
+    return next(iter(ioutil.read_files_and_dirs(filename, converters=converters)))
 
 
-def passage_id(passage):
-    return passage.extra.get("format", "ucca")
+def basename(filename):
+    return os.path.basename(os.path.splitext(filename)[0])
 
 
 @pytest.fixture

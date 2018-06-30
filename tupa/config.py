@@ -10,8 +10,10 @@ from semstr.convert import UCCA_EXT, CONVERTERS
 from ucca import constructions
 
 from tupa.classifiers.nn.constants import *
+from tupa.model_util import load_enum
 
 # Classifiers
+
 SPARSE = "sparse"
 MLP = "mlp"
 BIRNN = "bilstm"
@@ -20,6 +22,8 @@ HIERARCHICAL_RNN = "hbirnn"
 NOOP = "noop"
 NN_CLASSIFIERS = (MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN)
 CLASSIFIERS = (SPARSE, MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN, NOOP)
+
+FEATURE_PROPERTIES = "wmtudhencpqxyAPCIEMNT#^$"
 
 # Swap types
 REGULAR = "regular"
@@ -87,6 +91,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--swap-importance", type=float, default=1, help="learning rate factor for Swap")
     add(group, "--max-training-per-format", type=int, help="max number of training passages per format per iteration")
     add_boolean(group, "missing-node-features", "allow node features to be missing if not available", default=True)
+    add(group, "--omit-features", help="string of feature properties to omit, out of " + FEATURE_PROPERTIES)
 
     group = ap.add_argument_group(title="Perceptron parameters")
     add(group, "--min-update", type=int, default=5, help="minimum #updates for using a feature")
@@ -175,7 +180,7 @@ class FallbackNamespace(Namespace):
     def items(self):
         return self.vars().items()
 
-    def update(self, **kwargs):
+    def update(self, kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -191,7 +196,7 @@ class Hyperparams:
         self.shared = FallbackNamespace(parent, shared)
         self.specific = FallbackNamespace(parent)
         for name, args in kwargs.items():
-            self.specific[name].update(**args)
+            self.specific[name].update(args)
 
     def items(self):
         return ([("shared", self.shared)] if self.shared.vars() else []) + list(self.specific.traverse())
@@ -266,10 +271,12 @@ class Config(object, metaclass=Singleton):
         group.add_argument("-o", "--outdir", default=".", help="output directory for parsed files")
         group.add_argument("-p", "--prefix", default="", help="output filename prefix")
         add_boolean_option(group, "write", "writing parsed output to files", default=True, short_no="W")
+        group.add_argument("-j", "--join", help="if output format is textual, write all to one file with this basename")
         group.add_argument("-l", "--log", help="output log file (default: model filename + .log)")
         group.add_argument("--devscores", help="output CSV file for dev scores (default: model filename + .dev.csv)")
         group.add_argument("--testscores", help="output CSV file for test scores (default: model filename + .test.csv)")
         group.add_argument("--action-stats", help="output CSV file for action statistics")
+        add_boolean_option(group, "normalize", "apply normalizations to output in case format is UCCA", default=False)
         ap.add_argument("-f", "--formats", nargs="+", choices=FILE_FORMATS, default=(),
                         help="input formats for creating all parameters before training starts "
                              "(otherwise created dynamically based on filename suffix), "
@@ -317,6 +324,7 @@ class Config(object, metaclass=Singleton):
             self.args.log = "parse.log"
         self.sub_configs = []  # Copies to be stored in Models so that they do not interfere with each other
         self._logger = self.format = self.hyperparams = self.iteration_hyperparams = None
+        self._vocab = {}
         self.original_values = {}
         self.random = np.random
         self.update()
@@ -434,6 +442,19 @@ class Config(object, metaclass=Singleton):
         except OSError:
             pass
 
+    def vocab(self, filename=None, lang=None):
+        if filename is None:
+            args = self.hyperparams.specific[lang] if lang else self.args
+            filename = args.vocab
+        if not filename:
+            return None
+        vocab = self._vocab.get(filename)
+        if vocab:
+            return vocab
+        vocab = load_enum(filename)
+        self._vocab[filename] = vocab
+        return vocab
+
     def print(self, message, level=3):
         if self.args.verbose >= level:
             try:
@@ -473,6 +494,7 @@ class Config(object, metaclass=Singleton):
         ret.format = self.format
         ret.random = self.random
         ret._logger = self._logger
+        ret._vocab = dict(self._vocab)
         ret.sub_configs = []
         self.sub_configs.append(ret)
         return ret
