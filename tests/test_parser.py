@@ -2,11 +2,11 @@
 
 import pytest
 from numpy.testing import assert_allclose
+from semstr.evaluate import Scores
 from ucca import convert
 
-from semstr.evaluate import Scores
 from tupa.config import SPARSE, MLP, BIRNN, HIGHWAY_RNN, NOOP, Iterations
-from tupa.parse import Parser
+from tupa.parse import Parser, ParserException
 from .conftest import FORMATS, remove_existing, passage_files, load_passage, weight_decay, assert_all_params_equal
 
 CLASSIFIERS = (SPARSE, BIRNN, NOOP)
@@ -127,6 +127,14 @@ def test_iterations(config, model_type):
     for iterations in ((3, 2), (4, 4)):
         with pytest.raises(ValueError):  # Number of epochs must be strictly increasing
             list(Parser(model_files=filename, config=config).train(passages, dev=passages, iterations=iterations))
+
+
+@pytest.mark.parametrize("model_type", CLASSIFIERS)
+def test_train_empty(config, model_type, default_setting):
+    config.update(default_setting.dict())
+    config.update(dict(classifier=model_type))
+    with pytest.raises(ParserException):
+        list(Parser(config=config).train(load_passage("nonexistent file")))
 
 
 # @pytest.mark.parametrize("model_type", (BIRNN,))

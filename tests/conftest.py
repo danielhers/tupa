@@ -1,10 +1,10 @@
-import os
-from functools import partial
-from glob import glob
 from itertools import combinations
 
 import numpy as np
+import os
 import pytest
+from functools import partial
+from glob import glob
 from numpy.testing import assert_allclose, assert_array_equal
 from semstr.convert import FROM_FORMAT
 from semstr.util.amr import WIKIFIER
@@ -102,7 +102,11 @@ def passage_files(*formats):
 def load_passage(filename, annotate=False):
     WIKIFIER.enabled = False
     converters = {k: partial(c, annotate=annotate) for k, c in FROM_FORMAT.items()}
-    return next(iter(ioutil.read_files_and_dirs(filename, converters=converters)))
+    passages = ioutil.read_files_and_dirs(filename, converters=converters)
+    try:
+        return next(iter(passages))
+    except StopIteration:
+        return passages
 
 
 def basename(filename):
