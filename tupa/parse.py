@@ -383,9 +383,10 @@ class BatchParser(AbstractParser):
 
 class Parser(AbstractParser):
     """ Main class to implement transition-based UCCA parser """
-    def __init__(self, model_files=None, config=None, beam=1):
+    def __init__(self, model_files=(), config=None, beam=1):
         super().__init__(config=config or Config(),
-                         models=list(map(Model, (model_files,) if isinstance(model_files, str) else model_files)))
+                         models=list(map(Model, (model_files,) if isinstance(model_files, str) else
+                                         model_files or (config.args.classifier,))))
         self.beam = beam  # Currently unused
         self.best_score = self.dev = self.test = self.iteration = self.epoch = self.batch = None
         self.trained = self.save_init = False
@@ -421,7 +422,8 @@ class Parser(AbstractParser):
                 for self.epoch in range(start, end):
                     print("Training epoch %d of %d: " % (self.epoch, end - 1))
                     self.config.random.shuffle(passages)
-                    list(self.parse(passages, mode=ParseMode.train))
+                    if not sum(1 for _ in self.parse(passages, mode=ParseMode.train)):
+                        raise ParserException("Could not train on any passage")
                     yield self.eval_and_save(self.iteration == len(iterations) and self.epoch == end - 1,
                                              finished_epoch=True)
                 print("Trained %d epochs" % (end - 1))
@@ -505,7 +507,7 @@ class Parser(AbstractParser):
         assert mode in ParseMode, "Invalid parse mode: %s" % mode
         training = (mode is ParseMode.train)
         if not training and not self.trained:
-            list(self.train())  # Try to load model from file
+            yield from self.train()  # Try to load model from file
         parser = BatchParser(self.config, self.models, training, mode if mode is ParseMode.dev else evaluate)
         for i, passage in enumerate(parser.parse(passages, display=display, write=write), start=1):
             if training and self.config.args.save_every and i % self.config.args.save_every == 0:
