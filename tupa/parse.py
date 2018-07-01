@@ -315,9 +315,14 @@ class BatchParser(AbstractParser):
         self.num_passages = 0
 
     def parse(self, passages, display=True, write=False):
-        passages, total = self.passage_generator(passages, display=display)
+        passages, total = generate_and_len(single_to_iter(passages))
+        if self.config.args.ignore_case:
+            passages = to_lower_case(passages)
         pr_width = len(str(total))
         id_width = 1
+        passages = self.add_progress_bar(ThreadedGenerator(textutil.annotate_all(
+            passages, as_array=True, lang=self.config.args.lang, verbose=self.config.args.verbose > 2,
+            vocab=self.model.config.vocab(lang=self.config.args.lang)), queue_maxsize=100), display=display)
         for i, passage in enumerate(passages, start=1):
             parser = PassageParser(passage, self.config, self.models, self.training, self.evaluation)
             if self.config.args.verbose and display:
@@ -345,29 +350,12 @@ class BatchParser(AbstractParser):
             assert not (self.training and parser.in_format == "text"), "Cannot train on unannotated plain text"
             yield parser.parse(display=display, write=write)
             self.update_counts(parser)
-        if display:
+        if self.num_passages and display:
             self.summary()
 
-    def passage_generator(self, passages, display=True):
-        if not hasattr(passages, "__iter__"):  # Single passage given
-            passages = (passages,)
-        total = len(passages) if hasattr(passages, "__len__") else None
-        if self.config.args.ignore_case:
-            passages = self.to_lower_case(passages)
-        passages = textutil.annotate_all(passages, as_array=True, lang=self.config.args.lang,
-                                         vocab=self.model.config.vocab(lang=self.config.args.lang),
-                                         verbose=self.config.args.verbose > 2)
-        passages = ThreadedGenerator(passages, queue_maxsize=100)
-        if not self.config.args.verbose or not display:
-            passages = tqdm(passages, unit=self.config.passages_word, total=total, file=sys.stdout, desc="Initializing")
-        return passages, total
-
-    @staticmethod
-    def to_lower_case(passages):
-        for passage in passages:
-            for terminal in passage.layer(layer0.LAYER_ID).all:
-                terminal.text = terminal.text.lower()
-            yield passage
+    def add_progress_bar(self, it, total=None, display=True):
+        return it if self.config.args.verbose and display else tqdm(
+            it, unit=self.config.passages_word, total=total, file=sys.stdout, desc="Initializing")
 
     def update_counts(self, parser):
         self.correct_action_count += parser.correct_action_count
@@ -379,16 +367,15 @@ class BatchParser(AbstractParser):
         self.f1 += parser.f1
 
     def summary(self):
-        if self.num_passages:
-            print("Parsed %d%s" % (self.num_passages, self.config.passages_word))
-            if self.correct_action_count:
-                accuracy_str = percents_str(self.correct_action_count, self.action_count, "correct actions ")
-                if self.label_count:
-                    accuracy_str += ", " + percents_str(self.correct_label_count, self.label_count, "correct labels ")
-                print("Overall %s" % accuracy_str)
-            print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
-                self.duration, self.config.passage_word, self.time_per_passage(),
-                self.tokens_per_second()), flush=True)
+        print("Parsed %d%s" % (self.num_passages, self.config.passages_word))
+        if self.correct_action_count:
+            accuracy_str = percents_str(self.correct_action_count, self.action_count, "correct actions ")
+            if self.label_count:
+                accuracy_str += ", " + percents_str(self.correct_label_count, self.label_count, "correct labels ")
+            print("Overall %s" % accuracy_str)
+        print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
+            self.duration, self.config.passage_word, self.time_per_passage(),
+            self.tokens_per_second()), flush=True)
 
     def time_per_passage(self):
         return self.duration / self.num_passages
@@ -590,6 +577,21 @@ def print_scores(scores, filename, prefix=None, prefix_title=None):
                 print(",".join(fields), file=f)
         except OSError:
             pass
+
+
+def single_to_iter(it):
+    return it if hasattr(it, "__iter__") else (it,)  # Single passage given
+
+
+def generate_and_len(it):
+    return it, (len(it) if hasattr(it, "__len__") else None)
+
+
+def to_lower_case(passages):
+    for passage in passages:
+        for terminal in passage.layer(layer0.LAYER_ID).all:
+            terminal.text = terminal.text.lower()
+        yield passage
 
 
 def average_f1(scores, eval_type=None):
