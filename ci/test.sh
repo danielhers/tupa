@@ -18,7 +18,7 @@ if ! [[ "$ACTION" =~ ^(toy|unit)$ ]]; then
         DEV_DATA="pickle/dev/*"
         ;;
     amr)
-        curl --remote-name-all https://amr.isi.edu/download/2016-03-14/alignment-release-{training,dev,test}-bio.txt
+        curl -L --remote-name-all https://amr.isi.edu/download/2016-03-14/alignment-release-{training,dev,test}-bio.txt
         rename 's/.txt/.amr/' alignment-release-*-bio.txt
         python -m semstr.scripts.split -q alignment-release-training-bio.amr alignment-release-training-bio
         CONVERT_DATA=alignment-release-dev-bio.amr
