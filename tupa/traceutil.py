@@ -25,4 +25,7 @@ def print_traceback(*args, **kwargs):
 
 
 def set_traceback_listener(sig=signal.SIGUSR1):
-    signal.signal(sig, print_traceback)
+    try:
+        signal.signal(sig, print_traceback)
+    except AttributeError:
+        pass
