@@ -24,8 +24,8 @@ def print_traceback(*args, **kwargs):
     faulthandler.dump_traceback()
 
 
-def set_traceback_listener(sig=signal.SIGUSR1):
+def set_traceback_listener(sig=None):
     try:
-        signal.signal(sig, print_traceback)
+        signal.signal(signal.SIGUSR1 if sig is None else sig, print_traceback)
     except AttributeError:
         pass
