@@ -43,10 +43,10 @@ An `xml` file will be created per passage (separate by blank lines in the text f
 
 ### Pre-trained models
 
-To download and extract [a model pre-trained on the Wiki corpus](https://github.com/huji-nlp/tupa/releases/download/v1.3.2/ucca-bilstm-1.3.2.tar.gz), run:
+To download and extract [a model pre-trained on the Wiki corpus](https://github.com/huji-nlp/tupa/releases/download/v1.3.3/ucca-bilstm-1.3.3.tar.gz), run:
 
-    curl -LO https://github.com/huji-nlp/tupa/releases/download/v1.3.2/ucca-bilstm-1.3.2.tar.gz
-    tar xvzf ucca-bilstm-1.3.2.tar.gz
+    curl -LO https://github.com/huji-nlp/tupa/releases/download/v1.3.3/ucca-bilstm-1.3.3.tar.gz
+    tar xvzf ucca-bilstm-1.3.3.tar.gz
 
 Run the parser using the model:
 
@@ -54,13 +54,13 @@ Run the parser using the model:
     
 ### Other languages
 
-To get [a model](https://github.com/huji-nlp/tupa/releases/download/v1.3.2/ucca-bilstm-1.3.2-fr.tar.gz) pre-trained on the [French *20K Leagues* corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_French-20K)
-or [a model](https://github.com/huji-nlp/tupa/releases/download/v1.3.2/ucca-bilstm-1.3.2-de.tar.gz) pre-trained on the [German *20K Leagues* corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_German-20K), run:
+To get [a model](https://github.com/huji-nlp/tupa/releases/download/v1.3.3/ucca-bilstm-1.3.3-fr.tar.gz) pre-trained on the [French *20K Leagues* corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_French-20K)
+or [a model](https://github.com/huji-nlp/tupa/releases/download/v1.3.3/ucca-bilstm-1.3.3-de.tar.gz) pre-trained on the [German *20K Leagues* corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_German-20K), run:
 
-    curl -LO https://github.com/huji-nlp/tupa/releases/download/v1.3.2/ucca-bilstm-1.3.2-fr.tar.gz
-    tar xvzf ucca-bilstm-1.3.2-fr.tar.gz
-    curl -LO https://github.com/huji-nlp/tupa/releases/download/v1.3.2/ucca-bilstm-1.3.2-de.tar.gz
-    tar xvzf ucca-bilstm-1.3.2-de.tar.gz
+    curl -LO https://github.com/huji-nlp/tupa/releases/download/v1.3.3/ucca-bilstm-1.3.3-fr.tar.gz
+    tar xvzf ucca-bilstm-1.3.3-fr.tar.gz
+    curl -LO https://github.com/huji-nlp/tupa/releases/download/v1.3.3/ucca-bilstm-1.3.3-de.tar.gz
+    tar xvzf ucca-bilstm-1.3.3-de.tar.gz
 
 Run the parser on a French/German text file (separate passages by blank lines):
 
@@ -102,7 +102,7 @@ If you use the French, German or multitask models, please cite
       url       = {http://www.cs.huji.ac.il/~danielh/acl2018.pdf}
     }
 
-The version of the parser used in the paper is [v1.3.2](https://github.com/huji-nlp/tupa/releases/tag/v1.3.2).
+The version of the parser used in the paper is [v1.3.3](https://github.com/huji-nlp/tupa/releases/tag/v1.3.3).
 To reproduce the experiments, run:
 
     curl -L https://raw.githubusercontent.com/huji-nlp/tupa/master/experiments/acl2018.sh | bash
