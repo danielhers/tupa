@@ -13,7 +13,11 @@ REMOTE_F1_COLUMN = 6
 
 def load_scores(filename):
     print("Loading dev scores from '%s'" % filename)
-    return np.loadtxt(filename + ".dev.csv", delimiter=",", skiprows=1)[:, [PRIMARY_F1_COLUMN, REMOTE_F1_COLUMN]]
+    scores = np.loadtxt(filename + ".dev.csv", delimiter=",", skiprows=1)
+    try:
+        return scores[:, [PRIMARY_F1_COLUMN, REMOTE_F1_COLUMN]]
+    except IndexError:
+        return scores[:, PRIMARY_F1_COLUMN]
 
 
 def visualize(scores, filename):
