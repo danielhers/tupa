@@ -11,8 +11,8 @@ from semstr.convert import FROM_FORMAT, TO_FORMAT, from_text
 from semstr.evaluate import EVALUATORS, Scores
 from semstr.util.amr import LABEL_ATTRIB, WIKIFIER
 from tqdm import tqdm
-from ucca import diffutil, ioutil, textutil, layer0, layer1, evaluation as ucca_evaluation
-from ucca.evaluation import LABELED, UNLABELED, EVAL_TYPES
+from ucca import diffutil, ioutil, textutil, layer0, layer1
+from ucca.evaluation import LABELED, UNLABELED, EVAL_TYPES, evaluate as evaluate_ucca
 from ucca.normalization import normalize
 
 from tupa.__version__ import GIT_VERSION
@@ -273,10 +273,11 @@ class PassageParser(AbstractParser):
         if self.format:
             self.config.print("Converting to %s and evaluating..." % self.format)
         self.eval_type = UNLABELED if self.config.is_unlabeled(self.in_format) else LABELED
-        score = EVALUATORS.get(self.format, ucca_evaluation).evaluate(
-            self.out, self.passage, converter=get_output_converter(self.format),
-            verbose=self.out and self.config.args.verbose > 3, constructions=self.config.args.constructions,
-            eval_types=(self.eval_type,) if mode is ParseMode.dev else (LABELED, UNLABELED))
+        evaluator = EVALUATORS.get(self.format, evaluate_ucca)
+        score = evaluator(self.out, self.passage, converter=get_output_converter(self.format),
+                          verbose=self.out and self.config.args.verbose > 3,
+                          constructions=self.config.args.constructions,
+                          eval_types=(self.eval_type,) if mode is ParseMode.dev else (LABELED, UNLABELED))
         self.f1 = average_f1(score, self.eval_type)
         score.lang = self.lang
         return score
@@ -452,6 +453,7 @@ class Parser(AbstractParser):
     def eval_and_save(self, last=False, finished_epoch=False):
         scores = None
         model = self.model
+        # noinspection PyAttributeOutsideInit
         self.model = finalized = model.finalize(finished_epoch=finished_epoch)
         if self.dev:
             if not self.best_score:
