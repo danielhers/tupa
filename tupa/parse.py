@@ -665,10 +665,10 @@ def main_generator():
 
 
 def main():
+    print("TUPA version " + GIT_VERSION)
+    set_traceback_listener()
     list(main_generator())
 
 
 if __name__ == "__main__":
-    print("TUPA version " + GIT_VERSION)
-    set_traceback_listener()
     main()
