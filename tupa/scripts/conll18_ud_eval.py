@@ -530,19 +530,12 @@ def load_conllu_file(path):
     return load_conllu(_file)
 
 
-def evaluate_wrapper(args):
-    # Load CoNLL-U files
-    gold_ud = load_conllu_file(args.gold_file)
-    system_ud = load_conllu_file(args.system_file)
-    return evaluate(gold_ud, system_ud)
-
-
 def main():
     # Parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("gold_file", type=str,
+    parser.add_argument("gold_file",
                         help="Name of the CoNLL-U file with the gold data.")
-    parser.add_argument("system_file", type=str,
+    parser.add_argument("system_files", nargs="+",
                         help="Name of the CoNLL-U file with the predicted data.")
     parser.add_argument("--verbose", "-v", default=False, action="store_true",
                         help="Print all metrics.")
@@ -550,40 +543,52 @@ def main():
                         help="Print raw counts of correct/gold/system/aligned words instead of prec/rec/F1 for all metrics.")
     args = parser.parse_args()
 
-    # Evaluate
-    evaluation = evaluate_wrapper(args)
+    # Load CoNLL-U files
+    gold_ud = load_conllu_file(args.gold_file)
 
-    # Print the evaluation
-    if not args.verbose and not args.counts:
-        print("LAS F1 Score: {:.2f}".format(100 * evaluation["LAS"].f1))
-        print("MLAS Score: {:.2f}".format(100 * evaluation["MLAS"].f1))
-        print("BLEX Score: {:.2f}".format(100 * evaluation["BLEX"].f1))
-        print("Enhanced LAS F1 Score: {:.2f}".format(100 * evaluation["ELAS"].f1))
-    else:
-        if args.counts:
-            print("Metric     | Correct   |      Gold | Predicted | Aligned")
+    for i, system_file in enumerate(args.system_files):
+        system_ud = load_conllu_file(system_file)
+
+        # Evaluate
+        evaluation = evaluate(gold_ud, system_ud)
+
+        # Print the evaluation
+        if len(args.system_files) > 1:
+            print("== {} ==".format(system_file))
+
+        if not args.verbose and not args.counts:
+            print("LAS F1 Score: {:.2f}".format(100 * evaluation["LAS"].f1))
+            print("MLAS Score: {:.2f}".format(100 * evaluation["MLAS"].f1))
+            print("BLEX Score: {:.2f}".format(100 * evaluation["BLEX"].f1))
+            print("Enhanced LAS F1 Score: {:.2f}".format(100 * evaluation["ELAS"].f1))
         else:
-            print("Metric     | Precision |    Recall |  F1 Score | AligndAcc")
-        print("-----------+-----------+-----------+-----------+-----------")
-        for metric in ["Tokens", "Sentences", "Words", "UPOS", "XPOS", "UFeats", "AllTags", "Lemmas", "UAS", "LAS",
-                       "CLAS", "MLAS", "BLEX", "ELAS"]:
             if args.counts:
-                print("{:11}|{:10} |{:10} |{:10} |{:10}".format(
-                    metric,
-                    evaluation[metric].correct,
-                    evaluation[metric].gold_total,
-                    evaluation[metric].system_total,
-                    evaluation[metric].aligned_total or (evaluation[metric].correct if metric == "Words" else "")
-                ))
+                print("Metric     | Correct   |      Gold | Predicted | Aligned")
             else:
-                print("{:11}|{:10.2f} |{:10.2f} |{:10.2f} |{}".format(
-                    metric,
-                    100 * evaluation[metric].precision,
-                    100 * evaluation[metric].recall,
-                    100 * evaluation[metric].f1,
-                    "{:10.2f}".format(100 * evaluation[metric].aligned_accuracy) if evaluation[
-                                                                                        metric].aligned_accuracy is not None else ""
-                ))
+                print("Metric     | Precision |    Recall |  F1 Score | AligndAcc")
+            print("-----------+-----------+-----------+-----------+-----------")
+            for metric in ["Tokens", "Sentences", "Words", "UPOS", "XPOS", "UFeats", "AllTags", "Lemmas", "UAS", "LAS",
+                           "CLAS", "MLAS", "BLEX", "ELAS"]:
+                if args.counts:
+                    print("{:11}|{:10} |{:10} |{:10} |{:10}".format(
+                        metric,
+                        evaluation[metric].correct,
+                        evaluation[metric].gold_total,
+                        evaluation[metric].system_total,
+                        evaluation[metric].aligned_total or (evaluation[metric].correct if metric == "Words" else "")
+                    ))
+                else:
+                    print("{:11}|{:10.2f} |{:10.2f} |{:10.2f} |{}".format(
+                        metric,
+                        100 * evaluation[metric].precision,
+                        100 * evaluation[metric].recall,
+                        100 * evaluation[metric].f1,
+                        "{:10.2f}".format(100 * evaluation[metric].aligned_accuracy) if evaluation[
+                                                                                            metric].aligned_accuracy is not None else ""
+                    ))
+
+        if i < len(args.system_files) - 1:
+            print()
 
 
 if __name__ == "__main__":
