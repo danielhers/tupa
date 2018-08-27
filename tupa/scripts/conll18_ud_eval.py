@@ -92,10 +92,11 @@
 from __future__ import division
 from __future__ import print_function
 
-import argparse
-import io
 import sys
 import unicodedata
+
+import argparse
+import io
 import unittest
 
 # CoNLL-U column names
@@ -229,20 +230,27 @@ def load_conllu(file):
                 raise UDError("There are multiple roots in a sentence: " +
                               "\n".join(" ".join(w.columns) for w in roots))
 
+            # Read enhanced dependencies
             for word in ud.words[sentence_start:]:
-                word.enhanced = []
-                for spec in word.columns[DEPS].split("|"):
-                    if spec == "_":
+                word.enhanced = set()
+                for enhanced_dep in word.columns[DEPS].split("|"):
+                    if enhanced_dep == "_":
                         continue
-                    head, _, deprel = spec.partition(":")
-                    if "." in head:
+                    # Ignore language-specific enhanced deprel subtypes
+                    enhanced_head, enhanced_deprel, *_ = enhanced_dep.split(":")
+                    # Skip empty nodes and their dependents
+                    if "." in enhanced_head:
                         continue
-                    head = int(head)
-                    if head < 0 or head > len(ud.words) - sentence_start:
-                        raise UDError("Enhanced head '{}' points outside of the sentence".format(head))
-                    if head and head != int(word.columns[HEAD]):
-                        parent = ud.words[sentence_start + head - 1]
-                        word.enhanced.append((parent, deprel))
+                    try:
+                        enhanced_head = int(enhanced_head)
+                    except ValueError:
+                        raise UDError("Cannot parse enhanced head '{}'".format(_encode(enhanced_head)))
+                    if enhanced_head < 0 or enhanced_head > len(ud.words) - sentence_start:
+                        raise UDError("Enhanced head '{}' points outside of the sentence".format(enhanced_head))
+                    # Skip if identical to the basic head
+                    if enhanced_head != int(word.columns[HEAD]):
+                        enhanced_parent = ud.words[sentence_start + enhanced_head - 1] if enhanced_head else None
+                        word.enhanced.add((enhanced_parent, enhanced_deprel))
 
             # End the sentence
             ud.sentences[-1].end = index
@@ -502,7 +510,7 @@ def evaluate(gold_ud, system_ud):
         "Lemmas": alignment_score(alignment, lambda w, ga: w.columns[LEMMA] if ga(w).columns[LEMMA] != "_" else "_"),
         "UAS": alignment_score(alignment, lambda w, ga: ga(w.parent)),
         "LAS": alignment_score(alignment, lambda w, ga: (ga(w.parent), w.columns[DEPREL])),
-        "ELAS": alignment_score(alignment, lambda w, ga: tuple((ga(head), deprel) for (head, deprel) in w.enhanced),
+        "ELAS": alignment_score(alignment, lambda w, ga: set((ga(head), deprel) for (head, deprel) in w.enhanced),
                                 count_fn=lambda w: len(w.enhanced)),
         "CLAS": alignment_score(alignment, lambda w, ga: (ga(w.parent), w.columns[DEPREL]),
                                 filter_fn=lambda w: w.is_content_deprel),
