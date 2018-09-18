@@ -4,5 +4,5 @@ tqdm>=4.23.3
 configargparse>=0.13.0
 ucca>=1.0.120,<1.1
 semstr[amr]==1.0.59
-dynet==2.0.3
+dynet==2.1
 logbook==1.4.0
