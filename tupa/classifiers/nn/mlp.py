@@ -63,10 +63,10 @@ class MultilayerPerceptron(SubModel):
         self.config.print(self, level=4)
         if self.total_layers:
             if self.weights is None:
-                self.weights = [[dy.parameter(self.params[prefix + str(i)]) for prefix in ("W", "b")]
+                self.weights = [[self.params[prefix + str(i)] for prefix in ("W", "b")]
                                 for i in range(self.total_layers)]
                 if self.weights[0][0].dim()[0][1] < dim:  # number of columns in W0
-                    self.weights[0][0] = dy.concatenate_cols([self.weights[0][0], dy.parameter(self.params["W0+"])])
+                    self.weights[0][0] = dy.concatenate_cols([self.weights[0][0], self.params["W0+"]])
             for i, (W, b) in enumerate(self.weights):
                 self.config.print(lambda: x.npvalue().tolist(), level=4)
                 try:

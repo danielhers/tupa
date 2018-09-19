@@ -181,7 +181,7 @@ class HighwayRNN(BiRNN):
             return []
         for i in range(self.lstm_layers):
             for n, d in ("f", 1), ("b", -1):
-                Wr, br, Wh = [dy.parameter(self.params["%s%d%s" % (p, i, n)]) for p in ("Wr", "br", "Wh")]
+                Wr, br, Wh = [self.params["%s%d%s" % (p, i, n)] for p in ("Wr", "br", "Wh")]
                 hs_ = self.params["rnn%d%s" % (i, n)].initial_state().transduce(xs[::d])
                 hs = [hs_[0]]
                 for t in range(1, len(hs_)):
