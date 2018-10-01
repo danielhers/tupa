@@ -53,6 +53,8 @@ jobs:
         - conda update -q conda
         - conda create -q -n env python=3.6 numpy cython
         - source activate env
+before_script: # https://github.com/travis-ci/travis-ci/issues/8982#issuecomment-354357640
+  - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
 script:
   - ci/test.sh
 deploy:
