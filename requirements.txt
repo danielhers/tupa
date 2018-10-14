@@ -5,4 +5,4 @@ configargparse>=0.13.0
 ucca>=1.0.123,<1.1
 semstr[amr]==1.0.63
 dynet==2.1
-logbook==1.4.0
+logbook==1.4.1
