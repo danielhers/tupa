@@ -30,7 +30,7 @@ class State:
         self.log = []
         self.finished = False
         self.passage = passage
-        l0, l1 = [passage.layer(l.LAYER_ID) for l in (layer0, layer1)]
+        l0, l1 = [self.get_layer(passage, l) for l in (layer0, layer1)]
         self.labeled = any(n.outgoing or n.attrib.get(LABEL_ATTRIB) for n in l1.all)
         self.terminals = [Node(i, orig_node=t, root=passage, text=t.text, paragraph=t.paragraph, tag=t.tag)
                           for i, t in enumerate(l0.all, start=1)]
@@ -45,6 +45,13 @@ class State:
         self.nodes += self.terminals
         self.actions = []  # History of applied actions
         self.type_validity_cache = {}
+
+    @staticmethod
+    def get_layer(passage, layer):
+        try:
+            return passage.layer(layer.LAYER_ID)
+        except KeyError as e:
+            raise IOError("Passage %s is missing layer %s" % (passage.ID, layer.LAYER_ID)) from e
 
     def is_valid_action(self, action):
         """
