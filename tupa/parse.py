@@ -20,7 +20,6 @@ from tupa.config import Config, Iterations
 from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
 from tupa.oracle import Oracle
 from tupa.states.state import State
-from tupa.threadedgenerator import ThreadedGenerator
 from tupa.traceutil import set_traceback_listener
 
 
@@ -322,9 +321,9 @@ class BatchParser(AbstractParser):
             passages = to_lower_case(passages)
         pr_width = len(str(total))
         id_width = 1
-        passages = self.add_progress_bar(ThreadedGenerator(textutil.annotate_all(
+        passages = self.add_progress_bar(textutil.annotate_all(
             passages, as_array=True, lang=self.config.args.lang, verbose=self.config.args.verbose > 2,
-            vocab=self.model.config.vocab(lang=self.config.args.lang)), queue_maxsize=100), display=display)
+            vocab=self.model.config.vocab(lang=self.config.args.lang)), display=display)
         for i, passage in enumerate(passages, start=1):
             parser = PassageParser(passage, self.config, self.models, self.training, self.evaluation)
             if self.config.args.verbose and display:
