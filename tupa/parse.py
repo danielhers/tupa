@@ -240,7 +240,7 @@ class PassageParser(AbstractParser):
         for model in self.models[1:]:
             model.classifier.finished_item(renew=False)  # So that dynet.renew_cg happens only once
         if not self.training or self.config.args.verify:
-            self.out = self.state.create_passage(verify=self.config.args.verify)
+            self.out = self.state.create_passage(verify=self.config.args.verify, format=self.out_format)
         if write:
             for out_format in self.config.args.formats or [self.out_format]:
                 if self.config.args.normalize and out_format == "ucca":

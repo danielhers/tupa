@@ -338,7 +338,7 @@ class State:
         self.type_validity_cache = {}
         self.need_label = None
 
-    def create_passage(self, verify=True):
+    def create_passage(self, verify=True, **kwargs):
         """
         Create final passage from temporary representation
         :param verify: fail if this results in an improper passage
@@ -346,7 +346,7 @@ class State:
         """
         Config().print("Creating passage %s from state..." % self.passage.ID, level=2)
         passage = core.Passage(self.passage.ID)
-        passage_format = self.passage.extra.get("format")
+        passage_format = kwargs.get("format") or self.passage.extra.get("format")
         if passage_format:
             passage.extra["format"] = passage_format
         self.passage.layer(layer0.LAYER_ID).copy(passage)
