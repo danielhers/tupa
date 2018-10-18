@@ -73,7 +73,7 @@ noop-amr)
     tupa -vv -c noop --implicit -We -I 1 -t "$TRAIN_DATA" "$DEV_DATA"
     ;;
 *-amr)
-    tupa -vv -c "$ACTION" --implicit -We "$TOY_DATA" -I 1 -t "alignment-release-training-bio/*10.amr" --max-node-labels=250
+    tupa -vv -c "$ACTION" --implicit -We "$TOY_DATA" -I 1 -t "$TRAIN_DATA" --max-node-labels=250 --max-training-per-format=100
     ;;
 *)
     echo Training on "$TRAIN_DATA"
