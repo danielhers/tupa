@@ -118,4 +118,5 @@ This package is licensed under the GPLv3 or later license (see [`LICENSE.txt`](L
 
 [![Build Status (Travis CI)](https://travis-ci.org/danielhers/tupa.svg?branch=master)](https://travis-ci.org/danielhers/tupa)
 [![Build Status (AppVeyor)](https://ci.appveyor.com/api/projects/status/github/danielhers/tupa?svg=true)](https://ci.appveyor.com/project/danielh/tupa)
+[![Build Status (Docs)](https://readthedocs.org/projects/tupa/badge/?version=latest)](http://tupa.readthedocs.io/en/latest/)
 [![PyPI version](https://badge.fury.io/py/TUPA.svg)](https://badge.fury.io/py/TUPA)
