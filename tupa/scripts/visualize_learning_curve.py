@@ -51,7 +51,7 @@ def main():
     argparser.add_argument("models", nargs="+", help="model file basename(s) to load")
     args = argparser.parse_args()
     for pattern in args.models:
-        for filename in glob(pattern) or [pattern]:
+        for filename in sorted(glob(pattern)) or [pattern]:
             basename, _ = os.path.splitext(filename)
             for div in "dev", "test":
                 try:

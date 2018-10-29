@@ -623,7 +623,7 @@ CONVERTERS[""] = CONVERTERS["txt"] = from_text_format
 
 
 def read_passages(args, files):
-    expanded = [f for pattern in files for f in glob(pattern) or (pattern,)]
+    expanded = [f for pattern in files for f in sorted(glob(pattern)) or (pattern,)]
     return ioutil.read_files_and_dirs(expanded, sentences=args.sentences, paragraphs=args.paragraphs,
                                       converters=CONVERTERS, lang=Config().args.lang)
 
