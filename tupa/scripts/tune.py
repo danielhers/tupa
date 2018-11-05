@@ -114,6 +114,7 @@ def main():
         ("node_dropout",            False,  np.arange(.41, step=.01)),
         ("dynet_weight_decay",      False,  [0, 1e-5]),
         ("dropout",                 False,  np.arange(.61, step=.01)),
+        ("gated",                   False,  range(5)),
         ("require_connected",       False,  [False]),
         ("swap",                    False,  [config.REGULAR, config.COMPOUND]),
         ("max_swap",                False,  range(2, 6)),
