@@ -40,11 +40,8 @@ class BiRNN(SubModel):
             else:
                 self.indexed_dim = indexed_dim
                 self.indexed_num = indexed_num
-                self.mlp.init_params(indexed_dim)
                 randomize_orthonormal(*self.init_rnn_params(indexed_dim), activation=self.activation)
                 self.config.print("Initializing BiRNN: %s" % self, level=4)
-            return indexed_num * self.lstm_layer_dim
-        return 0
 
     def init_rnn_params(self, indexed_dim):
         rnn = dy.BiRNNBuilder(self.lstm_layers, self.lstm_layer_dim if self.embedding_layers else indexed_dim,
@@ -53,6 +50,11 @@ class BiRNN(SubModel):
         return [p for f, b in rnn.builder_layers for r in (f, b) for l in r.get_parameters() for p in l]
 
     def init_features(self, embeddings, train=False):
+        """
+        Set the value of self.input_reps (and self.empty_rep) given embeddings for the whole input sequence
+        :param embeddings: list of [list of vectors embeddings per time step] per feature
+        :param train: are we training now?
+        """
         if self.params:
             inputs = [self.mlp.evaluate(e, train=train) for e in zip(*embeddings)]  # join each time step to a vector
             self.config.print("Transducing %d inputs with dropout %s" %
@@ -136,11 +138,8 @@ class BiRNN(SubModel):
 
 
 class EmptyRNN(BiRNN):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def init_params(self, indexed_dim, indexed_num):
-        return 0
+        pass
 
     def init_features(self, embeddings, train=False):
         pass
@@ -157,9 +156,6 @@ class EmptyRNN(BiRNN):
 
 
 class HighwayRNN(BiRNN):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def init_rnn_params(self, indexed_dim):
         params = []
         for i in range(self.lstm_layers):

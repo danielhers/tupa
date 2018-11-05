@@ -111,7 +111,6 @@ class NeuralNetwork(Classifier, SubModel):
         else:
             model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.config, self.model, self.birnn_type)
             self.config.print("Initializing %s model with %d labels" % (axis, self.labels[axis].size), level=4)
-        input_dim = 0
         indexed_dim = np.array([0, 0], dtype=int)  # specific, shared
         indexed_num = np.array([0, 0], dtype=int)
         for key, param in sorted(self.input_params.items()):
@@ -130,11 +129,8 @@ class NeuralNetwork(Classifier, SubModel):
                 i = self.birnn_indices(param)
                 indexed_dim[i] += param.dim  # add to the input dimensionality at each indexed time point
                 indexed_num[i] = np.fmax(indexed_num[i], param.num)  # indices to be looked up are collected
-            else:
-                input_dim += param.num * param.dim
         for birnn in self.get_birnns(axis):
-            input_dim += birnn.init_params(indexed_dim[int(birnn.shared)], indexed_num[int(birnn.shared)])
-        model.mlp.init_params(input_dim)
+            birnn.init_params(indexed_dim[int(birnn.shared)], indexed_num[int(birnn.shared)])
 
     def birnn_indices(self, param):  # both specific and shared or just specific
         return [0, 1] if not self.config.args.multilingual or not param.lang_specific else [0]

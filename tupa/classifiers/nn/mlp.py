@@ -1,8 +1,12 @@
+import re
+
 import dynet as dy
 
 from .constants import ACTIVATIONS, INITIALIZERS, CategoricalParameter
 from .sub_model import SubModel
 from .util import randomize_orthonormal
+
+MLP_PARAM_PATTERN = re.compile(r"[Wb]\d+")
 
 
 class MultilayerPerceptron(SubModel):
@@ -18,6 +22,7 @@ class MultilayerPerceptron(SubModel):
         self.activation = CategoricalParameter(ACTIVATIONS, self.args.activation)
         self.init = CategoricalParameter(INITIALIZERS, self.args.init)
         self.dropout = self.args.dropout
+        self.gated = 1 if self.args.gated is None else self.args.gated  # None means --gated was given with no argument
         self.num_labels = num_labels
         self.input_dim = self.weights = None
 
@@ -29,8 +34,8 @@ class MultilayerPerceptron(SubModel):
         assert input_dim, "Zero input dimension to MLP"
         self.input_dim = input_dim
         if self.layers > 0:
-            if self.params:
-                W0 = self.params["W0"]
+            W0 = self.params.get("W0")
+            if W0:
                 value = W0.as_array()
                 old_input_dim = value.shape[1]
                 extra_dim = self.input_dim - old_input_dim
@@ -53,13 +58,36 @@ class MultilayerPerceptron(SubModel):
                                    for prefix, dims in (("W", list(zip(o_dim, i_dim))), ("b", o_dim))
                                    for i, dim in enumerate(dims))
                 self.verify_dims()
-                randomize_orthonormal(*self.params.values(), activation=self.activation)
+                randomize_orthonormal(*[v for k, v in self.params.items() if MLP_PARAM_PATTERN.match(k)],
+                                      activation=self.activation)
                 self.config.print("Initializing MLP: %s" % self, level=4)
 
     def evaluate(self, inputs, train=False):
-        x = dy.concatenate(list(inputs))  # TODO add interaction terms for biaffine attention
+        """
+        Apply all MLP layers to concatenated input
+        :param inputs: vector per feature type
+        :param train: are we training now?
+        :return: output vector of size self.output_dim
+        """
+        inputs = list(inputs)
+        if self.gated:
+            gates = self.params.get("gates")
+            if gates is None:  # FIXME attention weights should not be just parameters, but based on biaffine product?
+                gates = self.params["gates"] = self.model.add_parameters((len(inputs), self.gated),
+                                                                         init=dy.UniformInitializer(1))
+            input_dims = [i.dim()[0][0] for i in inputs]
+            max_dim = max(input_dims)
+            x = dy.concatenate_cols([dy.concatenate([i, dy.zeroes(max_dim - d)])
+                                     if d < max_dim else i for i, d in zip(inputs, input_dims)]) * gates
+            if self.gated > 1:  # Multiple "attention heads" -- concatenate outputs to one vector
+                inputs = [dy.reshape(x, (x.dim()[0][0] * x.dim()[0][1],))]
+        x = dy.concatenate(inputs)
+        assert len(x.dim()[0]) == 1, "Input should be a vector, but has dimension " + str(x.dim()[0])
         dim = x.dim()[0][0]
-        assert dim == self.input_dim, "Input dim mismatch: %d != %d" % (dim, self.input_dim)
+        if self.input_dim:
+            assert dim == self.input_dim, "Input dim mismatch: %d != %d" % (dim, self.input_dim)
+        else:
+            self.init_params(dim)
         self.config.print(self, level=4)
         if self.total_layers:
             if self.weights is None:
@@ -89,6 +117,7 @@ class MultilayerPerceptron(SubModel):
             ("activation", str(self.activation)),
             ("init", str(self.init)),
             ("dropout", self.dropout),
+            ("gated", self.gated),
             ("num_labels", self.num_labels),
             ("input_dim", self.input_dim),
         )
@@ -103,6 +132,7 @@ class MultilayerPerceptron(SubModel):
         self.args.activation = self.activation.string = d["activation"]
         self.args.init = self.init.string = d["init"]
         self.args.dropout = self.dropout = d["dropout"]
+        self.args.gated = self.gated = d.get("gated", 0)
         self.num_labels = d["num_labels"]
         self.input_dim = d["input_dim"]
         self.verify_dims()

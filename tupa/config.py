@@ -1,9 +1,10 @@
-import dynet_config
-import numpy as np
 import os
 import shlex
-from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
 from copy import deepcopy
+
+import dynet_config
+import numpy as np
+from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
 from logbook import Logger, FileHandler, StderrHandler
 from semstr.cfgutil import Singleton, add_verbose_arg, add_boolean_option, get_group_arg_names
 from semstr.convert import UCCA_EXT, CONVERTERS
@@ -153,6 +154,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--dropout", type=float, default=0.4, help="dropout parameter between layers")
     add(group, "--max-length", type=int, default=120, help="maximum length of input sentence")
     add(group, "--rnn", choices=["None"] + list(RNNS), default=DEFAULT_RNN, help="type of recurrent neural network")
+    add(group, "--gated", type=int, nargs="?", default=0, help="gated input to BiRNN and MLP")
     NN_ARG_NAMES.update(get_group_arg_names(group))
     return ap
 
