@@ -1,3 +1,5 @@
+from itertools import groupby
+
 import dynet as dy
 import re
 
@@ -71,7 +73,7 @@ class MultilayerPerceptron(SubModel):
         input_keys, inputs = list(map(list, zip(*list(inputs))))
         if self.input_keys:
             assert input_keys == self.input_keys, "Got:     %s\nBut expected input keys: %s" % (
-                " ".join(map(str, self.input_keys)), " ".join(map(str, input_keys)))
+                self.input_keys_str(self.input_keys), self.input_keys_str(input_keys))
         else:
             self.input_keys = input_keys
         if self.gated:
@@ -158,9 +160,13 @@ class MultilayerPerceptron(SubModel):
     def invalidate_caches(self):
         self.weights = None
 
+    @staticmethod
+    def input_keys_str(input_keys):
+        return " ".join("%s:%d" % (k, len(list(l))) for k, l in groupby(input_keys))
+
     def __str__(self):
         return "%s layers: %d, total_layers: %d, layer_dim: %d, output_dim: %d, activation: %s, init: %s, " \
                "dropout: %f, num_labels: %s, input_dim: %d, input_keys: %s, params: %s" % (
                 "/".join(self.save_path), self.layers, self.total_layers, self.layer_dim, self.output_dim,
                 self.activation, self.init, self.dropout, self.num_labels, self.input_dim,
-                " ".join(map(str, self.input_keys)), list(self.params.keys()))
+                self.input_keys_str(self.input_keys), list(self.params.keys()))
