@@ -52,11 +52,12 @@ class BiRNN(SubModel):
     def init_features(self, embeddings, train=False):
         """
         Set the value of self.input_reps (and self.empty_rep) given embeddings for the whole input sequence
-        :param embeddings: list of [list of vectors embeddings per time step] per feature
+        :param embeddings: list of [(key, list of vectors embeddings per time step)] per feature
         :param train: are we training now?
         """
         if self.params:
-            inputs = [self.mlp.evaluate(e, train=train) for e in zip(*embeddings)]  # join each time step to a vector
+            keys, embeddings = zip(*embeddings)
+            inputs = [self.mlp.evaluate(zip(keys, es), train=train) for es in zip(*embeddings)]  # join each time step
             self.config.print("Transducing %d inputs with dropout %s" %
                               (len(inputs), self.dropout if train else "disabled"), level=4)
             self.input_reps = self.transduce(inputs, train)
@@ -80,7 +81,8 @@ class BiRNN(SubModel):
         """
         if self.params:
             assert len(indices) == self.indexed_num, "Input size mismatch: %d != %d" % (len(indices), self.indexed_num)
-            return [self.empty_rep if i == MISSING_VALUE else self.get_representation(i) for i in indices]
+            return [("/".join(self.save_path),
+                     self.empty_rep if i == MISSING_VALUE else self.get_representation(i)) for i in indices]
         return []
 
     def get_representation(self, i):

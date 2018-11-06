@@ -1,6 +1,5 @@
-import re
-
 import dynet as dy
+import re
 
 from .constants import ACTIVATIONS, INITIALIZERS, CategoricalParameter
 from .sub_model import SubModel
@@ -24,7 +23,7 @@ class MultilayerPerceptron(SubModel):
         self.dropout = self.args.dropout
         self.gated = 1 if self.args.gated is None else self.args.gated  # None means --gated was given with no argument
         self.num_labels = num_labels
-        self.input_dim = self.weights = None
+        self.input_dim = self.input_keys = self.weights = None
 
     @property
     def total_layers(self):
@@ -65,11 +64,16 @@ class MultilayerPerceptron(SubModel):
     def evaluate(self, inputs, train=False):
         """
         Apply all MLP layers to concatenated input
-        :param inputs: vector per feature type
+        :param inputs: (key, vector) per feature type
         :param train: are we training now?
         :return: output vector of size self.output_dim
         """
-        inputs = list(inputs)
+        input_keys, inputs = list(map(list, zip(*list(inputs))))
+        if self.input_keys:
+            assert input_keys == self.input_keys, "Got:     %s\nBut expected input keys: %s" % (
+                " ".join(map(str, self.input_keys)), " ".join(map(str, input_keys)))
+        else:
+            self.input_keys = input_keys
         if self.gated:
             gates = self.params.get("gates")
             if gates is None:  # FIXME attention weights should not be just parameters, but based on biaffine product?
@@ -120,6 +124,7 @@ class MultilayerPerceptron(SubModel):
             ("gated", self.gated),
             ("num_labels", self.num_labels),
             ("input_dim", self.input_dim),
+            ("input_keys", self.input_keys),
         )
         self.config.print("Saving MLP: %s" % self, level=4)
         return values
@@ -135,6 +140,7 @@ class MultilayerPerceptron(SubModel):
         self.args.gated = self.gated = d.get("gated", 0)
         self.num_labels = d["num_labels"]
         self.input_dim = d["input_dim"]
+        self.input_keys = d.get("input_keys")
         self.verify_dims()
         self.config.print("Loading MLP: %s" % self, level=4)
 
@@ -154,6 +160,7 @@ class MultilayerPerceptron(SubModel):
 
     def __str__(self):
         return "%s layers: %d, total_layers: %d, layer_dim: %d, output_dim: %d, activation: %s, init: %s, " \
-               "dropout: %f, num_labels: %s, input_dim: %d, params: %s" % (
+               "dropout: %f, num_labels: %s, input_dim: %d, input_keys: %s, params: %s" % (
                 "/".join(self.save_path), self.layers, self.total_layers, self.layer_dim, self.output_dim,
-                self.activation, self.init, self.dropout, self.num_labels, self.input_dim, list(self.params.keys()))
+                self.activation, self.init, self.dropout, self.num_labels, self.input_dim,
+                " ".join(map(str, self.input_keys)), list(self.params.keys()))

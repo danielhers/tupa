@@ -104,12 +104,11 @@ class NeuralNetwork(Classifier, SubModel):
             self.trainer.set_sparse_updates(False)
 
     def init_axis_model(self, axis, init=True):
-        model = self.axes.get(axis)
-        if model:
+        if axis in self.axes:
             if init:
                 return
         else:
-            model = self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.config, self.model, self.birnn_type)
+            self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.config, self.model, self.birnn_type)
             self.config.print("Initializing %s model with %d labels" % (axis, self.labels[axis].size), level=4)
         indexed_dim = np.array([0, 0], dtype=int)  # specific, shared
         indexed_num = np.array([0, 0], dtype=int)
@@ -159,7 +158,7 @@ class NeuralNetwork(Classifier, SubModel):
                 continue
             vectors = [lookup[k] for k in indices]
             for index in self.birnn_indices(param):
-                embeddings[index].append(vectors)
+                embeddings[index].append((key, vectors))
             self.config.print(lambda: "%s: %s" % (key, ", ".join("%d->%s" % (i, e.npvalue().tolist())
                                                                  for i, e in zip(indices, vectors))), level=4)
         for birnn in self.get_birnns(*axes):
@@ -171,13 +170,13 @@ class NeuralNetwork(Classifier, SubModel):
             param = self.input_params[key]
             lookup = self.params.get(key)
             if param.numeric:
-                yield dy.inputVector(values)
+                yield key, dy.inputVector(values)
             elif param.indexed:  # collect indices to be looked up
                 indices += values  # DenseFeatureExtractor collapsed features so there are no repetitions between them
             elif lookup is None:  # ignored
                 continue
             else:  # lookup feature
-                yield from (self.get_empty_values(key) if x == MISSING_VALUE else lookup[x] for x in values)
+                yield from ((key, self.get_empty_values(key) if x == MISSING_VALUE else lookup[x]) for x in values)
             self.config.print(lambda: "%s: %s" % (key, values), level=4)
         if indices:
             for birnn in self.get_birnns(axis):
