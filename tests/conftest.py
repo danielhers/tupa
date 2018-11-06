@@ -102,7 +102,7 @@ def passage_files(*formats):
 def load_passage(filename, annotate=False):
     WIKIFIER.enabled = False
     converters = {k: partial(c, annotate=annotate) for k, c in FROM_FORMAT.items()}
-    passages = ioutil.read_files_and_dirs(filename, converters=converters)
+    passages = ioutil.read_files_and_dirs(filename, converters=converters, attempts=1, delay=0)
     try:
         return next(iter(passages))
     except StopIteration:

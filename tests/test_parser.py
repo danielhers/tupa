@@ -3,7 +3,7 @@
 import pytest
 from numpy.testing import assert_allclose
 from semstr.evaluate import Scores
-from ucca import convert, ioutil
+from ucca import convert
 
 from tupa.config import SPARSE, MLP, BIRNN, HIGHWAY_RNN, NOOP, Iterations
 from tupa.parse import Parser, ParserException
@@ -135,7 +135,6 @@ def test_train_empty(config, model_type, default_setting):
     config.update(dict(classifier=model_type))
     filename = "empty"
     remove_existing(filename)
-    ioutil.DEFAULT_ATTEMPTS = 1
     with pytest.raises(ParserException):
         list(Parser(model_files=filename, config=config).train(load_passage("nonexistent file")))
 
