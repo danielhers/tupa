@@ -162,7 +162,7 @@ class MultilayerPerceptron(SubModel):
 
     @staticmethod
     def input_keys_str(input_keys):
-        return " ".join("%s:%d" % (k, len(list(l))) for k, l in groupby(input_keys))
+        return None if input_keys is None else " ".join("%s:%d" % (k, len(list(l))) for k, l in groupby(input_keys))
 
     def __str__(self):
         return "%s layers: %d, total_layers: %d, layer_dim: %d, output_dim: %d, activation: %s, init: %s, " \
