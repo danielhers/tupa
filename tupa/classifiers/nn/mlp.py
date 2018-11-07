@@ -85,8 +85,8 @@ class MultilayerPerceptron(SubModel):
             max_dim = max(input_dims)
             x = dy.concatenate_cols([dy.concatenate([i, dy.zeroes(max_dim - d)])
                                      if d < max_dim else i for i, d in zip(inputs, input_dims)]) * gates
-            if self.gated > 1:  # Multiple "attention heads" -- concatenate outputs to one vector
-                inputs = [dy.reshape(x, (x.dim()[0][0] * x.dim()[0][1],))]
+            # Possibly multiple "attention heads" -- concatenate outputs to one vector
+            inputs = [dy.reshape(x, (x.dim()[0][0] * x.dim()[0][1],))]
         x = dy.concatenate(inputs)
         assert len(x.dim()[0]) == 1, "Input should be a vector, but has dimension " + str(x.dim()[0])
         dim = x.dim()[0][0]
