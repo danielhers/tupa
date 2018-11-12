@@ -105,6 +105,8 @@ class BiRNN(SubModel):
             ("rnn", str(self.rnn_builder)),
             ("indexed_dim", self.indexed_dim),
             ("indexed_num", self.indexed_num),
+            ("input_dim", self.mlp.input_dim),
+            ("gated", self.mlp.gated),
         ) if self.lstm_layer_dim and self.lstm_layers else []
         self.config.print("Saving BiRNN: %s" % self, level=4)
         return values
@@ -123,6 +125,8 @@ class BiRNN(SubModel):
             self.args.dropout = self.mlp.dropout = self.dropout = d["dropout"]
             self.indexed_dim = self.mlp.input_dim = d["indexed_dim"]
             self.indexed_num = d["indexed_num"]
+            self.mlp.input_dim = d.get("input_dim")
+            self.mlp.gated = d.get("gated")
         else:
             self.args.lstm_layers = self.lstm_layers = self.args.lstm_layer_dim = self.lstm_layer_dim = 0
         self.config.print("Loading BiRNN: %s" % self, level=4)

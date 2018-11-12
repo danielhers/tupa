@@ -83,7 +83,7 @@ class MultilayerPerceptron(SubModel):
                                                                          init=dy.UniformInitializer(1))
             input_dims = [i.dim()[0][0] for i in inputs]
             max_dim = max(input_dims)
-            x = dy.concatenate_cols([dy.concatenate([i, dy.zeroes(max_dim - d)])
+            x = dy.concatenate_cols([dy.concatenate([i, dy.zeroes(max_dim - d)])  # Pad with zeros to get uniform dim
                                      if d < max_dim else i for i, d in zip(inputs, input_dims)]) * gates
             # Possibly multiple "attention heads" -- concatenate outputs to one vector
             inputs = [dy.reshape(x, (x.dim()[0][0] * x.dim()[0][1],))]
@@ -166,7 +166,7 @@ class MultilayerPerceptron(SubModel):
 
     def __str__(self):
         return "%s layers: %d, total_layers: %d, layer_dim: %d, output_dim: %d, activation: %s, init: %s, " \
-               "dropout: %f, num_labels: %s, input_dim: %d, input_keys: %s, params: %s" % (
+               "dropout: %f, gated: %d, num_labels: %s, input_dim: %d, input_keys: %s, params: %s" % (
                 "/".join(self.save_path), self.layers, self.total_layers, self.layer_dim, self.output_dim,
-                self.activation, self.init, self.dropout, self.num_labels, self.input_dim,
+                self.activation, self.init, self.dropout, self.gated, self.num_labels, self.input_dim,
                 self.input_keys_str(self.input_keys), list(self.params.keys()))
