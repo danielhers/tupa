@@ -1,10 +1,9 @@
-import os
-import shlex
-from copy import deepcopy
-
 import dynet_config
 import numpy as np
+import os
+import shlex
 from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
+from copy import deepcopy
 from logbook import Logger, FileHandler, StderrHandler
 from semstr.cfgutil import Singleton, add_verbose_arg, add_boolean_option, get_group_arg_names
 from semstr.convert import UCCA_EXT, CONVERTERS
@@ -335,15 +334,25 @@ class Config(object, metaclass=Singleton):
         return {attr: getattr(self.args, attr) if args is None else args[attr]
                 for attr in RESTORED_ARGS if args is None or attr in args}
 
-    def set_format(self, f=None, update=False):
+    def set_format(self, f=None, update=False, recursive=True):
         if f in (None, "text") and not self.format:  # In update or parsing UCCA (with no extra["format"]) or plain text
             f = "ucca"  # Default output format is UCCA
         if update or self.format != f:
             if f not in (None, "text"):
                 self.format = f
             self.update_by_hyperparams()
-        for config in self.sub_configs:
-            config.set_format(f=f, update=update)
+        if recursive:
+            for config in self.descendants():
+                config.set_format(f=f, update=update, recursive=False)
+
+    def descendants(self):
+        ret = []
+        configs = [self]
+        while configs:
+            c = configs.pop(0)
+            ret += c.sub_configs
+            configs += c.sub_configs
+        return ret
 
     def is_unlabeled(self, f=None):
         # If just -u or --unlabeled is given then its value is [], and we want to treat that as "all formats"
@@ -393,14 +402,15 @@ class Config(object, metaclass=Singleton):
     def update_hyperparams(self, **kwargs):
         self.update(dict(hyperparams=[HyperparamsInitializer(k, **v) for k, v in kwargs.items()]))
 
-    def update_iteration(self, iteration, print_message=True):
+    def update_iteration(self, iteration, print_message=True, recursive=True):
         if iteration.hyperparams:
             if print_message:
                 print("Updating: %s" % iteration.hyperparams)
             self.iteration_hyperparams = iteration.hyperparams.args
             self.update_by_hyperparams()
-            for config in self.sub_configs:
-                config.update_iteration(iteration, print_message=False)
+            if recursive:
+                for config in self.descendants():
+                    config.update_iteration(iteration, print_message=False, recursive=False)
 
     def update_by_hyperparams(self):
         format_values = dict(self.original_values)
