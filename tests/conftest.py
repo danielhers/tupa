@@ -39,8 +39,7 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("formats", formats, ids="-".join)
 
 
-@pytest.fixture
-def config():
+def create_config():
     c = Config("", "-m", "test")
     c.update({"verbose": 2, "timeout": 1, "embedding_layer_dim": 1, "ner_dim": 1, "action_dim": 1, "lemma_dim": 1,
               "max_words_external": 3, "word_dim_external": 1, "word_dim": 1, "max_words": 3, "max_lemmas": 3,
@@ -55,8 +54,13 @@ def config():
 
 
 @pytest.fixture
+def config():
+    return create_config()
+
+
+@pytest.fixture
 def empty_features_config():
-    c = config()
+    c = create_config()
     c.update({"ner_dim": 0, "action_dim": 0, "word_dim_external": 0, "word_dim": 0, "lemma_dim": 0, "node_label_dim": 0,
               "node_category_dim": 0, "edge_label_dim": 0, "tag_dim": 0, "pos_dim": 0, "dep_dim": 0})
     return c
