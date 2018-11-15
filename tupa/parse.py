@@ -206,7 +206,7 @@ class PassageParser(AbstractParser):
                 is_correct = (label == true)
                 if is_correct:
                     self.correct_label_count += 1
-                else:
+                elif self.training:
                     label = true
             self.label_count += 1
         else:  # action
