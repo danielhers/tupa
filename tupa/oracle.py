@@ -1,6 +1,6 @@
+from semstr.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
 from ucca import layer1
 
-from semstr.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
 from .action import Actions
 from .config import Config, COMPOUND
 from .states.state import InvalidActionError
@@ -60,11 +60,13 @@ class Oracle:
             all_actions.generate_id(action, create=create)
             if action.id is not None:
                 try:
-                    state.check_valid_action(action, message=True)
+                    if self.args.validate_oracle:
+                        state.check_valid_action(action, message=True)
                     actions[action.id] = action
                 except InvalidActionError as e:
                     invalid.append((action, e))
-        assert actions, self.generate_log(invalid, state)
+        if self.args.validate_oracle:
+            assert actions, self.generate_log(invalid, state)
         return actions
 
     def generate_log(self, invalid, state):
@@ -163,17 +165,17 @@ class Oracle:
         return self.args.node_labels and not self.args.use_gold_node_labels \
                and not node.labeled and node.orig_node.attrib.get(LABEL_ATTRIB)
 
-    @staticmethod
-    def get_label(state, node):
+    def get_label(self, state, node):
         true_label = raw_true_label = None
         if node.orig_node is not None:
             raw_true_label = node.orig_node.attrib.get(LABEL_ATTRIB)
         if raw_true_label is not None:
             true_label, _, _ = raw_true_label.partition(LABEL_SEPARATOR)
-            try:
-                state.check_valid_label(true_label, message=True)
-            except InvalidActionError as e:
-                raise InvalidActionError("True label is invalid: " + "\n".join(map(str, (true_label, state, e))))
+            if self.args.validate_oracle:
+                try:
+                    state.check_valid_label(true_label, message=True)
+                except InvalidActionError as e:
+                    raise InvalidActionError("True label is invalid: " + "\n".join(map(str, (true_label, state, e))))
         return true_label, raw_true_label
 
     def str(self, sep):

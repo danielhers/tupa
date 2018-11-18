@@ -289,6 +289,7 @@ class Config(object, metaclass=Singleton):
         group = ap.add_argument_group(title="Sanity checks")
         add_boolean_option(group, "check-loops", "check for parser state loop")
         add_boolean_option(group, "verify", "check for oracle reproducing original passage")
+        add_boolean_option(group, "validate-oracle", "require oracle output to respect constraints", default=True)
         add_param_arguments(ap)
 
         group = ap.add_argument_group(title="DyNet parameters")
