@@ -38,7 +38,8 @@ class State:
         self.buffer = deque()
         self.nodes = []
         self.heads = set()
-        self.need_label = None  # If we are waiting for label_node() to be called, which node is to be labeled by it
+        self.need_node_label = None  # If we are waiting for label_node() to be called, which node is to be labeled by it
+        self.need_refinement_label = None  # If we are waiting for label_refinement() to be called
         self.root = self.add_node(orig_node=l1.heads[0], is_root=True)  # Root is not in the buffer
         self.stack.append(self.root)
         self.buffer += self.terminals
@@ -221,8 +222,8 @@ class State:
 
     def check_valid_label(self, label, message=False):
         if self.args.constraints and label is not None:
-            valid = self.constraints.allow_label(self.need_label, label)
-            self.check(valid, message and "May not label %s as %s: %s" % (self.need_label, label, valid))
+            valid = self.constraints.allow_label(self.need_node_label, label)
+            self.check(valid, message and "May not label %s as %s: %s" % (self.need_node_label, label, valid))
 
     @staticmethod
     def check(condition, *args, **kwargs):
@@ -245,12 +246,17 @@ class State:
             if child is None:
                 child = action.node = self.add_node(orig_node=action.orig_node, implicit=True)
             action.edge = self.add_edge(Edge(parent, child, tag, remote=action.remote))
+            if self.args.refinement_labels:
+                # check if tag is in refinement dict keys
+                r_m = Config().refinement(self.args.refinement_mapping)
+                if tag in r_m.keys:
+                    self.need_refinement_label = action.edge
             if action.node:
                 self.buffer.appendleft(action.node)
         elif action.is_type(Actions.Shift):  # Push buffer head to stack; shift buffer
             self.stack.append(self.buffer.popleft())
         elif action.is_type(Actions.Label):
-            self.need_label = self.stack[-action.tag]  # The parser is responsible to choose a label and set it
+            self.need_node_label = self.stack[-action.tag]  # The parser is responsible to choose a label and set it
         elif action.is_type(Actions.Reduce):  # Pop stack (no more edges to create with this node)
             self.stack.pop()
         elif action.is_type(Actions.Swap):  # Place second (or more) stack item back on the buffer
@@ -282,7 +288,7 @@ class State:
         self.heads.add(node)
         self.log.append("node: %s (swap_index: %g)" % (node, node.swap_index))
         if self.args.use_gold_node_labels:
-            self.need_label = node  # Labeled the node as soon as it is created rather than applying a LABEL action
+            self.need_node_label = node  # Labeled the node as soon as it is created rather than applying a LABEL action
         return node
 
     def calculate_swap_index(self):
@@ -332,11 +338,18 @@ class State:
             return None
 
     def label_node(self, label):
-        self.need_label.label = label
-        self.need_label.labeled = True
-        self.log.append("label: %s" % self.need_label)
+        self.need_node_label.label = label
+        self.need_node_label.labeled = True
+        self.log.append("label: %s" % self.need_node_label)
         self.type_validity_cache = {}
-        self.need_label = None
+        self.need_node_label = None
+
+    def label_refinement(self, label):
+        self.need_refinement_label.label = label
+        self.need_refinement_label.labeled = True
+        self.log.append("label: %s" % self.need_refinement_label)
+        self.type_validity_cache = {}
+        self.need_refinement_label = None
 
     def create_passage(self, verify=True, **kwargs):
         """

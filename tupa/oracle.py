@@ -178,6 +178,15 @@ class Oracle:
                     raise InvalidActionError("True label is invalid: " + "\n".join(map(str, (true_label, state, e))))
         return true_label, raw_true_label
 
+    @staticmethod
+    def get_edge_label(action):
+        true_label = raw_true_label = None
+        if action.orig_edge is not None:
+            raw_true_label = action.orig_edge.tag
+        if raw_true_label is not None:
+            true_label = "A" if raw_true_label in SNACS else raw_true_label
+        return true_label, raw_true_label
+
     def str(self, sep):
         return "nodes left: [%s]%sedges left: [%s]" % (" ".join(self.nodes_remaining), sep,
                                                        " ".join(map(str, self.edges_remaining)))

@@ -17,7 +17,7 @@ from ucca.normalization import normalize
 
 from tupa.__version__ import GIT_VERSION
 from tupa.config import Config, Iterations
-from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
+from tupa.model import Model, NODE_LABEL_KEY, REFINEMENT_LABEL_KEY, ClassifierProperty
 from tupa.oracle import Oracle
 from tupa.states.state import State
 from tupa.traceutil import set_traceback_listener
@@ -116,11 +116,13 @@ class PassageParser(AbstractParser):
         while True:
             if self.config.args.check_loops:
                 self.check_loop()
-            self.label_node()  # In case root node needs labeling
+            self.label_axis(axis=NODE_LABEL_KEY)  # In case root node needs labeling
             true_actions = self.get_true_actions()
             action, predicted_action = self.choose(true_actions)
             self.state.transition(action)
-            need_label, label, predicted_label, true_label = self.label_node(action)
+            need_node_label, node_label, predicted_node_label, true_node_label = self.label_axis(NODE_LABEL_KEY, action)
+            need_refinement_label, refinement_label, predicted_refinement_label, true_refinement_label = \
+                self.label_axis(REFINEMENT_LABEL_KEY, action)
             if self.config.args.action_stats:
                 try:
                     with open(self.config.args.action_stats, "a") as f:
@@ -130,9 +132,11 @@ class PassageParser(AbstractParser):
             self.config.print(lambda: "\n".join(["  predicted: %-15s true: %-15s taken: %-15s %s" % (
                 predicted_action, "|".join(map(str, true_actions.values())), action, self.state) if self.oracle else
                                           "  action: %-15s %s" % (action, self.state)] + (
-                ["  predicted label: %-9s true label: %s" % (predicted_label, true_label) if self.oracle and not
-                 self.config.args.use_gold_node_labels else "  label: %s" % label] if need_label else []) + [
-                "    " + l for l in self.state.log]))
+                ["  predicted node label: %-9s true label: %s" % (predicted_node_label, true_node_label) if self.oracle and not
+                 self.config.args.use_gold_node_labels else "  label: %s" % node_label] if need_node_label else []) +(
+                ["  predicted refinement label: %-9s true label: %s" % (predicted_refinement_label, true_refinement_label) if self.oracle and not
+                self.config.args.use_gold_node_labels else "  label: %s" % refinement_label] if need_refinement_label else []) +
+                ["    " + l for l in self.state.log]))
             if self.state.finished:
                 return  # action is Finish (or early update is triggered)
 
@@ -156,20 +160,33 @@ class PassageParser(AbstractParser):
 
     def label_node(self, action=None):
         true_label = label = predicted_label = None
-        need_label = self.state.need_label  # Label action that requires a choice of label
+        need_label = self.state.need_node_label  # Label action that requires a choice of node label
         if need_label:
             true_label, raw_true_label = self.get_true_label(action or need_label)
             label, predicted_label = self.choose(true_label, NODE_LABEL_KEY, "node label")
             self.state.label_node(raw_true_label if label == true_label else label)
         return need_label, label, predicted_label, true_label
 
+
+    def label_refinement(self, action=None):
+        true_label = label = predicted_label = None
+        need_label = self.state.need_refinement_label  # Label action that requires a choice of edge label
+        if need_label:
+            true_label, raw_true_label = self.get_true_label(action or need_label)
+            label, predicted_label = self.choose(true_label, REFINEMENT_LABEL_KEY, "refinement label")
+            self.state.label_refinement(raw_true_label if label == true_label else label)
+        return need_label, label, predicted_label, true_label
+
+
+
     def choose(self, true, axis=None, name="action"):
         if axis is None:
             axis = self.model.axis
-        elif axis == NODE_LABEL_KEY and self.config.args.use_gold_node_labels:
+        elif (axis == NODE_LABEL_KEY and self.config.args.use_gold_node_labels) or \
+                (axis == REFINEMENT_LABEL_KEY and self.config.args.use_gold_refinement_labels):
             return true, true
         labels = self.model.classifier.labels[axis]
-        if axis == NODE_LABEL_KEY:
+        if axis == NODE_LABEL_KEY or axis == REFINEMENT_LABEL_KEY:
             true_keys = (labels[true],) if self.oracle else ()  # Must be before score()
             is_valid = self.state.is_valid_label
         else:
@@ -189,19 +206,20 @@ class PassageParser(AbstractParser):
             if not (is_correct and ClassifierProperty.update_only_on_error in self.model.classifier_properties):
                 assert not self.model.is_finalized, "Updating finalized model"
                 self.model.classifier.update(
-                    features, axis=axis, true=true_keys, pred=labels[pred] if axis == NODE_LABEL_KEY else pred.id,
+                    features, axis=axis, true=true_keys,
+                    pred=labels[pred] if (axis == NODE_LABEL_KEY or axis == REFINEMENT_LABEL_KEY) else pred.id,
                     importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values] or None)
             if not is_correct and self.config.args.early_update:
                 self.state.finished = True
         for model in self.models:
             model.classifier.finished_step(self.training)
-            if axis != NODE_LABEL_KEY:
+            if axis != NODE_LABEL_KEY and axis != REFINEMENT_LABEL_KEY:
                 model.classifier.transition(label, axis=axis)
         return label, pred
 
     def correct(self, axis, label, pred, scores, true, true_keys):
         true_values = is_correct = ()
-        if axis == NODE_LABEL_KEY:
+        if axis == NODE_LABEL_KEY or axis == REFINEMENT_LABEL_KEY:
             if self.oracle:
                 is_correct = (label == true)
                 if is_correct:
