@@ -11576,118 +11576,6 @@ s1lwe=wo advmod 1
 s1rlwe=an case 1
 s1s0x=0 1
  
-a0Ae=NODE head 1
-b 1
-b0C=1 1
-b0E=0 1
-b0I=0 1
-b0M=0 1
-b0P=0 1
-b0s0e=head 1
-b0s0x=1 1
-b1NT=2 0 1
-b1h=0 1
-b1wtd=konnte VMFIN 1
-b2wtd=. $. 1
-n/t 1.323529411764706
-s0#e=13110060611322374290 head 1
-s0#s1es2e=13110060611322374290 acl nmod 1
-s0$e=15345770364485153437 head 1
-s0C=1 1
-s0E=0 1
-s0I=0 1
-s0M=0 1
-s0NT=2 0 1
-s0P=1 1
-s0^e=260667111241363922 head 1
-s0b0x=0 1
-s0es1e=head acl 1
-s0es1es2e=head acl nmod 1
-s0h=1 1
-s0lwe=weitervermitteln Terminal 1
-s0s1x=0 1
-s0tde=VVINF head 1
-s0wC=weitervermitteln 1 1
-s0wE=weitervermitteln 0 1
-s0wI=weitervermitteln 0 1
-s0wM=weitervermitteln 0 1
-s0wP=weitervermitteln 1 1
-s0we=weitervermitteln head 1
-s0ws1e=weitervermitteln acl 1
-s1llwe=wo Terminal 1
-s1lwe=wo advmod 1
-s1rlwe=an case 1
-s1s0x=0 1
- 
-a1Ae=NODE head 1
-b 1
-b0C=1 1
-b0E=0 1
-b0I=0 1
-b0M=0 1
-b0P=0 1
-b0s0x=0 1
-b1NT=2 0 1
-b1h=0 1
-b1wtd=konnte VMFIN 1
-b2wtd=. $. 1
-n/t 1.323529411764706
-s0C=4 1
-s0E=0 1
-s0I=0 1
-s0M=0 1
-s0P=1 1
-s0b0x=0 1
-s0es1e=acl nmod 1
-s0es1es2e=acl nmod head 1
-s0llwe=wo Terminal 1
-s0lwe=wo advmod 1
-s0rlwe=an case 1
-s0s1x=0 1
-s1llwe=bei Terminal 1
-s1lwe=bei case 1
-s1rlwe=wo advmod 1
-s1s0x=1 1
- 
-b 1
-b0C=0 1
-b0E=0 1
-b0I=0 1
-b0M=0 1
-b0NT=2 0 1
-b0P=0 1
-b0h=0 1
-b0s0x=0 1
-b0tdb1td=VMFIN $. 1
-b0tdb1w=VMFIN . 1
-b0wC=konnte 0 1
-b0wE=konnte 0 1
-b0wI=konnte 0 1
-b0wM=konnte 0 1
-b0wP=konnte 0 1
-b0wb1td=konnte $. 1
-b0wb1w=konnte . 1
-b0wtd=konnte VMFIN 1
-b1NT=2 0 1
-b1h=0 1
-b1wtd=. $. 1
-n/t 1.323529411764706
-s0C=1 1
-s0E=0 1
-s0I=0 1
-s0M=0 1
-s0P=0 1
-s0b0x=0 1
-s0llwe=weitervermitteln Terminal 1
-s0lwe=weitervermitteln head 1
-s0s1x=0 1
-s1eb0td=acl VMFIN 1
-s1eb0w=acl konnte 1
-s1llwe=wo Terminal 1
-s1lwe=wo advmod 1
-s1rlwe=an case 1
-s1s0x=0 1
- 
 a0Ae=RIGHT-EDGE head 1
 b 1
 b0C=0 1
@@ -11711,12 +11599,18 @@ b0wtd=konnte VMFIN 1
 b1NT=2 0 1
 b1h=0 1
 b1wtd=. $. 1
-n/t 1.323529411764706
+n/t 1.2941176470588234
+s0#e=13110060611322374290 head 1
+s0#s1eb0td=13110060611322374290 acl VMFIN 1
+s0#s1es2e=13110060611322374290 acl nmod 1
+s0$e=15345770364485153437 head 1
 s0C=1 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
+s0NT=2 0 1
 s0P=1 1
+s0^e=260667111241363922 head 1
 s0b0x=0 1
 s0eb0td=head VMFIN 1
 s0eb0w=head konnte 1
@@ -11724,17 +11618,76 @@ s0es1e=head acl 1
 s0es1eb0#=head acl 13110060611322374290 1
 s0es1eb0td=head acl VMFIN 1
 s0es1es2e=head acl nmod 1
-s0llwe=weitervermitteln Terminal 1
-s0lwe=weitervermitteln head 1
+s0h=1 1
+s0lwe=weitervermitteln Terminal 1
 s0s1x=0 1
+s0tde=VVINF head 1
+s0wC=weitervermitteln 1 1
+s0wE=weitervermitteln 0 1
+s0wI=weitervermitteln 0 1
+s0wM=weitervermitteln 0 1
+s0wP=weitervermitteln 1 1
+s0wb0td=weitervermitteln VMFIN 1
+s0wb0w=weitervermitteln konnte 1
+s0we=weitervermitteln head 1
+s0ws1e=weitervermitteln acl 1
 s1eb0td=acl VMFIN 1
 s1eb0w=acl konnte 1
 s1llwe=wo Terminal 1
 s1lwe=wo advmod 1
-s1rlwe=weitervermitteln head 1
+s1rlwe=weitervermitteln Terminal 1
+s1rwe=weitervermitteln head 1
 s1s0x=1 1
  
 a1Ae=RIGHT-EDGE head 1
+b 1
+b0C=0 1
+b0E=0 1
+b0I=0 1
+b0M=0 1
+b0NT=2 0 1
+b0P=0 1
+b0h=0 1
+b0s0x=0 1
+b0tdb1td=VMFIN $. 1
+b0tdb1w=VMFIN . 1
+b0wC=konnte 0 1
+b0wE=konnte 0 1
+b0wI=konnte 0 1
+b0wM=konnte 0 1
+b0wP=konnte 0 1
+b0wb1td=konnte $. 1
+b0wb1w=konnte . 1
+b0wtd=konnte VMFIN 1
+b1NT=2 0 1
+b1h=0 1
+b1wtd=. $. 1
+n/t 1.2941176470588234
+s0C=5 1
+s0E=0 1
+s0I=0 1
+s0M=0 1
+s0P=1 1
+s0b0x=0 1
+s0eb0td=acl VMFIN 1
+s0eb0w=acl konnte 1
+s0es1e=acl nmod 1
+s0es1eb0#=acl nmod 13110060611322374290 1
+s0es1eb0td=acl nmod VMFIN 1
+s0es1es2e=acl nmod head 1
+s0llwe=wo Terminal 1
+s0lwe=wo advmod 1
+s0rlwe=weitervermitteln Terminal 1
+s0rwe=weitervermitteln head 1
+s0s1x=0 1
+s1eb0td=nmod VMFIN 1
+s1eb0w=nmod konnte 1
+s1llwe=bei Terminal 1
+s1lwe=bei case 1
+s1rlwe=wo advmod 1
+s1rrwe=weitervermitteln head 1
+s1s0x=1 1
+ 
 b 1
 b0C=0 1
 b0E=0 1
@@ -11750,9 +11703,9 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. $. 1
-n/t 1.323529411764706
-s0#s1eb0td=13110060611322374290 head $. 1
-s0#s1es2e=13110060611322374290 head acl 1
+n/t 1.2941176470588234
+s0#s1eb0td=13110060611322374290 acl $. 1
+s0#s1es2e=13110060611322374290 acl nmod 1
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -11769,15 +11722,17 @@ s0wM=konnte 0 1
 s0wP=konnte 0 1
 s0wb0td=konnte $. 1
 s0wb0w=konnte . 1
-s0ws1e=konnte head 1
+s0ws1e=konnte acl 1
 s0xb0td=0 $. 1
 s0xb0w=0 . 1
-s0xs1e=0 head 1
-s0xs2e=0 acl 1
-s1eb0td=head $. 1
-s1eb0w=head . 1
-s1llwe=weitervermitteln Terminal 1
-s1lwe=weitervermitteln head 1
+s0xs1e=0 acl 1
+s0xs2e=0 nmod 1
+s1eb0td=acl $. 1
+s1eb0w=acl . 1
+s1llwe=wo Terminal 1
+s1lwe=wo advmod 1
+s1rlwe=weitervermitteln Terminal 1
+s1rwe=weitervermitteln head 1
 s1s0x=0 1
  
 a0Ae=NODE Terminal 1
@@ -11804,10 +11759,10 @@ b0wtd=konnte VMFIN 1
 b1NT=2 0 1
 b1h=0 1
 b1wtd=. $. 1
-n/t 1.3529411764705883
+n/t 1.323529411764706
 s0#e=13110060611322374290 Terminal 1
-s0#s1eb0td=13110060611322374290 head VMFIN 1
-s0#s1es2e=13110060611322374290 head acl 1
+s0#s1eb0td=13110060611322374290 acl VMFIN 1
+s0#s1es2e=13110060611322374290 acl nmod 1
 s0$e=9232162645330919472 Terminal 1
 s0C=0 1
 s0E=0 1
@@ -11819,10 +11774,10 @@ s0^e=15917291556903334389 Terminal 1
 s0b0x=0 1
 s0eb0td=Terminal VMFIN 1
 s0eb0w=Terminal konnte 1
-s0es1e=Terminal head 1
-s0es1eb0#=Terminal head 13110060611322374290 1
-s0es1eb0td=Terminal head VMFIN 1
-s0es1es2e=Terminal head acl 1
+s0es1e=Terminal acl 1
+s0es1eb0#=Terminal acl 13110060611322374290 1
+s0es1eb0td=Terminal acl VMFIN 1
+s0es1es2e=Terminal acl nmod 1
 s0h=0 1
 s0s1x=0 1
 s0tde=VMFIN Terminal 1
@@ -11834,17 +11789,19 @@ s0wP=konnte 1 1
 s0wb0td=konnte VMFIN 1
 s0wb0w=konnte konnte 1
 s0we=konnte Terminal 1
-s0ws1e=konnte head 1
+s0ws1e=konnte acl 1
 s0xb0td=0 VMFIN 1
 s0xb0w=0 konnte 1
-s0xs1e=0 head 1
-s0xs2e=0 acl 1
+s0xs1e=0 acl 1
+s0xs2e=0 nmod 1
 s0xtde=0 VMFIN Terminal 1
 s0xwe=0 konnte Terminal 1
-s1eb0td=head VMFIN 1
-s1eb0w=head konnte 1
-s1llwe=weitervermitteln Terminal 1
-s1lwe=weitervermitteln head 1
+s1eb0td=acl VMFIN 1
+s1eb0w=acl konnte 1
+s1llwe=wo Terminal 1
+s1lwe=wo advmod 1
+s1rlwe=weitervermitteln Terminal 1
+s1rwe=weitervermitteln head 1
 s1s0x=0 1
  
 a1Ae=NODE Terminal 1
@@ -11870,27 +11827,30 @@ b0wtd=konnte VMFIN 1
 b1NT=2 0 1
 b1h=0 1
 b1wtd=. $. 1
-n/t 1.3529411764705883
-s0C=1 1
+n/t 1.323529411764706
+s0C=5 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
 s0P=1 1
 s0b0x=0 1
-s0eb0td=head VMFIN 1
-s0eb0w=head konnte 1
-s0es1e=head acl 1
-s0es1eb0#=head acl 13110060611322374290 1
-s0es1eb0td=head acl VMFIN 1
-s0es1es2e=head acl nmod 1
-s0llwe=weitervermitteln Terminal 1
-s0lwe=weitervermitteln head 1
+s0eb0td=acl VMFIN 1
+s0eb0w=acl konnte 1
+s0es1e=acl nmod 1
+s0es1eb0#=acl nmod 13110060611322374290 1
+s0es1eb0td=acl nmod VMFIN 1
+s0es1es2e=acl nmod head 1
+s0llwe=wo Terminal 1
+s0lwe=wo advmod 1
+s0rlwe=weitervermitteln Terminal 1
+s0rwe=weitervermitteln head 1
 s0s1x=0 1
-s1eb0td=acl VMFIN 1
-s1eb0w=acl konnte 1
-s1llwe=wo Terminal 1
-s1lwe=wo advmod 1
-s1rlwe=weitervermitteln head 1
+s1eb0td=nmod VMFIN 1
+s1eb0w=nmod konnte 1
+s1llwe=bei Terminal 1
+s1lwe=bei case 1
+s1rlwe=wo advmod 1
+s1rrwe=weitervermitteln head 1
 s1s0x=1 1
  
 b 1
@@ -11908,9 +11868,9 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. $. 1
-n/t 1.3529411764705883
-s0#s1eb0td=13110060611322374290 head $. 1
-s0#s1es2e=13110060611322374290 head acl 1
+n/t 1.323529411764706
+s0#s1eb0td=13110060611322374290 acl $. 1
+s0#s1es2e=13110060611322374290 acl nmod 1
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -11928,11 +11888,13 @@ s0wM=konnte 0 1
 s0wP=konnte 0 1
 s0wb0td=konnte $. 1
 s0wb0w=konnte . 1
-s0ws1e=konnte head 1
-s1eb0td=head $. 1
-s1eb0w=head . 1
-s1llwe=weitervermitteln Terminal 1
-s1lwe=weitervermitteln head 1
+s0ws1e=konnte acl 1
+s1eb0td=acl $. 1
+s1eb0w=acl . 1
+s1llwe=wo Terminal 1
+s1lwe=wo advmod 1
+s1rlwe=weitervermitteln Terminal 1
+s1rwe=weitervermitteln head 1
 s1s0x=0 1
  
 a0Ae=RIGHT-EDGE aux 1
@@ -11951,10 +11913,10 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. $. 1
-n/t 1.3529411764705883
+n/t 1.323529411764706
 s0#e=13110060611322374290 aux 1
-s0#s1eb0td=13110060611322374290 head $. 1
-s0#s1es2e=13110060611322374290 head acl 1
+s0#s1eb0td=13110060611322374290 acl $. 1
+s0#s1es2e=13110060611322374290 acl nmod 1
 s0$e=9232162645330919472 aux 1
 s0C=1 1
 s0E=0 1
@@ -11966,10 +11928,10 @@ s0^e=15917291556903334389 aux 1
 s0b0x=0 1
 s0eb0td=aux $. 1
 s0eb0w=aux . 1
-s0es1e=aux head 1
-s0es1eb0#=aux head 12646065887601541794 1
-s0es1eb0td=aux head $. 1
-s0es1es2e=aux head acl 1
+s0es1e=aux acl 1
+s0es1eb0#=aux acl 12646065887601541794 1
+s0es1eb0td=aux acl $. 1
+s0es1es2e=aux acl nmod 1
 s0h=1 1
 s0lwe=konnte Terminal 1
 s0s1x=0 1
@@ -11982,11 +11944,11 @@ s0wP=konnte 1 1
 s0wb0td=konnte $. 1
 s0wb0w=konnte . 1
 s0we=konnte aux 1
-s0ws1e=konnte head 1
-s1eb0td=head $. 1
-s1eb0w=head . 1
-s1llwe=weitervermitteln Terminal 1
-s1lwe=weitervermitteln head 1
+s0ws1e=konnte acl 1
+s1eb0td=acl $. 1
+s1eb0w=acl . 1
+s1llwe=wo Terminal 1
+s1lwe=wo advmod 1
 s1rlwe=konnte Terminal 1
 s1rwe=konnte aux 1
 s1s0x=1 1
@@ -12007,29 +11969,29 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. $. 1
-n/t 1.3529411764705883
-s0C=2 1
+n/t 1.323529411764706
+s0C=6 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
 s0P=1 1
 s0b0x=0 1
-s0eb0td=head $. 1
-s0eb0w=head . 1
-s0es1e=head acl 1
-s0es1eb0#=head acl 12646065887601541794 1
-s0es1eb0td=head acl $. 1
-s0es1es2e=head acl nmod 1
-s0llwe=weitervermitteln Terminal 1
-s0lwe=weitervermitteln head 1
+s0eb0td=acl $. 1
+s0eb0w=acl . 1
+s0es1e=acl nmod 1
+s0es1eb0#=acl nmod 12646065887601541794 1
+s0es1eb0td=acl nmod $. 1
+s0es1es2e=acl nmod head 1
+s0llwe=wo Terminal 1
+s0lwe=wo advmod 1
 s0rlwe=konnte Terminal 1
 s0rwe=konnte aux 1
 s0s1x=0 1
-s1eb0td=acl $. 1
-s1eb0w=acl . 1
-s1llwe=wo Terminal 1
-s1lwe=wo advmod 1
-s1rlwe=weitervermitteln head 1
+s1eb0td=nmod $. 1
+s1eb0w=nmod . 1
+s1llwe=bei Terminal 1
+s1lwe=bei case 1
+s1rlwe=wo advmod 1
 s1rrwe=konnte aux 1
 s1s0x=1 1
  
@@ -12048,47 +12010,7 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. $. 1
-n/t 1.3529411764705883
-s0C=5 1
-s0E=0 1
-s0I=0 1
-s0M=0 1
-s0P=1 1
-s0b0x=0 1
-s0eb0td=acl $. 1
-s0eb0w=acl . 1
-s0es1e=acl nmod 1
-s0es1eb0#=acl nmod 12646065887601541794 1
-s0es1eb0td=acl nmod $. 1
-s0es1es2e=acl nmod head 1
-s0llwe=wo Terminal 1
-s0lwe=wo advmod 1
-s0rlwe=weitervermitteln head 1
-s0rrwe=konnte aux 1
-s0s1x=0 1
-s1eb0td=nmod $. 1
-s1eb0w=nmod . 1
-s1llwe=bei Terminal 1
-s1lwe=bei case 1
-s1rlwe=wo advmod 1
-s1s0x=1 1
- 
-b 1
-b0C=0 1
-b0E=0 1
-b0I=0 1
-b0M=0 1
-b0NT=2 0 1
-b0P=0 1
-b0h=0 1
-b0s0x=0 1
-b0wC=. 0 1
-b0wE=. 0 1
-b0wI=. 0 1
-b0wM=. 0 1
-b0wP=. 0 1
-b0wtd=. $. 1
-n/t 1.3529411764705883
+n/t 1.323529411764706
 s0C=6 1
 s0E=0 1
 s0I=0 1
@@ -12103,6 +12025,7 @@ s0es1eb0td=nmod head $. 1
 s0llwe=bei Terminal 1
 s0lwe=bei case 1
 s0rlwe=wo advmod 1
+s0rrwe=konnte aux 1
 s0s1x=0 1
 s1eb0td=head $. 1
 s1eb0w=head . 1
@@ -12126,7 +12049,7 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. $. 1
-n/t 1.3529411764705883
+n/t 1.323529411764706
 s0C=7 1
 s0E=0 1
 s0I=0 1
@@ -12144,7 +12067,7 @@ s1s0x=1 1
  
 b 1
 b0s0x=0 1
-n/t 1.3529411764705883
+n/t 1.323529411764706
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -12182,7 +12105,7 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. $. 1
-n/t 1.3823529411764706
+n/t 1.3529411764705883
 s0#e=12646065887601541794 Terminal 1
 s0#s1eb0td=12646065887601541794 head $. 1
 s0$e=12646065887601541794 Terminal 1
@@ -12239,7 +12162,7 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. $. 1
-n/t 1.3823529411764706
+n/t 1.3529411764705883
 s0C=7 1
 s0E=0 1
 s0I=0 1
@@ -12257,7 +12180,7 @@ s1s0x=1 1
  
 b 1
 b0s0x=0 1
-n/t 1.3823529411764706
+n/t 1.3529411764705883
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -12280,7 +12203,7 @@ s1s0x=0 1
  
 a0Ae=RIGHT-EDGE U 1
 b 1
-n/t 1.3823529411764706
+n/t 1.3529411764705883
 s0#e=12646065887601541794 U 1
 s0$e=12646065887601541794 U 1
 s0C=1 1
@@ -12309,7 +12232,7 @@ s1s0x=1 1
  
 a1Ae=RIGHT-EDGE U 1
 b 1
-n/t 1.3823529411764706
+n/t 1.3529411764705883
 s0C=8 1
 s0E=0 1
 s0I=0 1
@@ -12324,7 +12247,7 @@ s1s0x=1 1
  
 b 1
 b0s0x=0 1
-n/t 1.3823529411764706
+n/t 1.3529411764705883
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -12334,5 +12257,5 @@ s0lrwe=. U 1
 s1s0x=0 1
  
 b 1
-n/t 1.3823529411764706
+n/t 1.3529411764705883
  

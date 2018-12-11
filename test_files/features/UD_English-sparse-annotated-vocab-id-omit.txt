@@ -210,44 +210,7 @@ s0wb0td=Al HYPH 1
 s0wb0w=Al - 1
 s1s0x=0 1
  
-a0Ae=NODE head 1
-b 1
-b0C=1 1
-b0E=0 1
-b0I=0 1
-b0M=0 1
-b0P=0 1
-b0s0e=head 1
-b0s0x=1 1
-b1NT=1 378 1
-b1h=0 1
-b1wtd=- HYPH 1
-b2wtd=Zaman NNP 1
-b3wtd=: : 1
-n/t 0.10344827586206895
-s0#e=12204527652707022206 head 1
-s0$e=11631551226137452986 head 1
-s0C=1 1
-s0E=0 1
-s0I=0 1
-s0M=0 1
-s0NT=3 378 1
-s0P=1 1
-s0^e=14862748245026736845 head 1
-s0b0x=0 1
-s0h=1 1
-s0lwe=Al Terminal 1
-s0s1x=0 1
-s0tde=NNP head 1
-s0wC=Al 1 1
-s0wE=Al 0 1
-s0wI=Al 0 1
-s0wM=Al 0 1
-s0wP=Al 1 1
-s0we=Al head 1
-s1s0x=0 1
- 
-a1Ae=NODE head 1
+a0Ae=RIGHT-EDGE head 1
 b 1
 b0C=0 1
 b0E=0 1
@@ -272,30 +235,36 @@ b1h=0 1
 b1wtd=Zaman NNP 1
 b2wtd=: : 1
 b3wtd=American JJ 1
-n/t 0.10344827586206895
+n/t 0.06896551724137923
+s0#e=12204527652707022206 head 1
+s0$e=11631551226137452986 head 1
 s0C=1 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
-s0P=0 1
+s0NT=3 378 1
+s0P=1 1
+s0^e=14862748245026736845 head 1
 s0b0x=0 1
-s0llwe=Al Terminal 1
-s0lwe=Al head 1
-s0s1x=1 1
-s1#e=12204527652707022206 head 1
-s1$e=11631551226137452986 head 1
-s1NT=3 378 1
-s1^e=14862748245026736845 head 1
-s1eb0td=head HYPH 1
-s1eb0w=head - 1
-s1h=1 1
-s1lwe=Al Terminal 1
-s1s0x=0 1
-s1tde=NNP head 1
-s1wb0td=Al HYPH 1
-s1wb0w=Al - 1
-s1we=Al head 1
+s0eb0td=head HYPH 1
+s0eb0w=head - 1
+s0h=1 1
+s0lwe=Al Terminal 1
+s0s1x=0 1
+s0tde=NNP head 1
+s0wC=Al 1 1
+s0wE=Al 0 1
+s0wI=Al 0 1
+s0wM=Al 0 1
+s0wP=Al 1 1
+s0wb0td=Al HYPH 1
+s0wb0w=Al - 1
+s0we=Al head 1
+s1llwe=Al Terminal 1
+s1lwe=Al head 1
+s1s0x=1 1
  
+a1Ae=RIGHT-EDGE head 1
 b 1
 b0C=0 1
 b0E=0 1
@@ -320,7 +289,8 @@ b1h=0 1
 b1wtd=: : 1
 b2wtd=American JJ 1
 b3wtd=forces NNS 1
-n/t 0.10344827586206895
+n/t 0.06896551724137923
+s0#s1eb0td=9153284864653046197 head NNP 1
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -337,18 +307,28 @@ s0wM=- 0 1
 s0wP=- 0 1
 s0wb0td=- NNP 1
 s0wb0w=- Zaman 1
+s0wq=- 0 1
+s0ws1e=- head 1
+s0ws1w=- Al 1
 s0xb0td=0 NNP 1
 s0xb0w=0 Zaman 1
-s0xs2e=0 head 1
-s0xs2w=0 Al 1
-s1llwe=Al Terminal 1
-s1lwe=Al head 1
+s0xs1e=0 head 1
+s0xs1w=0 Al 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
+s1eb0td=head NNP 1
+s1eb0w=head Zaman 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1s0x=0 1
-s2#e=12204527652707022206 head 1
-s2$e=11631551226137452986 head 1
-s2^e=14862748245026736845 head 1
-s2tde=NNP head 1
-s2we=Al head 1
+s1tde=NNP head 1
+s1wb0td=Al NNP 1
+s1wb0w=Al Zaman 1
+s1we=Al head 1
+s1weq=Al head 0 1
+s1wq=Al 0 1
  
 a0Ae=NODE Terminal 1
 b 1
@@ -376,8 +356,9 @@ b1h=0 1
 b1wtd=Zaman NNP 1
 b2wtd=: : 1
 b3wtd=American JJ 1
-n/t 0.13793103448275867
+n/t 0.10344827586206895
 s0#e=9153284864653046197 Terminal 1
+s0#s1eb0td=9153284864653046197 head HYPH 1
 s0$e=9153284864653046197 Terminal 1
 s0C=0 1
 s0E=0 1
@@ -389,6 +370,13 @@ s0^e=9153284864653046197 Terminal 1
 s0b0x=0 1
 s0eb0td=Terminal HYPH 1
 s0eb0w=Terminal - 1
+s0es1#b0#=Terminal 12204527652707022206 9153284864653046197 1
+s0es1#b0td=Terminal 12204527652707022206 HYPH 1
+s0es1e=Terminal head 1
+s0es1eb0#=Terminal head 9153284864653046197 1
+s0es1eb0td=Terminal head HYPH 1
+s0es1eq=Terminal head 0 1
+s0es1w=Terminal Al 1
 s0h=0 1
 s0s1x=0 1
 s0tde=HYPH Terminal 1
@@ -400,20 +388,31 @@ s0wP=- 1 1
 s0wb0td=- HYPH 1
 s0wb0w=- - 1
 s0we=- Terminal 1
+s0weq=- Terminal 0 1
+s0wq=- 0 1
+s0ws1e=- head 1
+s0ws1w=- Al 1
 s0xb0td=0 HYPH 1
 s0xb0w=0 - 1
-s0xs2e=0 head 1
-s0xs2w=0 Al 1
+s0xs1e=0 head 1
+s0xs1w=0 Al 1
 s0xtde=0 HYPH Terminal 1
 s0xwe=0 - Terminal 1
-s1llwe=Al Terminal 1
-s1lwe=Al head 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
+s1eb0td=head HYPH 1
+s1eb0w=head - 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1s0x=0 1
-s2#e=12204527652707022206 head 1
-s2$e=11631551226137452986 head 1
-s2^e=14862748245026736845 head 1
-s2tde=NNP head 1
-s2we=Al head 1
+s1tde=NNP head 1
+s1wb0td=Al HYPH 1
+s1wb0w=Al - 1
+s1we=Al head 1
+s1weq=Al head 0 1
+s1wq=Al 0 1
  
 a1Ae=NODE Terminal 1
 b 1
@@ -440,29 +439,34 @@ b1h=0 1
 b1wtd=Zaman NNP 1
 b2wtd=: : 1
 b3wtd=American JJ 1
-n/t 0.13793103448275867
+n/t 0.10344827586206895
+s0#e=12204527652707022206 head 1
+s0$e=11631551226137452986 head 1
 s0C=1 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
-s0P=0 1
+s0NT=3 378 1
+s0P=1 1
+s0^e=14862748245026736845 head 1
 s0b0x=0 1
-s0llwe=Al Terminal 1
-s0lwe=Al head 1
-s0s1x=1 1
-s1#e=12204527652707022206 head 1
-s1$e=11631551226137452986 head 1
-s1NT=3 378 1
-s1^e=14862748245026736845 head 1
-s1eb0td=head HYPH 1
-s1eb0w=head - 1
-s1h=1 1
-s1lwe=Al Terminal 1
-s1s0x=0 1
-s1tde=NNP head 1
-s1wb0td=Al HYPH 1
-s1wb0w=Al - 1
-s1we=Al head 1
+s0eb0td=head HYPH 1
+s0eb0w=head - 1
+s0h=1 1
+s0lwe=Al Terminal 1
+s0s1x=0 1
+s0tde=NNP head 1
+s0wC=Al 1 1
+s0wE=Al 0 1
+s0wI=Al 0 1
+s0wM=Al 0 1
+s0wP=Al 1 1
+s0wb0td=Al HYPH 1
+s0wb0w=Al - 1
+s0we=Al head 1
+s1llwe=Al Terminal 1
+s1lwe=Al head 1
+s1s0x=1 1
  
 b 1
 b0C=0 1
@@ -488,7 +492,8 @@ b1h=0 1
 b1wtd=: : 1
 b2wtd=American JJ 1
 b3wtd=forces NNS 1
-n/t 0.13793103448275867
+n/t 0.10344827586206895
+s0#s1eb0td=9153284864653046197 head NNP 1
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -506,14 +511,24 @@ s0wM=- 0 1
 s0wP=- 0 1
 s0wb0td=- NNP 1
 s0wb0w=- Zaman 1
-s1llwe=Al Terminal 1
-s1lwe=Al head 1
+s0wq=- 0 1
+s0ws1e=- head 1
+s0ws1w=- Al 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
+s1eb0td=head NNP 1
+s1eb0w=head Zaman 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1s0x=0 1
-s2#e=12204527652707022206 head 1
-s2$e=11631551226137452986 head 1
-s2^e=14862748245026736845 head 1
-s2tde=NNP head 1
-s2we=Al head 1
+s1tde=NNP head 1
+s1wb0td=Al NNP 1
+s1wb0w=Al Zaman 1
+s1we=Al head 1
+s1weq=Al head 0 1
+s1wq=Al 0 1
  
 a0Ae=RIGHT-EDGE U 1
 b 1
@@ -540,12 +555,14 @@ b1h=0 1
 b1wtd=: : 1
 b2wtd=American JJ 1
 b3wtd=forces NNS 1
-n/t 0.13793103448275867
+n/t 0.10344827586206895
 s0#e=9153284864653046197 U 1
+s0#s1eb0td=9153284864653046197 head NNP 1
 s0$e=9153284864653046197 U 1
 s0C=1 1
 s0E=0 1
 s0I=0 1
+s0Lwe=Al head 1
 s0M=0 1
 s0NT=1 378 1
 s0P=1 1
@@ -553,6 +570,13 @@ s0^e=9153284864653046197 U 1
 s0b0x=0 1
 s0eb0td=U NNP 1
 s0eb0w=U Zaman 1
+s0es1#b0#=U 12204527652707022206 16072095006890171862 1
+s0es1#b0td=U 12204527652707022206 NNP 1
+s0es1e=U head 1
+s0es1eb0#=U head 16072095006890171862 1
+s0es1eb0td=U head NNP 1
+s0es1eq=U head 0 1
+s0es1w=U Al 1
 s0h=1 1
 s0lwe=- Terminal 1
 s0s1x=0 1
@@ -565,16 +589,27 @@ s0wP=- 1 1
 s0wb0td=- NNP 1
 s0wb0w=- Zaman 1
 s0we=- U 1
-s1llwe=Al Terminal 1
-s1lwe=Al head 1
+s0weq=- U 0 1
+s0wq=- 0 1
+s0ws1e=- head 1
+s0ws1w=- Al 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
+s1eb0td=head NNP 1
+s1eb0w=head Zaman 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=- Terminal 1
 s1rwe=- U 1
 s1s0x=1 1
-s2#e=12204527652707022206 head 1
-s2$e=11631551226137452986 head 1
-s2^e=14862748245026736845 head 1
-s2tde=NNP head 1
-s2we=Al head 1
+s1tde=NNP head 1
+s1wb0td=Al NNP 1
+s1wb0w=Al Zaman 1
+s1we=Al head 1
+s1weq=Al head 0 1
+s1wq=Al 0 1
  
 a1Ae=RIGHT-EDGE U 1
 b 1
@@ -601,31 +636,37 @@ b1h=0 1
 b1wtd=: : 1
 b2wtd=American JJ 1
 b3wtd=forces NNS 1
-n/t 0.13793103448275867
+n/t 0.10344827586206895
+s0#e=12204527652707022206 head 1
+s0$e=11631551226137452986 head 1
 s0C=2 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
-s0P=0 1
+s0NT=3 378 1
+s0P=1 1
+s0^e=14862748245026736845 head 1
 s0b0x=0 1
-s0llwe=Al Terminal 1
-s0lwe=Al head 1
+s0eb0td=head NNP 1
+s0eb0w=head Zaman 1
+s0h=1 1
+s0lwe=Al Terminal 1
 s0rlwe=- Terminal 1
 s0rwe=- U 1
-s0s1x=1 1
-s1#e=12204527652707022206 head 1
-s1$e=11631551226137452986 head 1
-s1NT=3 378 1
-s1^e=14862748245026736845 head 1
-s1eb0td=head NNP 1
-s1eb0w=head Zaman 1
-s1h=1 1
-s1lwe=Al Terminal 1
-s1s0x=0 1
-s1tde=NNP head 1
-s1wb0td=Al NNP 1
-s1wb0w=Al Zaman 1
-s1we=Al head 1
+s0s1x=0 1
+s0tde=NNP head 1
+s0wC=Al 2 1
+s0wE=Al 0 1
+s0wI=Al 0 1
+s0wM=Al 0 1
+s0wP=Al 1 1
+s0wb0td=Al NNP 1
+s0wb0w=Al Zaman 1
+s0we=Al head 1
+s1llwe=Al Terminal 1
+s1lrwe=- U 1
+s1lwe=Al head 1
+s1s0x=1 1
  
 b 1
 b0C=0 1
@@ -651,7 +692,8 @@ b1h=0 1
 b1wtd=American JJ 1
 b2wtd=forces NNS 1
 b3wtd=killed VBD 1
-n/t 0.13793103448275867
+n/t 0.10344827586206895
+s0#s1eb0td=16072095006890171862 head : 1
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -668,62 +710,28 @@ s0wM=Zaman 0 1
 s0wP=Zaman 0 1
 s0wb0td=Zaman : 1
 s0wb0w=Zaman : 1
-s0xb0td=0 : 1
-s0xb0w=0 : 1
-s0xs2e=0 head 1
-s0xs2w=0 Al 1
-s1llwe=Al Terminal 1
-s1lwe=Al head 1
-s1rlwe=- Terminal 1
-s1rwe=- U 1
-s1s0x=0 1
-s2#e=12204527652707022206 head 1
-s2$e=11631551226137452986 head 1
-s2^e=14862748245026736845 head 1
-s2tde=NNP head 1
-s2we=Al head 1
- 
-b 1
-b0C=2 1
-b0E=0 1
-b0I=0 1
-b0M=0 1
-b0P=0 1
-b0s0x=0 1
-b1NT=2 0 1
-b1h=0 1
-b1wtd=: : 1
-b2wtd=American JJ 1
-b3wtd=forces NNS 1
-n/t 0.13793103448275867
-s0C=0 1
-s0E=0 1
-s0I=0 1
-s0M=0 1
-s0NT=1 378 1
-s0P=0 1
-s0b0x=0 1
-s0h=0 1
-s0s1x=0 1
-s0wC=Zaman 0 1
-s0wE=Zaman 0 1
-s0wI=Zaman 0 1
-s0wM=Zaman 0 1
-s0wP=Zaman 0 1
 s0wp=Zaman - 1
 s0wq=Zaman 1 1
 s0ws1e=Zaman head 1
 s0ws1w=Zaman Al 1
+s0xb0td=0 : 1
+s0xb0w=0 : 1
 s0xs1e=0 head 1
 s0xs1w=0 Al 1
 s1#e=12204527652707022206 head 1
 s1$e=11631551226137452986 head 1
 s1NT=3 378 1
 s1^e=14862748245026736845 head 1
+s1eb0td=head : 1
+s1eb0w=head : 1
 s1h=1 1
 s1lwe=Al Terminal 1
+s1rlwe=- Terminal 1
+s1rwe=- U 1
 s1s0x=0 1
 s1tde=NNP head 1
+s1wb0td=Al : 1
+s1wb0w=Al : 1
 s1we=Al head 1
 s1wep=Al head - 1
 s1weq=Al head 1 1
@@ -732,19 +740,32 @@ s1wq=Al 1 1
  
 a0Ae=RIGHT-EDGE Terminal 1
 b 1
-b0C=2 1
+b0C=0 1
 b0E=0 1
 b0I=0 1
 b0M=0 1
+b0NT=2 0 1
 b0P=0 1
+b0h=0 1
 b0s0x=0 1
-b1NT=2 0 1
+b0tdb1td=: JJ 1
+b0tdb1w=: American 1
+b0wC=: 0 1
+b0wE=: 0 1
+b0wI=: 0 1
+b0wM=: 0 1
+b0wP=: 0 1
+b0wb1td=: JJ 1
+b0wb1w=: American 1
+b0wtd=: : 1
+b1NT=3 379 1
 b1h=0 1
-b1wtd=: : 1
-b2wtd=American JJ 1
-b3wtd=forces NNS 1
-n/t 0.13793103448275867
+b1wtd=American JJ 1
+b2wtd=forces NNS 1
+b3wtd=killed VBD 1
+n/t 0.10344827586206895
 s0#e=16072095006890171862 Terminal 1
+s0#s1eb0td=16072095006890171862 head : 1
 s0$e=3104811030673030468 Terminal 1
 s0C=0 1
 s0E=0 1
@@ -755,7 +776,13 @@ s0NT=1 378 1
 s0P=1 1
 s0^e=7173976090571422945 Terminal 1
 s0b0x=0 1
+s0eb0td=Terminal : 1
+s0eb0w=Terminal : 1
+s0es1#b0#=Terminal 12204527652707022206 11532473245541075862 1
+s0es1#b0td=Terminal 12204527652707022206 : 1
 s0es1e=Terminal head 1
+s0es1eb0#=Terminal head 11532473245541075862 1
+s0es1eb0td=Terminal head : 1
 s0es1ep=Terminal head - 1
 s0es1eq=Terminal head 1 1
 s0es1w=Terminal Al 1
@@ -767,6 +794,8 @@ s0wE=Zaman 0 1
 s0wI=Zaman 0 1
 s0wM=Zaman 0 1
 s0wP=Zaman 1 1
+s0wb0td=Zaman : 1
+s0wb0w=Zaman : 1
 s0we=Zaman Terminal 1
 s0wep=Zaman Terminal - 1
 s0weq=Zaman Terminal 1 1
@@ -774,6 +803,8 @@ s0wp=Zaman - 1
 s0wq=Zaman 1 1
 s0ws1e=Zaman head 1
 s0ws1w=Zaman Al 1
+s0xb0td=0 : 1
+s0xb0w=0 : 1
 s0xs1e=0 head 1
 s0xs1w=0 Al 1
 s0xtde=0 NNP Terminal 1
@@ -782,11 +813,15 @@ s1#e=12204527652707022206 head 1
 s1$e=11631551226137452986 head 1
 s1NT=3 378 1
 s1^e=14862748245026736845 head 1
+s1eb0td=head : 1
+s1eb0w=head : 1
 s1h=1 1
 s1lwe=Al Terminal 1
 s1rwe=Zaman Terminal 1
 s1s0x=1 1
 s1tde=NNP head 1
+s1wb0td=Al : 1
+s1wb0w=Al : 1
 s1we=Al head 1
 s1wep=Al head - 1
 s1weq=Al head 1 1
@@ -795,22 +830,33 @@ s1wq=Al 1 1
  
 a1Ae=RIGHT-EDGE Terminal 1
 b 1
-b0C=2 1
+b0C=0 1
 b0E=0 1
 b0I=0 1
 b0M=0 1
+b0NT=2 0 1
 b0P=0 1
-b0s0e=head 1
-b0s0x=1 1
-b1NT=2 0 1
+b0h=0 1
+b0s0x=0 1
+b0tdb1td=: JJ 1
+b0tdb1w=: American 1
+b0wC=: 0 1
+b0wE=: 0 1
+b0wI=: 0 1
+b0wM=: 0 1
+b0wP=: 0 1
+b0wb1td=: JJ 1
+b0wb1w=: American 1
+b0wtd=: : 1
+b1NT=3 379 1
 b1h=0 1
-b1wtd=: : 1
-b2wtd=American JJ 1
-b3wtd=forces NNS 1
-n/t 0.13793103448275867
+b1wtd=American JJ 1
+b2wtd=forces NNS 1
+b3wtd=killed VBD 1
+n/t 0.10344827586206895
 s0#e=12204527652707022206 head 1
 s0$e=11631551226137452986 head 1
-s0C=2 1
+s0C=3 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
@@ -818,124 +864,26 @@ s0NT=3 378 1
 s0P=1 1
 s0^e=14862748245026736845 head 1
 s0b0x=0 1
+s0eb0td=head : 1
+s0eb0w=head : 1
 s0h=1 1
 s0lwe=Al Terminal 1
 s0rwe=Zaman Terminal 1
 s0s1x=0 1
 s0tde=NNP head 1
-s0wC=Al 2 1
+s0wC=Al 3 1
 s0wE=Al 0 1
 s0wI=Al 0 1
 s0wM=Al 0 1
 s0wP=Al 1 1
+s0wb0td=Al : 1
+s0wb0w=Al : 1
 s0we=Al head 1
-s1s0x=0 1
- 
-b 1
-b0C=2 1
-b0E=0 1
-b0I=0 1
-b0M=0 1
-b0P=0 1
-b0s0x=0 1
-b1NT=2 0 1
-b1h=0 1
-b1wtd=: : 1
-b2wtd=American JJ 1
-b3wtd=forces NNS 1
-n/t 0.13793103448275867
-s0C=0 1
-s0E=0 1
-s0I=0 1
-s0M=0 1
-s0P=0 1
-s0b0x=0 1
-s1s0x=0 1
- 
-b 1
-b0C=0 1
-b0E=0 1
-b0I=0 1
-b0M=0 1
-b0NT=2 0 1
-b0P=0 1
-b0h=0 1
-b0s0x=0 1
-b0tdb1td=: JJ 1
-b0tdb1w=: American 1
-b0wC=: 0 1
-b0wE=: 0 1
-b0wI=: 0 1
-b0wM=: 0 1
-b0wP=: 0 1
-b0wb1td=: JJ 1
-b0wb1w=: American 1
-b0wtd=: : 1
-b1NT=3 379 1
-b1h=0 1
-b1wtd=American JJ 1
-b2wtd=forces NNS 1
-b3wtd=killed VBD 1
-n/t 0.13793103448275867
-s0C=2 1
-s0E=0 1
-s0I=0 1
-s0M=0 1
-s0P=0 1
-s0b0x=0 1
-s0llwe=Al Terminal 1
-s0lrwe=Zaman Terminal 1
-s0lwe=Al head 1
-s0rlwe=- Terminal 1
-s0rwe=- U 1
-s0s1x=0 1
-s1s0x=0 1
- 
-a0Ae=RIGHT-EDGE head 1
-b 1
-b0C=0 1
-b0E=0 1
-b0I=0 1
-b0M=0 1
-b0NT=2 0 1
-b0P=0 1
-b0h=0 1
-b0s0x=0 1
-b0tdb1td=: JJ 1
-b0tdb1w=: American 1
-b0wC=: 0 1
-b0wE=: 0 1
-b0wI=: 0 1
-b0wM=: 0 1
-b0wP=: 0 1
-b0wb1td=: JJ 1
-b0wb1w=: American 1
-b0wtd=: : 1
-b1NT=3 379 1
-b1h=0 1
-b1wtd=American JJ 1
-b2wtd=forces NNS 1
-b3wtd=killed VBD 1
-n/t 0.13793103448275867
-s0C=2 1
-s0E=0 1
-s0I=0 1
-s0M=0 1
-s0P=1 1
-s0b0x=0 1
-s0eb0td=head : 1
-s0eb0w=head : 1
-s0llwe=Al Terminal 1
-s0lrwe=Zaman Terminal 1
-s0lwe=Al head 1
-s0rlwe=- Terminal 1
-s0rwe=- U 1
-s0s1x=0 1
-s1llwe=Al head 1
-s1lrwe=- U 1
+s1llwe=Al Terminal 1
+s1lrwe=Zaman Terminal 1
+s1lwe=Al head 1
 s1s0x=1 1
  
-a1Ae=RIGHT-EDGE head 1
 b 1
 b0C=0 1
 b0E=0 1
@@ -960,7 +908,7 @@ b1h=0 1
 b1wtd=forces NNS 1
 b2wtd=killed VBD 1
 b3wtd=Shaikh NNP 1
-n/t 0.13793103448275867
+n/t 0.10344827586206895
 s0#s1eb0td=11532473245541075862 head JJ 1
 s0C=0 1
 s0E=0 1
@@ -978,18 +926,32 @@ s0wM=: 0 1
 s0wP=: 0 1
 s0wb0td=: JJ 1
 s0wb0w=: American 1
+s0wp=: - 1
+s0wq=: 1 1
 s0ws1e=: head 1
+s0ws1w=: Al 1
 s0xb0td=0 JJ 1
 s0xb0w=0 American 1
 s0xs1e=0 head 1
+s0xs1w=0 Al 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head JJ 1
 s1eb0w=head American 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
-s1rlwe=- Terminal 1
-s1rwe=- U 1
+s1h=1 1
+s1lwe=Al Terminal 1
+s1rwe=Zaman Terminal 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1wb0td=Al JJ 1
+s1wb0w=Al American 1
+s1we=Al head 1
+s1wep=Al head - 1
+s1weq=Al head 1 1
+s1wp=Al - 1
+s1wq=Al 1 1
  
 a0Ae=NODE Terminal 1
 b 1
@@ -1017,7 +979,7 @@ b1h=0 1
 b1wtd=American JJ 1
 b2wtd=forces NNS 1
 b3wtd=killed VBD 1
-n/t 0.17241379310344818
+n/t 0.13793103448275867
 s0#e=11532473245541075862 Terminal 1
 s0#s1eb0td=11532473245541075862 head : 1
 s0$e=11532473245541075862 Terminal 1
@@ -1031,9 +993,14 @@ s0^e=11532473245541075862 Terminal 1
 s0b0x=0 1
 s0eb0td=Terminal : 1
 s0eb0w=Terminal : 1
+s0es1#b0#=Terminal 12204527652707022206 11532473245541075862 1
+s0es1#b0td=Terminal 12204527652707022206 : 1
 s0es1e=Terminal head 1
 s0es1eb0#=Terminal head 11532473245541075862 1
 s0es1eb0td=Terminal head : 1
+s0es1ep=Terminal head - 1
+s0es1eq=Terminal head 1 1
+s0es1w=Terminal Al 1
 s0h=0 1
 s0s1x=0 1
 s0tde=: Terminal 1
@@ -1045,20 +1012,36 @@ s0wP=: 1 1
 s0wb0td=: : 1
 s0wb0w=: : 1
 s0we=: Terminal 1
+s0wep=: Terminal - 1
+s0weq=: Terminal 1 1
+s0wp=: - 1
+s0wq=: 1 1
 s0ws1e=: head 1
+s0ws1w=: Al 1
 s0xb0td=0 : 1
 s0xb0w=0 : 1
 s0xs1e=0 head 1
+s0xs1w=0 Al 1
 s0xtde=0 : Terminal 1
 s0xwe=0 : Terminal 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head : 1
 s1eb0w=head : 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
-s1rlwe=- Terminal 1
-s1rwe=- U 1
+s1h=1 1
+s1lwe=Al Terminal 1
+s1rwe=Zaman Terminal 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1wb0td=Al : 1
+s1wb0w=Al : 1
+s1we=Al head 1
+s1wep=Al head - 1
+s1weq=Al head 1 1
+s1wp=Al - 1
+s1wq=Al 1 1
  
 a1Ae=NODE Terminal 1
 b 1
@@ -1085,23 +1068,35 @@ b1h=0 1
 b1wtd=American JJ 1
 b2wtd=forces NNS 1
 b3wtd=killed VBD 1
-n/t 0.17241379310344818
-s0C=2 1
+n/t 0.13793103448275867
+s0#e=12204527652707022206 head 1
+s0$e=11631551226137452986 head 1
+s0C=3 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
+s0NT=3 378 1
 s0P=1 1
+s0^e=14862748245026736845 head 1
 s0b0x=0 1
 s0eb0td=head : 1
 s0eb0w=head : 1
-s0llwe=Al Terminal 1
-s0lrwe=Zaman Terminal 1
-s0lwe=Al head 1
-s0rlwe=- Terminal 1
-s0rwe=- U 1
+s0h=1 1
+s0lwe=Al Terminal 1
+s0rwe=Zaman Terminal 1
 s0s1x=0 1
-s1llwe=Al head 1
-s1lrwe=- U 1
+s0tde=NNP head 1
+s0wC=Al 3 1
+s0wE=Al 0 1
+s0wI=Al 0 1
+s0wM=Al 0 1
+s0wP=Al 1 1
+s0wb0td=Al : 1
+s0wb0w=Al : 1
+s0we=Al head 1
+s1llwe=Al Terminal 1
+s1lrwe=Zaman Terminal 1
+s1lwe=Al head 1
 s1s0x=1 1
  
 b 1
@@ -1128,7 +1123,7 @@ b1h=0 1
 b1wtd=forces NNS 1
 b2wtd=killed VBD 1
 b3wtd=Shaikh NNP 1
-n/t 0.17241379310344818
+n/t 0.13793103448275867
 s0#s1eb0td=11532473245541075862 head JJ 1
 s0C=1 1
 s0E=0 1
@@ -1147,15 +1142,28 @@ s0wM=: 0 1
 s0wP=: 0 1
 s0wb0td=: JJ 1
 s0wb0w=: American 1
+s0wp=: - 1
+s0wq=: 1 1
 s0ws1e=: head 1
+s0ws1w=: Al 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head JJ 1
 s1eb0w=head American 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
-s1rlwe=- Terminal 1
-s1rwe=- U 1
+s1h=1 1
+s1lwe=Al Terminal 1
+s1rwe=Zaman Terminal 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1wb0td=Al JJ 1
+s1wb0w=Al American 1
+s1we=Al head 1
+s1wep=Al head - 1
+s1weq=Al head 1 1
+s1wp=Al - 1
+s1wq=Al 1 1
  
 a0Ae=RIGHT-EDGE U 1
 b 1
@@ -1182,13 +1190,14 @@ b1h=0 1
 b1wtd=forces NNS 1
 b2wtd=killed VBD 1
 b3wtd=Shaikh NNP 1
-n/t 0.17241379310344818
+n/t 0.13793103448275867
 s0#e=11532473245541075862 U 1
 s0#s1eb0td=11532473245541075862 head JJ 1
 s0$e=11532473245541075862 U 1
 s0C=1 1
 s0E=0 1
 s0I=0 1
+s0Lwe=Al head 1
 s0M=0 1
 s0NT=2 0 1
 s0P=1 1
@@ -1196,9 +1205,14 @@ s0^e=11532473245541075862 U 1
 s0b0x=0 1
 s0eb0td=U JJ 1
 s0eb0w=U American 1
+s0es1#b0#=U 12204527652707022206 16072095006890171862 1
+s0es1#b0td=U 12204527652707022206 JJ 1
 s0es1e=U head 1
 s0es1eb0#=U head 16072095006890171862 1
 s0es1eb0td=U head JJ 1
+s0es1ep=U head - 1
+s0es1eq=U head 1 1
+s0es1w=U Al 1
 s0h=1 1
 s0lwe=: Terminal 1
 s0s1x=0 1
@@ -1211,15 +1225,31 @@ s0wP=: 1 1
 s0wb0td=: JJ 1
 s0wb0w=: American 1
 s0we=: U 1
+s0wep=: U - 1
+s0weq=: U 1 1
+s0wp=: - 1
+s0wq=: 1 1
 s0ws1e=: head 1
+s0ws1w=: Al 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head JJ 1
 s1eb0w=head American 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=1 1
+s1tde=NNP head 1
+s1wb0td=Al JJ 1
+s1wb0w=Al American 1
+s1we=Al head 1
+s1wep=Al head - 1
+s1weq=Al head 1 1
+s1wp=Al - 1
+s1wq=Al 1 1
  
 a1Ae=RIGHT-EDGE U 1
 b 1
@@ -1246,23 +1276,36 @@ b1h=0 1
 b1wtd=forces NNS 1
 b2wtd=killed VBD 1
 b3wtd=Shaikh NNP 1
-n/t 0.17241379310344818
-s0C=3 1
+n/t 0.13793103448275867
+s0#e=12204527652707022206 head 1
+s0$e=11631551226137452986 head 1
+s0C=4 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
+s0NT=3 378 1
 s0P=1 1
+s0^e=14862748245026736845 head 1
 s0b0x=0 1
 s0eb0td=head JJ 1
 s0eb0w=head American 1
-s0llwe=Al Terminal 1
-s0lrwe=Zaman Terminal 1
-s0lwe=Al head 1
+s0h=1 1
+s0lwe=Al Terminal 1
 s0rlwe=: Terminal 1
 s0rwe=: U 1
 s0s1x=0 1
-s1llwe=Al head 1
+s0tde=NNP head 1
+s0wC=Al 4 1
+s0wE=Al 0 1
+s0wI=Al 0 1
+s0wM=Al 0 1
+s0wP=Al 1 1
+s0wb0td=Al JJ 1
+s0wb0w=Al American 1
+s0we=Al head 1
+s1llwe=Al Terminal 1
 s1lrwe=: U 1
+s1lwe=Al head 1
 s1s0x=1 1
  
 b 1
@@ -1289,7 +1332,7 @@ b1h=0 1
 b1wtd=killed VBD 1
 b2wtd=Shaikh NNP 1
 b3wtd=Abdullah NNP 1
-n/t 0.17241379310344818
+n/t 0.13793103448275867
 s0#s1eb0td=16072095006890171862 head NNS 1
 s0C=0 1
 s0E=0 1
@@ -1307,18 +1350,33 @@ s0wM=American 0 1
 s0wP=American 0 1
 s0wb0td=American NNS 1
 s0wb0w=American forces 1
+s0wp=American - 1
+s0wq=American 2 1
 s0ws1e=American head 1
+s0ws1w=American Al 1
 s0xb0td=0 NNS 1
 s0xb0w=0 forces 1
 s0xs1e=0 head 1
+s0xs1w=0 Al 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head NNS 1
 s1eb0w=head forces 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1wb0td=Al NNS 1
+s1wb0w=Al forces 1
+s1we=Al head 1
+s1wep=Al head - 1
+s1weq=Al head 2 1
+s1wp=Al - 1
+s1wq=Al 2 1
  
 a0Ae=NODE Terminal 1
 b 1
@@ -1346,7 +1404,7 @@ b1h=0 1
 b1wtd=forces NNS 1
 b2wtd=killed VBD 1
 b3wtd=Shaikh NNP 1
-n/t 0.2068965517241379
+n/t 0.17241379310344818
 s0#e=16072095006890171862 Terminal 1
 s0#s1eb0td=16072095006890171862 head JJ 1
 s0$e=6635067063807956629 Terminal 1
@@ -1360,9 +1418,14 @@ s0^e=14862748245026736845 Terminal 1
 s0b0x=0 1
 s0eb0td=Terminal JJ 1
 s0eb0w=Terminal American 1
+s0es1#b0#=Terminal 12204527652707022206 16072095006890171862 1
+s0es1#b0td=Terminal 12204527652707022206 JJ 1
 s0es1e=Terminal head 1
 s0es1eb0#=Terminal head 16072095006890171862 1
 s0es1eb0td=Terminal head JJ 1
+s0es1ep=Terminal head - 1
+s0es1eq=Terminal head 2 1
+s0es1w=Terminal Al 1
 s0h=0 1
 s0s1x=0 1
 s0tde=JJ Terminal 1
@@ -1374,20 +1437,37 @@ s0wP=American 1 1
 s0wb0td=American JJ 1
 s0wb0w=American American 1
 s0we=American Terminal 1
+s0wep=American Terminal - 1
+s0weq=American Terminal 2 1
+s0wp=American - 1
+s0wq=American 2 1
 s0ws1e=American head 1
+s0ws1w=American Al 1
 s0xb0td=0 JJ 1
 s0xb0w=0 American 1
 s0xs1e=0 head 1
+s0xs1w=0 Al 1
 s0xtde=0 JJ Terminal 1
 s0xwe=0 American Terminal 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head JJ 1
 s1eb0w=head American 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1wb0td=Al JJ 1
+s1wb0w=Al American 1
+s1we=Al head 1
+s1wep=Al head - 1
+s1weq=Al head 2 1
+s1wp=Al - 1
+s1wq=Al 2 1
  
 a1Ae=NODE Terminal 1
 b 1
@@ -1414,23 +1494,36 @@ b1h=0 1
 b1wtd=forces NNS 1
 b2wtd=killed VBD 1
 b3wtd=Shaikh NNP 1
-n/t 0.2068965517241379
-s0C=3 1
+n/t 0.17241379310344818
+s0#e=12204527652707022206 head 1
+s0$e=11631551226137452986 head 1
+s0C=4 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
+s0NT=3 378 1
 s0P=1 1
+s0^e=14862748245026736845 head 1
 s0b0x=0 1
 s0eb0td=head JJ 1
 s0eb0w=head American 1
-s0llwe=Al Terminal 1
-s0lrwe=Zaman Terminal 1
-s0lwe=Al head 1
+s0h=1 1
+s0lwe=Al Terminal 1
 s0rlwe=: Terminal 1
 s0rwe=: U 1
 s0s1x=0 1
-s1llwe=Al head 1
+s0tde=NNP head 1
+s0wC=Al 4 1
+s0wE=Al 0 1
+s0wI=Al 0 1
+s0wM=Al 0 1
+s0wP=Al 1 1
+s0wb0td=Al JJ 1
+s0wb0w=Al American 1
+s0we=Al head 1
+s1llwe=Al Terminal 1
 s1lrwe=: U 1
+s1lwe=Al head 1
 s1s0x=1 1
  
 b 1
@@ -1457,7 +1550,7 @@ b1h=0 1
 b1wtd=killed VBD 1
 b2wtd=Shaikh NNP 1
 b3wtd=Abdullah NNP 1
-n/t 0.2068965517241379
+n/t 0.17241379310344818
 s0#s1eb0td=16072095006890171862 head NNS 1
 s0C=1 1
 s0E=0 1
@@ -1476,15 +1569,29 @@ s0wM=American 0 1
 s0wP=American 0 1
 s0wb0td=American NNS 1
 s0wb0w=American forces 1
+s0wp=American - 1
+s0wq=American 2 1
 s0ws1e=American head 1
+s0ws1w=American Al 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head NNS 1
 s1eb0w=head forces 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1wb0td=Al NNS 1
+s1wb0w=Al forces 1
+s1we=Al head 1
+s1wep=Al head - 1
+s1weq=Al head 2 1
+s1wp=Al - 1
+s1wq=Al 2 1
  
 a0Ae=NODE amod 1
 b 1
@@ -1500,7 +1607,7 @@ b1h=0 1
 b1wtd=forces NNS 1
 b2wtd=killed VBD 1
 b3wtd=Shaikh NNP 1
-n/t 0.24137931034482762
+n/t 0.2068965517241379
 s0#e=16072095006890171862 amod 1
 s0$e=6635067063807956629 amod 1
 s0C=1 1
@@ -1512,6 +1619,9 @@ s0P=1 1
 s0^e=14862748245026736845 amod 1
 s0b0x=0 1
 s0es1e=amod head 1
+s0es1ep=amod head - 1
+s0es1eq=amod head 2 1
+s0es1w=amod Al 1
 s0h=1 1
 s0lwe=American Terminal 1
 s0s1x=0 1
@@ -1522,13 +1632,27 @@ s0wI=American 0 1
 s0wM=American 0 1
 s0wP=American 1 1
 s0we=American amod 1
+s0wep=American amod - 1
+s0weq=American amod 2 1
+s0wp=American - 1
+s0wq=American 2 1
 s0ws1e=American head 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s0ws1w=American Al 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1we=Al head 1
+s1wep=Al head - 1
+s1weq=Al head 2 1
+s1wp=Al - 1
+s1wq=Al 2 1
  
 a1Ae=NODE amod 1
 b 1
@@ -1543,21 +1667,32 @@ b1h=0 1
 b1wtd=forces NNS 1
 b2wtd=killed VBD 1
 b3wtd=Shaikh NNP 1
-n/t 0.24137931034482762
-s0C=3 1
+n/t 0.2068965517241379
+s0#e=12204527652707022206 head 1
+s0$e=11631551226137452986 head 1
+s0C=4 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
+s0NT=3 378 1
 s0P=1 1
+s0^e=14862748245026736845 head 1
 s0b0x=0 1
-s0llwe=Al Terminal 1
-s0lrwe=Zaman Terminal 1
-s0lwe=Al head 1
+s0h=1 1
+s0lwe=Al Terminal 1
 s0rlwe=: Terminal 1
 s0rwe=: U 1
 s0s1x=0 1
-s1llwe=Al head 1
+s0tde=NNP head 1
+s0wC=Al 4 1
+s0wE=Al 0 1
+s0wI=Al 0 1
+s0wM=Al 0 1
+s0wP=Al 1 1
+s0we=Al head 1
+s1llwe=Al Terminal 1
 s1lrwe=: U 1
+s1lwe=Al head 1
 s1s0x=1 1
  
 b 1
@@ -1584,7 +1719,7 @@ b1h=0 1
 b1wtd=killed VBD 1
 b2wtd=Shaikh NNP 1
 b3wtd=Abdullah NNP 1
-n/t 0.24137931034482762
+n/t 0.2068965517241379
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -1594,14 +1729,21 @@ s0b0x=0 1
 s0llwe=American Terminal 1
 s0lwe=American amod 1
 s0s1x=0 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head NNS 1
 s1eb0w=head forces 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1wb0td=Al NNS 1
+s1wb0w=Al forces 1
+s1we=Al head 1
  
 a0Ae=NODE nsubj 1
 b 1
@@ -1617,7 +1759,7 @@ b1h=0 1
 b1wtd=forces NNS 1
 b2wtd=killed VBD 1
 b3wtd=Shaikh NNP 1
-n/t 0.27586206896551735
+n/t 0.24137931034482762
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -1625,15 +1767,21 @@ s0M=0 1
 s0P=1 1
 s0b0x=0 1
 s0es1e=nsubj head 1
+s0es1w=nsubj Al 1
 s0llwe=American Terminal 1
 s0lwe=American amod 1
 s0s1x=0 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1we=Al head 1
  
 a1Ae=NODE nsubj 1
 b 1
@@ -1660,7 +1808,7 @@ b1h=0 1
 b1wtd=killed VBD 1
 b2wtd=Shaikh NNP 1
 b3wtd=Abdullah NNP 1
-n/t 0.27586206896551735
+n/t 0.24137931034482762
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -1674,6 +1822,11 @@ s1eb0w=nsubj forces 1
 s1llwe=American Terminal 1
 s1lwe=American amod 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -1699,7 +1852,7 @@ b1h=0 1
 b1wtd=Shaikh NNP 1
 b2wtd=Abdullah NNP 1
 b3wtd=al NNP 1
-n/t 0.27586206896551735
+n/t 0.24137931034482762
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -1721,6 +1874,11 @@ s0xb0w=0 killed 1
 s0xs2e=0 nsubj 1
 s1llwe=American amod 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=NODE Terminal 1
 b 1
@@ -1748,7 +1906,7 @@ b1h=0 1
 b1wtd=killed VBD 1
 b2wtd=Shaikh NNP 1
 b3wtd=Abdullah NNP 1
-n/t 0.31034482758620685
+n/t 0.27586206896551735
 s0#e=13110060611322374290 Terminal 1
 s0$e=10477575395255680452 Terminal 1
 s0C=0 1
@@ -1779,6 +1937,11 @@ s0xtde=0 NNS Terminal 1
 s0xwe=0 forces Terminal 1
 s1llwe=American amod 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=NODE Terminal 1
 b 1
@@ -1805,7 +1968,7 @@ b1h=0 1
 b1wtd=killed VBD 1
 b2wtd=Shaikh NNP 1
 b3wtd=Abdullah NNP 1
-n/t 0.31034482758620685
+n/t 0.27586206896551735
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -1819,6 +1982,11 @@ s1eb0w=nsubj forces 1
 s1llwe=American Terminal 1
 s1lwe=American amod 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -1844,7 +2012,7 @@ b1h=0 1
 b1wtd=Shaikh NNP 1
 b2wtd=Abdullah NNP 1
 b3wtd=al NNP 1
-n/t 0.31034482758620685
+n/t 0.27586206896551735
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -1864,6 +2032,11 @@ s0wb0td=forces VBD 1
 s0wb0w=forces killed 1
 s1llwe=American amod 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=1 1
@@ -1877,7 +2050,7 @@ b1h=0 1
 b1wtd=killed VBD 1
 b2wtd=Shaikh NNP 1
 b3wtd=Abdullah NNP 1
-n/t 0.31034482758620685
+n/t 0.27586206896551735
 s0#s1es2e=13110060611322374290 nsubj head 1
 s0C=1 1
 s0E=0 1
@@ -1898,6 +2071,11 @@ s0ws1e=forces nsubj 1
 s1llwe=American Terminal 1
 s1lwe=American amod 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a0Ae=RIGHT-EDGE head 1
 b 1
@@ -1912,7 +2090,7 @@ b1h=0 1
 b1wtd=killed VBD 1
 b2wtd=Shaikh NNP 1
 b3wtd=Abdullah NNP 1
-n/t 0.31034482758620685
+n/t 0.27586206896551735
 s0#e=13110060611322374290 head 1
 s0#s1es2e=13110060611322374290 nsubj head 1
 s0$e=10477575395255680452 head 1
@@ -1925,6 +2103,7 @@ s0P=1 1
 s0^e=13110760720460257827 head 1
 s0b0x=0 1
 s0es1e=head nsubj 1
+s0es1es2#=head nsubj 12204527652707022206 1
 s0es1es2e=head nsubj head 1
 s0h=1 1
 s0lwe=forces Terminal 1
@@ -1942,6 +2121,11 @@ s1lwe=American amod 1
 s1rlwe=forces Terminal 1
 s1rwe=forces head 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a1Ae=RIGHT-EDGE head 1
 b 1
@@ -1957,7 +2141,7 @@ b1h=0 1
 b1wtd=killed VBD 1
 b2wtd=Shaikh NNP 1
 b3wtd=Abdullah NNP 1
-n/t 0.31034482758620685
+n/t 0.27586206896551735
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -1965,17 +2149,23 @@ s0M=0 1
 s0P=1 1
 s0b0x=0 1
 s0es1e=nsubj head 1
+s0es1w=nsubj Al 1
 s0llwe=American Terminal 1
 s0lwe=American amod 1
 s0rlwe=forces Terminal 1
 s0rwe=forces head 1
 s0s1x=0 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1we=Al head 1
  
 b 1
 b0C=1 1
@@ -1989,21 +2179,32 @@ b1h=0 1
 b1wtd=killed VBD 1
 b2wtd=Shaikh NNP 1
 b3wtd=Abdullah NNP 1
-n/t 0.31034482758620685
-s0C=3 1
+n/t 0.27586206896551735
+s0#e=12204527652707022206 head 1
+s0$e=11631551226137452986 head 1
+s0C=4 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
+s0NT=3 378 1
 s0P=1 1
+s0^e=14862748245026736845 head 1
 s0b0x=0 1
-s0llwe=Al Terminal 1
-s0lrwe=Zaman Terminal 1
-s0lwe=Al head 1
+s0h=1 1
+s0lwe=Al Terminal 1
 s0rlwe=: Terminal 1
 s0rwe=: U 1
 s0s1x=0 1
-s1llwe=Al head 1
+s0tde=NNP head 1
+s0wC=Al 4 1
+s0wE=Al 0 1
+s0wI=Al 0 1
+s0wM=Al 0 1
+s0wP=Al 1 1
+s0we=Al head 1
+s1llwe=Al Terminal 1
 s1lrwe=: U 1
+s1lwe=Al head 1
 s1s0x=1 1
  
 b 1
@@ -2030,7 +2231,7 @@ b1h=0 1
 b1wtd=Shaikh NNP 1
 b2wtd=Abdullah NNP 1
 b3wtd=al NNP 1
-n/t 0.31034482758620685
+n/t 0.27586206896551735
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -2040,14 +2241,21 @@ s0b0x=0 1
 s0llwe=American amod 1
 s0lrwe=forces head 1
 s0s1x=0 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head VBD 1
 s1eb0w=head killed 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1wb0td=Al VBD 1
+s1wb0w=Al killed 1
+s1we=Al head 1
  
 b 1
 b0C=0 1
@@ -2073,7 +2281,7 @@ b1h=0 1
 b1wtd=Abdullah NNP 1
 b2wtd=al NNP 1
 b3wtd=- HYPH 1
-n/t 0.31034482758620685
+n/t 0.27586206896551735
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -2093,9 +2301,15 @@ s0wb0w=killed Shaikh 1
 s0xb0td=0 NNP 1
 s0xb0w=0 Shaikh 1
 s0xs2e=0 head 1
+s0xs2w=0 Al 1
 s1llwe=American amod 1
 s1lrwe=forces head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a0Ae=NODE Terminal 1
 b 1
@@ -2123,7 +2337,7 @@ b1h=0 1
 b1wtd=Shaikh NNP 1
 b2wtd=Abdullah NNP 1
 b3wtd=al NNP 1
-n/t 0.3448275862068966
+n/t 0.31034482758620685
 s0#e=13110060611322374290 Terminal 1
 s0$e=5121906190925376702 Terminal 1
 s0C=0 1
@@ -2150,11 +2364,17 @@ s0we=killed Terminal 1
 s0xb0td=0 VBD 1
 s0xb0w=0 killed 1
 s0xs2e=0 head 1
+s0xs2w=0 Al 1
 s0xtde=0 VBD Terminal 1
 s0xwe=0 killed Terminal 1
 s1llwe=American amod 1
 s1lrwe=forces head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a1Ae=NODE Terminal 1
 b 1
@@ -2181,7 +2401,7 @@ b1h=0 1
 b1wtd=Shaikh NNP 1
 b2wtd=Abdullah NNP 1
 b3wtd=al NNP 1
-n/t 0.3448275862068966
+n/t 0.31034482758620685
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -2191,14 +2411,21 @@ s0b0x=0 1
 s0llwe=American amod 1
 s0lrwe=forces head 1
 s0s1x=0 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head VBD 1
 s1eb0w=head killed 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1wb0td=Al VBD 1
+s1wb0w=Al killed 1
+s1we=Al head 1
  
 b 1
 b0C=0 1
@@ -2224,7 +2451,7 @@ b1h=0 1
 b1wtd=Abdullah NNP 1
 b2wtd=al NNP 1
 b3wtd=- HYPH 1
-n/t 0.3448275862068966
+n/t 0.31034482758620685
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -2245,6 +2472,11 @@ s0wb0w=killed Shaikh 1
 s1llwe=American amod 1
 s1lrwe=forces head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a0Ae=RIGHT-EDGE head 1
 b 1
@@ -2271,7 +2503,7 @@ b1h=0 1
 b1wtd=Abdullah NNP 1
 b2wtd=al NNP 1
 b3wtd=- HYPH 1
-n/t 0.3448275862068966
+n/t 0.31034482758620685
 s0#e=13110060611322374290 head 1
 s0$e=5121906190925376702 head 1
 s0C=1 1
@@ -2301,6 +2533,11 @@ s1lrwe=forces head 1
 s1rlwe=killed Terminal 1
 s1rwe=killed head 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a1Ae=RIGHT-EDGE head 1
 b 1
@@ -2327,7 +2564,7 @@ b1h=0 1
 b1wtd=Abdullah NNP 1
 b2wtd=al NNP 1
 b3wtd=- HYPH 1
-n/t 0.3448275862068966
+n/t 0.31034482758620685
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -2339,14 +2576,21 @@ s0lrwe=forces head 1
 s0rlwe=killed Terminal 1
 s0rwe=killed head 1
 s0s1x=0 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head NNP 1
 s1eb0w=head Shaikh 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1wb0td=Al NNP 1
+s1wb0w=Al Shaikh 1
+s1we=Al head 1
  
 b 1
 b0C=0 1
@@ -2372,7 +2616,7 @@ b1h=0 1
 b1wtd=al NNP 1
 b2wtd=- HYPH 1
 b3wtd=Ani NNP 1
-n/t 0.3448275862068966
+n/t 0.31034482758620685
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -2392,11 +2636,17 @@ s0wb0w=Shaikh Abdullah 1
 s0xb0td=0 NNP 1
 s0xb0w=0 Abdullah 1
 s0xs2e=0 head 1
+s0xs2w=0 Al 1
 s1llwe=American amod 1
 s1lrwe=forces head 1
 s1rlwe=killed Terminal 1
 s1rwe=killed head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a0Ae=NODE Terminal 1
 b 1
@@ -2424,7 +2674,7 @@ b1h=0 1
 b1wtd=Abdullah NNP 1
 b2wtd=al NNP 1
 b3wtd=- HYPH 1
-n/t 0.3793103448275863
+n/t 0.3448275862068966
 s0#e=16072095006890171862 Terminal 1
 s0$e=16642076899796147132 Terminal 1
 s0C=0 1
@@ -2451,6 +2701,7 @@ s0we=Shaikh Terminal 1
 s0xb0td=0 NNP 1
 s0xb0w=0 Shaikh 1
 s0xs2e=0 head 1
+s0xs2w=0 Al 1
 s0xtde=0 NNP Terminal 1
 s0xwe=0 Shaikh Terminal 1
 s1llwe=American amod 1
@@ -2458,6 +2709,11 @@ s1lrwe=forces head 1
 s1rlwe=killed Terminal 1
 s1rwe=killed head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a1Ae=NODE Terminal 1
 b 1
@@ -2484,7 +2740,7 @@ b1h=0 1
 b1wtd=Abdullah NNP 1
 b2wtd=al NNP 1
 b3wtd=- HYPH 1
-n/t 0.3793103448275863
+n/t 0.3448275862068966
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -2496,14 +2752,21 @@ s0lrwe=forces head 1
 s0rlwe=killed Terminal 1
 s0rwe=killed head 1
 s0s1x=0 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head NNP 1
 s1eb0w=head Shaikh 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1wb0td=Al NNP 1
+s1wb0w=Al Shaikh 1
+s1we=Al head 1
  
 b 1
 b0C=0 1
@@ -2529,7 +2792,7 @@ b1h=0 1
 b1wtd=al NNP 1
 b2wtd=- HYPH 1
 b3wtd=Ani NNP 1
-n/t 0.3793103448275863
+n/t 0.3448275862068966
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -2552,6 +2815,11 @@ s1lrwe=forces head 1
 s1rlwe=killed Terminal 1
 s1rwe=killed head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a0Ae=NODE head 1
 b 1
@@ -2567,7 +2835,7 @@ b1h=0 1
 b1wtd=Abdullah NNP 1
 b2wtd=al NNP 1
 b3wtd=- HYPH 1
-n/t 0.4137931034482758
+n/t 0.3793103448275863
 s0#e=16072095006890171862 head 1
 s0$e=16642076899796147132 head 1
 s0C=1 1
@@ -2593,6 +2861,11 @@ s1lrwe=forces head 1
 s1rlwe=killed Terminal 1
 s1rwe=killed head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a1Ae=NODE head 1
 b 1
@@ -2619,7 +2892,7 @@ b1h=0 1
 b1wtd=al NNP 1
 b2wtd=- HYPH 1
 b3wtd=Ani NNP 1
-n/t 0.4137931034482758
+n/t 0.3793103448275863
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -2642,6 +2915,11 @@ s1tde=NNP head 1
 s1wb0td=Shaikh NNP 1
 s1wb0w=Shaikh Abdullah 1
 s1we=Shaikh head 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -2667,7 +2945,7 @@ b1h=0 1
 b1wtd=- HYPH 1
 b2wtd=Ani NNP 1
 b3wtd=, , 1
-n/t 0.4137931034482758
+n/t 0.3793103448275863
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -2709,7 +2987,7 @@ b1h=0 1
 b1wtd=al NNP 1
 b2wtd=- HYPH 1
 b3wtd=Ani NNP 1
-n/t 0.4137931034482758
+n/t 0.3793103448275863
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -2740,6 +3018,11 @@ s1tde=NNP head 1
 s1we=Shaikh head 1
 s1weq=Shaikh head 0 1
 s1wq=Shaikh 0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=RIGHT-EDGE Terminal 1
 b 1
@@ -2754,7 +3037,7 @@ b1h=0 1
 b1wtd=al NNP 1
 b2wtd=- HYPH 1
 b3wtd=Ani NNP 1
-n/t 0.4137931034482758
+n/t 0.3793103448275863
 s0#e=16072095006890171862 Terminal 1
 s0$e=7799258779202539104 Terminal 1
 s0C=0 1
@@ -2798,6 +3081,11 @@ s1tde=NNP head 1
 s1we=Shaikh head 1
 s1weq=Shaikh head 0 1
 s1wq=Shaikh 0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=RIGHT-EDGE Terminal 1
 b 1
@@ -2813,7 +3101,7 @@ b1h=0 1
 b1wtd=al NNP 1
 b2wtd=- HYPH 1
 b3wtd=Ani NNP 1
-n/t 0.4137931034482758
+n/t 0.3793103448275863
 s0#e=16072095006890171862 head 1
 s0$e=16642076899796147132 head 1
 s0C=2 1
@@ -2840,6 +3128,11 @@ s1lrwe=forces head 1
 s1rlwe=killed Terminal 1
 s1rwe=killed head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -2865,7 +3158,7 @@ b1h=0 1
 b1wtd=- HYPH 1
 b2wtd=Ani NNP 1
 b3wtd=, , 1
-n/t 0.4137931034482758
+n/t 0.3793103448275863
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -2890,6 +3183,11 @@ s1tde=NNP head 1
 s1wb0td=Shaikh NNP 1
 s1wb0w=Shaikh al 1
 s1we=Shaikh head 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -2915,7 +3213,7 @@ b1h=0 1
 b1wtd=Ani NNP 1
 b2wtd=, , 1
 b3wtd=the DT 1
-n/t 0.4137931034482758
+n/t 0.3793103448275863
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -2958,7 +3256,7 @@ b1h=0 1
 b1wtd=- HYPH 1
 b2wtd=Ani NNP 1
 b3wtd=, , 1
-n/t 0.4137931034482758
+n/t 0.3793103448275863
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -2990,6 +3288,11 @@ s1tde=NNP head 1
 s1we=Shaikh head 1
 s1weq=Shaikh head 0 1
 s1wq=Shaikh 0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=RIGHT-EDGE Terminal 1
 b 1
@@ -3004,7 +3307,7 @@ b1h=0 1
 b1wtd=- HYPH 1
 b2wtd=Ani NNP 1
 b3wtd=, , 1
-n/t 0.4137931034482758
+n/t 0.3793103448275863
 s0#e=4370460163704169311 Terminal 1
 s0$e=8222700718889469974 Terminal 1
 s0C=0 1
@@ -3048,6 +3351,11 @@ s1tde=NNP head 1
 s1we=Shaikh head 1
 s1weq=Shaikh head 0 1
 s1wq=Shaikh 0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=RIGHT-EDGE Terminal 1
 b 1
@@ -3063,7 +3371,7 @@ b1h=0 1
 b1wtd=- HYPH 1
 b2wtd=Ani NNP 1
 b3wtd=, , 1
-n/t 0.4137931034482758
+n/t 0.3793103448275863
 s0#e=16072095006890171862 head 1
 s0$e=16642076899796147132 head 1
 s0C=3 1
@@ -3090,6 +3398,11 @@ s1lrwe=forces head 1
 s1rlwe=killed Terminal 1
 s1rwe=killed head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -3115,7 +3428,7 @@ b1h=0 1
 b1wtd=Ani NNP 1
 b2wtd=, , 1
 b3wtd=the DT 1
-n/t 0.4137931034482758
+n/t 0.3793103448275863
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -3140,6 +3453,11 @@ s1tde=NNP head 1
 s1wb0td=Shaikh HYPH 1
 s1wb0w=Shaikh - 1
 s1we=Shaikh head 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -3165,7 +3483,7 @@ b1h=0 1
 b1wtd=, , 1
 b2wtd=the DT 1
 b3wtd=preacher NN 1
-n/t 0.4137931034482758
+n/t 0.3793103448275863
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -3222,7 +3540,7 @@ b1h=0 1
 b1wtd=Ani NNP 1
 b2wtd=, , 1
 b3wtd=the DT 1
-n/t 0.4482758620689655
+n/t 0.4137931034482758
 s0#e=9153284864653046197 Terminal 1
 s0$e=9153284864653046197 Terminal 1
 s0C=0 1
@@ -3287,7 +3605,7 @@ b1h=0 1
 b1wtd=Ani NNP 1
 b2wtd=, , 1
 b3wtd=the DT 1
-n/t 0.4482758620689655
+n/t 0.4137931034482758
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -3312,6 +3630,11 @@ s1tde=NNP head 1
 s1wb0td=Shaikh HYPH 1
 s1wb0w=Shaikh - 1
 s1we=Shaikh head 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -3337,7 +3660,7 @@ b1h=0 1
 b1wtd=, , 1
 b2wtd=the DT 1
 b3wtd=preacher NN 1
-n/t 0.4482758620689655
+n/t 0.4137931034482758
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -3390,7 +3713,7 @@ b1h=0 1
 b1wtd=, , 1
 b2wtd=the DT 1
 b3wtd=preacher NN 1
-n/t 0.4482758620689655
+n/t 0.4137931034482758
 s0#e=9153284864653046197 U 1
 s0$e=9153284864653046197 U 1
 s0C=1 1
@@ -3452,7 +3775,7 @@ b1h=0 1
 b1wtd=, , 1
 b2wtd=the DT 1
 b3wtd=preacher NN 1
-n/t 0.4482758620689655
+n/t 0.4137931034482758
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -3479,6 +3802,11 @@ s1tde=NNP head 1
 s1wb0td=Shaikh NNP 1
 s1wb0w=Shaikh Ani 1
 s1we=Shaikh head 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -3504,7 +3832,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=preacher NN 1
 b3wtd=at IN 1
-n/t 0.4482758620689655
+n/t 0.4137931034482758
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -3549,7 +3877,7 @@ b1h=0 1
 b1wtd=, , 1
 b2wtd=the DT 1
 b3wtd=preacher NN 1
-n/t 0.4482758620689655
+n/t 0.4137931034482758
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -3584,6 +3912,11 @@ s1wep=Shaikh head - 1
 s1weq=Shaikh head 1 1
 s1wp=Shaikh - 1
 s1wq=Shaikh 1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=RIGHT-EDGE Terminal 1
 b 1
@@ -3598,7 +3931,7 @@ b1h=0 1
 b1wtd=, , 1
 b2wtd=the DT 1
 b3wtd=preacher NN 1
-n/t 0.4482758620689655
+n/t 0.4137931034482758
 s0#e=18200729499220207786 Terminal 1
 s0$e=17882505054673599533 Terminal 1
 s0C=0 1
@@ -3647,6 +3980,11 @@ s1wep=Shaikh head - 1
 s1weq=Shaikh head 1 1
 s1wp=Shaikh - 1
 s1wq=Shaikh 1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=RIGHT-EDGE Terminal 1
 b 1
@@ -3662,7 +4000,7 @@ b1h=0 1
 b1wtd=, , 1
 b2wtd=the DT 1
 b3wtd=preacher NN 1
-n/t 0.4482758620689655
+n/t 0.4137931034482758
 s0#e=16072095006890171862 head 1
 s0$e=16642076899796147132 head 1
 s0C=4 1
@@ -3689,6 +4027,11 @@ s1lrwe=forces head 1
 s1rlwe=killed Terminal 1
 s1rwe=killed head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=2 1
@@ -3702,7 +4045,7 @@ b1h=0 1
 b1wtd=, , 1
 b2wtd=the DT 1
 b3wtd=preacher NN 1
-n/t 0.4482758620689655
+n/t 0.4137931034482758
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -3714,12 +4057,17 @@ s0lrwe=forces head 1
 s0rlwe=killed Terminal 1
 s0rwe=killed head 1
 s0s1x=0 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1we=Al head 1
  
 b 1
 b0C=0 1
@@ -3745,7 +4093,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=preacher NN 1
 b3wtd=at IN 1
-n/t 0.4482758620689655
+n/t 0.4137931034482758
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -3763,6 +4111,11 @@ s1lrwe=forces head 1
 s1rlwe=killed Terminal 1
 s1rwe=killed head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a0Ae=RIGHT-EDGE obj 1
 b 1
@@ -3789,7 +4142,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=preacher NN 1
 b3wtd=at IN 1
-n/t 0.4482758620689655
+n/t 0.4137931034482758
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -3809,6 +4162,11 @@ s1lrwe=forces head 1
 s1rlwe=Shaikh head 1
 s1rrwe=- U 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a1Ae=RIGHT-EDGE obj 1
 b 1
@@ -3835,7 +4193,7 @@ b1h=0 1
 b1wtd=preacher NN 1
 b2wtd=at IN 1
 b3wtd=the DT 1
-n/t 0.4482758620689655
+n/t 0.4137931034482758
 s0#s1eb0td=2593208677638477497 obj DT 1
 s0C=0 1
 s0E=0 1
@@ -3865,6 +4223,11 @@ s1lwe=Shaikh head 1
 s1rlwe=- Terminal 1
 s1rwe=- U 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=NODE Terminal 1
 b 1
@@ -3892,7 +4255,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=preacher NN 1
 b3wtd=at IN 1
-n/t 0.48275862068965525
+n/t 0.4482758620689655
 s0#e=2593208677638477497 Terminal 1
 s0#s1eb0td=2593208677638477497 obj , 1
 s0$e=2593208677638477497 Terminal 1
@@ -3934,6 +4297,11 @@ s1lwe=Shaikh head 1
 s1rlwe=- Terminal 1
 s1rwe=- U 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=NODE Terminal 1
 b 1
@@ -3960,7 +4328,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=preacher NN 1
 b3wtd=at IN 1
-n/t 0.48275862068965525
+n/t 0.4482758620689655
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -3980,6 +4348,11 @@ s1lrwe=forces head 1
 s1rlwe=Shaikh head 1
 s1rrwe=- U 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -4005,7 +4378,7 @@ b1h=0 1
 b1wtd=preacher NN 1
 b2wtd=at IN 1
 b3wtd=the DT 1
-n/t 0.48275862068965525
+n/t 0.4482758620689655
 s0#s1eb0td=2593208677638477497 obj DT 1
 s0C=1 1
 s0E=0 1
@@ -4033,6 +4406,11 @@ s1lwe=Shaikh head 1
 s1rlwe=- Terminal 1
 s1rwe=- U 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=RIGHT-EDGE U 1
 b 1
@@ -4059,7 +4437,7 @@ b1h=0 1
 b1wtd=preacher NN 1
 b2wtd=at IN 1
 b3wtd=the DT 1
-n/t 0.48275862068965525
+n/t 0.4482758620689655
 s0#e=2593208677638477497 U 1
 s0#s1eb0td=2593208677638477497 obj DT 1
 s0$e=2593208677638477497 U 1
@@ -4097,6 +4475,11 @@ s1lwe=Shaikh head 1
 s1rlwe=, Terminal 1
 s1rwe=, U 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=RIGHT-EDGE U 1
 b 1
@@ -4123,7 +4506,7 @@ b1h=0 1
 b1wtd=preacher NN 1
 b2wtd=at IN 1
 b3wtd=the DT 1
-n/t 0.48275862068965525
+n/t 0.4482758620689655
 s0C=3 1
 s0E=0 1
 s0I=0 1
@@ -4143,6 +4526,11 @@ s1lrwe=forces head 1
 s1rlwe=Shaikh head 1
 s1rrwe=, U 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -4168,7 +4556,7 @@ b1h=0 1
 b1wtd=at IN 1
 b2wtd=the DT 1
 b3wtd=mosque NN 1
-n/t 0.48275862068965525
+n/t 0.4482758620689655
 s0#s1eb0td=4088098365541558500 obj NN 1
 s0C=0 1
 s0E=0 1
@@ -4198,6 +4586,11 @@ s1lwe=Shaikh head 1
 s1rlwe=, Terminal 1
 s1rwe=, U 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=NODE Terminal 1
 b 1
@@ -4225,7 +4618,7 @@ b1h=0 1
 b1wtd=preacher NN 1
 b2wtd=at IN 1
 b3wtd=the DT 1
-n/t 0.5172413793103448
+n/t 0.48275862068965525
 s0#e=4088098365541558500 Terminal 1
 s0#s1eb0td=4088098365541558500 obj DT 1
 s0$e=7425985699627899538 Terminal 1
@@ -4267,6 +4660,11 @@ s1lwe=Shaikh head 1
 s1rlwe=, Terminal 1
 s1rwe=, U 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=NODE Terminal 1
 b 1
@@ -4293,7 +4691,7 @@ b1h=0 1
 b1wtd=preacher NN 1
 b2wtd=at IN 1
 b3wtd=the DT 1
-n/t 0.5172413793103448
+n/t 0.48275862068965525
 s0C=3 1
 s0E=0 1
 s0I=0 1
@@ -4313,6 +4711,11 @@ s1lrwe=forces head 1
 s1rlwe=Shaikh head 1
 s1rrwe=, U 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -4338,7 +4741,7 @@ b1h=0 1
 b1wtd=at IN 1
 b2wtd=the DT 1
 b3wtd=mosque NN 1
-n/t 0.5172413793103448
+n/t 0.48275862068965525
 s0#s1eb0td=4088098365541558500 obj NN 1
 s0C=1 1
 s0E=0 1
@@ -4366,6 +4769,11 @@ s1lwe=Shaikh head 1
 s1rlwe=, Terminal 1
 s1rwe=, U 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=NODE det 1
 b 1
@@ -4381,7 +4789,7 @@ b1h=0 1
 b1wtd=preacher NN 1
 b2wtd=at IN 1
 b3wtd=the DT 1
-n/t 0.5517241379310345
+n/t 0.5172413793103448
 s0#e=4088098365541558500 det 1
 s0$e=7425985699627899538 det 1
 s0C=1 1
@@ -4410,6 +4818,11 @@ s1lwe=Shaikh head 1
 s1rlwe=, Terminal 1
 s1rwe=, U 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=NODE det 1
 b 1
@@ -4424,7 +4837,7 @@ b1h=0 1
 b1wtd=preacher NN 1
 b2wtd=at IN 1
 b3wtd=the DT 1
-n/t 0.5517241379310345
+n/t 0.5172413793103448
 s0C=3 1
 s0E=0 1
 s0I=0 1
@@ -4442,6 +4855,11 @@ s1lrwe=forces head 1
 s1rlwe=Shaikh head 1
 s1rrwe=, U 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -4467,7 +4885,7 @@ b1h=0 1
 b1wtd=at IN 1
 b2wtd=the DT 1
 b3wtd=mosque NN 1
-n/t 0.5517241379310345
+n/t 0.5172413793103448
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -4485,6 +4903,11 @@ s1lwe=Shaikh head 1
 s1rlwe=, Terminal 1
 s1rwe=, U 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=RIGHT-EDGE appos 1
 b 1
@@ -4511,7 +4934,7 @@ b1h=0 1
 b1wtd=at IN 1
 b2wtd=the DT 1
 b3wtd=mosque NN 1
-n/t 0.5517241379310345
+n/t 0.5172413793103448
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -4533,6 +4956,11 @@ s1lrwe=Ani Terminal 1
 s1lwe=Shaikh head 1
 s1rlwe=the det 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=RIGHT-EDGE appos 1
 b 1
@@ -4559,7 +4987,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=mosque NN 1
 b3wtd=in IN 1
-n/t 0.5517241379310345
+n/t 0.5172413793103448
 s0#s1eb0td=13110060611322374290 appos IN 1
 s0#s1es2e=13110060611322374290 appos obj 1
 s0C=0 1
@@ -4615,7 +5043,7 @@ b1h=0 1
 b1wtd=at IN 1
 b2wtd=the DT 1
 b3wtd=mosque NN 1
-n/t 0.5862068965517242
+n/t 0.5517241379310345
 s0#e=13110060611322374290 Terminal 1
 s0#s1eb0td=13110060611322374290 appos NN 1
 s0#s1es2e=13110060611322374290 appos obj 1
@@ -4683,7 +5111,7 @@ b1h=0 1
 b1wtd=at IN 1
 b2wtd=the DT 1
 b3wtd=mosque NN 1
-n/t 0.5862068965517242
+n/t 0.5517241379310345
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -4705,6 +5133,11 @@ s1lrwe=Ani Terminal 1
 s1lwe=Shaikh head 1
 s1rlwe=the det 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -4730,7 +5163,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=mosque NN 1
 b3wtd=in IN 1
-n/t 0.5862068965517242
+n/t 0.5517241379310345
 s0#s1eb0td=13110060611322374290 appos IN 1
 s0#s1es2e=13110060611322374290 appos obj 1
 s0C=1 1
@@ -4782,7 +5215,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=mosque NN 1
 b3wtd=in IN 1
-n/t 0.5862068965517242
+n/t 0.5517241379310345
 s0#e=13110060611322374290 head 1
 s0#s1eb0td=13110060611322374290 appos IN 1
 s0#s1es2e=13110060611322374290 appos obj 1
@@ -4847,7 +5280,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=mosque NN 1
 b3wtd=in IN 1
-n/t 0.5862068965517242
+n/t 0.5517241379310345
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -4872,6 +5305,11 @@ s1lwe=Shaikh head 1
 s1rlwe=the det 1
 s1rrwe=preacher head 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -4897,7 +5335,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=mosque NN 1
 b3wtd=in IN 1
-n/t 0.5862068965517242
+n/t 0.5517241379310345
 s0C=4 1
 s0E=0 1
 s0I=0 1
@@ -4916,6 +5354,11 @@ s1llwe=American amod 1
 s1lrwe=forces head 1
 s1rlwe=Shaikh head 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -4941,7 +5384,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=mosque NN 1
 b3wtd=in IN 1
-n/t 0.5862068965517242
+n/t 0.5517241379310345
 s0C=3 1
 s0E=0 1
 s0I=0 1
@@ -4952,14 +5395,21 @@ s0llwe=American amod 1
 s0lrwe=forces head 1
 s0rlwe=Shaikh head 1
 s0s1x=0 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head IN 1
 s1eb0w=head at 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1wb0td=Al IN 1
+s1wb0w=Al at 1
+s1we=Al head 1
  
 b 1
 b0C=0 1
@@ -4985,7 +5435,7 @@ b1h=0 1
 b1wtd=mosque NN 1
 b2wtd=in IN 1
 b3wtd=the DT 1
-n/t 0.5862068965517242
+n/t 0.5517241379310345
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -5005,10 +5455,16 @@ s0wb0w=at the 1
 s0xb0td=0 DT 1
 s0xb0w=0 the 1
 s0xs2e=0 head 1
+s0xs2w=0 Al 1
 s1llwe=American amod 1
 s1lrwe=forces head 1
 s1rlwe=Shaikh head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a0Ae=NODE Terminal 1
 b 1
@@ -5036,7 +5492,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=mosque NN 1
 b3wtd=in IN 1
-n/t 0.6206896551724137
+n/t 0.5862068965517242
 s0#e=4370460163704169311 Terminal 1
 s0$e=11667289587015813222 Terminal 1
 s0C=0 1
@@ -5063,12 +5519,18 @@ s0we=at Terminal 1
 s0xb0td=0 IN 1
 s0xb0w=0 at 1
 s0xs2e=0 head 1
+s0xs2w=0 Al 1
 s0xtde=0 IN Terminal 1
 s0xwe=0 at Terminal 1
 s1llwe=American amod 1
 s1lrwe=forces head 1
 s1rlwe=Shaikh head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a1Ae=NODE Terminal 1
 b 1
@@ -5095,7 +5557,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=mosque NN 1
 b3wtd=in IN 1
-n/t 0.6206896551724137
+n/t 0.5862068965517242
 s0C=3 1
 s0E=0 1
 s0I=0 1
@@ -5106,14 +5568,21 @@ s0llwe=American amod 1
 s0lrwe=forces head 1
 s0rlwe=Shaikh head 1
 s0s1x=0 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head IN 1
 s1eb0w=head at 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1wb0td=Al IN 1
+s1wb0w=Al at 1
+s1we=Al head 1
  
 b 1
 b0C=0 1
@@ -5139,7 +5608,7 @@ b1h=0 1
 b1wtd=mosque NN 1
 b2wtd=in IN 1
 b3wtd=the DT 1
-n/t 0.6206896551724137
+n/t 0.5862068965517242
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -5161,6 +5630,11 @@ s1llwe=American amod 1
 s1lrwe=forces head 1
 s1rlwe=Shaikh head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a0Ae=NODE case 1
 b 1
@@ -5176,7 +5650,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=mosque NN 1
 b3wtd=in IN 1
-n/t 0.6551724137931034
+n/t 0.6206896551724137
 s0#e=4370460163704169311 case 1
 s0$e=11667289587015813222 case 1
 s0C=1 1
@@ -5201,6 +5675,11 @@ s1llwe=American amod 1
 s1lrwe=forces head 1
 s1rlwe=Shaikh head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a1Ae=NODE case 1
 b 1
@@ -5215,7 +5694,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=mosque NN 1
 b3wtd=in IN 1
-n/t 0.6551724137931034
+n/t 0.6206896551724137
 s0C=3 1
 s0E=0 1
 s0I=0 1
@@ -5226,12 +5705,17 @@ s0llwe=American amod 1
 s0lrwe=forces head 1
 s0rlwe=Shaikh head 1
 s0s1x=0 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1we=Al head 1
  
 b 1
 b0C=0 1
@@ -5257,7 +5741,7 @@ b1h=0 1
 b1wtd=mosque NN 1
 b2wtd=in IN 1
 b3wtd=the DT 1
-n/t 0.6551724137931034
+n/t 0.6206896551724137
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -5271,6 +5755,11 @@ s1llwe=American amod 1
 s1lrwe=forces head 1
 s1rlwe=Shaikh head 1
 s1s0x=0 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a0Ae=RIGHT-EDGE obl 1
 b 1
@@ -5297,7 +5786,7 @@ b1h=0 1
 b1wtd=mosque NN 1
 b2wtd=in IN 1
 b3wtd=the DT 1
-n/t 0.6551724137931034
+n/t 0.6206896551724137
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -5313,6 +5802,11 @@ s1llwe=American amod 1
 s1lrwe=forces head 1
 s1rlwe=at case 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 a1Ae=RIGHT-EDGE obl 1
 b 1
@@ -5339,7 +5833,7 @@ b1h=0 1
 b1wtd=in IN 1
 b2wtd=the DT 1
 b3wtd=town NN 1
-n/t 0.6551724137931034
+n/t 0.6206896551724137
 s0#s1eb0td=4088098365541558500 obl NN 1
 s0C=0 1
 s0E=0 1
@@ -5366,6 +5860,11 @@ s1eb0w=obl mosque 1
 s1llwe=at Terminal 1
 s1lwe=at case 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=NODE Terminal 1
 b 1
@@ -5393,7 +5892,7 @@ b1h=0 1
 b1wtd=mosque NN 1
 b2wtd=in IN 1
 b3wtd=the DT 1
-n/t 0.6896551724137931
+n/t 0.6551724137931034
 s0#e=4088098365541558500 Terminal 1
 s0#s1eb0td=4088098365541558500 obl DT 1
 s0$e=7425985699627899538 Terminal 1
@@ -5432,6 +5931,11 @@ s1eb0w=obl the 1
 s1llwe=at Terminal 1
 s1lwe=at case 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=NODE Terminal 1
 b 1
@@ -5458,7 +5962,7 @@ b1h=0 1
 b1wtd=mosque NN 1
 b2wtd=in IN 1
 b3wtd=the DT 1
-n/t 0.6896551724137931
+n/t 0.6551724137931034
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -5474,6 +5978,11 @@ s1llwe=American amod 1
 s1lrwe=forces head 1
 s1rlwe=at case 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -5499,7 +6008,7 @@ b1h=0 1
 b1wtd=in IN 1
 b2wtd=the DT 1
 b3wtd=town NN 1
-n/t 0.6896551724137931
+n/t 0.6551724137931034
 s0#s1eb0td=4088098365541558500 obl NN 1
 s0C=1 1
 s0E=0 1
@@ -5524,6 +6033,11 @@ s1eb0w=obl mosque 1
 s1llwe=at Terminal 1
 s1lwe=at case 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=RIGHT-EDGE det 1
 b 1
@@ -5550,7 +6064,7 @@ b1h=0 1
 b1wtd=in IN 1
 b2wtd=the DT 1
 b3wtd=town NN 1
-n/t 0.6896551724137931
+n/t 0.6551724137931034
 s0#e=4088098365541558500 det 1
 s0#s1eb0td=4088098365541558500 obl NN 1
 s0$e=7425985699627899538 det 1
@@ -5587,6 +6101,11 @@ s1lwe=at case 1
 s1rlwe=the Terminal 1
 s1rwe=the det 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=RIGHT-EDGE det 1
 b 1
@@ -5613,7 +6132,7 @@ b1h=0 1
 b1wtd=in IN 1
 b2wtd=the DT 1
 b3wtd=town NN 1
-n/t 0.6896551724137931
+n/t 0.6551724137931034
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -5632,6 +6151,11 @@ s1lrwe=forces head 1
 s1rlwe=at case 1
 s1rrwe=the det 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -5657,7 +6181,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=town NN 1
 b3wtd=of IN 1
-n/t 0.6896551724137931
+n/t 0.6551724137931034
 s0#s1eb0td=13110060611322374290 obl IN 1
 s0C=0 1
 s0E=0 1
@@ -5686,6 +6210,11 @@ s1lwe=at case 1
 s1rlwe=the Terminal 1
 s1rwe=the det 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=NODE Terminal 1
 b 1
@@ -5713,7 +6242,7 @@ b1h=0 1
 b1wtd=in IN 1
 b2wtd=the DT 1
 b3wtd=town NN 1
-n/t 0.7241379310344827
+n/t 0.6896551724137931
 s0#e=13110060611322374290 Terminal 1
 s0#s1eb0td=13110060611322374290 obl NN 1
 s0$e=11474801393294414462 Terminal 1
@@ -5754,6 +6283,11 @@ s1lwe=at case 1
 s1rlwe=the Terminal 1
 s1rwe=the det 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=NODE Terminal 1
 b 1
@@ -5780,7 +6314,7 @@ b1h=0 1
 b1wtd=in IN 1
 b2wtd=the DT 1
 b3wtd=town NN 1
-n/t 0.7241379310344827
+n/t 0.6896551724137931
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -5799,6 +6333,11 @@ s1lrwe=forces head 1
 s1rlwe=at case 1
 s1rrwe=the det 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -5824,7 +6363,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=town NN 1
 b3wtd=of IN 1
-n/t 0.7241379310344827
+n/t 0.6896551724137931
 s0#s1eb0td=13110060611322374290 obl IN 1
 s0C=1 1
 s0E=0 1
@@ -5851,6 +6390,11 @@ s1lwe=at case 1
 s1rlwe=the Terminal 1
 s1rwe=the det 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=RIGHT-EDGE head 1
 b 1
@@ -5877,7 +6421,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=town NN 1
 b3wtd=of IN 1
-n/t 0.7241379310344827
+n/t 0.6896551724137931
 s0#e=13110060611322374290 head 1
 s0#s1eb0td=13110060611322374290 obl IN 1
 s0$e=11474801393294414462 head 1
@@ -5914,6 +6458,11 @@ s1lwe=at case 1
 s1rlwe=mosque Terminal 1
 s1rwe=mosque head 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=RIGHT-EDGE head 1
 b 1
@@ -5940,7 +6489,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=town NN 1
 b3wtd=of IN 1
-n/t 0.7241379310344827
+n/t 0.6896551724137931
 s0C=3 1
 s0E=0 1
 s0I=0 1
@@ -5959,6 +6508,11 @@ s1lrwe=forces head 1
 s1rlwe=at case 1
 s1rrwe=mosque head 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -5984,7 +6538,7 @@ b1h=0 1
 b1wtd=town NN 1
 b2wtd=of IN 1
 b3wtd=Qaim NNP 1
-n/t 0.7241379310344827
+n/t 0.6896551724137931
 s0#s1eb0td=4370460163704169311 obl DT 1
 s0C=0 1
 s0E=0 1
@@ -6013,6 +6567,11 @@ s1lwe=at case 1
 s1rlwe=mosque Terminal 1
 s1rwe=mosque head 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=NODE Terminal 1
 b 1
@@ -6040,7 +6599,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=town NN 1
 b3wtd=of IN 1
-n/t 0.7586206896551724
+n/t 0.7241379310344827
 s0#e=4370460163704169311 Terminal 1
 s0#s1eb0td=4370460163704169311 obl IN 1
 s0$e=3002984154512732771 Terminal 1
@@ -6081,6 +6640,11 @@ s1lwe=at case 1
 s1rlwe=mosque Terminal 1
 s1rwe=mosque head 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=NODE Terminal 1
 b 1
@@ -6107,7 +6671,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=town NN 1
 b3wtd=of IN 1
-n/t 0.7586206896551724
+n/t 0.7241379310344827
 s0C=3 1
 s0E=0 1
 s0I=0 1
@@ -6126,6 +6690,11 @@ s1lrwe=forces head 1
 s1rlwe=at case 1
 s1rrwe=mosque head 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -6151,7 +6720,7 @@ b1h=0 1
 b1wtd=town NN 1
 b2wtd=of IN 1
 b3wtd=Qaim NNP 1
-n/t 0.7586206896551724
+n/t 0.7241379310344827
 s0#s1eb0td=4370460163704169311 obl DT 1
 s0C=1 1
 s0E=0 1
@@ -6178,6 +6747,11 @@ s1lwe=at case 1
 s1rlwe=mosque Terminal 1
 s1rwe=mosque head 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=NODE case 1
 b 1
@@ -6193,7 +6767,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=town NN 1
 b3wtd=of IN 1
-n/t 0.7931034482758621
+n/t 0.7586206896551724
 s0#e=4370460163704169311 case 1
 s0$e=3002984154512732771 case 1
 s0C=1 1
@@ -6221,6 +6795,11 @@ s1lwe=at case 1
 s1rlwe=mosque Terminal 1
 s1rwe=mosque head 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=NODE case 1
 b 1
@@ -6235,7 +6814,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=town NN 1
 b3wtd=of IN 1
-n/t 0.7931034482758621
+n/t 0.7586206896551724
 s0C=3 1
 s0E=0 1
 s0I=0 1
@@ -6252,6 +6831,11 @@ s1lrwe=forces head 1
 s1rlwe=at case 1
 s1rrwe=mosque head 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -6277,7 +6861,7 @@ b1h=0 1
 b1wtd=town NN 1
 b2wtd=of IN 1
 b3wtd=Qaim NNP 1
-n/t 0.7931034482758621
+n/t 0.7586206896551724
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -6294,6 +6878,11 @@ s1lwe=at case 1
 s1rlwe=mosque Terminal 1
 s1rwe=mosque head 1
 s1s0x=0 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a0Ae=RIGHT-EDGE nmod 1
 b 1
@@ -6320,7 +6909,7 @@ b1h=0 1
 b1wtd=town NN 1
 b2wtd=of IN 1
 b3wtd=Qaim NNP 1
-n/t 0.7931034482758621
+n/t 0.7586206896551724
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -6341,6 +6930,11 @@ s1llwe=at Terminal 1
 s1lwe=at case 1
 s1rlwe=in case 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 a1Ae=RIGHT-EDGE nmod 1
 b 1
@@ -6367,7 +6961,7 @@ b1h=0 1
 b1wtd=of IN 1
 b2wtd=Qaim NNP 1
 b3wtd=, , 1
-n/t 0.7931034482758621
+n/t 0.7586206896551724
 s0#s1eb0td=4088098365541558500 nmod NN 1
 s0#s1es2e=4088098365541558500 nmod obl 1
 s0C=0 1
@@ -6423,7 +7017,7 @@ b1h=0 1
 b1wtd=town NN 1
 b2wtd=of IN 1
 b3wtd=Qaim NNP 1
-n/t 0.8275862068965518
+n/t 0.7931034482758621
 s0#e=4088098365541558500 Terminal 1
 s0#s1eb0td=4088098365541558500 nmod DT 1
 s0#s1es2e=4088098365541558500 nmod obl 1
@@ -6491,7 +7085,7 @@ b1h=0 1
 b1wtd=town NN 1
 b2wtd=of IN 1
 b3wtd=Qaim NNP 1
-n/t 0.8275862068965518
+n/t 0.7931034482758621
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -6512,6 +7106,11 @@ s1llwe=at Terminal 1
 s1lwe=at case 1
 s1rlwe=in case 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -6537,7 +7136,7 @@ b1h=0 1
 b1wtd=of IN 1
 b2wtd=Qaim NNP 1
 b3wtd=, , 1
-n/t 0.8275862068965518
+n/t 0.7931034482758621
 s0#s1eb0td=4088098365541558500 nmod NN 1
 s0#s1es2e=4088098365541558500 nmod obl 1
 s0C=1 1
@@ -6589,7 +7188,7 @@ b1h=0 1
 b1wtd=of IN 1
 b2wtd=Qaim NNP 1
 b3wtd=, , 1
-n/t 0.8275862068965518
+n/t 0.7931034482758621
 s0#e=4088098365541558500 det 1
 s0#s1eb0td=4088098365541558500 nmod NN 1
 s0#s1es2e=4088098365541558500 nmod obl 1
@@ -6654,7 +7253,7 @@ b1h=0 1
 b1wtd=of IN 1
 b2wtd=Qaim NNP 1
 b3wtd=, , 1
-n/t 0.8275862068965518
+n/t 0.7931034482758621
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -6678,6 +7277,11 @@ s1lwe=at case 1
 s1rlwe=in case 1
 s1rrwe=the det 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -6703,7 +7307,7 @@ b1h=0 1
 b1wtd=Qaim NNP 1
 b2wtd=, , 1
 b3wtd=near IN 1
-n/t 0.8275862068965518
+n/t 0.7931034482758621
 s0#s1eb0td=13110060611322374290 nmod IN 1
 s0#s1es2e=13110060611322374290 nmod obl 1
 s0C=0 1
@@ -6761,7 +7365,7 @@ b1h=0 1
 b1wtd=of IN 1
 b2wtd=Qaim NNP 1
 b3wtd=, , 1
-n/t 0.8620689655172413
+n/t 0.8275862068965518
 s0#e=13110060611322374290 Terminal 1
 s0#s1eb0td=13110060611322374290 nmod NN 1
 s0#s1es2e=13110060611322374290 nmod obl 1
@@ -6831,7 +7435,7 @@ b1h=0 1
 b1wtd=of IN 1
 b2wtd=Qaim NNP 1
 b3wtd=, , 1
-n/t 0.8620689655172413
+n/t 0.8275862068965518
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -6855,6 +7459,11 @@ s1lwe=at case 1
 s1rlwe=in case 1
 s1rrwe=the det 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -6880,7 +7489,7 @@ b1h=0 1
 b1wtd=Qaim NNP 1
 b2wtd=, , 1
 b3wtd=near IN 1
-n/t 0.8620689655172413
+n/t 0.8275862068965518
 s0#s1eb0td=13110060611322374290 nmod IN 1
 s0#s1es2e=13110060611322374290 nmod obl 1
 s0C=1 1
@@ -6934,7 +7543,7 @@ b1h=0 1
 b1wtd=Qaim NNP 1
 b2wtd=, , 1
 b3wtd=near IN 1
-n/t 0.8620689655172413
+n/t 0.8275862068965518
 s0#e=13110060611322374290 head 1
 s0#s1eb0td=13110060611322374290 nmod IN 1
 s0#s1es2e=13110060611322374290 nmod obl 1
@@ -6999,7 +7608,7 @@ b1h=0 1
 b1wtd=Qaim NNP 1
 b2wtd=, , 1
 b3wtd=near IN 1
-n/t 0.8620689655172413
+n/t 0.8275862068965518
 s0C=3 1
 s0E=0 1
 s0I=0 1
@@ -7023,6 +7632,11 @@ s1lwe=at case 1
 s1rlwe=in case 1
 s1rrwe=town head 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -7048,7 +7662,7 @@ b1h=0 1
 b1wtd=, , 1
 b2wtd=near IN 1
 b3wtd=the DT 1
-n/t 0.8620689655172413
+n/t 0.8275862068965518
 s0#s1eb0td=4370460163704169311 nmod NNP 1
 s0#s1es2e=4370460163704169311 nmod obl 1
 s0C=0 1
@@ -7106,7 +7720,7 @@ b1h=0 1
 b1wtd=Qaim NNP 1
 b2wtd=, , 1
 b3wtd=near IN 1
-n/t 0.896551724137931
+n/t 0.8620689655172413
 s0#e=4370460163704169311 Terminal 1
 s0#s1eb0td=4370460163704169311 nmod IN 1
 s0#s1es2e=4370460163704169311 nmod obl 1
@@ -7176,7 +7790,7 @@ b1h=0 1
 b1wtd=Qaim NNP 1
 b2wtd=, , 1
 b3wtd=near IN 1
-n/t 0.896551724137931
+n/t 0.8620689655172413
 s0C=3 1
 s0E=0 1
 s0I=0 1
@@ -7200,6 +7814,11 @@ s1lwe=at case 1
 s1rlwe=in case 1
 s1rrwe=town head 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -7225,7 +7844,7 @@ b1h=0 1
 b1wtd=, , 1
 b2wtd=near IN 1
 b3wtd=the DT 1
-n/t 0.896551724137931
+n/t 0.8620689655172413
 s0#s1eb0td=4370460163704169311 nmod NNP 1
 s0#s1es2e=4370460163704169311 nmod obl 1
 s0C=1 1
@@ -7268,7 +7887,7 @@ b1h=0 1
 b1wtd=Qaim NNP 1
 b2wtd=, , 1
 b3wtd=near IN 1
-n/t 0.9310344827586208
+n/t 0.896551724137931
 s0#e=4370460163704169311 case 1
 s0#s1es2e=4370460163704169311 nmod obl 1
 s0$e=886050111519832510 case 1
@@ -7312,7 +7931,7 @@ b1h=0 1
 b1wtd=Qaim NNP 1
 b2wtd=, , 1
 b3wtd=near IN 1
-n/t 0.9310344827586208
+n/t 0.896551724137931
 s0C=3 1
 s0E=0 1
 s0I=0 1
@@ -7330,6 +7949,11 @@ s1lwe=at case 1
 s1rlwe=in case 1
 s1rrwe=town head 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -7355,7 +7979,7 @@ b1h=0 1
 b1wtd=, , 1
 b2wtd=near IN 1
 b3wtd=the DT 1
-n/t 0.9310344827586208
+n/t 0.896551724137931
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -7398,7 +8022,7 @@ b1h=0 1
 b1wtd=, , 1
 b2wtd=near IN 1
 b3wtd=the DT 1
-n/t 0.9310344827586208
+n/t 0.896551724137931
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -7446,7 +8070,7 @@ b1h=0 1
 b1wtd=near IN 1
 b2wtd=the DT 1
 b3wtd=Syrian JJ 1
-n/t 0.9310344827586208
+n/t 0.896551724137931
 s0#s1eb0td=10887629174180191697 nmod , 1
 s0#s1es2e=10887629174180191697 nmod nmod 1
 s0C=0 1
@@ -7502,7 +8126,7 @@ b1h=0 1
 b1wtd=, , 1
 b2wtd=near IN 1
 b3wtd=the DT 1
-n/t 0.9655172413793103
+n/t 0.9310344827586208
 s0#e=10887629174180191697 Terminal 1
 s0#s1eb0td=10887629174180191697 nmod NNP 1
 s0#s1es2e=10887629174180191697 nmod nmod 1
@@ -7570,7 +8194,7 @@ b1h=0 1
 b1wtd=, , 1
 b2wtd=near IN 1
 b3wtd=the DT 1
-n/t 0.9655172413793103
+n/t 0.9310344827586208
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -7617,7 +8241,7 @@ b1h=0 1
 b1wtd=near IN 1
 b2wtd=the DT 1
 b3wtd=Syrian JJ 1
-n/t 0.9655172413793103
+n/t 0.9310344827586208
 s0#s1eb0td=10887629174180191697 nmod , 1
 s0#s1es2e=10887629174180191697 nmod nmod 1
 s0C=1 1
@@ -7669,7 +8293,7 @@ b1h=0 1
 b1wtd=near IN 1
 b2wtd=the DT 1
 b3wtd=Syrian JJ 1
-n/t 0.9655172413793103
+n/t 0.9310344827586208
 s0#e=10887629174180191697 head 1
 s0#s1eb0td=10887629174180191697 nmod , 1
 s0#s1es2e=10887629174180191697 nmod nmod 1
@@ -7734,7 +8358,7 @@ b1h=0 1
 b1wtd=near IN 1
 b2wtd=the DT 1
 b3wtd=Syrian JJ 1
-n/t 0.9655172413793103
+n/t 0.9310344827586208
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -7784,7 +8408,7 @@ b1h=0 1
 b1wtd=near IN 1
 b2wtd=the DT 1
 b3wtd=Syrian JJ 1
-n/t 0.9655172413793103
+n/t 0.9310344827586208
 s0C=4 1
 s0E=0 1
 s0I=0 1
@@ -7807,6 +8431,11 @@ s1llwe=at Terminal 1
 s1lwe=at case 1
 s1rlwe=in case 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -7832,7 +8461,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=Syrian JJ 1
 b3wtd=border NN 1
-n/t 0.9655172413793103
+n/t 0.9310344827586208
 s0#s1eb0td=2593208677638477497 nmod IN 1
 s0#s1es2e=2593208677638477497 nmod obl 1
 s0C=0 1
@@ -7890,7 +8519,7 @@ b1h=0 1
 b1wtd=near IN 1
 b2wtd=the DT 1
 b3wtd=Syrian JJ 1
-n/t 1.0
+n/t 0.9655172413793103
 s0#e=2593208677638477497 Terminal 1
 s0#s1eb0td=2593208677638477497 nmod , 1
 s0#s1es2e=2593208677638477497 nmod obl 1
@@ -7960,7 +8589,7 @@ b1h=0 1
 b1wtd=near IN 1
 b2wtd=the DT 1
 b3wtd=Syrian JJ 1
-n/t 1.0
+n/t 0.9655172413793103
 s0C=4 1
 s0E=0 1
 s0I=0 1
@@ -7983,6 +8612,11 @@ s1llwe=at Terminal 1
 s1lwe=at case 1
 s1rlwe=in case 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -8008,7 +8642,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=Syrian JJ 1
 b3wtd=border NN 1
-n/t 1.0
+n/t 0.9655172413793103
 s0#s1eb0td=2593208677638477497 nmod IN 1
 s0#s1es2e=2593208677638477497 nmod obl 1
 s0C=1 1
@@ -8062,7 +8696,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=Syrian JJ 1
 b3wtd=border NN 1
-n/t 1.0
+n/t 0.9655172413793103
 s0#e=2593208677638477497 U 1
 s0#s1eb0td=2593208677638477497 nmod IN 1
 s0#s1es2e=2593208677638477497 nmod obl 1
@@ -8127,7 +8761,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=Syrian JJ 1
 b3wtd=border NN 1
-n/t 1.0
+n/t 0.9655172413793103
 s0C=5 1
 s0E=0 1
 s0I=0 1
@@ -8151,6 +8785,11 @@ s1lwe=at case 1
 s1rlwe=in case 1
 s1rrwe=, U 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -8176,7 +8815,7 @@ b1h=0 1
 b1wtd=Syrian JJ 1
 b2wtd=border NN 1
 b3wtd=. . 1
-n/t 1.0
+n/t 0.9655172413793103
 s0#s1eb0td=13110060611322374290 nmod DT 1
 s0#s1es2e=13110060611322374290 nmod obl 1
 s0C=0 1
@@ -8234,7 +8873,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=Syrian JJ 1
 b3wtd=border NN 1
-n/t 1.0344827586206895
+n/t 1.0
 s0#e=13110060611322374290 Terminal 1
 s0#s1eb0td=13110060611322374290 nmod IN 1
 s0#s1es2e=13110060611322374290 nmod obl 1
@@ -8304,7 +8943,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=Syrian JJ 1
 b3wtd=border NN 1
-n/t 1.0344827586206895
+n/t 1.0
 s0C=5 1
 s0E=0 1
 s0I=0 1
@@ -8328,6 +8967,11 @@ s1lwe=at case 1
 s1rlwe=in case 1
 s1rrwe=, U 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -8353,7 +8997,7 @@ b1h=0 1
 b1wtd=Syrian JJ 1
 b2wtd=border NN 1
 b3wtd=. . 1
-n/t 1.0344827586206895
+n/t 1.0
 s0#s1eb0td=13110060611322374290 nmod DT 1
 s0#s1es2e=13110060611322374290 nmod obl 1
 s0C=1 1
@@ -8396,7 +9040,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=Syrian JJ 1
 b3wtd=border NN 1
-n/t 1.0689655172413794
+n/t 1.0344827586206895
 s0#e=13110060611322374290 case 1
 s0#s1es2e=13110060611322374290 nmod obl 1
 s0$e=14872279755251211665 case 1
@@ -8440,7 +9084,7 @@ b1h=0 1
 b1wtd=the DT 1
 b2wtd=Syrian JJ 1
 b3wtd=border NN 1
-n/t 1.0689655172413794
+n/t 1.0344827586206895
 s0C=5 1
 s0E=0 1
 s0I=0 1
@@ -8458,6 +9102,11 @@ s1lwe=at case 1
 s1rlwe=in case 1
 s1rrwe=, U 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -8483,7 +9132,7 @@ b1h=0 1
 b1wtd=Syrian JJ 1
 b2wtd=border NN 1
 b3wtd=. . 1
-n/t 1.0689655172413794
+n/t 1.0344827586206895
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -8526,7 +9175,7 @@ b1h=0 1
 b1wtd=Syrian JJ 1
 b2wtd=border NN 1
 b3wtd=. . 1
-n/t 1.0689655172413794
+n/t 1.0344827586206895
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -8573,7 +9222,7 @@ b1NT=2 0 1
 b1h=0 1
 b1wtd=border NN 1
 b2wtd=. . 1
-n/t 1.0689655172413794
+n/t 1.0344827586206895
 s0#s1eb0td=4088098365541558500 nmod JJ 1
 s0#s1es2e=4088098365541558500 nmod nmod 1
 s0C=0 1
@@ -8629,7 +9278,7 @@ b1h=0 1
 b1wtd=Syrian JJ 1
 b2wtd=border NN 1
 b3wtd=. . 1
-n/t 1.103448275862069
+n/t 1.0689655172413794
 s0#e=4088098365541558500 Terminal 1
 s0#s1eb0td=4088098365541558500 nmod DT 1
 s0#s1es2e=4088098365541558500 nmod nmod 1
@@ -8697,7 +9346,7 @@ b1h=0 1
 b1wtd=Syrian JJ 1
 b2wtd=border NN 1
 b3wtd=. . 1
-n/t 1.103448275862069
+n/t 1.0689655172413794
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -8743,7 +9392,7 @@ b1NT=2 0 1
 b1h=0 1
 b1wtd=border NN 1
 b2wtd=. . 1
-n/t 1.103448275862069
+n/t 1.0689655172413794
 s0#s1eb0td=4088098365541558500 nmod JJ 1
 s0#s1es2e=4088098365541558500 nmod nmod 1
 s0C=1 1
@@ -8794,7 +9443,7 @@ b1NT=2 0 1
 b1h=0 1
 b1wtd=border NN 1
 b2wtd=. . 1
-n/t 1.103448275862069
+n/t 1.0689655172413794
 s0#e=4088098365541558500 det 1
 s0#s1eb0td=4088098365541558500 nmod JJ 1
 s0#s1es2e=4088098365541558500 nmod nmod 1
@@ -8858,7 +9507,7 @@ b1NT=2 0 1
 b1h=0 1
 b1wtd=border NN 1
 b2wtd=. . 1
-n/t 1.103448275862069
+n/t 1.0689655172413794
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -8906,7 +9555,7 @@ b0wtd=border NN 1
 b1NT=2 0 1
 b1h=0 1
 b1wtd=. . 1
-n/t 1.103448275862069
+n/t 1.0689655172413794
 s0#s1eb0td=16072095006890171862 nmod NN 1
 s0#s1es2e=16072095006890171862 nmod nmod 1
 s0C=0 1
@@ -8963,7 +9612,7 @@ b1NT=2 0 1
 b1h=0 1
 b1wtd=border NN 1
 b2wtd=. . 1
-n/t 1.1379310344827585
+n/t 1.103448275862069
 s0#e=16072095006890171862 Terminal 1
 s0#s1eb0td=16072095006890171862 nmod JJ 1
 s0#s1es2e=16072095006890171862 nmod nmod 1
@@ -9032,7 +9681,7 @@ b1NT=2 0 1
 b1h=0 1
 b1wtd=border NN 1
 b2wtd=. . 1
-n/t 1.1379310344827585
+n/t 1.103448275862069
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -9080,7 +9729,7 @@ b0wtd=border NN 1
 b1NT=2 0 1
 b1h=0 1
 b1wtd=. . 1
-n/t 1.1379310344827585
+n/t 1.103448275862069
 s0#s1eb0td=16072095006890171862 nmod NN 1
 s0#s1es2e=16072095006890171862 nmod nmod 1
 s0C=1 1
@@ -9132,7 +9781,7 @@ b0wtd=border NN 1
 b1NT=2 0 1
 b1h=0 1
 b1wtd=. . 1
-n/t 1.1379310344827585
+n/t 1.103448275862069
 s0#e=16072095006890171862 amod 1
 s0#s1eb0td=16072095006890171862 nmod NN 1
 s0#s1es2e=16072095006890171862 nmod nmod 1
@@ -9195,7 +9844,7 @@ b0wtd=border NN 1
 b1NT=2 0 1
 b1h=0 1
 b1wtd=. . 1
-n/t 1.1379310344827585
+n/t 1.103448275862069
 s0C=3 1
 s0E=0 1
 s0I=0 1
@@ -9236,7 +9885,7 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. . 1
-n/t 1.1379310344827585
+n/t 1.103448275862069
 s0#s1eb0td=13110060611322374290 nmod . 1
 s0#s1es2e=13110060611322374290 nmod nmod 1
 s0C=0 1
@@ -9292,7 +9941,7 @@ b0wtd=border NN 1
 b1NT=2 0 1
 b1h=0 1
 b1wtd=. . 1
-n/t 1.1724137931034484
+n/t 1.1379310344827585
 s0#e=13110060611322374290 Terminal 1
 s0#s1eb0td=13110060611322374290 nmod NN 1
 s0#s1es2e=13110060611322374290 nmod nmod 1
@@ -9360,7 +10009,7 @@ b0wtd=border NN 1
 b1NT=2 0 1
 b1h=0 1
 b1wtd=. . 1
-n/t 1.1724137931034484
+n/t 1.1379310344827585
 s0C=3 1
 s0E=0 1
 s0I=0 1
@@ -9401,7 +10050,7 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. . 1
-n/t 1.1724137931034484
+n/t 1.1379310344827585
 s0#s1eb0td=13110060611322374290 nmod . 1
 s0#s1es2e=13110060611322374290 nmod nmod 1
 s0C=1 1
@@ -9446,7 +10095,7 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. . 1
-n/t 1.1724137931034484
+n/t 1.1379310344827585
 s0#e=13110060611322374290 head 1
 s0#s1eb0td=13110060611322374290 nmod . 1
 s0#s1es2e=13110060611322374290 nmod nmod 1
@@ -9502,7 +10151,7 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. . 1
-n/t 1.1724137931034484
+n/t 1.1379310344827585
 s0C=4 1
 s0E=0 1
 s0I=0 1
@@ -9543,7 +10192,7 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. . 1
-n/t 1.1724137931034484
+n/t 1.1379310344827585
 s0C=6 1
 s0E=0 1
 s0I=0 1
@@ -9566,6 +10215,11 @@ s1llwe=at Terminal 1
 s1lwe=at case 1
 s1rlwe=in case 1
 s1s0x=1 1
+s3#e=12204527652707022206 head 1
+s3$e=11631551226137452986 head 1
+s3^e=14862748245026736845 head 1
+s3tde=NNP head 1
+s3we=Al head 1
  
 b 1
 b0C=0 1
@@ -9582,7 +10236,7 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. . 1
-n/t 1.1724137931034484
+n/t 1.1379310344827585
 s0C=4 1
 s0E=0 1
 s0I=0 1
@@ -9599,6 +10253,11 @@ s1llwe=American amod 1
 s1lrwe=forces head 1
 s1rlwe=at case 1
 s1s0x=1 1
+s2#e=12204527652707022206 head 1
+s2$e=11631551226137452986 head 1
+s2^e=14862748245026736845 head 1
+s2tde=NNP head 1
+s2we=Al head 1
  
 b 1
 b0C=0 1
@@ -9615,7 +10274,7 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. . 1
-n/t 1.1724137931034484
+n/t 1.1379310344827585
 s0C=4 1
 s0E=0 1
 s0I=0 1
@@ -9626,26 +10285,45 @@ s0llwe=American amod 1
 s0lrwe=forces head 1
 s0rlwe=at case 1
 s0s1x=0 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head . 1
 s1eb0w=head . 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1wb0td=Al . 1
+s1wb0w=Al . 1
+s1we=Al head 1
  
 b 1
-b0C=3 1
+b0C=4 1
 b0E=0 1
 b0I=0 1
 b0M=0 1
+b0NT=3 378 1
 b0P=1 1
+b0h=1 1
 b0s0x=0 1
+b0tdb1td=NNP . 1
+b0tdb1w=NNP . 1
+b0wC=Al 4 1
+b0wE=Al 0 1
+b0wI=Al 0 1
+b0wM=Al 0 1
+b0wP=Al 1 1
+b0wb1td=Al . 1
+b0wb1w=Al . 1
+b0wtd=Al NNP 1
 b1NT=2 0 1
 b1h=0 1
 b1wtd=. . 1
-n/t 1.1724137931034484
+n/t 1.1379310344827585
 s0C=4 1
 s0E=0 1
 s0I=0 1
@@ -9656,48 +10334,76 @@ s0llwe=American amod 1
 s0lrwe=forces head 1
 s0rlwe=at case 1
 s0s1x=0 1
-s1llwe=Al head 1
+s1llwe=Al Terminal 1
 s1lrwe=: U 1
+s1lwe=Al head 1
 s1s0x=0 1
  
 a0Ae=RIGHT-EDGE parataxis 1
 b 1
-b0C=3 1
+b0C=4 1
 b0E=0 1
 b0I=0 1
 b0M=0 1
+b0NT=3 378 1
 b0P=1 1
+b0h=1 1
 b0s0x=0 1
+b0tdb1td=NNP . 1
+b0tdb1w=NNP . 1
+b0wC=Al 4 1
+b0wE=Al 0 1
+b0wI=Al 0 1
+b0wM=Al 0 1
+b0wP=Al 1 1
+b0wb1td=Al . 1
+b0wb1w=Al . 1
+b0wtd=Al NNP 1
 b1NT=2 0 1
 b1h=0 1
 b1wtd=. . 1
-n/t 1.1724137931034484
+n/t 1.1379310344827585
 s0C=4 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
 s0P=1 1
 s0b0x=0 1
+s0eb0td=parataxis NNP 1
+s0eb0w=parataxis Al 1
 s0llwe=American amod 1
 s0lrwe=forces head 1
 s0rlwe=at case 1
 s0s1x=0 1
-s1llwe=Al head 1
+s1llwe=Al Terminal 1
 s1lrwe=: U 1
+s1lwe=Al head 1
 s1s0x=1 1
  
 a1Ae=RIGHT-EDGE parataxis 1
 b 1
-b0C=3 1
+b0C=4 1
 b0E=0 1
 b0I=0 1
 b0M=0 1
+b0NT=3 378 1
 b0P=1 1
+b0h=1 1
 b0s0x=0 1
+b0tdb1td=NNP . 1
+b0tdb1w=NNP . 1
+b0wC=Al 4 1
+b0wE=Al 0 1
+b0wI=Al 0 1
+b0wM=Al 0 1
+b0wP=Al 1 1
+b0wb1td=Al . 1
+b0wb1w=Al . 1
+b0wtd=Al NNP 1
 b1NT=2 0 1
 b1h=0 1
 b1wtd=. . 1
-n/t 1.1724137931034484
+n/t 1.1379310344827585
 s0C=2 1
 s0E=0 1
 s0I=0 1
@@ -9705,20 +10411,33 @@ s0M=0 1
 s0P=0 1
 s0b0e=head 1
 s0b0x=1 1
-s0llwe=Al head 1
+s0llwe=Al Terminal 1
 s0lrwe=: U 1
+s0lwe=Al head 1
 s1s0x=0 1
  
 b 1
-b0C=3 1
+b0C=4 1
 b0E=0 1
 b0I=0 1
 b0M=0 1
+b0NT=3 378 1
 b0P=1 1
+b0h=1 1
+b0tdb1td=NNP . 1
+b0tdb1w=NNP . 1
+b0wC=Al 4 1
+b0wE=Al 0 1
+b0wI=Al 0 1
+b0wM=Al 0 1
+b0wP=Al 1 1
+b0wb1td=Al . 1
+b0wb1w=Al . 1
+b0wtd=Al NNP 1
 b1NT=2 0 1
 b1h=0 1
 b1wtd=. . 1
-n/t 1.1724137931034484
+n/t 1.1379310344827585
  
 b 1
 b0C=0 1
@@ -9735,24 +10454,36 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. . 1
-n/t 1.1724137931034484
-s0C=3 1
+n/t 1.1379310344827585
+s0#e=12204527652707022206 head 1
+s0$e=11631551226137452986 head 1
+s0C=4 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
+s0NT=3 378 1
 s0P=1 1
+s0^e=14862748245026736845 head 1
 s0b0x=0 1
 s0eb0td=head . 1
 s0eb0w=head . 1
-s0llwe=Al Terminal 1
-s0lrwe=Zaman Terminal 1
-s0lwe=Al head 1
+s0h=1 1
+s0lwe=Al Terminal 1
 s0rlwe=: Terminal 1
 s0rwe=: U 1
+s0tde=NNP head 1
+s0wC=Al 4 1
+s0wE=Al 0 1
+s0wI=Al 0 1
+s0wM=Al 0 1
+s0wP=Al 1 1
+s0wb0td=Al . 1
+s0wb0w=Al . 1
+s0we=Al head 1
  
 b 1
 b0s0x=0 1
-n/t 1.1724137931034484
+n/t 1.1379310344827585
 s0C=0 1
 s0E=0 1
 s0I=0 1
@@ -9766,14 +10497,27 @@ s0wE=. 0 1
 s0wI=. 0 1
 s0wM=. 0 1
 s0wP=. 0 1
+s0wp=. - 1
+s0wq=. 5 1
 s0ws1e=. head 1
+s0ws1w=. Al 1
 s0xs1e=0 head 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s0xs1w=0 Al 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1we=Al head 1
+s1wep=Al head - 1
+s1weq=Al head 5 1
+s1wp=Al - 1
+s1wq=Al 5 1
  
 a0Ae=NODE Terminal 1
 b 1
@@ -9792,7 +10536,7 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. . 1
-n/t 1.206896551724138
+n/t 1.1724137931034484
 s0#e=12646065887601541794 Terminal 1
 s0#s1eb0td=12646065887601541794 head . 1
 s0$e=12646065887601541794 Terminal 1
@@ -9806,9 +10550,14 @@ s0^e=12646065887601541794 Terminal 1
 s0b0x=0 1
 s0eb0td=Terminal . 1
 s0eb0w=Terminal . 1
+s0es1#b0#=Terminal 12204527652707022206 12646065887601541794 1
+s0es1#b0td=Terminal 12204527652707022206 . 1
 s0es1e=Terminal head 1
 s0es1eb0#=Terminal head 12646065887601541794 1
 s0es1eb0td=Terminal head . 1
+s0es1ep=Terminal head - 1
+s0es1eq=Terminal head 5 1
+s0es1w=Terminal Al 1
 s0h=0 1
 s0s1x=0 1
 s0tde=. Terminal 1
@@ -9820,20 +10569,37 @@ s0wP=. 1 1
 s0wb0td=. . 1
 s0wb0w=. . 1
 s0we=. Terminal 1
+s0wep=. Terminal - 1
+s0weq=. Terminal 5 1
+s0wp=. - 1
+s0wq=. 5 1
 s0ws1e=. head 1
+s0ws1w=. Al 1
 s0xb0td=0 . 1
 s0xb0w=0 . 1
 s0xs1e=0 head 1
+s0xs1w=0 Al 1
 s0xtde=0 . Terminal 1
 s0xwe=0 . Terminal 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
 s1eb0td=head . 1
 s1eb0w=head . 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1wb0td=Al . 1
+s1wb0w=Al . 1
+s1we=Al head 1
+s1wep=Al head - 1
+s1weq=Al head 5 1
+s1wp=Al - 1
+s1wq=Al 5 1
  
 a1Ae=NODE Terminal 1
 b 1
@@ -9851,24 +10617,36 @@ b0wI=. 0 1
 b0wM=. 0 1
 b0wP=. 0 1
 b0wtd=. . 1
-n/t 1.206896551724138
-s0C=3 1
+n/t 1.1724137931034484
+s0#e=12204527652707022206 head 1
+s0$e=11631551226137452986 head 1
+s0C=4 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
+s0NT=3 378 1
 s0P=1 1
+s0^e=14862748245026736845 head 1
 s0b0x=0 1
 s0eb0td=head . 1
 s0eb0w=head . 1
-s0llwe=Al Terminal 1
-s0lrwe=Zaman Terminal 1
-s0lwe=Al head 1
+s0h=1 1
+s0lwe=Al Terminal 1
 s0rlwe=: Terminal 1
 s0rwe=: U 1
+s0tde=NNP head 1
+s0wC=Al 4 1
+s0wE=Al 0 1
+s0wI=Al 0 1
+s0wM=Al 0 1
+s0wP=Al 1 1
+s0wb0td=Al . 1
+s0wb0w=Al . 1
+s0we=Al head 1
  
 b 1
 b0s0x=0 1
-n/t 1.206896551724138
+n/t 1.1724137931034484
 s0C=1 1
 s0E=0 1
 s0I=0 1
@@ -9883,27 +10661,43 @@ s0wE=. 0 1
 s0wI=. 0 1
 s0wM=. 0 1
 s0wP=. 0 1
+s0wp=. - 1
+s0wq=. 5 1
 s0ws1e=. head 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s0ws1w=. Al 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=: Terminal 1
 s1rwe=: U 1
 s1s0x=0 1
+s1tde=NNP head 1
+s1we=Al head 1
+s1wep=Al head - 1
+s1weq=Al head 5 1
+s1wp=Al - 1
+s1wq=Al 5 1
  
 a0Ae=RIGHT-EDGE U 1
 b 1
-n/t 1.206896551724138
+n/t 1.1724137931034484
 s0#e=12646065887601541794 U 1
 s0$e=12646065887601541794 U 1
 s0C=1 1
 s0E=0 1
 s0I=0 1
+s0Lwe=Al head 1
 s0M=0 1
 s0NT=2 0 1
 s0P=1 1
 s0^e=12646065887601541794 U 1
 s0es1e=U head 1
+s0es1ep=U head - 1
+s0es1eq=U head 5 1
+s0es1w=U Al 1
 s0h=1 1
 s0lwe=. Terminal 1
 s0s1x=0 1
@@ -9914,28 +10708,52 @@ s0wI=. 0 1
 s0wM=. 0 1
 s0wP=. 1 1
 s0we=. U 1
+s0wep=. U - 1
+s0weq=. U 5 1
+s0wp=. - 1
+s0wq=. 5 1
 s0ws1e=. head 1
-s1llwe=Al Terminal 1
-s1lrwe=Zaman Terminal 1
-s1lwe=Al head 1
+s0ws1w=. Al 1
+s1#e=12204527652707022206 head 1
+s1$e=11631551226137452986 head 1
+s1NT=3 378 1
+s1^e=14862748245026736845 head 1
+s1h=1 1
+s1lwe=Al Terminal 1
 s1rlwe=. Terminal 1
 s1rwe=. U 1
 s1s0x=1 1
+s1tde=NNP head 1
+s1we=Al head 1
+s1wep=Al head - 1
+s1weq=Al head 5 1
+s1wp=Al - 1
+s1wq=Al 5 1
  
 a1Ae=RIGHT-EDGE U 1
 b 1
-n/t 1.206896551724138
-s0C=4 1
+n/t 1.1724137931034484
+s0#e=12204527652707022206 head 1
+s0$e=11631551226137452986 head 1
+s0C=5 1
 s0E=0 1
 s0I=0 1
 s0M=0 1
+s0NT=3 378 1
 s0P=1 1
-s0llwe=Al Terminal 1
-s0lrwe=Zaman Terminal 1
-s0lwe=Al head 1
+s0^e=14862748245026736845 head 1
+s0h=1 1
+s0lwe=Al Terminal 1
 s0rlwe=. Terminal 1
 s0rwe=. U 1
+s0tde=NNP head 1
+s0wC=Al 5 1
+s0wE=Al 0 1
+s0wI=Al 0 1
+s0wM=Al 0 1
+s0wP=Al 1 1
+s0we=Al head 1
  
 b 1
-n/t 1.206896551724138
+n/t 1.1724137931034484
  
