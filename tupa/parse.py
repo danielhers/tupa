@@ -10,6 +10,7 @@ from glob import glob
 from semstr.convert import FROM_FORMAT, TO_FORMAT, from_text
 from semstr.evaluate import EVALUATORS, Scores
 from semstr.util.amr import LABEL_ATTRIB, WIKIFIER
+from semstr.validation import validate
 from tqdm import tqdm
 from ucca import diffutil, ioutil, textutil, layer0, layer1
 from ucca.evaluation import LABELED, UNLABELED, EVAL_TYPES, evaluate as evaluate_ucca
@@ -67,6 +68,9 @@ class PassageParser(AbstractParser):
         self.format = self.passage.extra.get("format") if self.training or self.evaluation else \
             sorted(set.intersection(*map(set, filter(None, (self.model.formats, self.config.args.formats)))) or
                    self.model.formats)[0]
+        if self.training and self.config.args.verify:
+            errors = list(validate(self.passage))
+            assert not errors, errors
         self.in_format = self.format or "ucca"
         self.out_format = "ucca" if self.format in (None, "text") else self.format
         self.lang = self.passage.attrib.get("lang", self.config.args.lang)
