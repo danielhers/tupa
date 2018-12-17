@@ -1,11 +1,11 @@
-import numpy as np
+import re
+
+import torch.nn as nn
 
 
-def randomize_orthonormal(*parameters, activation=None):  # Saxe et al., 2014 (https://arxiv.org/abs/1312.6120)
-    for param in parameters:
-        shape = param.shape()
-        if len(shape) == 2 and shape[0] == shape[1] > 1:
-            init, _, _ = np.linalg.svd(np.random.randn(*shape))
-            if str(activation) == "relu":
-                init *= np.sqrt(2)
-            param.set_value(init)
+def randomize_orthonormal(**parameters):  # Saxe et al., 2014 (https://arxiv.org/abs/1312.6120)
+    for name, param in parameters.items():
+        if "bias" in name or re.match("b\d+", name):
+            nn.init.constant(param, 0.0)
+        elif "weight" in name or re.match("W\d+", name):
+            nn.init.orthogonal(param)

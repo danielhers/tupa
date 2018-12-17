@@ -1,9 +1,10 @@
-import dynet_config
-import numpy as np
 import os
 import shlex
-from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
 from copy import deepcopy
+
+import numpy as np
+import torch
+from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
 from logbook import Logger, FileHandler, StderrHandler
 from semstr.cfgutil import Singleton, add_verbose_arg, add_boolean_option, get_group_arg_names
 from semstr.convert import UCCA_EXT, CONVERTERS
@@ -17,11 +18,9 @@ from tupa.model_util import load_enum
 SPARSE = "sparse"
 MLP = "mlp"
 BIRNN = "bilstm"
-HIGHWAY_RNN = "highway"
-HIERARCHICAL_RNN = "hbirnn"
 NOOP = "noop"
-NN_CLASSIFIERS = (MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN)
-CLASSIFIERS = (SPARSE, MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN, NOOP)
+NN_CLASSIFIERS = (MLP, BIRNN)
+CLASSIFIERS = (SPARSE, MLP, BIRNN, NOOP)
 
 FEATURE_PROPERTIES = "wmtudhencpqxyAPCIEMNT#^$"
 
@@ -37,7 +36,6 @@ FILE_FORMATS = [e.lstrip(".") for e in UCCA_EXT] + FORMATS
 EDGE_LABELS_NUM = {"amr": 110, "sdp": 70, "conllu": 60}
 SPARSE_ARG_NAMES = set()
 NN_ARG_NAMES = set()
-DYNET_ARG_NAMES = set()
 RESTORED_ARGS = set()
 
 SEPARATOR = "."
@@ -154,6 +152,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--max-length", type=int, default=120, help="maximum length of input sentence")
     add(group, "--rnn", choices=["None"] + list(RNNS), default=DEFAULT_RNN, help="type of recurrent neural network")
     add(group, "--gated", type=int, nargs="?", default=0, help="gated input to BiRNN and MLP")
+    add(group, "--weight-decay", type=float, default=1e-5, help="weight decay for parameters")
     NN_ARG_NAMES.update(get_group_arg_names(group))
     return ap
 
@@ -292,21 +291,10 @@ class Config(object, metaclass=Singleton):
         add_boolean_option(group, "validate-oracle", "require oracle output to respect constraints", default=True)
         add_param_arguments(ap)
 
-        group = ap.add_argument_group(title="DyNet parameters")
-        group.add_argument("--dynet-mem", help="memory for dynet")
-        group.add_argument("--dynet-weight-decay", type=float, default=1e-5, help="weight decay for parameters")
-        add_boolean_option(group, "dynet-apply-weight-decay-on-load", "workaround for clab/dynet#1206", default=False)
-        add_boolean_option(group, "dynet-gpu", "GPU for training")
-        group.add_argument("--dynet-gpus", type=int, default=1, help="how many GPUs you want to use")
-        add_boolean_option(group, "dynet-autobatch", "auto-batching of training examples")
-        DYNET_ARG_NAMES.update(get_group_arg_names(group))
-
         ap.add_argument("-H", "--hyperparams", type=HyperparamsInitializer.action, nargs="*",
                         help="shared hyperparameters or hyperparameters for specific formats, "
                              'e.g., "shared --lstm-layer-dim=100 --lstm-layers=1" "ucca --word-dim=300"',
                         default=[HyperparamsInitializer.action("shared --lstm-layers 2")])
-        ap.add_argument("--copy-shared", nargs="*", choices=FORMATS, help="formats whose parameters shall be "
-                                                                          "copied from loaded shared parameters")
         self.args = FallbackNamespace(ap.parse_args(args if args else None))
 
         if self.args.config:
@@ -367,21 +355,6 @@ class Config(object, metaclass=Singleton):
             1 if self.args.implicit else 0) + (  # Implicit
             2 if self.args.node_labels and not self.args.use_gold_node_labels else 0)  # Label x 2
 
-    def set_dynet_arguments(self):
-        self.random.seed(self.args.seed)
-        kwargs = dict(random_seed=self.args.seed)
-        if self.args.dynet_mem:
-            kwargs.update(mem=self.args.dynet_mem)
-        if self.args.dynet_weight_decay:
-            kwargs.update(weight_decay=self.args.dynet_weight_decay)
-        if self.args.dynet_gpus and self.args.dynet_gpus != 1:
-            kwargs.update(requested_gpus=self.args.dynet_gpus)
-        if self.args.dynet_autobatch:
-            kwargs.update(autobatch=True)
-        dynet_config.set(**kwargs)
-        if self.args.dynet_gpu:
-            dynet_config.set_gpu()
-
     def update(self, params=None):
         if params:
             for name, value in params.items():
@@ -395,7 +368,8 @@ class Config(object, metaclass=Singleton):
             if k not in amr_hyperparams and not getattr(amr_hyperparams, k, None):
                 setattr(amr_hyperparams, k, v)
         self.set_format(update=True)
-        self.set_dynet_arguments()
+        self.random.seed(self.args.seed)
+        torch.manual_seed(self.args.seed)
 
     def create_hyperparams(self):
         return Hyperparams(parent=self.args, **{h.name: h.args for h in self.args.hyperparams or ()})
@@ -524,7 +498,7 @@ class Config(object, metaclass=Singleton):
                 and (args.swap == COMPOUND or k != "max_swap")
                 and (not args.require_connected or k != "orphan_label")
                 and (args.classifier == SPARSE or k not in SPARSE_ARG_NAMES)
-                and (args.classifier in NN_CLASSIFIERS or k not in NN_ARG_NAMES | DYNET_ARG_NAMES)
+                and (args.classifier in NN_CLASSIFIERS or k not in NN_ARG_NAMES)
                 and k != "passages"]
 
     def __str__(self):

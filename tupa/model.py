@@ -1,11 +1,11 @@
 from collections import OrderedDict
-
 from enum import Enum
+
 from ucca import textutil
 
 from .action import Actions
 from .classifiers.classifier import Classifier
-from .config import Config, SEPARATOR, SPARSE, MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN, NOOP
+from .config import Config, SEPARATOR, SPARSE, MLP, BIRNN, NOOP
 from .features.feature_params import FeatureParameters
 from .model_util import UnknownDict, AutoIncrementDict, remove_backup, save_json, load_json
 
@@ -83,8 +83,6 @@ CLASSIFIER_PROPERTIES = {
     SPARSE: (ClassifierProperty.update_only_on_error,),
     MLP: (ClassifierProperty.trainable_after_saving,),
     BIRNN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
-    HIGHWAY_RNN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
-    HIERARCHICAL_RNN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
     NOOP: (ClassifierProperty.trainable_after_saving,),
 }
 
@@ -166,7 +164,6 @@ class Model:
             from .classifiers.nn.neural_network import NeuralNetwork
             self.feature_extractor = DenseFeatureExtractor(self.feature_params,
                                                            indexed=self.config.args.classifier != MLP,
-                                                           hierarchical=self.config.args.classifier == HIERARCHICAL_RNN,
                                                            node_dropout=self.config.args.node_dropout,
                                                            omit_features=self.config.args.omit_features)
             self.classifier = NeuralNetwork(self.config, labels)
@@ -192,7 +189,7 @@ class Model:
 
     @property
     def is_neural_network(self):
-        return self.config.args.classifier in (MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN)
+        return self.config.args.classifier in (MLP, BIRNN)
 
     @property
     def is_retrainable(self):
