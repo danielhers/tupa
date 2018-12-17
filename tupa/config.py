@@ -2,7 +2,7 @@ import shlex
 import sys
 from copy import copy
 
-import dynet_config
+import torch
 import numpy as np
 from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS, FileType, Action
 from logbook import Logger, FileHandler, StderrHandler
@@ -27,7 +27,6 @@ NODE_PROPERTY_NUM = {"amr": 1000, "dm": 510, "psd": 1000, "eds": 1000, "ucca": 0
 EDGE_LABELS_NUM = {"amr": 141, "dm": 59, "psd": 90, "eds": 10, "ucca": 15}
 EDGE_ATTRIBUTE_NUM = {"amr": 0, "dm": 0, "psd": 0, "eds": 0, "ucca": 2}
 NN_ARG_NAMES = set()
-DYNET_ARG_NAMES = set()
 RESTORED_ARGS = set()
 
 SEPARATOR = "."
@@ -191,6 +190,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--bert-multilingual", choices=[0], type=int)
     add(group, "--use-default-word-embeddings", action="store_true", help="whether to use external word vectors")
     add(group, "--bert-dropout", type=float, default=0, choices=np.linspace(0, 0.9, num=10))
+    add(group, "--weight-decay", type=float, default=1e-5, help="weight decay for parameters")
     NN_ARG_NAMES.update(get_group_arg_names(group))
     return ap
 
@@ -324,16 +324,7 @@ class Config(object, metaclass=Singleton):
         add_boolean_option(group, "validate-oracle", "require oracle output to respect constraints", default=True)
         add_param_arguments(ap)
 
-        group = ap.add_argument_group(title="DyNet parameters")
-        group.add_argument("--dynet-mem", help="memory for dynet")
-        group.add_argument("--dynet-weight-decay", type=float, default=1e-5, help="weight decay for parameters")
-        add_boolean_option(group, "dynet-apply-weight-decay-on-load", "workaround for clab/dynet#1206", default=False)
-        add_boolean_option(group, "dynet-gpu", "GPU for training")
         add_boolean_option(group, "pytorch-gpu", "GPU for BERT")
-        group.add_argument("--dynet-gpus", type=int, default=1, help="how many GPUs you want to use")
-        add_boolean_option(group, "dynet-autobatch", "auto-batching of training examples")
-        add_boolean_option(group, "dynet-check-validity", "check validity of expressions immediately")
-        DYNET_ARG_NAMES.update(get_group_arg_names(group))
 
         ap.add_argument("-H", "--hyperparams", type=HyperparamsInitializer.action, nargs="*",
                         help="shared hyperparameters or hyperparameters for specific frameworks, "
@@ -387,21 +378,6 @@ class Config(object, metaclass=Singleton):
             configs += c.sub_configs
         return ret
 
-    def set_dynet_arguments(self):
-        self.random.seed(self.args.seed)
-        kwargs = dict(random_seed=self.args.seed)
-        if self.args.dynet_mem:
-            kwargs.update(mem=self.args.dynet_mem)
-        if self.args.dynet_weight_decay:
-            kwargs.update(weight_decay=self.args.dynet_weight_decay)
-        if self.args.dynet_gpus and self.args.dynet_gpus != 1:
-            kwargs.update(requested_gpus=self.args.dynet_gpus)
-        if self.args.dynet_autobatch:
-            kwargs.update(autobatch=True)
-        dynet_config.set(**kwargs)
-        if self.args.dynet_gpu:
-            dynet_config.set_gpu()
-
     def update(self, params=None):
         if params:
             for name, value in params.items():
@@ -417,7 +393,8 @@ class Config(object, metaclass=Singleton):
         for framework, num in EDGE_ATTRIBUTE_NUM.items():
             self.hyperparams.specific[framework].max_edge_attributes = num
         self.set_framework(update=True)
-        self.set_dynet_arguments()
+        self.random.seed(self.args.seed)
+        torch.manual_seed(self.args.seed)
 
     def create_hyperparams(self):
         return Hyperparams(parent=self.args, **{h.name: h.args for h in self.args.hyperparams or ()})
@@ -528,7 +505,7 @@ class Config(object, metaclass=Singleton):
                 and (args.swap or "swap_" not in k)
                 and (args.swap == COMPOUND or k != "max_swap")
                 and (not args.require_connected or k != "orphan_label")
-                and (args.classifier == BIRNN or k not in NN_ARG_NAMES | DYNET_ARG_NAMES)
+                and (args.classifier == BIRNN or k not in NN_ARG_NAMES)
                 and k not in ("input", "output")]
 
     def __str__(self):

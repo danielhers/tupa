@@ -1,7 +1,7 @@
-import dynet as dy
 import numpy as np
+import torch
 
-from .constants import ACTIVATIONS, INITIALIZERS, RNNS, CategoricalParameter
+from .constants import Activation, Initializer, RNN
 from .mlp import MultilayerPerceptron
 from .sub_model import SubModel
 from .util import randomize_orthonormal
@@ -20,10 +20,10 @@ class BiRNN(SubModel):
         self.embedding_layers = self.args.embedding_layers if self.lstm_layer_dim and self.lstm_layers else 0
         self.embedding_layer_dim = self.args.embedding_layer_dim
         self.max_length = self.args.max_length
-        self.activation = CategoricalParameter(ACTIVATIONS, self.args.activation)
-        self.init = CategoricalParameter(INITIALIZERS, self.args.init)
-        self.rnn_builder = CategoricalParameter(RNNS, self.args.rnn)
-        self.input_reps = self.empty_rep = self.indexed_dim = self.indexed_num = None
+        self.activation = Activation(self.args.activation)
+        self.init = Initializer(self.args.init)
+        self.rnn = RNN(self.args.rnn)
+        self.input_reps = self.indexed_dim = self.indexed_num = None
         self.mlp = MultilayerPerceptron(self.config, self.args, self.model, params=self.params,
                                         layers=self.embedding_layers, layer_dim=self.embedding_layer_dim,
                                         output_dim=self.lstm_layer_dim)
@@ -40,22 +40,24 @@ class BiRNN(SubModel):
             else:
                 self.indexed_dim = indexed_dim
                 self.indexed_num = indexed_num
-                randomize_orthonormal(*self.init_rnn_params(indexed_dim), activation=self.activation)
+                randomize_orthonormal(**self.init_rnn_params(indexed_dim))
                 self.config.print("Initializing BiRNN: %s" % self, level=4)
 
     def init_rnn_params(self, indexed_dim):
-        rnn = dy.BiRNNBuilder(self.lstm_layers, self.lstm_layer_dim if self.embedding_layers else indexed_dim,
-                              self.lstm_layer_dim, self.model, self.rnn_builder())
-        self.params["birnn"] = rnn
-        return [p for f, b in rnn.builder_layers for r in (f, b) for l in r.get_parameters() for p in l]
+        self.params["birnn"] = rnn = self.rnn(self.lstm_layer_dim if self.embedding_layers else indexed_dim,
+                                              self.lstm_layer_dim, self.lstm_layers, bidirectional=True,
+                                              dropout=self.dropout)
+        return rnn.named_parameters()
 
     def init_features(self, embeddings, train=False):
         """
-        Set the value of self.input_reps (and self.empty_rep) given embeddings for the whole input sequence
+        Set the value of self.input_reps given embeddings for the whole input sequence
         :param embeddings: list of [(key, list of vectors embeddings per time step)] per feature
         :param train: are we training now?
         """
         if self.params:
+            for module in self.params.values():
+                module.train(mode=train)
             keys, embeddings = zip(*embeddings)
             inputs = [self.mlp.evaluate(zip(keys, es), train=train) for es in zip(*embeddings)]  # join each time step
             self.config.print("Transducing %d inputs with dropout %s" %
@@ -64,15 +66,10 @@ class BiRNN(SubModel):
             expected = min(len(inputs), self.max_length or np.iinfo(int).max)
             assert len(self.input_reps) == expected, \
                 "transduce() returned incorrect number of elements: %d != %d" % (len(self.input_reps), expected)
-            self.empty_rep = dy.inputVector(np.zeros(self.lstm_layer_dim, dtype=float))
 
     def transduce(self, inputs, train):
         birnn = self.params["birnn"]
-        if train:
-            birnn.set_dropout(self.dropout)
-        else:
-            birnn.disable_dropout()
-        return birnn.transduce(inputs[:self.max_length])
+        return birnn(torch.DoubleTensor(inputs[:self.max_length]))
 
     def evaluate(self, indices):
         """
@@ -82,7 +79,8 @@ class BiRNN(SubModel):
         if self.params:
             assert len(indices) == self.indexed_num, "Input size mismatch: %d != %d" % (len(indices), self.indexed_num)
             return [("/".join(self.save_path),
-                     self.empty_rep if i == MISSING_VALUE else self.get_representation(i)) for i in indices]
+                     torch.zeros(self.lstm_layer_dim, dtype=torch.float64) if i == MISSING_VALUE
+                     else self.get_representation(i)) for i in indices]
         return []
 
     def get_representation(self, i):
@@ -99,7 +97,7 @@ class BiRNN(SubModel):
             ("activation", str(self.activation)),
             ("init", str(self.init)),
             ("dropout", self.dropout),
-            ("rnn", str(self.rnn_builder)),
+            ("rnn", str(self.rnn)),
             ("indexed_dim", self.indexed_dim),
             ("indexed_num", self.indexed_num),
             ("input_dim", self.mlp.input_dim),
@@ -116,7 +114,7 @@ class BiRNN(SubModel):
             self.args.embedding_layers = self.mlp.layers = self.embedding_layers = d["embedding_layers"]
             self.args.embedding_layer_dim = self.mlp.layer_dim = self.embedding_layer_dim = d["embedding_layer_dim"]
             self.args.max_length = self.max_length = d["max_length"]
-            self.args.rnn = self.rnn_builder.string = d["rnn"]
+            self.args.rnn = self.rnn.string = d["rnn"]
             self.args.activation = self.mlp.activation.string = self.activation.string = d["activation"]
             self.args.init = self.mlp.init.string = self.init.string = d["init"]
             self.args.dropout = self.mlp.dropout = self.dropout = d["dropout"]
@@ -133,7 +131,7 @@ class BiRNN(SubModel):
                "max_length: %d, rnn: %s, activation: %s, init: %s, dropout: %f, indexed_dim: %s, indexed_num: %s, "\
                "params: %s" % (
                 "/".join(self.save_path), self.lstm_layers, self.lstm_layer_dim, self.embedding_layers,
-                self.embedding_layer_dim, self.max_length, self.rnn_builder, self.activation, self.init, self.dropout,
+                self.embedding_layer_dim, self.max_length, self.rnn, self.activation, self.init, self.dropout,
                 self.indexed_dim, self.indexed_num, list(self.params.keys()))
 
     def sub_models(self):

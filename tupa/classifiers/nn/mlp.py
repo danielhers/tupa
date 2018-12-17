@@ -1,13 +1,12 @@
 import re
 from itertools import groupby
 
-import dynet as dy
+import torch
+import torch.nn as nn
 
-from .constants import ACTIVATIONS, INITIALIZERS, CategoricalParameter
+from .constants import Activation, Initializer
 from .sub_model import SubModel
 from .util import randomize_orthonormal
-
-MLP_PARAM_PATTERN = re.compile(r"[Wb]\d+")
 
 
 class MultilayerPerceptron(SubModel):
@@ -20,8 +19,8 @@ class MultilayerPerceptron(SubModel):
         self.layers = self.args.layers if layers is None else layers
         self.layer_dim = self.args.layer_dim if layer_dim is None else layer_dim
         self.output_dim = self.args.output_dim if output_dim is None else output_dim
-        self.activation = CategoricalParameter(ACTIVATIONS, self.args.activation)
-        self.init = CategoricalParameter(INITIALIZERS, self.args.init)
+        self.activation = Activation(self.args.activation)
+        self.init = Initializer(self.args.init)
         self.dropout = self.args.dropout
         self.gated = 1 if self.args.gated is None else self.args.gated  # None means --gated was given with no argument
         self.num_labels = num_labels
@@ -34,34 +33,26 @@ class MultilayerPerceptron(SubModel):
     def init_params(self, input_dim):
         assert input_dim, "Zero input dimension to MLP"
         self.input_dim = input_dim
-        if self.layers > 0:
-            W0 = self.params.get("W0")
-            if W0:
-                value = W0.as_array()
-                old_input_dim = value.shape[1]
-                extra_dim = self.input_dim - old_input_dim
-                if extra_dim:  # Duplicate suffix of input dimension to accommodate extra input
-                    assert extra_dim > 0, "%s: input dimension reduced from %d to %d" % (
-                        "/".join(self.save_path), old_input_dim, self.input_dim)
-                    value[:, -extra_dim:] /= 2
-                    W0.set_value(value)
-                    extra_value = value[:, -extra_dim:]
-                    self.params["W0+"] = extra = self.model.add_parameters(extra_value.shape)
-                    extra.set_value(extra_value)
-            else:
-                hidden_dim = (self.layers - 1) * [self.layer_dim]
-                i_dim = [input_dim] + hidden_dim
-                o_dim = hidden_dim + [self.output_dim]
-                if self.num_labels:  # Adding another layer at the top
-                    i_dim.append(self.output_dim)
-                    o_dim.append(self.num_labels)
-                self.params.update((prefix + str(i), self.model.add_parameters(dims[i], init=self.init()()))
-                                   for prefix, dims in (("W", list(zip(o_dim, i_dim))), ("b", o_dim))
-                                   for i, dim in enumerate(dims))
-                self.verify_dims()
-                randomize_orthonormal(*[v for k, v in self.params.items() if MLP_PARAM_PATTERN.match(k)],
-                                      activation=self.activation)
-                self.config.print("Initializing MLP: %s" % self, level=4)
+        if self.layers > 0 and "W0" not in self.params:
+            hidden_dim = (self.layers - 1) * [self.layer_dim]
+            i_dim = [input_dim] + hidden_dim
+            o_dim = hidden_dim + [self.output_dim]
+            if self.num_labels:  # Adding another layer at the top
+                i_dim.append(self.output_dim)
+                o_dim.append(self.num_labels)
+            self.params.update((prefix + str(i), self.init_layer(dims[i]))
+                               for prefix, dims in (("W", list(zip(o_dim, i_dim))), ("b", o_dim))
+                               for i, dim in enumerate(dims))
+            if self.dropout:
+                self.params.update(("d%d" % i, nn.Dropout(self.dropout)) for i in range(len(o_dim)))
+            self.verify_dims()
+            randomize_orthonormal(**self.params)
+            self.config.print("Initializing MLP: %s" % self, level=4)
+
+    def init_layer(self, dims):
+        m = nn.Linear(*dims)
+        self.init()(m)
+        return m
 
     def evaluate(self, inputs, train=False):
         """
@@ -70,6 +61,8 @@ class MultilayerPerceptron(SubModel):
         :param train: are we training now?
         :return: output vector of size self.output_dim
         """
+        for module in self.params.values():
+            module.train(mode=train)
         input_keys, inputs = list(map(list, zip(*list(inputs))))
         if self.input_keys:
             assert input_keys == self.input_keys, "Got:     %s\nBut expected input keys: %s" % (
@@ -79,17 +72,18 @@ class MultilayerPerceptron(SubModel):
         if self.gated:
             gates = self.params.get("gates")
             if gates is None:  # FIXME attention weights should not be just parameters, but based on biaffine product?
-                gates = self.params["gates"] = self.model.add_parameters((len(inputs), self.gated),
-                                                                         init=dy.UniformInitializer(1))
-            input_dims = [i.dim()[0][0] for i in inputs]
+                gates = self.params["gates"] = nn.Linear(len(inputs), self.gated)
+                nn.init.constant(gates, 1.0)
+            input_dims = [i.size()[0] for i in inputs]
             max_dim = max(input_dims)
-            x = dy.concatenate_cols([dy.concatenate([i, dy.zeroes(max_dim - d)])  # Pad with zeros to get uniform dim
-                                     if d < max_dim else i for i, d in zip(inputs, input_dims)]) * gates
+            # Pad with zeros to get uniform dim
+            x = torch.cat([torch.cat([i, torch.zeros(max_dim - d, dtype=torch.float64)])
+                           if d < max_dim else i for i, d in zip(inputs, input_dims)], 1) * gates
             # Possibly multiple "attention heads" -- concatenate outputs to one vector
-            inputs = [dy.reshape(x, (x.dim()[0][0] * x.dim()[0][1],))]
-        x = dy.concatenate(inputs)
-        assert len(x.dim()[0]) == 1, "Input should be a vector, but has dimension " + str(x.dim()[0])
-        dim = x.dim()[0][0]
+            inputs = [x.view(-1, x.size()[0] * x.size()[1],)]
+        x = torch.cat(inputs)
+        assert len(x.size()[0]) == 1, "Input should be a vector, but has dimension " + str(x.size())
+        dim = x.size()[0]
         if self.input_dim:
             assert dim == self.input_dim, "Input dim mismatch: %d != %d" % (dim, self.input_dim)
         else:
@@ -99,17 +93,16 @@ class MultilayerPerceptron(SubModel):
             if self.weights is None:
                 self.weights = [[self.params[prefix + str(i)] for prefix in ("W", "b")]
                                 for i in range(self.total_layers)]
-                if self.weights[0][0].dim()[0][1] < dim:  # number of columns in W0
-                    self.weights[0][0] = dy.concatenate_cols([self.weights[0][0], self.params["W0+"]])
             for i, (W, b) in enumerate(self.weights):
                 self.config.print(lambda: x.npvalue().tolist(), level=4)
                 try:
-                    if train and self.dropout:
-                        x = dy.dropout(x, self.dropout)
+                    dropout = self.params.get("d%d" % i)
+                    if dropout:
+                        x = dropout(x)
                     x = self.activation()(W * x + b)
                 except ValueError as e:
                     raise ValueError("Error in evaluating layer %d of %d" % (i + 1, self.total_layers)) from e
-        self.config.print(lambda: x.npvalue().tolist(), level=4)
+        self.config.print(x, level=4)
         return x
 
     def save_sub_model(self, d, *args):
@@ -152,10 +145,10 @@ class MultilayerPerceptron(SubModel):
     def verify_dims(self):
         assert self.params, "No MLP parameters found for %s (classifier never used)" % ("/".join(self.save_path))
         if self.layers > 0:
-            self.verify_dim("input_dim", self.params["W0"].as_array().shape[1])
-            self.verify_dim("output_dim", self.params["W" + str(self.layers - 1)].as_array().shape[0])
+            self.verify_dim("input_dim", self.params["W0"].size()[1])
+            self.verify_dim("output_dim", self.params["W" + str(self.layers - 1)].size()[0])
             if self.num_labels:
-                self.verify_dim("num_labels", self.params["W" + str(self.layers)].as_array().shape[0])
+                self.verify_dim("num_labels", self.params["W" + str(self.layers)].size()[0])
     
     def verify_dim(self, attr, val):
         expected = getattr(self, attr)

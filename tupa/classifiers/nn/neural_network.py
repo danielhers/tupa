@@ -1,8 +1,13 @@
-import sys
 from collections import OrderedDict
+from typing import Dict
 
-import dynet as dy
 import numpy as np
+import torch
+import torch.nn as nn
+from allennlp.data.vocabulary import Vocabulary
+from allennlp.models import Model
+from allennlp.modules.token_embedders import Embedding
+from allennlp.nn.util import sequence_cross_entropy_with_logits
 from tqdm import tqdm
 
 from .birnn import EmptyRNN, BiRNN
@@ -17,11 +22,6 @@ BIRNN_TYPES = {BIRNN: BiRNN}
 
 tqdm.monitor_interval = 0
 
-try:
-    print("[dynet] %s" % dy.__gitversion__, file=sys.stderr, flush=True)
-except AttributeError:
-    pass
-
 
 class AxisModel:
     """
@@ -33,7 +33,7 @@ class AxisModel:
         self.mlp = MultilayerPerceptron(config, args, model, num_labels=num_labels, save_path=("axes", axis, "mlp"))
 
 
-class NeuralNetwork(Classifier, SubModel):
+class NeuralNetwork(Classifier, SubModel, Model):
     """
     Neural network to be used by the parser for action classification. Uses dense features.
     Keeps weights in constant-size matrices. Does not allow adding new features on-the-fly.
@@ -47,14 +47,14 @@ class NeuralNetwork(Classifier, SubModel):
         """
         Classifier.__init__(self, *args, **kwargs)
         SubModel.__init__(self)
+        Model.__init__(self, vocab=Vocabulary())
         self.minibatch_size = self.config.args.minibatch_size
         self.loss = self.config.args.loss
-        self.weight_decay = self.config.args.dynet_weight_decay
-        self.empty_values = OrderedDict()  # string (feature param key) -> expression
+        self.weight_decay = self.config.args.weight_decay
         self.axes = OrderedDict()  # string (axis) -> AxisModel
         self.losses = []
         self.steps = 0
-        self.trainer_type = self.trainer = self.value = self.birnn = None
+        self.trainer_type = self.trainer = self.value = self.birnn = self.log_softmax = None
 
         if self.config.args.use_bert:
             import torch
@@ -97,32 +97,27 @@ class NeuralNetwork(Classifier, SubModel):
     def init_model(self, axis=None, train=False):
         init = self.model is None
         if init:
-            self.model = dy.ParameterCollection()
+            self.model = self
             self.birnn = self.birnn_type(self.config, Config().hyperparams.shared, self.model,
                                          save_path=("shared", "birnn"), shared=True)
-            self.set_weight_decay_lambda()
+            self.log_softmax = nn.LogSoftmax()
         if train:
             self.init_trainer()
         if axis:
             self.init_axis_model(axis)
         if init:
-            self.init_cg()
             self.finished_step()
-
-    def set_weight_decay_lambda(self, weight_decay=None):
-        self.model.set_weight_decay_lambda(self.weight_decay if weight_decay is None else weight_decay)
 
     def init_trainer(self):
         if self.trainer_type is None or str(self.trainer_type) != self.config.args.optimizer:
-            self.trainer_type = CategoricalParameter(TRAINERS, self.config.args.optimizer)
+            self.trainer_type = Trainer(self.config.args.optimizer)
             trainer_kwargs = dict(TRAINER_KWARGS.get(str(self.trainer_type), {}))
             learning_rate_param_name = TRAINER_LEARNING_RATE_PARAM_NAMES.get(str(self.trainer_type))
             if learning_rate_param_name and self.learning_rate:
                 trainer_kwargs[learning_rate_param_name] = self.learning_rate
             self.config.print("Initializing trainer=%s(%s)" % (
                 self.trainer_type, ", ".join("%s=%s" % (k, v) for k, v in trainer_kwargs.items())), level=4)
-            self.trainer = self.trainer_type()(self.model, **trainer_kwargs)
-            self.trainer.set_sparse_updates(False)
+            self.trainer = self.trainer_type()(self.params.values(), **trainer_kwargs)
 
     def init_axis_model(self, axis, init=True):
         if axis in self.axes:
@@ -146,11 +141,10 @@ class NeuralNetwork(Classifier, SubModel):
             self.config.print("Initializing input parameter: %s" % param, level=4)
             if not param.numeric and key not in self.params:  # lookup feature
                 if init:
-                    lookup = self.model.add_lookup_parameters((param.size, param.dim))
-                    lookup.set_updated(param.updated)
+                    lookup = Embedding(num_embeddings=param.size, embedding_dim=param.dim, trainable=param.updated)
                     param.init_data()
                     if param.init is not None and param.init.size:
-                        lookup.init_from_array(param.init)
+                        lookup.weight = nn.Parameter(param.init)
                     self.params[key] = lookup
             if param.indexed:
                 i = self.birnn_indices(param)
@@ -285,10 +279,10 @@ class NeuralNetwork(Classifier, SubModel):
             lookup = self.params.get(key)
             if not param.indexed or lookup is None:
                 continue
-            vectors = [lookup[k] for k in indices]
+            vectors = lookup.forward(torch.LongTensor(indices))
             for index in self.birnn_indices(param):
                 embeddings[index].append((key, vectors))
-            self.config.print(lambda: "%s: %s" % (key, ", ".join("%d->%s" % (i, e.npvalue().tolist())
+            self.config.print(lambda: "%s: %s" % (key, ", ".join("%d->%s" % (i, e)
                                                                  for i, e in zip(indices, vectors))), level=4)
         if self.config.args.use_bert:
             bert_emded = self.get_bert_embed(passage, lang, train)
@@ -316,13 +310,14 @@ class NeuralNetwork(Classifier, SubModel):
             if self.config.args.bert_multilingual is not None and param.lang_specific and key != 'W':
                 continue
             if param.numeric:
-                yield key, dy.inputVector(values)
+                yield key, torch.DoubleTensor(values)
             elif param.indexed:  # collect indices to be looked up
                 indices += values  # DenseFeatureExtractor collapsed features so there are no repetitions between them
             elif lookup is None:  # ignored
                 continue
             else:  # lookup feature
-                yield from ((key, self.get_empty_values(key) if x == MISSING_VALUE else lookup[x]) for x in values)
+                for x in lookup.forward(torch.LongTensor(values)):
+                    yield (key, x)
             self.config.print(lambda: "%s: %s" % (key, values), level=4)
         if indices:
             for birnn in self.get_birnns(axis):
@@ -331,6 +326,9 @@ class NeuralNetwork(Classifier, SubModel):
     def get_birnns(self, *axes):
         """ Return shared + axis-specific BiRNNs """
         return [m.birnn for m in [self] + [self.axes[axis] for axis in axes]]
+
+    def forward(self, *inputs) -> Dict[str, torch.Tensor]:
+        pass
 
     def evaluate(self, features, axis, train=False):
         """
@@ -368,12 +366,15 @@ class NeuralNetwork(Classifier, SubModel):
         :param pred: label predicted by the classifier (non-negative integer bounded by num_labels[axis])
         :param true: true labels (non-negative integers bounded by num_labels[axis])
         """
-        super().update(features, axis, pred, true)
-        logits = self.evaluate(features, axis, train=True)
-        losses = [dy.pickneglogsoftmax(logits, t) for t in true]
-        self.config.print(lambda: "  loss=" + ", ".join("%g" % l.value() for l in losses), level=4)
+        super().update(features, axis, pred, true, importance)
+        losses = self.calc_loss(self.evaluate(features, axis, train=True), axis, true, importance or [1] * len(true))
+        self.config.print(lambda: "  loss=" + ", ".join("%g" % l for l in losses), level=4)
         self.losses += losses
         self.steps += 1
+
+    @staticmethod
+    def calc_loss(scores, axis, true, importance):
+        return sequence_cross_entropy_with_logits(scores, torch.LongTensor(true), torch.FloatTensor(importance))
 
     def finished_step(self, train=False):
         super().invalidate_caches()
@@ -381,11 +382,9 @@ class NeuralNetwork(Classifier, SubModel):
     def invalidate_caches(self):
         self.value = {}  # For caching the result of _evaluate
 
-    def finished_item(self, train=False, renew=True):
+    def finished_item(self, train=False):
         if self.steps >= self.minibatch_size:
             self.finalize()
-        elif not train:
-            self.init_cg(renew)
         self.finished_step(train)
 
     def finalize(self, finished_epoch=False, **kwargs):
@@ -399,22 +398,14 @@ class NeuralNetwork(Classifier, SubModel):
         self.axes = OrderedDict((a, m) for a, m in self.axes.items() if m.mlp.params)
         self.labels = OrderedDict((a, l) for a, l in self.labels.items() if a in self.axes)
         if self.losses:
-            loss = dy.esum(self.losses)
-            try:
-                loss.forward()
-                self.config.print(lambda: "Total loss from %d time steps: %g" % (self.steps, loss.value()), level=4)
-                loss.backward()
-                self.trainer.update()
-            except RuntimeError as e:
-                Config().log("Error in update(): %s\n" % e)
-            self.init_cg()
+            loss = sum(self.losses)
+            loss.forward()
+            self.config.print(lambda: "Total loss from %d time steps: %g" % (self.steps, loss.value()), level=4)
+            loss.backward()
+            self.trainer.step()
             self.losses = []
             self.steps = 0
             self.updates += 1
-        if finished_epoch:
-            self.trainer.learning_rate /= (1 - self.learning_rate_decay)
-        if self.config.args.verbose > 2:
-            self.trainer.status()
         return self
             
     def sub_models(self):
@@ -432,62 +423,30 @@ class NeuralNetwork(Classifier, SubModel):
     def load_sub_model(self, d, *args, **kwargs):
         d = SubModel.load_sub_model(self, d, *args, **kwargs)
         self.config.args.loss = self.loss = d["loss"]
-        self.config.args.dynet_weight_decay = self.weight_decay = d.get("weight_decay",
-                                                                        self.config.args.dynet_weight_decay)
+        self.config.args.weight_decay = self.weight_decay = d.get("weight_decay", self.config.args.weight_decay)
 
     def save_model(self, filename, d):
         Classifier.save_model(self, filename, d)
         self.finalize()
-        values = []
         for model in self.sub_models():
-            values += model.save_sub_model(d)
+            model.save_sub_model(d)
             if self.config.args.verbose <= 3:
                 self.config.print(model.params_str, level=1)
         self.config.print(self, level=1)
-        self.save_param_values(filename, values)
-
-    def save_param_values(self, filename, values):
-        remove_existing(filename + ".data", filename + ".meta")
-        try:
-            self.set_weight_decay_lambda(0.0)  # Avoid applying weight decay due to clab/dynet#1206, we apply it on load
-            dy.save(filename, tqdm(values, desc="Saving model to '%s'" % filename, unit="param"))
-            self.set_weight_decay_lambda()
-        except ValueError as e:
-            print("Failed saving model: %s" % e, file=sys.stderr)
+        print("Saving model to '%s'" % filename + ".pth")
+        torch.save(self.state_dict(), filename + ".pth")
 
     def load_model(self, filename, d):
         self.model = None
         self.init_model()
-        values = self.load_param_values(filename, d)
+        print("Loading model from '%s'" % filename + ".pth")
+        self.load_state_dict(torch.load(filename + ".pth"))
         self.axes = OrderedDict()
         for axis, labels in self.labels_t.items():
             _, size = labels
             assert size, "Size limit for '%s' axis labels is %s" % (axis, size)
             self.axes[axis] = AxisModel(axis, size, self.config, self.model, self.birnn_type)
-        for model in self.sub_models():
-            model.load_sub_model(d, *values)
-            del values[:len(model.params)]  # Take next len(model.params) values
-            if self.config.args.verbose <= 3:
-                self.config.print(model.params_str)
-        assert not values, "Loaded values: %d more than expected" % len(values)
-        if self.weight_decay and self.config.args.dynet_apply_weight_decay_on_load:
-            t = tqdm(list(self.all_params(as_array=False).items()),
-                     desc="Applying weight decay of %g" % self.weight_decay, unit="param")
-            for key, param in t:
-                t.set_postfix(param=key)
-                try:
-                    value = param.as_array() * np.float_power(1 - self.weight_decay, self.updates)
-                except AttributeError:
-                    continue
-                try:
-                    param.set_value(value)
-                except AttributeError:
-                    param.init_from_array(value)
         self.config.print(self, level=1)
-
-    def load_param_values(self, filename, d=None):
-        return list(tqdm(dy.load_generator(filename, self.model), total=self.params_num(d) if d else None,
-                         desc="Loading model from '%s'" % filename, unit="param"))
 
     def params_num(self, d):
         return sum(len(m.get_sub_dict(d).get("param_keys", ())) for m in self.sub_models())
@@ -495,15 +454,9 @@ class NeuralNetwork(Classifier, SubModel):
     def all_params(self, as_array=True):
         d = super().all_params()
         for model in self.sub_models():
-            for key, value in model.params.items():
-                for name, param in ((key, value),) if isinstance(value, (dy.Parameters, dy.LookupParameters)) else [
-                        ("%s%s%d%d%d" % (key, p, i, j, k), v) for i, (f, b) in
-                        enumerate(value.builder_layers)
-                        for p, r in (("f", f), ("b", b)) for j, l in enumerate(r.get_parameters())
-                        for k, v in enumerate(l)] if isinstance(value, dy.BiRNNBuilder) else [
-                        ("%s%d%d" % (key, j, k), v) for j, l in enumerate(value.get_parameters())
-                        for k, v in enumerate(l)]:
-                    d["_".join(model.save_path + (name,))] = param.as_array() if as_array else param
+            for name, param in model.named_parameters():
+                if param.requires_grad:
+                    d["_".join(model.save_path + (name,))] = param
         return d
 
     def print_params(self, max_rows=10):
@@ -512,6 +465,6 @@ class NeuralNetwork(Classifier, SubModel):
                 print("[%s] %s" % (model.params_str(), key), file=sys.stderr)
                 # noinspection PyBroadException
                 try:
-                    print(value.as_array()[:max_rows], file=sys.stderr)
+                    print(value[:max_rows])
                 except Exception:
                     pass
