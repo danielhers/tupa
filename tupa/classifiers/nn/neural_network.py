@@ -13,6 +13,7 @@ from .sub_model import SubModel
 from ..classifier import Classifier
 from ...config import Config, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN
 from ...model_util import MISSING_VALUE, remove_existing
+from ...states.state import REFINEMENT_LABEL_KEY
 
 BIRNN_TYPES = {BIRNN: BiRNN, HIGHWAY_RNN: HighwayRNN, HIERARCHICAL_RNN: HierarchicalBiRNN}
 
@@ -30,9 +31,9 @@ class AxisModel:
     """
     def __init__(self, axis, num_labels, config, model, birnn_type):
         args = config.hyperparams.specific[axis]
-        self.birnn = birnn_type(config, args, model, save_path=("axes", axis, "birnn"),
+        self.birnn = birnn_type(config, args, model, save_path=("labels", axis, "birnn"),
                                 copy_shared=args.copy_shared == [] or axis in (args.copy_shared or ()))
-        self.mlp = MultilayerPerceptron(config, args, model, num_labels=num_labels, save_path=("axes", axis, "mlp"))
+        self.mlp = MultilayerPerceptron(config, args, model, num_labels=num_labels, save_path=("labels", axis, "mlp"))
 
 
 class NeuralNetwork(Classifier, SubModel):
@@ -108,8 +109,12 @@ class NeuralNetwork(Classifier, SubModel):
             if init:
                 return
         else:
-            self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.config, self.model, self.birnn_type)
-            self.config.print("Initializing %s model with %d labels" % (axis, self.labels[axis].size), level=4)
+            if axis not in self.labels: #refinement axis
+                self.axes[axis] = AxisModel(axis, self.labels[REFINEMENT_LABEL_KEY].size, self.config, self.model, self.birnn_type)
+                self.config.print("Initializing %s model with %d labels" % (axis, self.labels[REFINEMENT_LABEL_KEY].size), level=4)
+            else:
+                self.axes[axis] = AxisModel(axis, self.labels[axis].size, self.config, self.model, self.birnn_type)
+                self.config.print("Initializing %s model with %d labels" % (axis, self.labels[axis].size), level=4)
         indexed_dim = np.array([0, 0], dtype=int)  # specific, shared
         indexed_num = np.array([0, 0], dtype=int)
         for key, param in sorted(self.input_params.items()):
@@ -200,7 +205,7 @@ class NeuralNetwork(Classifier, SubModel):
             self.value[axis] = value = self.axes[axis].mlp.evaluate(self.generate_inputs(features, axis), train=train)
         return value
 
-    def score(self, features, axis):
+    def score(self, features, is_refinement, axis):
         """
         Calculate score for each label
         :param features: extracted feature values, of size input_size
@@ -208,7 +213,7 @@ class NeuralNetwork(Classifier, SubModel):
         :return: array with score for each label
         """
         super().score(features, axis)
-        num_labels = self.num_labels[axis]
+        num_labels = self.num_labels[axis if not is_refinement else REFINEMENT_LABEL_KEY]
         if self.updates > 0 and num_labels > 1:
             value = dy.log_softmax(self.evaluate(features, axis), restrict=list(range(num_labels))).npvalue()
             return value[:num_labels]
@@ -322,8 +327,11 @@ class NeuralNetwork(Classifier, SubModel):
         self.init_model()
         values = self.load_param_values(filename, d)
         self.axes = OrderedDict()
-        for axis, labels in self.labels_t.items():
-            _, size = labels
+        for axis in self.axes_t:
+            if axis not in self.labels_t:
+                _, size = self.labels_t[REFINEMENT_LABEL_KEY]
+            else:
+                _, size = self.labels_t[axis]
             assert size, "Size limit for '%s' axis labels is %s" % (axis, size)
             self.axes[axis] = AxisModel(axis, size, self.config, self.model, self.birnn_type)
         for model in self.sub_models():

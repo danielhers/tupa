@@ -23,6 +23,8 @@ class Action(dict):
         super().__init__(action_type=self.type, tag=self.tag)
 
     def is_type(self, *others):
+        if len(others) == 0:
+            return False
         return self.type_id in (o.type_id for o in others)
 
     def apply(self):

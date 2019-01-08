@@ -69,7 +69,10 @@ class Node:
                     if edge.remote:
                         remotes.append((node, edge))
                     else:
-                        edge.child.add_to_l1(l0, l1, node, edge.tag, labeled, node_labels)
+                        edge_categories = [(edge.tag, "", "", "")]
+                        if edge.refinement:
+                            edge_categories.append((edge.refinement, "", "", edge.tag))
+                        edge.child.add_to_l1(l0, l1, node, edge_categories, labeled, node_labels)
         Node.attach_remotes(l1, remotes, verify)
         Node.attach_linkages(l1, linkages, verify)
 
@@ -107,7 +110,7 @@ class Node:
             node.incoming.sort(key=lambda x: x.parent.node_index or nodes.index(x.parent))
         return nodes
 
-    def add_to_l1(self, l0, l1, parent, tag, labeled, node_labels):
+    def add_to_l1(self, l0, l1, parent, edge_categories, labeled, node_labels):
         """
         Called when creating final Passage to add a new core.Node
         :param l0: Layer0 of the passage
@@ -121,24 +124,24 @@ class Node:
         if self.text:  # For Word terminals (Punctuation already created by add_punct for parent)
             if parent.node is not None:
                 if self.node is None:
-                    self.node = parent.node.add(EdgeTags.Terminal, self.get_terminal(l0)).child
+                    self.node = parent.node.add([(EdgeTags.Terminal, "", "", "")], self.get_terminal(l0)).child
                 elif self.node not in parent.node.children:
-                    parent.node.add(EdgeTags.Terminal, self.node)
-        elif edge and edge.child.text and layer0.is_punct(edge.child.get_terminal(l0)):
+                    parent.node.add([(EdgeTags.Terminal, "", "", "")], self.node)
+        elif edge and edge.child.text and layer0.is_punct(edge.child.get_terminal(l0)): # For Punctuation, that already created by add_punct for parent
             if Config().args.verify:
-                assert tag == EdgeTags.Punctuation, "Punctuation parent %s's edge tag is %s" % (parent.node_id, tag)
+                assert edge_categories[0][0] == EdgeTags.Punctuation, "Punctuation parent %s's edge tag is %s" % (parent.node_id, tag)
                 assert edge.tag == EdgeTags.Terminal, "Punctuation %s's edge tag is %s" % (self.node_id, edge.tag)
             if self.node is None:
                 self.node = l1.add_punct(parent.node, edge.child.get_terminal(l0))
                 edge.child.node = self.node[0].child
             elif parent.node is not None and self.node not in parent.node.children:
-                parent.node.add(EdgeTags.Punctuation, self.node)
+                parent.node.add([(EdgeTags.Punctuation, "", "", "")], self.node)
         else:  # The usual case
             assert self.node is None, "Trying to create the same node twice (multiple incoming primary edges): " + \
                                       ", ".join(map(str, self.incoming))
             if parent is not None and parent.label and parent.node is None:  # If parent is an orphan and has a a label,
                 parent.add_to_l1(l0, l1, None, Config().args.orphan_label, labeled, node_labels)  # link to root
-            self.node = l1.add_fnode(None if parent is None else parent.node, tag, implicit=self.implicit)
+            self.node = l1.add_fnode(None if parent is None else parent.node, edge_categories, implicit=self.implicit)
         if labeled:  # In training
             self.set_node_id()
         if node_labels:
@@ -157,6 +160,7 @@ class Node:
 
     @staticmethod
     def attach_linkages(l1, linkages, verify=False):
+        #
         for node in linkages:  # Add linkage nodes and edges
             try:
                 link_relation = None
