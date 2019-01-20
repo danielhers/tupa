@@ -13,7 +13,7 @@ if ! [[ "$ACTION" =~ ^(toy|unit)$ ]]; then
     case "$FORMAT" in
     ucca)
         mkdir pickle
-        curl -L https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_English-Wiki/files/2152810/ucca-sample.tar.gz | tar xz -C pickle
+        curl -L https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_English-Wiki/releases/download/v1.2.4/ucca-sample.tar.gz | tar xz -C pickle
         TRAIN_DATA="pickle/train/*"
         DEV_DATA="pickle/dev/*"
         ;;
