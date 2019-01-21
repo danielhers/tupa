@@ -94,7 +94,7 @@ class PassageParser(AbstractParser):
             if ClassifierProperty.require_init_features in model.classifier_properties:
                 model.init_features(self.state, self.training)
 
-    def parse(self, display=True, write=False):
+    def parse(self, display=True, write=False, accuracies=None):
         self.init()
         passage_id = self.passage.ID
         try:
@@ -109,7 +109,7 @@ class PassageParser(AbstractParser):
         except concurrent.futures.TimeoutError:
             self.config.log("%s %s: timeout (%fs)" % (self.config.passage_word, passage_id, self.config.args.timeout))
             status = "(timeout)"
-        return self.finish(status, display=display, write=write)
+        return self.finish(status, display=display, write=write, accuracies=accuracies)
 
     def parse_internal(self):
         """
@@ -239,7 +239,7 @@ class PassageParser(AbstractParser):
         yield scores.argmax()
         yield from scores.argsort()[::-1]  # Contains the max, but otherwise items might be missed (different order)
 
-    def finish(self, status, display=True, write=False):
+    def finish(self, status, display=True, write=False, accuracies=None):
         self.model.classifier.finished_item(self.training)
         for model in self.models[1:]:
             model.classifier.finished_item(renew=False)  # So that dynet.renew_cg happens only once
@@ -261,6 +261,8 @@ class PassageParser(AbstractParser):
             status = "%-14s %s F1=%.3f" % (status, self.eval_type, self.f1)
         if display:
             self.config.print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), level=1)
+        if accuracies is not None:
+            accuracies[self.passage.ID] = self.correct_action_count / self.action_count if self.action_count else 0
         return ret
 
     @property
@@ -319,7 +321,7 @@ class BatchParser(AbstractParser):
         self.seen_per_format = defaultdict(int)
         self.num_passages = 0
 
-    def parse(self, passages, display=True, write=False):
+    def parse(self, passages, display=True, write=False, accuracies=None):
         passages, total = generate_and_len(single_to_iter(passages))
         if self.config.args.ignore_case:
             passages = to_lower_case(passages)
@@ -353,7 +355,7 @@ class BatchParser(AbstractParser):
                 self.config.print("skipped", level=1)
                 continue
             assert not (self.training and parser.in_format == "text"), "Cannot train on unannotated plain text"
-            yield parser.parse(display=display, write=write)
+            yield parser.parse(display=display, write=write, accuracies=accuracies)
             self.update_counts(parser)
         if self.num_passages and display:
             self.summary()
@@ -395,6 +397,7 @@ class Parser(AbstractParser):
         self.beam = beam  # Currently unused
         self.best_score = self.dev = self.test = self.iteration = self.epoch = self.batch = None
         self.trained = self.save_init = False
+        self.accuracies = {}
 
     def train(self, passages=None, dev=None, test=None, iterations=1):
         """
@@ -426,7 +429,11 @@ class Parser(AbstractParser):
                     continue
                 for self.epoch in range(start, end):
                     print("Training epoch %d of %d: " % (self.epoch, end - 1))
-                    self.config.random.shuffle(passages)
+                    if self.config.args.curriculum and self.accuracies:
+                        print("Sorting passages by previous epoch accuracy...")
+                        passages = sorted(passages, key=lambda p: self.accuracies.get(p.ID, 0))
+                    else:
+                        self.config.random.shuffle(passages)
                     if not sum(1 for _ in self.parse(passages, mode=ParseMode.train)):
                         raise ParserException("Could not train on any passage")
                     yield self.eval_and_save(self.iteration == len(iterations) and self.epoch == end - 1,
@@ -515,7 +522,8 @@ class Parser(AbstractParser):
         if not training and not self.trained:
             yield from self.train()  # Try to load model from file
         parser = BatchParser(self.config, self.models, training, mode if mode is ParseMode.dev else evaluate)
-        for i, passage in enumerate(parser.parse(passages, display=display, write=write), start=1):
+        for i, passage in enumerate(parser.parse(passages, display=display, write=write, accuracies=self.accuracies),
+                                    start=1):
             if training and self.config.args.save_every and i % self.config.args.save_every == 0:
                 self.eval_and_save()
                 self.batch += 1

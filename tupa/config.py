@@ -92,6 +92,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--max-training-per-format", type=int, help="max number of training passages per format per iteration")
     add_boolean(group, "missing-node-features", "allow node features to be missing if not available", default=True)
     add(group, "--omit-features", help="string of feature properties to omit, out of " + FEATURE_PROPERTIES)
+    add_boolean(group, "curriculum", "sort training passages by action prediction accuracy in previous epoch")
 
     group = ap.add_argument_group(title="Perceptron parameters")
     add(group, "--min-update", type=int, default=5, help="minimum #updates for using a feature")
