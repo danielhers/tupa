@@ -2,6 +2,8 @@ import sys
 from collections import OrderedDict
 from itertools import repeat
 
+import dynet_config
+
 import dynet as dy
 import numpy as np
 from tqdm import tqdm
@@ -210,7 +212,13 @@ class NeuralNetwork(Classifier, SubModel):
         super().score(features, axis)
         num_labels = self.num_labels[axis]
         if self.updates > 0 and num_labels > 1:
-            value = dy.log_softmax(self.evaluate(features, axis), restrict=list(range(num_labels))).npvalue()
+            if dynet_config.gpu():
+                # RestrictedLogSoftmax is not implemented for GPU, so we move the value to CPU first
+                value = dy.to_device(self.evaluate(features, axis), 'CPU')
+                # then, we move it back to GPU (if the device name is '', the default device will be selected)
+                value = dy.to_device(dy.log_softmax(value, restrict=list(range(num_labels))), '').npvalue()
+            else:
+                value = dy.log_softmax(self.evaluate(features, axis), restrict=list(range(num_labels))).npvalue()
             return value[:num_labels]
         self.config.print("  no updates done yet, returning zero vector.", level=4)
         return np.zeros(num_labels)
