@@ -244,6 +244,7 @@ class Config(object, metaclass=Singleton):
         self.arg_parser = ap = ArgParser(description="Transition-based parser for UCCA.",
                                          formatter_class=ArgumentDefaultsHelpFormatter)
         ap.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
+        ap.add_argument("--version", action="version", version="")
         ap.add_argument("-C", "--config", is_config_file=True, help="configuration file to get arguments from")
         ap.add_argument("-m", "--models", nargs="+", help="model file basename(s) to load/save, ensemble if >1 "
                                                           "(default: <format>_<model_type>")
