@@ -154,7 +154,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--dropout", type=float, default=0.4, help="dropout parameter between layers")
     add(group, "--max-length", type=int, default=120, help="maximum length of input sentence")
     add(group, "--rnn", choices=["None"] + list(RNNS), default=DEFAULT_RNN, help="type of recurrent neural network")
-    add(group, "--gated", type=int, nargs="?", default=0, help="gated input to BiRNN and MLP")
+    add(group, "--gated", type=int, nargs="?", default=2, help="gated input to BiRNN and MLP")
     NN_ARG_NAMES.update(get_group_arg_names(group))
     return ap
 
