@@ -1,6 +1,7 @@
 from semstr.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
 from ucca import layer1
 
+from .model import NODE_LABEL_KEY, REFINEMENT_LABEL_KEY
 from .action import Actions
 from .config import Config, COMPOUND
 from .states.state import InvalidActionError
@@ -87,11 +88,11 @@ class Oracle:
             s0 = state.stack[-1]
             incoming, outgoing = [[e for e in l if e in self.edges_remaining]
                                   for l in (s0.orig_node.incoming, s0.orig_node.outgoing)]
-            if not incoming and not outgoing and not self.need_label(s0):
+            if not incoming and not outgoing and not self.need_node_label(s0):
                 yield self.action(Actions.Reduce)
             else:
                 # Check for node label action: if all terminals have already been connected
-                if self.need_label(s0) and not any(is_terminal_edge(e) for e in outgoing):
+                if self.need_node_label(s0) and not any(is_terminal_edge(e) for e in outgoing):
                     yield self.action(s0, LABEL, 1)
 
                 # Check for actions to create new nodes
@@ -110,7 +111,7 @@ class Oracle:
                 if len(state.stack) > 1:
                     s1 = state.stack[-2]
                     # Check for node label action: if all terminals have already been connected
-                    if self.need_label(s1) and not any(is_terminal_edge(e) for e in
+                    if self.need_node_label(s1) and not any(is_terminal_edge(e) for e in
                                                        self.edges_remaining.intersection(s1.orig_node.outgoing)):
                         yield self.action(s1, LABEL, 2)
 
@@ -161,11 +162,17 @@ class Oracle:
         if node is not None:
             self.nodes_remaining.discard(node.ID)
 
-    def need_label(self, node):
+    def need_node_label(self, node):
         return self.args.node_labels and not self.args.use_gold_node_labels \
                and not node.labeled and node.orig_node.attrib.get(LABEL_ATTRIB)
 
-    def get_label(self, state, node):
+    def get_label(self, state, axis, is_refinement, need_label):
+        if axis == NODE_LABEL_KEY:
+            return self.get_node_label(state, need_label)
+        elif is_refinement:
+            return self.get_edge_label(need_label)
+
+    def get_node_label(self, state, node):
         true_label = raw_true_label = None
         if node.orig_node is not None:
             raw_true_label = node.orig_node.attrib.get(LABEL_ATTRIB)
@@ -176,6 +183,14 @@ class Oracle:
                     state.check_valid_label(true_label, message=True)
                 except InvalidActionError as e:
                     raise InvalidActionError("True label is invalid: " + "\n".join(map(str, (true_label, state, e))))
+        return true_label, raw_true_label
+
+    def get_edge_label(self, action):
+        true_label = raw_true_label = None
+        if action.orig_edge is not None:
+            for c in action.orig_edge.categories:
+                if c.parent == action.orig_edge.tag:
+                    raw_true_label = true_label = c.tag
         return true_label, raw_true_label
 
     def str(self, sep):

@@ -5,10 +5,14 @@ class Edge:
     """
     Temporary representation for core.Edge with only relevant information for parsing
     """
-    def __init__(self, parent, child, tag, remote=False):
+    def __init__(self, parent, child, tag, orig_edge, remote=False):
         self.parent = parent  # Node object from which this edge comes
         self.child = child  # Node object to which this edge goes
         self.tag = tag  # String tag
+        # List of categories
+        self.categories = orig_edge.categories if orig_edge else None
+        refinement_l = [c for c in self.categories if c.parent == self.tag] if self.categories else []
+        self.refinement = refinement_l[0].tag if len(refinement_l) > 0 else None
         self.remote = remote  # True or False
 
     def add(self):
@@ -25,8 +29,7 @@ class Edge:
                ((", " + str(self.remote)) if self.remote else "") + ")"
 
     def __str__(self):
-        return "%s -%s-> %s%s" % (self.parent, self.tag, self.child,
-                                  " (remote)" if self.remote else "")
+        return "%s -%s-> %s%s" % (self.parent, self.tag, self.child, " (remote)" if self.remote else "")
 
     def __eq__(self, other):
         return other and self.parent.index == other.parent.index and self.child == other.child and \

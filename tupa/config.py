@@ -10,7 +10,7 @@ from semstr.convert import UCCA_EXT, CONVERTERS
 from ucca import constructions
 
 from tupa.classifiers.nn.constants import *
-from tupa.model_util import load_enum
+from tupa.model_util import load_enum, load_json
 
 # Classifiers
 
@@ -23,7 +23,7 @@ NOOP = "noop"
 NN_CLASSIFIERS = (MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN)
 CLASSIFIERS = (SPARSE, MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN, NOOP)
 
-FEATURE_PROPERTIES = "wmtudhencpqxyAPCIEMNT#^$"
+FEATURE_PROPERTIES = "wmtudhefncpqxyAPCIEMNT#^$"
 
 # Swap types
 REGULAR = "regular"
@@ -60,6 +60,15 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
 
     if not ap:
         ap = ArgParser()
+
+    group = ap.add_argument_group(title="Refinement layer")
+    add(group, "--max-refinement-labels", type=int, default=0, help="max number of refinement labels to allow")
+    add(group, "--max-refinement-categories", type=int, default=0, help="max refinement categories to allow")
+    add(group, "--min-refinement-label-count", type=int, default=2, help="min number of occurrences for a refinement label")
+    add_boolean(group, "use-gold-action-labels", "gold action labels when parsing", default=False)
+    add_boolean(group, "use-gold-refinement-labels", "gold refinement labels when parsing", default=False)
+    add_boolean(group, "refinement-labels", "prediction of refinement labels, if supported by format", default=True)
+    add(group, "--refinement-mapping", help="file mapping categories with their refinement labels")
 
     group = ap.add_argument_group(title="Node labels")
     add(group, "--max-node-labels", type=int, default=0, help="max number of node labels to allow")
@@ -328,6 +337,7 @@ class Config(object, metaclass=Singleton):
         self.sub_configs = []  # Copies to be stored in Models so that they do not interfere with each other
         self._logger = self.format = self.hyperparams = self.iteration_hyperparams = None
         self._vocab = {}
+        self._refinement_map = {}
         self.original_values = {}
         self.random = np.random
         self.update()
@@ -395,6 +405,11 @@ class Config(object, metaclass=Singleton):
         for k, v in dict(node_label_dim=20, max_node_labels=1000, node_category_dim=5, max_node_categories=25).items():
             if k not in amr_hyperparams and not getattr(amr_hyperparams, k, None):
                 setattr(amr_hyperparams, k, v)
+        refinement_hyperparams = self.hyperparams.specific["ucca"]
+        for k, v in dict(refinement_label_dim=20, max_refinement_labels=1000, refinement_category_dim=5,
+                         max_refinement_categories=25, refinement_label_dropout=0.4).items():
+            if k not in refinement_hyperparams and not getattr(refinement_hyperparams, k, None):
+                setattr(refinement_hyperparams, k, v)
         self.set_format(update=True)
         self.set_dynet_arguments()
 
@@ -475,6 +490,13 @@ class Config(object, metaclass=Singleton):
                 print(message() if hasattr(message, "__call__") else message, flush=True)
             except UnicodeEncodeError:
                 pass
+
+    def refinement(self, filename):
+        if not filename:
+            return None
+        if not self._refinement_map:
+            self._refinement_map = load_json(filename)
+        return self._refinement_map
 
     def save(self, filename):
         out_file = filename + ".yml"

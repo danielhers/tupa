@@ -18,7 +18,7 @@ from ucca.normalization import normalize
 
 from tupa.__version__ import GIT_VERSION
 from tupa.config import Config, Iterations
-from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
+from tupa.model import Model, NODE_LABEL_KEY, REFINEMENT_LABEL_KEY, ClassifierProperty
 from tupa.oracle import Oracle
 from tupa.states.state import State
 from tupa.traceutil import set_traceback_listener
@@ -78,11 +78,13 @@ class PassageParser(AbstractParser):
         self.ignore_node = None if self.config.args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
         self.state_hash_history = set()
         self.state = self.oracle = self.eval_type = None
+        self.refined_categories = []
 
     def init(self):
         self.config.set_format(self.in_format)
         WIKIFIER.enabled = self.config.args.wikification
         self.state = State(self.passage)
+        self.refined_categories = self.passage.refined_categories
         # Passage is considered labeled if there are any edges or node labels in it
         edges, node_labels = map(any, zip(*[(n.outgoing, n.attrib.get(LABEL_ATTRIB))
                                             for n in self.passage.layer(layer1.LAYER_ID).all]))
@@ -90,7 +92,8 @@ class PassageParser(AbstractParser):
                 (self.config.args.verbose > 1 or self.config.args.use_gold_node_labels or self.config.args.action_stats)
                 and (edges or node_labels)) else None
         for model in self.models:
-            model.init_model(self.config.format, lang=self.lang if self.config.args.multilingual else None)
+            model.init_model(self.config.format, lang=self.lang if self.config.args.multilingual else None,
+                             refined_categories=self.refined_categories)
             if ClassifierProperty.require_init_features in model.classifier_properties:
                 model.init_features(self.state, self.training)
 
@@ -120,11 +123,13 @@ class PassageParser(AbstractParser):
         while True:
             if self.config.args.check_loops:
                 self.check_loop()
-            self.label_node()  # In case root node needs labeling
+            self.label_axis(NODE_LABEL_KEY)  # In case root node needs labeling
             true_actions = self.get_true_actions()
             action, predicted_action = self.choose(true_actions)
             self.state.transition(action)
-            need_label, label, predicted_label, true_label = self.label_node(action)
+            need_label = label = predicted_label = true_label = {}
+            for axis in self.state.need_label:
+                need_label[axis], label[axis], predicted_label[axis], true_label[axis] = self.label_axis(axis, action)
             if self.config.args.action_stats:
                 try:
                     with open(self.config.args.action_stats, "a") as f:
@@ -133,10 +138,10 @@ class PassageParser(AbstractParser):
                     pass
             self.config.print(lambda: "\n".join(["  predicted: %-15s true: %-15s taken: %-15s %s" % (
                 predicted_action, "|".join(map(str, true_actions.values())), action, self.state) if self.oracle else
-                                          "  action: %-15s %s" % (action, self.state)] + (
-                ["  predicted label: %-9s true label: %s" % (predicted_label, true_label) if self.oracle and not
-                 self.config.args.use_gold_node_labels else "  label: %s" % label] if need_label else []) + [
-                "    " + l for l in self.state.log]))
+                                          "  action: %-15s %s" % (action, self.state)]  +
+                (["  predicted %s label: %-9s true label: %s" % (predicted_label[axis], true_label[axis]) if self.oracle and not
+                 self.config.args.use_gold_node_labels else "  label: %s" % label[axis]] for axis in need_label) +
+                ["    " + l for l in self.state.log]))
             if self.state.finished:
                 return  # action is Finish (or early update is triggered)
 
@@ -150,30 +155,33 @@ class PassageParser(AbstractParser):
                     raise ParserException("Error in getting action from oracle during training") from e
         return true_actions
 
-    def get_true_label(self, node):
+    def get_true_label(self, axis, need_label):
         try:
-            return self.oracle.get_label(self.state, node) if self.oracle else (None, None)
+            return self.oracle.get_label(self.state, axis, axis in self.refined_categories, need_label) if self.oracle else (None, None)
         except AssertionError as e:
             if self.training:
                 raise ParserException("Error in getting label from oracle during training") from e
             return None, None
 
-    def label_node(self, action=None):
-        true_label = label = predicted_label = None
-        need_label = self.state.need_label  # Label action that requires a choice of label
+    def label_axis(self, axis, action=None):
+        need_label = true_label = label = predicted_label = None
+        if axis in self.state.need_label:
+            need_label = self.state.need_label[axis]  # Label action that requires a choice of node label
         if need_label:
-            true_label, raw_true_label = self.get_true_label(action or need_label)
-            label, predicted_label = self.choose(true_label, NODE_LABEL_KEY, "node label")
-            self.state.label_node(raw_true_label if label == true_label else label)
+            true_label, raw_true_label = self.get_true_label(axis, action or need_label)
+            label, predicted_label = self.choose(true_label, axis, "node label")
+            self.state.label_axis(axis, raw_true_label if label == true_label else label)
         return need_label, label, predicted_label, true_label
 
     def choose(self, true, axis=None, name="action"):
         if axis is None:
             axis = self.model.axis
-        elif axis == NODE_LABEL_KEY and self.config.args.use_gold_node_labels:
+        elif (axis == NODE_LABEL_KEY and self.config.args.use_gold_node_labels) or \
+                (axis in self.refined_categories and self.config.args.use_gold_refinement_labels):
             return true, true
-        labels = self.model.classifier.labels[axis]
-        if axis == NODE_LABEL_KEY:
+        labels_axis = axis if axis not in self.refined_categories else REFINEMENT_LABEL_KEY
+        labels = self.model.classifier.labels[labels_axis]
+        if axis == NODE_LABEL_KEY or axis in self.refined_categories:
             true_keys = (labels[true],) if self.oracle else ()  # Must be before score()
             is_valid = self.state.is_valid_label
         else:
@@ -181,11 +189,11 @@ class PassageParser(AbstractParser):
             is_valid = self.state.is_valid_action
         scores, features = self.model.score(self.state, axis)
         for model in self.models[1:]:  # Ensemble if given more than one model; align label order and add scores
-            label_scores = dict(zip(model.classifier.labels[axis].all, self.model.score(self.state, axis)[0]))
+            label_scores = dict(zip(model.classifier.labels[labels_axis].all, self.model.score(self.state, axis)[0]))
             scores += [label_scores.get(a, 0) for a in labels.all]  # Product of Experts, assuming log(softmax)
         self.config.print(lambda: "  %s scores: %s" % (name, tuple(zip(labels.all, scores))), level=4)
         try:
-            label = pred = self.predict(scores, labels.all, is_valid)
+            label = pred = self.predict(scores, labels.all, axis, is_valid)
         except StopIteration as e:
             raise ParserException("No valid %s available\n%s" % (name, self.oracle.log if self.oracle else "")) from e
         label, is_correct, true_keys, true_values = self.correct(axis, label, pred, scores, true, true_keys)
@@ -193,19 +201,20 @@ class PassageParser(AbstractParser):
             if not (is_correct and ClassifierProperty.update_only_on_error in self.model.classifier_properties):
                 assert not self.model.is_finalized, "Updating finalized model"
                 self.model.classifier.update(
-                    features, axis=axis, true=true_keys, pred=labels[pred] if axis == NODE_LABEL_KEY else pred.id,
+                    features, axis=axis, true=true_keys,
+                    pred=labels[pred] if (axis == NODE_LABEL_KEY or axis in self.refined_categories) else pred.id,
                     importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values] or None)
             if not is_correct and self.config.args.early_update:
                 self.state.finished = True
         for model in self.models:
             model.classifier.finished_step(self.training)
-            if axis != NODE_LABEL_KEY:
+            if axis != NODE_LABEL_KEY and axis not in self.refined_categories:
                 model.classifier.transition(label, axis=axis)
         return label, pred
 
     def correct(self, axis, label, pred, scores, true, true_keys):
         true_values = is_correct = ()
-        if axis == NODE_LABEL_KEY:
+        if axis == NODE_LABEL_KEY or axis in self.refined_categories:
             if self.oracle:
                 is_correct = (label == true)
                 if is_correct:
@@ -225,14 +234,14 @@ class PassageParser(AbstractParser):
         return label, is_correct, true_keys, true_values
 
     @staticmethod
-    def predict(scores, values, is_valid=None):
+    def predict(scores, values, axis, is_valid=None):
         """
         Choose action/label based on classifier
         Usually the best action/label is valid, so max is enough to choose it in O(n) time
         Otherwise, sorts all the other scores to choose the best valid one in O(n lg n)
         :return: valid action/label with maximum probability according to classifier
         """
-        return next(filter(is_valid, (values[i] for i in PassageParser.generate_descending(scores))))
+        return next(filter(lambda x : is_valid(axis, x), (values[i] for i in PassageParser.generate_descending(scores))))
 
     @staticmethod
     def generate_descending(scores):

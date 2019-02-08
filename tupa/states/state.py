@@ -11,6 +11,7 @@ from .edge import Edge
 from .node import Node
 from ..action import Actions
 from ..config import Config
+from ..model import NODE_LABEL_KEY, REFINEMENT_LABEL_KEY
 
 
 class InvalidActionError(AssertionError):
@@ -45,7 +46,7 @@ class State:
         self.buffer = deque()
         self.nodes = []
         self.heads = set()
-        self.need_label = None  # If we are waiting for label_node() to be called, which node is to be labeled by it
+        self.need_label = {}  # If we are waiting for label_node() to be called, which node is to be labeled by it
         self.root = self.add_node(orig_node=l1.heads[0], is_root=True)  # Root is not in the buffer
         self.stack.append(self.root)
         self.buffer += self.terminals
@@ -53,11 +54,20 @@ class State:
         self.actions = []  # History of applied actions
         self.type_validity_cache = {}
 
-    def is_valid_action(self, action):
+    @staticmethod
+    def get_layer(passage, layer):
+        try:
+            return passage.layer(layer.LAYER_ID)
+        except KeyError as e:
+            raise IOError("Passage %s is missing layer %s" % (passage.ID, layer.LAYER_ID)) from e
+
+    def is_valid_action(self, axis, action):
         """
         :param action: action to check for validity
         :return: is the action (including tag) valid in the current state?
         """
+        if action is None:
+            print("here")
         valid = self.type_validity_cache.get(action.type_id)
         if valid is None:
             try:
@@ -208,21 +218,21 @@ class State:
     def swappable(right, left):
         return left.swap_index < right.swap_index
 
-    def is_valid_label(self, label):
+    def is_valid_label(self, axis, label):
         """
         :param label: label to check for validity
         :return: is the label valid in the current state?
         """
         try:
-            self.check_valid_label(label)
+            self.check_valid_label(axis, label)
         except InvalidActionError:
             return False
         return True
 
-    def check_valid_label(self, label, message=False):
+    def check_valid_label(self, axis, label, message=False):
         if self.args.constraints and label is not None:
-            valid = self.constraints.allow_label(self.need_label, label)
-            self.check(valid, message and "May not label %s as %s: %s" % (self.need_label, label, valid))
+            valid = self.constraints.allow_label(self.need_label[axis], label)
+            self.check(valid, message and "May not label %s as %s: %s" % (self.need_label[axis], label, valid))
 
     @staticmethod
     def check(condition, *args, **kwargs):
@@ -244,13 +254,15 @@ class State:
                 parent = action.node = self.add_node(orig_node=action.orig_node)
             if child is None:
                 child = action.node = self.add_node(orig_node=action.orig_node, implicit=True)
-            action.edge = self.add_edge(Edge(parent, child, tag, remote=action.remote))
+            action.edge = self.add_edge(Edge(parent, child, tag, action.orig_edge, remote=action.remote))
+            if self.args.refinement_labels and tag in self.passage.refined_categories:
+                    self.need_label[tag] = action.edge
             if action.node:
                 self.buffer.appendleft(action.node)
         elif action.is_type(Actions.Shift):  # Push buffer head to stack; shift buffer
             self.stack.append(self.buffer.popleft())
         elif action.is_type(Actions.Label):
-            self.need_label = self.stack[-action.tag]  # The parser is responsible to choose a label and set it
+            self.need_label[NODE_LABEL_KEY] = self.stack[-action.tag]  # The parser is responsible to choose a label and set it
         elif action.is_type(Actions.Reduce):  # Pop stack (no more edges to create with this node)
             self.stack.pop()
         elif action.is_type(Actions.Swap):  # Place second (or more) stack item back on the buffer
@@ -282,7 +294,7 @@ class State:
         self.heads.add(node)
         self.log.append("node: %s (swap_index: %g)" % (node, node.swap_index))
         if self.args.use_gold_node_labels:
-            self.need_label = node  # Labeled the node as soon as it is created rather than applying a LABEL action
+            self.need_label[NODE_LABEL_KEY] = node  # Labeled the node as soon as it is created rather than applying a LABEL action
         return node
 
     def calculate_swap_index(self):
@@ -331,12 +343,12 @@ class State:
         except IndexError:
             return None
 
-    def label_node(self, label):
-        self.need_label.label = label
-        self.need_label.labeled = True
-        self.log.append("label: %s" % self.need_label)
+    def label_axis(self, axis, label):
+        self.need_label[axis].label = label
+        self.need_label[axis].labeled = True
+        self.log.append("label: %s" % self.need_label[axis])
         self.type_validity_cache = {}
-        self.need_label = None
+        self.need_label[axis] = None
 
     def create_passage(self, verify=True, **kwargs):
         """
