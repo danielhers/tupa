@@ -12,7 +12,7 @@ from ucca import ioutil
 
 from tupa.config import Config
 
-FORMATS = ("ucca", "amr", "conllu", "sdp")
+FORMATS = ("ucca", "ucca_refinement", "amr", "conllu", "sdp")
 
 
 def pytest_addoption(parser):
@@ -47,7 +47,9 @@ def create_config():
               "max_ner_types": 3, "edge_label_dim": 1, "tag_dim": 1, "pos_dim": 1, "dep_dim": 1, "optimizer": "sgd",
               "output_dim": 1, "layer_dim": 2, "layers": 3, "lstm_layer_dim": 2, "lstm_layers": 3,
               "max_action_ratio": 10, "update_word_vectors": False, "copy_shared": None})
-    c.update_hyperparams(shared={"lstm_layer_dim": 2, "lstm_layers": 1}, ucca={"word_dim": 2},
+    c.update_hyperparams(shared={"lstm_layer_dim": 2, "lstm_layers": 1},
+                         ucca={"word_dim": 2, "max_refinement_labels": 3, "max_refinement_categories": 3,
+                              "refinement_label_dim": 1, "refinement_category_dim": 1},
                          amr={"max_node_labels": 3, "max_node_categories": 3,
                               "node_label_dim": 1, "node_category_dim": 1})
     return c
@@ -62,7 +64,7 @@ def config():
 def empty_features_config():
     c = create_config()
     c.update({"ner_dim": 0, "action_dim": 0, "word_dim_external": 0, "word_dim": 0, "lemma_dim": 0, "node_label_dim": 0,
-              "node_category_dim": 0, "edge_label_dim": 0, "tag_dim": 0, "pos_dim": 0, "dep_dim": 0})
+              "refinement_label_dim": 0, "node_category_dim": 0, "edge_label_dim": 0, "tag_dim": 0, "pos_dim": 0, "dep_dim": 0})
     return c
 
 
