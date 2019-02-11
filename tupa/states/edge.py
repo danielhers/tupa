@@ -10,7 +10,7 @@ class Edge:
         self.child = child  # Node object to which this edge goes
         self.tag = tag  # String tag
         # List of categories
-        self.categories = orig_edge.categories if orig_edge else None
+        self.categories = orig_edge.categories if orig_edge else []
         refinement_l = [c for c in self.categories if c.parent == self.tag] if self.categories else []
         self.refinement = refinement_l[0].tag if len(refinement_l) > 0 else None
         self.remote = remote  # True or False

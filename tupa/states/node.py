@@ -239,10 +239,39 @@ class Node:
                ((", " + self.node_id) if self.node_id else "") + ")"
 
     def __str__(self):
-        s = '"%s"' % self.text if self.text else self.node_id or str(self.index)
-        if self.label:
-            s += "/" + self.label
-        return s
+        # s = '"%s"' % self.text if self.text else self.node_id or str(self.index)
+        # if self.label:
+        #     s += "/" + self.label
+        # return s
+
+        # def start(e):
+        #     return e.child.position if e.child.layer.ID == layer0.LAYER_ID else e.child.start_position
+
+        # sorted_edges = sorted(self, key=start)
+        output = []
+        for edge, next_edge in zip(list(self), list(self)[1:] + [None]):
+            node = edge.child
+            remote = edge.remote
+            # end = node.position if node.layer.ID == layer0.LAYER_ID else node.end_position
+            #if edge.tag == EdgeTags.Terminal:
+            if node.text is not None:
+                output.append(node.text)
+                # if end != self.end_position:
+                #     output.append(" ")
+                output.append(' ')
+            else:
+                edge_tags = "|".join(c.tag for c in edge.categories)
+                if remote:
+                    edge_tags += '*'
+                # if edge.attrib.get('uncertain'):
+                #     edge_tags += '?'
+                if node.implicit:
+                    output.append("[{} IMPLICIT] ".format(edge_tags))
+                else:
+                    output.append("[{} {}] ".format(edge_tags, str(node)))
+            # if start(edge) != -1 and not remote and next_edge is not None and end + 1 < start(next_edge):
+            #     output.append("... ")  # adding '...' if discontiguous
+        return "".join(output)
 
     def __eq__(self, other):
         return self.index == other.index and self.outgoing == other.outgoing

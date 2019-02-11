@@ -143,7 +143,7 @@ class Model:
         return [ParameterDefinition(args or self.config.args, n, *k) for n, *k in
                 NODE_LABEL_PARAM_DEFS + REFINEMENT_LABEL_PARAM_DEFS + PARAM_DEFS]
 
-    def init_model(self, axis=None, lang=None, init_params=True, refined_categories=None):
+    def init_model(self, axis=None, lang=None, init_params=True, refined_categories=[]):
         self.set_axis(axis, lang)
         if not self.refined_categories:
             self.set_refined_categories(refined_categories)

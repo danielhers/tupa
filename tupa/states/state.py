@@ -7,6 +7,8 @@ from ucca import core, layer0, layer1
 from ucca.layer0 import NodeTags
 from ucca.layer1 import EdgeTags
 
+from ucca.snacs import find_refined
+
 from .edge import Edge
 from .node import Node
 from ..action import Actions
@@ -281,6 +283,21 @@ class State:
         action.index = len(self.actions)
         self.actions.append(action)
         self.type_validity_cache = {}
+
+        # passage_temp = self.create_passage(verify=False)
+        # print(passage_temp)
+        # print(' '.join(str(hd) for hd in self.heads))
+
+        for _, terminal in self.passage.layer(layer0.LAYER_ID).pairs:
+            if 'ss' in terminal.extra and terminal.extra['ss'][0] == 'p':
+                for r in find_refined(terminal, self.passage, local=True)[0]:
+                    previous = terminal.extra.get('refined')
+                    r.refinement = terminal.extra['ss']
+                    terminal.extra['refined'] = r
+                    if previous is not None and previous is not r:
+                        print(previous.parent, end=' ')
+                        previous.refinement = None
+                        print('->', r.parent)
 
     def add_node(self, **kwargs):
         """
