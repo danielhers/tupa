@@ -92,8 +92,8 @@ class Classifier:
         """
         d = OrderedDict((
             ("type", self.model_type),
-            ("axes", [okey for okey in self.axes.keys()]),
-            ("labels", OrderedDict(
+            ("axis_keys", [okey for okey in self.axes.keys()]),
+            ("axes", OrderedDict(
                 (axis, OrderedDict((("index", i), ("labels", labels.save(skip=axis in skip_labels)))))  # (all, size)
                 for i, (axis, labels) in enumerate(self.labels.items())
             )),
@@ -120,14 +120,14 @@ class Classifier:
         d = self.load_file(filename, clear=True)
         model_type = d.get("type")
         assert model_type is None or model_type == self.model_type, "Model type does not match: %s" % model_type
-        self.labels_t = OrderedDict((a, l["labels"]) for a, l in sorted(d["labels"].items(), key=lambda x: x[1]["index"]))
-        self.axes_t = d["axes"]
+        self.labels_t = OrderedDict((a, l["labels"]) for a, l in sorted(d["axes"].items(), key=lambda x: x[1]["index"]))
+        self.axes_t = d.get("axis_keys", [okey for okey in self.axes.keys()])
         self.is_frozen = d["is_frozen"]
         self.config.args.learning_rate = self.learning_rate = d["learning_rate"]
         self.config.args.learning_rate_decay = self.learning_rate_decay = d["learning_rate_decay"]
         self.updates = d.get("updates", 0)
         self.epoch = d.get("epoch", 0)
-        self.best_score = d.get("best_score", 0)
+        # self.best_score = d.get("best_score", 0)
         self.load_model(filename, d)
 
     def load_model(self, filename, d):

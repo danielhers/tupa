@@ -207,7 +207,7 @@ class Model:
                 self.axis += suffix
 
     def set_refined_categories(self, refined_categories):
-        self.refined_categories = refined_categories
+        self.refined_categories = refined_categories or []
 
     @property
     def formats(self):
