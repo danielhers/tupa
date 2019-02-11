@@ -1,4 +1,5 @@
 from collections import deque
+from copy import deepcopy
 
 from semstr.constraints import Constraints, Direction
 from semstr.util.amr import LABEL_ATTRIB
@@ -284,20 +285,6 @@ class State:
         self.actions.append(action)
         self.type_validity_cache = {}
 
-        # passage_temp = self.create_passage(verify=False)
-        # print(passage_temp)
-        # print(' '.join(str(hd) for hd in self.heads))
-
-        for _, terminal in self.passage.layer(layer0.LAYER_ID).pairs:
-            if 'ss' in terminal.extra and terminal.extra['ss'][0] == 'p':
-                for r in find_refined(terminal, self.passage, local=True)[0]:
-                    previous = terminal.extra.get('refined')
-                    r.refinement = terminal.extra['ss']
-                    terminal.extra['refined'] = r
-                    if previous is not None and previous is not r:
-                        print(previous.parent, end=' ')
-                        previous.refinement = None
-                        print('->', r.parent)
 
     def add_node(self, **kwargs):
         """
@@ -336,6 +323,19 @@ class State:
         edge.add()
         self.heads.discard(edge.child)
         self.log.append("edge: %s" % edge)
+
+        passage_temp = deepcopy(self).create_passage(verify=False)
+        for _, terminal in passage_temp.layer(layer0.LAYER_ID).pairs:
+            if 'ss' in terminal.extra and terminal.extra['ss'][0] == 'p':
+                for r in find_refined(terminal, passage_temp, local=True)[0]:
+                    previous = terminal.extra.get('refined')
+                    r.refinement = terminal.extra['ss']
+                    terminal.extra['refined'] = r
+                    if previous is not r:
+                        print('->', r.parent)
+                        if previous is not None:
+                            print(previous.parent, end=' ')
+                            previous.refinement = None
         return edge
     
     PARENT_CHILD = (
