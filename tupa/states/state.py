@@ -332,9 +332,9 @@ class State:
                     r.refinement = terminal.extra['ss']
                     terminal.extra['refined'] = r
                     if previous is not r:
-                        print('->', r.parent)
+                        # print('->', r.parent)
                         if previous is not None:
-                            print(previous.parent, end=' ')
+                            # print(previous.parent, end=' ')
                             previous.refinement = None
         return edge
     
