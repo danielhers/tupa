@@ -24,6 +24,19 @@ class Edge:
         self.parent.add_outgoing(self)
         self.child.add_incoming(self)
 
+    def add_category(self, cat):
+        if not any(c.tag == cat.tag for c in self.categories):
+            self.categories.append(cat)
+            refinement_l = [c for c in self.categories if c.parent == self.tag] if self.categories else []
+            self.refinement = refinement_l[0].tag if len(refinement_l) > 0 else None
+
+    def remove_category(self, cat):
+        self.categories = [c for c in self.categories if c.tag != cat.tag]
+        if cat.tag in self.parent.outgoing_tags:
+            self.parent.outgoing_tags.remove(cat.tag)
+        if cat.tag in self.child.incoming_tags:
+            self.child.incoming_tags.remove(cat.tag)
+
     def __repr__(self):
         return Edge.__name__ + "(" + self.tag + ", " + repr(self.parent) + ", " + repr(self.child) +\
                ((", " + str(self.remote)) if self.remote else "") + ")"

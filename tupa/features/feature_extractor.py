@@ -313,9 +313,10 @@ NODE_PROP_GETTERS = {
     "i": lambda node, *_: head_terminal(node).index - 1,
     "j": lambda node, *_: node.index,
     "e": lambda node, prev, binary: next(e.tag for e in node.incoming if not binary or e.parent == prev),
-    "f": lambda node, prev, binary: next(e.refinement for e in node.incoming if not binary or e.parent == prev),
+    "f": lambda node, prev, binary: next(e.refinement for e in node.incoming if not binary or e.parent == prev),  # integrated edge refinement
     "n": lambda node, *_: node.label,
     "c": lambda node, *_: node.category,
+    "l": lambda node, *_: head_terminal(node).extra.get('ss2'),  # token-level function
     "x": lambda node, prev, binary: int(prev in node.parents) if binary else gap_type(node),
     "y": gap_length_sum,
     "P": lambda node, *_: len(node.incoming),
