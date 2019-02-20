@@ -23,7 +23,7 @@ NOOP = "noop"
 NN_CLASSIFIERS = (MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN)
 CLASSIFIERS = (SPARSE, MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN, NOOP)
 
-FEATURE_PROPERTIES = "wmtudhencpqxyAPCIEMNT#^$"
+FEATURE_PROPERTIES = "wmtudhefFSncpqxyAPCIEMNT#^$"
 
 # Swap types
 REGULAR = "regular"
@@ -109,6 +109,9 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--pos-dim", type=int, default=20, help="dimension for coarse/universal POS tag embeddings")
     add(group, "--dep-dim", type=int, default=10, help="dimension for dependency relation embeddings")
     add(group, "--edge-label-dim", type=int, default=20, help="dimension for edge label embeddings")
+    add(group, "--refinement-label-dim", type=int, default=20, help="dimension for refinement label embeddings")
+    add(group, "--scene-label-dim", type=int, default=20, help="dimension for scene label embeddings")
+    add(group, "--function-label-dim", type=int, default=20, help="dimension for function label embeddings")
     add(group, "--node-label-dim", type=int, default=0, help="dimension for node label embeddings")
     add(group, "--node-category-dim", type=int, default=0, help="dimension for node category embeddings")
     add(group, "--punct-dim", type=int, default=1, help="dimension for separator punctuation embeddings")
@@ -136,6 +139,9 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--max-pos", type=int, default=100, help="max number of coarse POS tags to keep embeddings for")
     add(group, "--max-deps", type=int, default=100, help="max number of dep labels to keep embeddings for")
     add(group, "--max-edge-labels", type=int, default=15, help="max number of edge labels for embeddings")
+    add(group, "--max-refinement-labels", type=int, default=50, help="max number of refinement labels for embeddings")
+    add(group, "--max-scene-labels", type=int, default=50, help="max number of scene labels for embeddings")
+    add(group, "--max-function-labels", type=int, default=50, help="max number of function labels for embeddings")
     add(group, "--max-puncts", type=int, default=5, help="max number of punctuations for embeddings")
     add(group, "--max-action-types", type=int, default=10, help="max number of action types for embeddings")
     add(group, "--max-action-labels", type=int, default=100, help="max number of action labels to allow")
