@@ -7,7 +7,7 @@ from tupa.config import Config, FEATURE_PROPERTIES
 
 FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([%s]*)" % FEATURE_PROPERTIES)
 FEATURE_TEMPLATE_PATTERN = re.compile(r"^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
-NON_NUMERIC = "wmtudefncpAT#^$"
+NON_NUMERIC = "wmtudencpAT#^$"
 
 
 class FeatureTemplate:
@@ -64,9 +64,7 @@ class FeatureTemplateElement:
                            u: node coarse/universal POS tag
                            d: node dependency relation
                            h: node height
-                           e: tag of fedge / action tag
-                           f: refinement tag of incoming fedge
-                           F: refinement tag of head terminal
+                           e: tag of first incoming edge / action tag
                            n: node label
                            c: node label category suffix
                            p: unique separator punctuation between nodes
@@ -300,7 +298,6 @@ def get_punctuation(nodes, terminals):
 ACTION_PROP_GETTERS = {
     "A": lambda a, *_: a.type,
     "e": lambda a, *_: a.tag if isinstance(a.tag, str) or Config().args.missing_node_features else None,  # Swap, Label
-    "f": lambda a, *_: a.refinement
 }
 
 
@@ -313,8 +310,9 @@ NODE_PROP_GETTERS = {
     "h": height,
     "i": lambda node, *_: head_terminal(node).index - 1,
     "j": lambda node, *_: node.index,
-    "e": lambda node, prev, binary: node.incoming[0].tag if len(node.incoming) == 1 else node.ftag,  #next(e.tag for e in node.incoming if not binary or e.parent == prev),
-    "f": lambda node, prev, binary: node.incoming[0].refinement if len(node.incoming) == 1 else node._fedge().refinement,
+    "e": lambda node, prev, binary: next(e.tag for e in node.incoming if not binary or e.parent == prev),
+    "f": lambda node, prev, binary: next(e.refinement for e in node.incoming if not binary or e.parent == prev),  #node.incoming[0].refinement if len(node.incoming) == 1 else node._fedge().refinement,
+    "S": lambda node, *_: head_terminal(node).extra.get('ss'),
     "F": lambda node, *_: head_terminal(node).extra.get('ss2'),
     "n": lambda node, *_: node.label,
     "c": lambda node, *_: node.category,
