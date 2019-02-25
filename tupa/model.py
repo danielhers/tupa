@@ -71,8 +71,6 @@ class ParameterDefinition:
 
 
 NODE_LABEL_KEY = "n"
-REFINEMENT_LABEL_KEY = "r"
-#REFINEMENT_AXES = []
 
 
 class ClassifierProperty(Enum):
@@ -94,10 +92,7 @@ NODE_LABEL_PARAM_DEFS = [
     (NODE_LABEL_KEY, dict(dim="node_label_dim",    size="max_node_labels",    dropout="node_label_dropout",
                           min_count="min_node_label_count"))
 ]
-REFINEMENT_LABEL_PARAM_DEFS = [
-    (REFINEMENT_LABEL_KEY, dict(dim="refinement_label_dim",    size="max_refinement_labels",    dropout="refinement_label_dropout",
-                          min_count="min_refinement_label_count"))
-]
+
 PARAM_DEFS = [
     ("c",            dict(dim="node_category_dim", size="max_node_categories")),
     ("W",            dict(dim="word_dim_external", size="max_words_external", dropout="word_dropout_external",
@@ -112,6 +107,7 @@ PARAM_DEFS = [
     ("f",            dict(dim="refinement_label_dim", size="max_refinement_labels")),
     ("S",            dict(dim="scene_label_dim", size="max_scene_labels")),
     ("F",            dict(dim="function_label_dim", size="max_function_labels")),
+    ("X",            dict(dim="lexcat_label_dim", size="max_lexcat_labels")),
     ("p",            dict(dim="punct_dim",      size="max_puncts")),
     ("A",            dict(dim="action_dim",     size="max_action_types")),
     ("T",            dict(dim="ner_dim",        size="max_ner_types")),
@@ -126,7 +122,6 @@ class Model:
         self.config = config or Config().copy()
         self.filename = filename
         self.feature_extractor = self.classifier = self.axis = self.lang = None
-        self.refined_categories = []
         self.feature_params = OrderedDict()
         self.is_finalized = False
         if args or kwargs:
@@ -135,21 +130,15 @@ class Model:
     def label_param_def(self, axis, args=None):
         if axis == NODE_LABEL_KEY:
             return self.param_defs(args, only_node_labels=True)[0]
-        elif axis == REFINEMENT_LABEL_KEY:
-            return self.param_defs(args, only_refinement_labels=True)[0]
 
-    def param_defs(self, args=None, only_node_labels=False, only_refinement_labels=False):
+    def param_defs(self, args=None, only_node_labels=False):
         if only_node_labels:
             return [ParameterDefinition(args or self.config.args, n, *k) for n, *k in NODE_LABEL_PARAM_DEFS]
-        if only_refinement_labels:
-            return [ParameterDefinition(args or self.config.args, n, *k) for n, *k in REFINEMENT_LABEL_PARAM_DEFS]
         return [ParameterDefinition(args or self.config.args, n, *k) for n, *k in
-                NODE_LABEL_PARAM_DEFS + REFINEMENT_LABEL_PARAM_DEFS + PARAM_DEFS]
+                NODE_LABEL_PARAM_DEFS + PARAM_DEFS]
 
-    def init_model(self, axis=None, lang=None, init_params=True, refined_categories=[]):
+    def init_model(self, axis=None, lang=None, init_params=True):
         self.set_axis(axis, lang)
-        if not self.refined_categories:
-            self.set_refined_categories(refined_categories)
         labels = self.classifier.labels if self.classifier else OrderedDict()
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
             for param_def in self.param_defs():  # FIXME save parameters separately per format, not just per language
@@ -168,9 +157,6 @@ class Model:
             if self.config.args.node_labels and not self.config.args.use_gold_node_labels and \
                     NODE_LABEL_KEY not in labels:
                 labels[NODE_LABEL_KEY] = self.init_labels(NODE_LABEL_KEY)  # Updates self.feature_params
-            if self.config.args.refinement_labels and not self.config.args.use_gold_refinement_labels and \
-                    REFINEMENT_LABEL_KEY not in labels:
-                labels[REFINEMENT_LABEL_KEY] = self.init_labels(REFINEMENT_LABEL_KEY)  # Updates self.feature_params
 
         if self.classifier:  # Already initialized
             pass
@@ -208,9 +194,6 @@ class Model:
             suffix = SEPARATOR + self.lang
             if not self.axis.endswith(suffix):
                 self.axis += suffix
-
-    def set_refined_categories(self, refined_categories):
-        self.refined_categories = refined_categories or []
 
     @property
     def formats(self):
@@ -251,16 +234,13 @@ class Model:
 
     def score(self, state, axis):
         features = self.feature_extractor.extract_features(state)
-        return self.classifier.score(features, is_refinement=axis in self.refined_categories, axis=axis), features  # scores is a NumPy array
+        return self.classifier.score(features, axis=axis), features  # scores is a NumPy array
 
     def init_features(self, state, train):
         self.init_model()
         axes = [self.axis]
         if self.config.args.node_labels and not self.config.args.use_gold_node_labels:
             axes.append(NODE_LABEL_KEY)
-        if self.config.args.refinement_labels and not self.config.args.use_gold_refinement_labels:
-            for axis in self.refined_categories:
-                axes.append(axis)
         self.classifier.init_features(self.feature_extractor.init_features(state), axes, train)
 
     def finalize(self, finished_epoch):
@@ -354,7 +334,7 @@ class Model:
         Restoring from a model that was just loaded from file, or called by restore()
         """
         for axis, all_size in self.classifier.labels_t.items():  # all_size is a pair of (label list, size limit)
-            if axis == NODE_LABEL_KEY or axis == REFINEMENT_LABEL_KEY:  # These are node labels rather than action labels
+            if axis == NODE_LABEL_KEY:  # These are node labels rather than action labels
                 node_labels = self.feature_extractor.params.get(axis)
                 if node_labels and node_labels.size:  # Also used for features, so share the dict
                     del all_size

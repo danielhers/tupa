@@ -8,13 +8,12 @@ from ucca import core, layer0, layer1
 from ucca.layer0 import NodeTags
 from ucca.layer1 import EdgeTags
 
-from ucca.snacs import find_refined
 
 from .edge import Edge
 from .node import Node
 from ..action import Actions
 from ..config import Config
-from ..model import NODE_LABEL_KEY, REFINEMENT_LABEL_KEY
+from ..model import NODE_LABEL_KEY
 
 
 class InvalidActionError(AssertionError):
@@ -258,8 +257,6 @@ class State:
             if child is None:
                 child = action.node = self.add_node(orig_node=action.orig_node, implicit=True)
             action.edge = self.add_edge(Edge(parent, child, tag, action.orig_edge, remote=action.remote))
-            if self.args.refinement_labels and tag in self.passage.refined_categories:
-                    self.need_label[tag] = action.edge
             if action.node:
                 self.buffer.appendleft(action.node)
         elif action.is_type(Actions.Shift):  # Push buffer head to stack; shift buffer
@@ -324,42 +321,9 @@ class State:
         self.heads.discard(edge.child)
         self.log.append("edge: %s" % edge)
 
-        self.integrate_refinement()
 
         return edge
 
-    def integrate_refinement(self):
-        terminals = self.passage.layer(layer0.LAYER_ID).pairs
-        copy = deepcopy(self)
-        passage_temp = copy.create_passage(verify=False)
-        terminals_copy = passage_temp.layer(layer0.LAYER_ID).pairs
-        for (_, t_self), (_, t_copy) in zip(terminals, terminals_copy):
-            if 'ss' in t_self.extra and t_self.extra['ss'][0] == 'p':
-                ss = t_self.extra['ss']
-                refined = []
-                for _r in find_refined(t_copy, dict(terminals_copy), local=True)[0]:
-                    copy_child = None
-                    copy_parent = None
-                    for n in copy.nodes:
-                        if n.node is not None and n.node.ID == _r.child.ID:
-                            copy_child = n
-                        if n.node is not None and n.node.ID == _r.parent.ID:
-                            copy_parent = n
-                    try:
-                        r = next(e for e in self.nodes[copy_child.index].incoming
-                                 if (copy_parent in copy.heads or e.parent.index == copy_parent.index))
-                    except (StopIteration, AttributeError):
-                        continue
-                    else:
-                        if not any(c.tag == ss for c in r.categories):
-                            r.add_category(core.Category(ss, parent=r.tag))
-                        refined.append(r)
-                for prev in t_self.extra.get('refined', []):
-                    if prev not in refined:
-                        for cat in prev.categories:
-                            if cat.tag == ss:
-                                prev.remove_category(cat)
-                t_self.extra['refined'] = refined
 
     PARENT_CHILD = (
         ((Actions.LeftEdge, Actions.LeftRemote), (-1, -2)),

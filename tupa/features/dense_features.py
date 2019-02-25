@@ -6,14 +6,14 @@ from ..model_util import UNKNOWN_VALUE, MISSING_VALUE, UnknownDict, save_dict, l
 
 FEATURE_TEMPLATES = (
     "s0s1xd" "s1s0x" "s0b0xd" "b0s0x"  # specific edges
-    "s0wmtudefFSncpT#^$xhqyPCIEMN"
-    "s1wmtudefFSncT#^$xhyN"
-    "s2wmtudefFSncT#^$xhy"
-    "s3wmtudefFSncT#^$xhyN"
-    "b0wmtudFSncT#^$hPCIEMN"
-    "b1wmtudFSncT#^$"
-    "b2wmtudFSncT#^$"
-    "b3wmtudFSncT#^$"
+    "s0wmtudefFSXncpT#^$xhqyPCIEMN"
+    "s1wmtudefFSXncT#^$xhyN"
+    "s2wmtudefFSXncT#^$xhy"
+    "s3wmtudefFSXncT#^$xhyN"
+    "b0wmtudFSXncT#^$hPCIEMN"
+    "b1wmtudFSXncT#^$"
+    "b2wmtudFSXncT#^$"
+    "b3wmtudFSXncT#^$"
     "s0lwmefnc#^$"
     "s0rwmefnc#^$"
     "s1lwmefnc#^$"
@@ -35,7 +35,7 @@ FEATURE_TEMPLATES = (
     "s0b0ef" "b0s0ef"  # specific edges
     "a0eAa1eA",  # past actions
 )
-INDEXED = "wmtudFST"  # words, lemmas, fine POS tags, coarse/universal POS tags, dep rels, entity type
+INDEXED = "wmtudTSFX"  # words, lemmas, fine POS tags, coarse/universal POS tags, dep rels, entity type, scene role, function, lexcat
 DEFAULT = ()  # intermediate value for missing features
 FILENAME_SUFFIX = ".enum"
 

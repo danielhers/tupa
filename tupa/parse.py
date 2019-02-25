@@ -18,7 +18,7 @@ from ucca.normalization import normalize
 
 from tupa.__version__ import GIT_VERSION
 from tupa.config import Config, Iterations
-from tupa.model import Model, NODE_LABEL_KEY, REFINEMENT_LABEL_KEY, ClassifierProperty
+from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
 from tupa.oracle import Oracle
 from tupa.states.state import State
 from tupa.traceutil import set_traceback_listener
@@ -78,13 +78,11 @@ class PassageParser(AbstractParser):
         self.ignore_node = None if self.config.args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
         self.state_hash_history = set()
         self.state = self.oracle = self.eval_type = None
-        self.refined_categories = []
 
     def init(self):
         self.config.set_format(self.in_format)
         WIKIFIER.enabled = self.config.args.wikification
         self.state = State(self.passage)
-        self.refined_categories = self.passage.categories # self.passage.refined_categories
         # Passage is considered labeled if there are any edges or node labels in it
         edges, node_labels = map(any, zip(*[(n.outgoing, n.attrib.get(LABEL_ATTRIB))
                                             for n in self.passage.layer(layer1.LAYER_ID).all]))
@@ -92,8 +90,7 @@ class PassageParser(AbstractParser):
                 (self.config.args.verbose > 1 or self.config.args.use_gold_node_labels or self.config.args.action_stats)
                 and (edges or node_labels)) else None
         for model in self.models:
-            model.init_model(self.config.format, lang=self.lang if self.config.args.multilingual else None,
-                             refined_categories=self.refined_categories)
+            model.init_model(self.config.format, lang=self.lang if self.config.args.multilingual else None)
             if ClassifierProperty.require_init_features in model.classifier_properties:
                 model.init_features(self.state, self.training)
 
@@ -157,7 +154,7 @@ class PassageParser(AbstractParser):
 
     def get_true_label(self, axis, need_label):
         try:
-            return self.oracle.get_label(self.state, axis, axis in self.refined_categories, need_label) if self.oracle else (None, None)
+            return self.oracle.get_label(self.state, axis, need_label) if self.oracle else (None, None)
         except AssertionError as e:
             if self.training:
                 raise ParserException("Error in getting label from oracle during training") from e
@@ -176,12 +173,11 @@ class PassageParser(AbstractParser):
     def choose(self, true, axis=None, name="action"):
         if axis is None:
             axis = self.model.axis
-        elif (axis == NODE_LABEL_KEY and self.config.args.use_gold_node_labels) or \
-                (axis in self.refined_categories and self.config.args.use_gold_refinement_labels):
+        elif (axis == NODE_LABEL_KEY and self.config.args.use_gold_node_labels):
             return true, true
-        labels_axis = axis if axis not in self.refined_categories else REFINEMENT_LABEL_KEY
+        labels_axis = axis
         labels = self.model.classifier.labels[labels_axis]
-        if axis == NODE_LABEL_KEY or axis in self.refined_categories:
+        if axis == NODE_LABEL_KEY:
             true_keys = (labels[true],) if self.oracle else ()  # Must be before score()
             is_valid = self.state.is_valid_label
         else:
@@ -202,19 +198,19 @@ class PassageParser(AbstractParser):
                 assert not self.model.is_finalized, "Updating finalized model"
                 self.model.classifier.update(
                     features, axis=axis, true=true_keys,
-                    pred=labels[pred] if (axis == NODE_LABEL_KEY or axis in self.refined_categories) else pred.id,
+                    pred=labels[pred] if (axis == NODE_LABEL_KEY) else pred.id,
                     importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values] or None)
             if not is_correct and self.config.args.early_update:
                 self.state.finished = True
         for model in self.models:
             model.classifier.finished_step(self.training)
-            if axis != NODE_LABEL_KEY and axis not in self.refined_categories:
+            if axis != NODE_LABEL_KEY:
                 model.classifier.transition(label, axis=axis)
         return label, pred
 
     def correct(self, axis, label, pred, scores, true, true_keys):
         true_values = is_correct = ()
-        if axis == NODE_LABEL_KEY or axis in self.refined_categories:
+        if axis == NODE_LABEL_KEY:
             if self.oracle:
                 is_correct = (label == true)
                 if is_correct:

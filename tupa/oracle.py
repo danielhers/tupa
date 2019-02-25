@@ -1,7 +1,7 @@
 from semstr.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
 from ucca import layer1
 
-from .model import NODE_LABEL_KEY, REFINEMENT_LABEL_KEY
+from .model import NODE_LABEL_KEY
 from .action import Actions
 from .config import Config, COMPOUND
 from .states.state import InvalidActionError
@@ -166,11 +166,9 @@ class Oracle:
         return self.args.node_labels and not self.args.use_gold_node_labels \
                and not node.labeled and node.orig_node.attrib.get(LABEL_ATTRIB)
 
-    def get_label(self, state, axis, is_refinement, need_label):
+    def get_label(self, state, axis, need_label):
         if axis == NODE_LABEL_KEY:
             return self.get_node_label(state, need_label)
-        elif is_refinement:
-            return self.get_edge_label(need_label)
 
     def get_node_label(self, state, node):
         true_label = raw_true_label = None

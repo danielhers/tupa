@@ -70,8 +70,6 @@ class Node:
                         remotes.append((node, edge))
                     else:
                         edge_categories = [(edge.tag, "", "", "")]
-                        if edge.refinement:
-                            edge_categories.append((edge.refinement, "", "", edge.tag))
                         edge.child.add_to_l1(l0, l1, node, edge_categories, labeled, node_labels)
         Node.attach_remotes(l1, remotes, verify)
         Node.attach_linkages(l1, linkages, verify)
