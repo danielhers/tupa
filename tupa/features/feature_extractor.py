@@ -67,8 +67,8 @@ class FeatureTemplateElement:
                            h: node height
                            e: tag of first incoming edge / action tag
                            f: refinement of first incoming edge
-                           F: node function (ss2)
                            S: node scene role (ss)
+                           F: node function (ss2)
                            X: node lexcat
                            n: node label
                            c: node label category suffix
