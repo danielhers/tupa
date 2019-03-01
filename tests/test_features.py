@@ -74,9 +74,10 @@ def _test_features(config, feature_extractor_creator, filename, write_features):
         action = min(oracle.get_actions(state, actions).values(), key=str)
         state.transition(action)
         for axis, node in state.need_label.items():
-            extract_features(feature_extractor, state, features)
-            label, _ = oracle.get_label(state, axis, node)
-            state.label_axis(axis, label)
+            if node:
+                extract_features(feature_extractor, state, features)
+                label, _ = oracle.get_label(state, axis, node)
+                state.label_axis(axis, label)
         if state.finished:
             break
     features = ["%s %s\n" % i for f in features if f for i in (sorted(f.items()) + [("", "")])]
