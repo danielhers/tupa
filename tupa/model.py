@@ -1,6 +1,6 @@
 from collections import OrderedDict
-
 from enum import Enum
+
 from ucca import textutil
 
 from .action import Actions
@@ -108,6 +108,8 @@ PARAM_DEFS = [
     ("S",            dict(dim="scene_label_dim", size="max_scene_labels")),
     ("F",            dict(dim="function_label_dim", size="max_function_labels")),
     ("X",            dict(dim="lexcat_label_dim", size="max_lexcat_labels")),
+    ("G",            dict(dim="next_terminal_lower_common_ancestor_category_dim",
+                          size="max_next_terminal_lower_common_ancestor_categories")),
     ("p",            dict(dim="punct_dim",      size="max_puncts")),
     ("A",            dict(dim="action_dim",     size="max_action_types")),
     ("T",            dict(dim="ner_dim",        size="max_ner_types")),
@@ -326,7 +328,6 @@ class Model:
         self._update_input_params()
         self.classifier.labels_t = OrderedDict((a, l.save()) for a, l in self.classifier.labels.items())
         self.load_labels()
-
 
     def load_labels(self):
         """

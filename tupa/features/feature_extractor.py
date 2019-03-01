@@ -8,7 +8,7 @@ from tupa.config import Config, FEATURE_PROPERTIES
 
 FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([%s]*)" % FEATURE_PROPERTIES)
 FEATURE_TEMPLATE_PATTERN = re.compile(r"^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
-NON_NUMERIC = "wmtudefFSXncpAT#^$"
+NON_NUMERIC = "wmtudefFSXGncpAT#^$"
 
 
 class FeatureTemplate:
@@ -72,6 +72,7 @@ class FeatureTemplateElement:
                            X: node lexcat
                            D: token depth, from pre-annotated passage
                            O: depth of lowest common ancestor with next terminal, from pre-annotated passage
+                           G: category of lowest common ancestor with next terminal, from pre-annotated passage
                            n: node label
                            c: node label category suffix
                            p: unique separator punctuation between nodes
@@ -324,6 +325,7 @@ NODE_PROP_GETTERS = {
     "X": lambda node, *_: head_terminal(node).orig_node.extra.get('lexcat'),
     "D": lambda node, *_: int(head_terminal(node).orig_node.extra.get('depth', 0)),
     "O": lambda node, *_: int(head_terminal(node).orig_node.extra.get('next_terminal_lower_common_ancestor_depth', 0)),
+    "G": lambda node, *_: head_terminal(node).orig_node.extra.get('next_terminal_lower_common_ancestor_category'),
     "n": lambda node, *_: node.label,
     "c": lambda node, *_: node.category,
     "x": lambda node, prev, binary: int(prev in node.parents) if binary else gap_type(node),
