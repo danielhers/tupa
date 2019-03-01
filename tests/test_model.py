@@ -1,10 +1,11 @@
 """Testing code for the tupa.model module, unit-testing only."""
 
 import os
+
 import pytest
 
 from tupa.config import CLASSIFIERS
-from tupa.model import Model, ClassifierProperty, NODE_LABEL_KEY, REFINEMENT_LABEL_KEY
+from tupa.model import Model, ClassifierProperty, NODE_LABEL_KEY
 from tupa.states.state import State
 from .conftest import remove_existing, weight_decay, assert_all_params_equal
 
