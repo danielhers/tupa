@@ -14,6 +14,7 @@ def get_depth(unit):
     while unit.parents:
         try:
             unit = parent(unit)
+            depth += 1
         except StopIteration:
             return -1
     return depth
