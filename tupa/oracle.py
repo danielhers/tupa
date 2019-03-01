@@ -1,9 +1,9 @@
 from semstr.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
 from ucca import layer1
 
-from .model import NODE_LABEL_KEY
 from .action import Actions
 from .config import Config, COMPOUND
+from .model import NODE_LABEL_KEY
 from .states.state import InvalidActionError
 
 # Constants for readability, used by Oracle.action
@@ -176,11 +176,11 @@ class Oracle:
             raw_true_label = node.orig_node.attrib.get(LABEL_ATTRIB)
         if raw_true_label is not None:
             true_label, _, _ = raw_true_label.partition(LABEL_SEPARATOR)
-            if self.args.validate_oracle:
-                try:
-                    state.check_valid_label(true_label, message=True)
-                except InvalidActionError as e:
-                    raise InvalidActionError("True label is invalid: " + "\n".join(map(str, (true_label, state, e))))
+            # if self.args.validate_oracle:
+            #     try:
+            #         state.check_valid_label(true_label, message=True)
+            #     except InvalidActionError as e:
+            #         raise InvalidActionError("True label is invalid: " + "\n".join(map(str, (true_label, state, e))))
         return true_label, raw_true_label
 
     def get_edge_label(self, action):
