@@ -35,10 +35,11 @@ def gen_actions(passage):
         action = min(oracle.get_actions(state, actions).values(), key=str)
         state.transition(action)
         s = str(action)
-        if state.need_label:
-            label, _ = oracle.get_label(state, action)
-            state.label_node(label)
-            s += " " + str(label)
+        for axis, node in state.need_label.items():
+            if node:
+                label, _ = oracle.get_label(state, axis, node)
+                state.label_axis(axis, label)
+                s += " " + str(label)
         yield s
         if state.finished:
             break
