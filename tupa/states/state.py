@@ -1,5 +1,4 @@
 from collections import deque
-from copy import deepcopy
 
 from semstr.constraints import Constraints, Direction
 from semstr.util.amr import LABEL_ATTRIB
@@ -7,7 +6,6 @@ from semstr.validation import CONSTRAINTS
 from ucca import core, layer0, layer1
 from ucca.layer0 import NodeTags
 from ucca.layer1 import EdgeTags
-
 
 from .edge import Edge
 from .node import Node
@@ -137,9 +135,10 @@ class State:
             self.check(self.constraints.allow_root_terminal_children or p is not self.root or c.text is None,
                        message and "Terminal child '%s' for root" % c, is_type=True)
             if self.constraints.multigraph:  # Nodes may be connected by more than one edge
-                edge = Edge(p, c, t, remote=action.remote)
-                self.check(self.constraints.allow_edge(edge), message and "Edge not allowed: %s (currently: %s)" % (
-                               edge, ", ".join(map(str, p.outgoing)) or "childless"))
+                pass
+                # edge = Edge(p, c, t, remote=action.remote)
+                # self.check(self.constraints.allow_edge(edge), message and "Edge not allowed: %s (currently: %s)" % (
+                #                edge, ", ".join(map(str, p.outgoing)) or "childless"))
             else:  # Simple graph, i.e., no more than one edge between the same pair of nodes
                 self.check(c not in p.children, message and "%s is already %s's child" % (c, p), is_type=True)
             self.check(p not in c.descendants, message and "Detected cycle by edge: %s->%s" % (p, c), is_type=True)
