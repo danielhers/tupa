@@ -1,4 +1,5 @@
 import re
+
 from ucca import layer0
 from ucca.layer1 import EdgeTags
 from ucca.textutil import Attr
@@ -316,9 +317,9 @@ NODE_PROP_GETTERS = {
     "j": lambda node, *_: node.index,
     "e": lambda node, prev, binary: next(e.tag for e in node.incoming if not binary or e.parent == prev),
     "f": lambda node, prev, binary: next(e.refinement for e in node.incoming if not binary or e.parent == prev),  #node.incoming[0].refinement if len(node.incoming) == 1 else node._fedge().refinement,
-    "S": lambda node, *_: head_terminal(node).extra.get('ss'),
-    "F": lambda node, *_: head_terminal(node).extra.get('ss2'),
-    "X": lambda node, *_: head_terminal(node).extra.get('lexcat'),
+    "S": lambda node, *_: head_terminal(node).orig_node.extra.get('ss'),
+    "F": lambda node, *_: head_terminal(node).orig_node.extra.get('ss2'),
+    "X": lambda node, *_: head_terminal(node).orig_node.extra.get('lexcat'),
     "n": lambda node, *_: node.label,
     "c": lambda node, *_: node.category,
     "x": lambda node, prev, binary: int(prev in node.parents) if binary else gap_type(node),
