@@ -1,9 +1,10 @@
-import dynet_config
-import numpy as np
 import os
 import shlex
-from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
 from copy import deepcopy
+
+import dynet_config
+import numpy as np
+from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
 from logbook import Logger, FileHandler, StderrHandler
 from semstr.cfgutil import Singleton, add_verbose_arg, add_boolean_option, get_group_arg_names
 from semstr.convert import UCCA_EXT, CONVERTERS
@@ -23,7 +24,7 @@ NOOP = "noop"
 NN_CLASSIFIERS = (MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN)
 CLASSIFIERS = (SPARSE, MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN, NOOP)
 
-FEATURE_PROPERTIES = "wmtudhefFSXncpqxyAPCIEMNT#^$"
+FEATURE_PROPERTIES = "wmtudhefFSXDOncpqxyAPCIEMNT#^$"
 
 # Swap types
 REGULAR = "regular"

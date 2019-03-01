@@ -70,6 +70,8 @@ class FeatureTemplateElement:
                            S: node scene role (ss)
                            F: node function (ss2)
                            X: node lexcat
+                           D: token depth, from pre-annotated passage
+                           O: depth of lowest common ancestor with next terminal, from pre-annotated passage
                            n: node label
                            c: node label category suffix
                            p: unique separator punctuation between nodes
@@ -320,6 +322,8 @@ NODE_PROP_GETTERS = {
     "S": lambda node, *_: head_terminal(node).orig_node.extra.get('ss'),
     "F": lambda node, *_: head_terminal(node).orig_node.extra.get('ss2'),
     "X": lambda node, *_: head_terminal(node).orig_node.extra.get('lexcat'),
+    "D": lambda node, *_: int(head_terminal(node).orig_node.extra.get('depth', 0)),
+    "O": lambda node, *_: int(head_terminal(node).orig_node.extra.get('next_terminal_lower_common_ancestor_depth', 0)),
     "n": lambda node, *_: node.label,
     "c": lambda node, *_: node.category,
     "x": lambda node, prev, binary: int(prev in node.parents) if binary else gap_type(node),

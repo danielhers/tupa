@@ -6,14 +6,14 @@ from ..model_util import UNKNOWN_VALUE, MISSING_VALUE, UnknownDict, save_dict, l
 
 FEATURE_TEMPLATES = (
     "s0s1xd" "s1s0x" "s0b0xd" "b0s0x"  # specific edges
-    "s0wmtudefFSXncpT#^$xhqyPCIEMN"
-    "s1wmtudefFSXncT#^$xhyN"
-    "s2wmtudefFSXncT#^$xhy"
-    "s3wmtudefFSXncT#^$xhyN"
-    "b0wmtudFSXncT#^$hPCIEMN"
-    "b1wmtudFSXncT#^$"
-    "b2wmtudFSXncT#^$"
-    "b3wmtudFSXncT#^$"
+    "s0wmtudefFSXDOncpT#^$xhqyPCIEMN"
+    "s1wmtudefFSXDOncT#^$xhyN"
+    "s2wmtudefFSXDOncT#^$xhy"
+    "s3wmtudefFSXDOncT#^$xhyN"
+    "b0wmtudFSXDOncT#^$hPCIEMN"
+    "b1wmtudFSXDOncT#^$"
+    "b2wmtudFSXDOncT#^$"
+    "b3wmtudFSXDOncT#^$"
     "s0lwmefnc#^$"
     "s0rwmefnc#^$"
     "s1lwmefnc#^$"
