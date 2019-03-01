@@ -1,14 +1,14 @@
 """Testing code for the tupa.features package, unit-testing only."""
+import os
 from collections import OrderedDict
 
-import os
 import pytest
 from ucca import textutil
 
 from tupa.action import Actions
 from tupa.features.dense_features import DenseFeatureExtractor
 from tupa.features.sparse_features import SparseFeatureExtractor
-from tupa.model import Model
+from tupa.model import Model, NODE_LABEL_KEY
 from tupa.oracle import Oracle
 from tupa.states.state import State
 from .conftest import passage_files, load_passage, basename
@@ -75,8 +75,8 @@ def _test_features(config, feature_extractor_creator, filename, write_features):
         state.transition(action)
         if state.need_label:
             extract_features(feature_extractor, state, features)
-            label, _ = oracle.get_label(state, action)
-            state.label_node(label)
+            label, _ = oracle.get_label(state, action, state.need_label)
+            state.label_axis(NODE_LABEL_KEY, label)
         if state.finished:
             break
     features = ["%s %s\n" % i for f in features if f for i in (sorted(f.items()) + [("", "")])]
