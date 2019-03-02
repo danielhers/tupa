@@ -64,11 +64,23 @@ def main(args):
     os.makedirs(args.out_dir, exist_ok=True)
     features_passage_by_id = {hack_id(passage.ID): passage for passage in get_passages_with_progress_bar(
         args.features_source_dir, desc="Reading passages for features")}
+    if args.extra:
+        extra_passage_by_id = {passage.ID: passage for passage in get_passages_with_progress_bar(
+            args.extra, desc="Reading passages for extra features")}
+    else:
+        extra_passage_by_id = None
     for passage in get_passages_with_progress_bar(args.source_dir, desc="Annotating"):
         try:
             features_passage = features_passage_by_id[passage.ID]
         except KeyError as e:
             raise RuntimeError("No feature source passage found for ID=" + passage.ID) from e
+        if extra_passage_by_id:
+            try:
+                extra_passage = extra_passage_by_id[passage.ID]
+            except KeyError as e:
+                raise RuntimeError("No extra passage found for ID=" + passage.ID) from e
+        else:
+            extra_passage = None
         for terminal in passage.layer(layer0.LAYER_ID).all:
             try:
                 features_terminal = features_passage.by_id(terminal.ID)
@@ -76,6 +88,13 @@ def main(args):
                 raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage.ID
                                    + " from " + args.features_source_dir) from e
             terminal.extra.update(get_features(features_terminal))
+            if extra_passage:
+                try:
+                    extra_terminal = extra_passage.by_id(terminal.ID)
+                except KeyError as e:
+                    raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage.ID
+                                       + " from " + args.extra) from e
+                terminal.extra.update(extra_terminal.extra)
         write_passage(passage, outdir=args.out_dir, verbose=False)
     print("Wrote passages to " + args.out_dir)
 
@@ -84,5 +103,6 @@ if __name__ == "__main__":
     argparser = ArgumentParser(description="Add structural annotations from full graph features to tokens' extra dict")
     argparser.add_argument("source_dir", help="directory to read source UCCA files from to manipulate")
     argparser.add_argument("features_source_dir", help="directory to read source UCCA files to get structure features")
+    argparser.add_argument("-e", "--extra", help="directory read source UCCA files for extra features")
     argparser.add_argument("-o", "--out-dir", default=".", help="directory to write annotated UCCA files to")
     main(argparser.parse_args())
