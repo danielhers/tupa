@@ -1,12 +1,12 @@
+import concurrent.futures
+import os
 import sys
 import time
 from collections import defaultdict
-
-import concurrent.futures
-import os
 from enum import Enum
 from functools import partial
 from glob import glob
+
 from semstr.convert import FROM_FORMAT, TO_FORMAT, from_text
 from semstr.evaluate import EVALUATORS, Scores
 from semstr.util.amr import LABEL_ATTRIB, WIKIFIER
@@ -588,11 +588,11 @@ def print_scores(scores, filename, prefix=None, prefix_title=None):
         try:
             with open(filename, "a") as f:
                 if print_title:
-                    titles = scores.titles()
+                    titles = scores.titles(LABELED) + scores.titles(UNLABELED)
                     if prefix_title is not None:
                         titles = [prefix_title] + titles
                     print(",".join(titles), file=f)
-                fields = scores.fields()
+                fields = scores.fields(LABELED) + scores.fields(UNLABELED)
                 if prefix is not None:
                     fields.insert(0, prefix)
                 print(",".join(fields), file=f)
