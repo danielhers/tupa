@@ -70,29 +70,32 @@ def main(args):
     else:
         extra_passage_by_id = None
     for passage in get_passages_with_progress_bar(args.source_dir, desc="Annotating"):
+        passage_id = passage.ID
+        if extra_passage_by_id:
+            passage_id = hack_id(passage_id)
         try:
-            features_passage = features_passage_by_id[passage.ID]
+            features_passage = features_passage_by_id[passage_id]
         except KeyError as e:
-            raise RuntimeError("No feature source passage found for ID=" + passage.ID) from e
+            raise RuntimeError("No feature source passage found for ID=" + passage_id) from e
         if extra_passage_by_id:
             try:
-                extra_passage = extra_passage_by_id[passage.ID]
+                extra_passage = extra_passage_by_id[passage_id]
             except KeyError as e:
-                raise RuntimeError("No extra passage found for ID=" + passage.ID) from e
+                raise RuntimeError("No extra passage found for ID=" + passage_id) from e
         else:
             extra_passage = None
         for terminal in passage.layer(layer0.LAYER_ID).all:
             try:
                 features_terminal = features_passage.by_id(terminal.ID)
             except KeyError as e:
-                raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage.ID
+                raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage_id
                                    + " from " + args.features_source_dir) from e
             terminal.extra.update(get_features(features_terminal))
             if extra_passage:
                 try:
                     extra_terminal = extra_passage.by_id(terminal.ID)
                 except KeyError as e:
-                    raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage.ID
+                    raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage_id
                                        + " from " + args.extra) from e
                 terminal.extra.update(extra_terminal.extra)
         write_passage(passage, outdir=args.out_dir, verbose=False)
