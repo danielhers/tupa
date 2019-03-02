@@ -74,37 +74,39 @@ def main(args):
         extra_passage_by_id = None
     for passage in get_passages_with_progress_bar(args.source_dir, desc="Annotating"):
         passage_id = passage.ID
-        if extra_passage_by_id:
-            passage_id = hack_id(passage_id)
-        if features_passage_by_id:
-            try:
-                features_passage = features_passage_by_id[passage_id]
-            except KeyError as e:
-                raise RuntimeError("No feature source passage found for ID=" + passage_id) from e
-        else:
-            features_passage = None
-        if extra_passage_by_id:
-            try:
-                extra_passage = extra_passage_by_id[passage_id]
-            except KeyError as e:
-                raise RuntimeError("No extra passage found for ID=" + passage_id) from e
-        else:
-            extra_passage = None
-        for terminal in passage.layer(layer0.LAYER_ID).all:
-            if features_passage:
+        if "reviews-" in passage_id:
+            passage_id = passage_id.replace("reviews-", "")
+            if extra_passage_by_id:
+                passage_id = hack_id(passage_id)
+            if features_passage_by_id:
                 try:
-                    features_terminal = features_passage.by_id(terminal.ID)
+                    features_passage = features_passage_by_id[passage_id]
                 except KeyError as e:
-                    raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage_id
-                                       + " from " + args.features_source_dir) from e
-                terminal.extra.update(get_features(features_terminal))
-            if extra_passage:
+                    raise RuntimeError("No feature source passage found for ID=" + passage_id) from e
+            else:
+                features_passage = None
+            if extra_passage_by_id:
                 try:
-                    extra_terminal = extra_passage.by_id(terminal.ID)
+                    extra_passage = extra_passage_by_id[passage_id]
                 except KeyError as e:
-                    raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage_id
-                                       + " from " + args.extra) from e
-                terminal.extra.update(extra_terminal.extra)
+                    raise RuntimeError("No extra passage found for ID=" + passage_id) from e
+            else:
+                extra_passage = None
+            for terminal in passage.layer(layer0.LAYER_ID).all:
+                if features_passage:
+                    try:
+                        features_terminal = features_passage.by_id(terminal.ID)
+                    except KeyError as e:
+                        raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage_id
+                                           + " from " + args.features_source_dir) from e
+                    terminal.extra.update(get_features(features_terminal))
+                if extra_passage:
+                    try:
+                        extra_terminal = extra_passage.by_id(terminal.ID)
+                    except KeyError as e:
+                        raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage_id
+                                           + " from " + args.extra) from e
+                    terminal.extra.update(extra_terminal.extra)
         write_passage(passage, outdir=args.out_dir, verbose=False)
     print("Wrote passages to " + args.out_dir)
 
