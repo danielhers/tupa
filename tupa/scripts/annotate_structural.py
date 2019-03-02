@@ -82,14 +82,16 @@ def main(args):
                 try:
                     features_passage = features_passage_by_id[passage_id]
                 except KeyError as e:
-                    raise RuntimeError("No feature source passage found for ID=" + passage_id) from e
+                    features_passage = None
+                    # raise RuntimeError("No feature source passage found for ID=" + passage_id) from e
             else:
                 features_passage = None
             if extra_passage_by_id:
                 try:
                     extra_passage = extra_passage_by_id[passage_id]
                 except KeyError as e:
-                    raise RuntimeError("No extra passage found for ID=" + passage_id) from e
+                    extra_passage = None
+                    # raise RuntimeError("No extra passage found for ID=" + passage_id) from e
             else:
                 extra_passage = None
             for terminal in passage.layer(layer0.LAYER_ID).all:
