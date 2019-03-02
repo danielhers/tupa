@@ -62,8 +62,11 @@ def hack_id(sent_id):
 
 def main(args):
     os.makedirs(args.out_dir, exist_ok=True)
-    features_passage_by_id = {hack_id(passage.ID): passage for passage in get_passages_with_progress_bar(
-        args.features_source_dir, desc="Reading passages for features")}
+    if args.features_source_dir:
+        features_passage_by_id = {hack_id(passage.ID): passage for passage in get_passages_with_progress_bar(
+            args.features_source_dir, desc="Reading passages for features")}
+    else:
+        features_passage_by_id = None
     if args.extra:
         extra_passage_by_id = {passage.ID: passage for passage in get_passages_with_progress_bar(
             args.extra, desc="Reading passages for extra features")}
@@ -73,10 +76,13 @@ def main(args):
         passage_id = passage.ID
         if extra_passage_by_id:
             passage_id = hack_id(passage_id)
-        try:
-            features_passage = features_passage_by_id[passage_id]
-        except KeyError as e:
-            raise RuntimeError("No feature source passage found for ID=" + passage_id) from e
+        if features_passage_by_id:
+            try:
+                features_passage = features_passage_by_id[passage_id]
+            except KeyError as e:
+                raise RuntimeError("No feature source passage found for ID=" + passage_id) from e
+        else:
+            features_passage = None
         if extra_passage_by_id:
             try:
                 extra_passage = extra_passage_by_id[passage_id]
@@ -85,12 +91,13 @@ def main(args):
         else:
             extra_passage = None
         for terminal in passage.layer(layer0.LAYER_ID).all:
-            try:
-                features_terminal = features_passage.by_id(terminal.ID)
-            except KeyError as e:
-                raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage_id
-                                   + " from " + args.features_source_dir) from e
-            terminal.extra.update(get_features(features_terminal))
+            if features_passage:
+                try:
+                    features_terminal = features_passage.by_id(terminal.ID)
+                except KeyError as e:
+                    raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage_id
+                                       + " from " + args.features_source_dir) from e
+                terminal.extra.update(get_features(features_terminal))
             if extra_passage:
                 try:
                     extra_terminal = extra_passage.by_id(terminal.ID)
@@ -105,7 +112,8 @@ def main(args):
 if __name__ == "__main__":
     argparser = ArgumentParser(description="Add structural annotations from full graph features to tokens' extra dict")
     argparser.add_argument("source_dir", help="directory to read source UCCA files from to manipulate")
-    argparser.add_argument("features_source_dir", help="directory to read source UCCA files to get structure features")
+    argparser.add_argument("-f", "--features-source-dir", help="directory to read source UCCA files to get structure "
+                                                               "features")
     argparser.add_argument("-e", "--extra", help="directory read source UCCA files for extra features")
     argparser.add_argument("-o", "--out-dir", default=".", help="directory to write annotated UCCA files to")
     main(argparser.parse_args())
