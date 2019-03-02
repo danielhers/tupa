@@ -583,11 +583,11 @@ def print_scores(scores, filename, prefix=None, prefix_title=None):
         try:
             with open(filename, "a") as f:
                 if print_title:
-                    titles = scores.titles()
+                    titles = scores.titles(LABELED) + scores.titles(UNLABELED)
                     if prefix_title is not None:
                         titles = [prefix_title] + titles
                     print(",".join(titles), file=f)
-                fields = scores.fields()
+                fields = scores.fields(LABELED) + scores.fields(UNLABELED)
                 if prefix is not None:
                     fields.insert(0, prefix)
                 print(",".join(fields), file=f)
