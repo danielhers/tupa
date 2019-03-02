@@ -1,12 +1,12 @@
+import concurrent.futures
+import os
 import sys
 import time
 from collections import defaultdict
-
-import concurrent.futures
-import os
 from enum import Enum
 from functools import partial
 from glob import glob
+
 from semstr.convert import FROM_FORMAT, TO_FORMAT, from_text
 from semstr.evaluate import EVALUATORS, Scores
 from semstr.util.amr import LABEL_ATTRIB, WIKIFIER
@@ -475,7 +475,7 @@ class Parser(AbstractParser):
                 if self.best_score:
                     self.save(finalized)
                 self.best_score = average_score
-                if self.test and self.test is not True:  # There are actual passages to parse
+                if self.config.args.eval_test and self.test and self.test is not True:  # There are passages to parse
                     self.eval(self.test, ParseMode.test, self.config.args.testscores, display=False)
             else:
                 print("Not better than previous best score (%.3f)" % self.best_score)
