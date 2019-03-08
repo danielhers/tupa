@@ -1,6 +1,6 @@
 from collections import OrderedDict
-
 from enum import Enum
+
 from ucca import textutil
 
 from .action import Actions
@@ -283,6 +283,8 @@ class Model:
                 self.classifier.load(self.filename)
                 self.is_finalized = is_finalized
                 self.load_labels()
+                for param_def in self.param_defs(self.config):
+                    param_def.load_to_config(self.feature_extractor.params)
                 try:
                     textutil.models.update(load_json(self.filename + ".nlp.json"))
                     vocab = textutil.models.get("vocab")
@@ -291,8 +293,6 @@ class Model:
                 except FileNotFoundError:
                     pass
                 self.config.print("\n".join("%s: %s" % i for i in self.feature_params.items()), level=1)
-                for param_def in self.param_defs(self.config):
-                    param_def.load_to_config(self.feature_extractor.params)
             except FileNotFoundError:
                 self.feature_extractor = self.classifier = None
                 raise
