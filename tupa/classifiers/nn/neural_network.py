@@ -16,6 +16,9 @@ from ..classifier import Classifier
 from ...config import Config, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN
 from ...model_util import MISSING_VALUE, remove_existing
 
+from numpy import average
+from allennlp.commands.elmo import ElmoEmbedder
+
 BIRNN_TYPES = {BIRNN: BiRNN, HIGHWAY_RNN: HighwayRNN, HIERARCHICAL_RNN: HierarchicalBiRNN}
 
 tqdm.monitor_interval = 0
@@ -134,6 +137,7 @@ class NeuralNetwork(Classifier, SubModel):
             birnn.init_params(indexed_dim[int(birnn.shared)], indexed_num[int(birnn.shared)])
 
     def birnn_indices(self, param):  # both specific and shared or just specific
+        # can we train multilingual? I though the shared are for multi schemes?
         return [0, 1] if not self.config.args.multilingual or not param.lang_specific else [0]
 
     def init_cg(self, renew=True):
@@ -147,7 +151,17 @@ class NeuralNetwork(Classifier, SubModel):
             self.empty_values[key] = value = dy.inputVector(np.zeros(self.input_params[key].dim, dtype=float))
         return value
 
-    def init_features(self, features, axes, train=False):
+    OPTIONS_FILE = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json"
+    WEIGHT_FILE = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5"
+    elmo = ElmoEmbedder(options_file=OPTIONS_FILE, weight_file=WEIGHT_FILE)
+
+    @staticmethod
+    def get_elmo_embed(passage):
+        embed = NeuralNetwork.elmo.embed_sentence(passage)
+        average_embed = average(embed, 0)
+        return dy.inputTensor(average_embed)
+
+    def init_features(self, features, axes, train=False, passage=None):
         for axis in axes:
             self.init_model(axis, train)
         embeddings = [[], []]  # specific, shared
@@ -163,6 +177,10 @@ class NeuralNetwork(Classifier, SubModel):
                 embeddings[index].append((key, vectors))
             self.config.print(lambda: "%s: %s" % (key, ", ".join("%d->%s" % (i, e.npvalue().tolist())
                                                                  for i, e in zip(indices, vectors))), level=4)
+        elmo_emded = NeuralNetwork.get_elmo_embed(passage)
+        for index in self.birnn_indices(param):
+            embeddings[index].append(('ELMO', elmo_emded))
+
         for birnn in self.get_birnns(*axes):
             birnn.init_features(embeddings[int(birnn.shared)], train)
 

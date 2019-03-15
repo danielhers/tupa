@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
 from enum import Enum
+from ucca.layer0 import Terminal
 from ucca import textutil
 
 from .action import Actions
@@ -232,7 +233,9 @@ class Model:
         axes = [self.axis]
         if self.config.args.node_labels and not self.config.args.use_gold_node_labels:
             axes.append(NODE_LABEL_KEY)
-        self.classifier.init_features(self.feature_extractor.init_features(state), axes, train)
+
+        passage = [node.text for node in state.passage.nodes.values() if isinstance(node, Terminal)]
+        self.classifier.init_features(self.feature_extractor.init_features(state), axes, train, passage)
 
     def finalize(self, finished_epoch):
         """

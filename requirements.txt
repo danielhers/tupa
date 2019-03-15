@@ -1,3 +1,4 @@
+allennlp
 numpy>=1.15.0
 cython>=0.29
 tqdm>=4.28.1
