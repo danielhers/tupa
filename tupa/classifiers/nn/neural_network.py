@@ -19,6 +19,8 @@ from ...model_util import MISSING_VALUE, remove_existing
 from numpy import average
 from allennlp.commands.elmo import ElmoEmbedder
 
+from typing import List
+
 BIRNN_TYPES = {BIRNN: BiRNN, HIGHWAY_RNN: HighwayRNN, HIERARCHICAL_RNN: HierarchicalBiRNN}
 
 tqdm.monitor_interval = 0
@@ -156,9 +158,13 @@ class NeuralNetwork(Classifier, SubModel):
     elmo = ElmoEmbedder(options_file=OPTIONS_FILE, weight_file=WEIGHT_FILE)
 
     @staticmethod
-    def get_elmo_embed(passage):
+    def get_elmo_embed(passage: List[str]):
+        passage.insert(0, "<S>")
+        passage.append("</S>")
         embed = NeuralNetwork.elmo.embed_sentence(passage)
-        average_embed = average(embed, 0)
+
+        average_embed = average(embed, axis=0)
+        average_embed = average_embed[1:-1]
         return dy.inputTensor(average_embed)
 
     def init_features(self, features, axes, train=False, passage=None):
