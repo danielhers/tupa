@@ -16,7 +16,6 @@ from ..classifier import Classifier
 from ...config import Config, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN
 from ...model_util import MISSING_VALUE, remove_existing
 
-from numpy import average
 from allennlp.commands.elmo import ElmoEmbedder
 
 from typing import List
@@ -87,6 +86,9 @@ class NeuralNetwork(Classifier, SubModel):
             self.birnn = self.birnn_type(self.config, Config().hyperparams.shared, self.model,
                                          save_path=("shared", "birnn"), shared=True)
             self.set_weight_decay_lambda()
+            self.elmo_w_0 = self.model.add_parameters(1, init=1)
+            self.elmo_w_1 = self.model.add_parameters(1, init=1)
+            self.elmo_w_2 = self.model.add_parameters(1, init=1)
         if train:
             self.init_trainer()
         if axis:
@@ -157,15 +159,16 @@ class NeuralNetwork(Classifier, SubModel):
     WEIGHT_FILE = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5"
     elmo = ElmoEmbedder(options_file=OPTIONS_FILE, weight_file=WEIGHT_FILE)
 
-    @staticmethod
-    def get_elmo_embed(passage: List[str]):
+    def get_elmo_embed(self, passage: List[str]):
         passage.insert(0, "<S>")
         passage.append("</S>")
-        embed = NeuralNetwork.elmo.embed_sentence(passage)
+        embeds = NeuralNetwork.elmo.embed_sentence(passage)
+        embeds = [i[1:-1] for i in embeds]
+        embed_0 = dy.inputTensor(embeds[0])*self.elmo_w_0.scalar_value()
+        embed_1 = dy.inputTensor(embeds[1])*self.elmo_w_1.scalar_value()
+        embed_2 = dy.inputTensor(embeds[2])*self.elmo_w_2.scalar_value()
 
-        average_embed = average(embed, axis=0)
-        average_embed = average_embed[1:-1]
-        return dy.inputTensor(average_embed)
+        return (embed_0+embed_1+embed_2)/3
 
     def init_features(self, features, axes, train=False, passage=None):
         for axis in axes:
@@ -183,9 +186,14 @@ class NeuralNetwork(Classifier, SubModel):
                 embeddings[index].append((key, vectors))
             self.config.print(lambda: "%s: %s" % (key, ", ".join("%d->%s" % (i, e.npvalue().tolist())
                                                                  for i, e in zip(indices, vectors))), level=4)
-        elmo_emded = NeuralNetwork.get_elmo_embed(passage)
+        elmo_emded = self.get_elmo_embed(passage)
         for index in self.birnn_indices(param):
             embeddings[index].append(('ELMO', elmo_emded))
+
+        print("--Elmo Weights--: ")
+        print(" Weight_1: " + str(self.elmo_w_0.scalar_value()))
+        print(" Weight_2: " + str(self.elmo_w_0.scalar_value()))
+        print(" Weight_3: " + str(self.elmo_w_0.scalar_value()))
 
         for birnn in self.get_birnns(*axes):
             birnn.init_features(embeddings[int(birnn.shared)], train)
