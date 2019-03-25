@@ -86,9 +86,7 @@ class NeuralNetwork(Classifier, SubModel):
             self.birnn = self.birnn_type(self.config, Config().hyperparams.shared, self.model,
                                          save_path=("shared", "birnn"), shared=True)
             self.set_weight_decay_lambda()
-            self.elmo_w_0 = self.model.add_parameters(1, init=1)
-            self.elmo_w_1 = self.model.add_parameters(1, init=1)
-            self.elmo_w_2 = self.model.add_parameters(1, init=1)
+            self.elmo_weights = self.model.add_parameters(3, init=1)
         if train:
             self.init_trainer()
         if axis:
@@ -164,9 +162,10 @@ class NeuralNetwork(Classifier, SubModel):
         passage.append("</S>")
         embeds = NeuralNetwork.elmo.embed_sentence(passage)
         embeds = [i[1:-1] for i in embeds]
-        embed_0 = dy.inputTensor(embeds[0])*self.elmo_w_0.scalar_value()
-        embed_1 = dy.inputTensor(embeds[1])*self.elmo_w_1.scalar_value()
-        embed_2 = dy.inputTensor(embeds[2])*self.elmo_w_2.scalar_value()
+        elmo_softmax = dy.softmax(self.elmo_weights)
+        embed_0 = dy.cmult(dy.inputTensor(embeds[0]), elmo_softmax[0])
+        embed_1 = dy.cmult(dy.inputTensor(embeds[1]), elmo_softmax[1])
+        embed_2 = dy.cmult(dy.inputTensor(embeds[2]), elmo_softmax[2])
 
         return (embed_0+embed_1+embed_2)/3
 
@@ -190,10 +189,8 @@ class NeuralNetwork(Classifier, SubModel):
         for index in self.birnn_indices(param):
             embeddings[index].append(('ELMO', elmo_emded))
 
-        print("--Elmo Weights--: ")
-        print(" Weight_1: " + str(self.elmo_w_0.scalar_value()))
-        print(" Weight_2: " + str(self.elmo_w_0.scalar_value()))
-        print(" Weight_3: " + str(self.elmo_w_0.scalar_value()))
+        print("\n--Elmo Weights--: ")
+        print(str(dy.softmax(self.elmo_weights).value()))
 
         for birnn in self.get_birnns(*axes):
             birnn.init_features(embeddings[int(birnn.shared)], train)
