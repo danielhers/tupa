@@ -86,7 +86,6 @@ class NeuralNetwork(Classifier, SubModel):
             self.birnn = self.birnn_type(self.config, Config().hyperparams.shared, self.model,
                                          save_path=("shared", "birnn"), shared=True)
             self.set_weight_decay_lambda()
-            self.elmo_weights = self.model.add_parameters(3, init=1)
         if train:
             self.init_trainer()
         if axis:
@@ -135,6 +134,12 @@ class NeuralNetwork(Classifier, SubModel):
                 i = self.birnn_indices(param)
                 indexed_dim[i] += param.dim  # add to the input dimensionality at each indexed time point
                 indexed_num[i] = np.fmax(indexed_num[i], param.num)  # indices to be looked up are collected
+        if True:  # if config elmo
+            if init:
+                elmo_weights = self.model.add_parameters(3, init=1)
+                self.params["elmo_weights"] = elmo_weights
+            i = self.birnn_indices(param)
+            indexed_dim[i] += 1024  # config - emo model
         for birnn in self.get_birnns(axis):
             birnn.init_params(indexed_dim[int(birnn.shared)], indexed_num[int(birnn.shared)])
 
@@ -162,7 +167,7 @@ class NeuralNetwork(Classifier, SubModel):
         passage.append("</S>")
         embeds = NeuralNetwork.elmo.embed_sentence(passage)
         embeds = [i[1:-1] for i in embeds]
-        elmo_softmax = dy.softmax(self.elmo_weights)
+        elmo_softmax = dy.softmax(self.params["elmo_weights"])
         embed_0 = dy.cmult(dy.inputTensor(embeds[0]), elmo_softmax[0])
         embed_1 = dy.cmult(dy.inputTensor(embeds[1]), elmo_softmax[1])
         embed_2 = dy.cmult(dy.inputTensor(embeds[2]), elmo_softmax[2])
@@ -190,7 +195,7 @@ class NeuralNetwork(Classifier, SubModel):
             embeddings[index].append(('ELMO', elmo_emded))
 
         print("\n--Elmo Weights--: ")
-        print(str(dy.softmax(self.elmo_weights).value()))
+        print(str(dy.softmax(self.params["elmo_weights"]).value()))
 
         for birnn in self.get_birnns(*axes):
             birnn.init_features(embeddings[int(birnn.shared)], train)
