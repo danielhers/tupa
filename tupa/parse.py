@@ -677,6 +677,7 @@ def main_generator():
 
 def main():
     print("TUPA version " + GIT_VERSION)
+    print("TUPA Experiment - Branch: elmo_weighted_w_special_tokens_to_lstm_mlp")
     set_traceback_listener()
     list(main_generator())
 
