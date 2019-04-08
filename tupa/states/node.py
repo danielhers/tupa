@@ -122,9 +122,9 @@ class Node:
         if self.text:  # For Word terminals (Punctuation already created by add_punct for parent)
             if parent.node is not None:
                 if self.node is None:
-                    self.node = parent.node.add([(EdgeTags.Terminal, "", "", "")], self.get_terminal(l0)).child
+                    self.node = parent.node.add_multiple([(EdgeTags.Terminal, "", "", "")], self.get_terminal(l0)).child
                 elif self.node not in parent.node.children:
-                    parent.node.add([(EdgeTags.Terminal, "", "", "")], self.node)
+                    parent.node.add_multiple([(EdgeTags.Terminal, "", "", "")], self.node)
         elif edge and edge.child.text and layer0.is_punct(edge.child.get_terminal(l0)): # For Punctuation, that already created by add_punct for parent
             if Config().args.verify:
                 assert edge_categories[0][0] == EdgeTags.Punctuation, "Punctuation parent %s's edge tag is %s" % (parent.node_id, tag)
@@ -133,13 +133,13 @@ class Node:
                 self.node = l1.add_punct(parent.node, edge.child.get_terminal(l0))
                 edge.child.node = self.node[0].child
             elif parent.node is not None and self.node not in parent.node.children:
-                parent.node.add([(EdgeTags.Punctuation, "", "", "")], self.node)
+                parent.node.add_multiple([(EdgeTags.Punctuation, "", "", "")], self.node)
         else:  # The usual case
             assert self.node is None, "Trying to create the same node twice (multiple incoming primary edges): " + \
                                       ", ".join(map(str, self.incoming))
             if parent is not None and parent.label and parent.node is None:  # If parent is an orphan and has a a label,
                 parent.add_to_l1(l0, l1, None, Config().args.orphan_label, labeled, node_labels)  # link to root
-            self.node = l1.add_fnode(None if parent is None else parent.node, edge_categories, implicit=self.implicit)
+            self.node = l1.add_fnode_multiple(None if parent is None else parent.node, edge_categories, implicit=self.implicit)
         if labeled:  # In training
             self.set_node_id()
         if node_labels:
