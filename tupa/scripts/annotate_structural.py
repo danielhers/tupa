@@ -67,16 +67,16 @@ def main(args):
             args.features_source_dir, desc="Reading passages for features")}
     else:
         features_passage_by_id = None
-    if args.extra:
-        extra_passage_by_id = {passage.ID: passage for passage in get_passages_with_progress_bar(
-            args.extra, desc="Reading passages for extra features")}
+    if args.copy:
+        copy_passage_by_id = {passage.ID: passage for passage in get_passages_with_progress_bar(
+            args.copy, desc="Reading passages for copy features")}
     else:
-        extra_passage_by_id = None
+        copy_passage_by_id = None
     for passage in get_passages_with_progress_bar(args.source_dir, desc="Annotating"):
         passage_id = passage.ID
         if "reviews-" in passage_id:
             passage_id = passage_id.replace("reviews-", "")
-            if extra_passage_by_id:
+            if copy_passage_by_id:
                 passage_id = hack_id(passage_id)
             if features_passage_by_id:
                 try:
@@ -86,14 +86,14 @@ def main(args):
                     # raise RuntimeError("No feature source passage found for ID=" + passage_id) from e
             else:
                 features_passage = None
-            if extra_passage_by_id:
+            if copy_passage_by_id:
                 try:
-                    extra_passage = extra_passage_by_id[passage_id]
+                    copy_passage = copy_passage_by_id[passage_id]
                 except KeyError as e:
-                    extra_passage = None
-                    # raise RuntimeError("No extra passage found for ID=" + passage_id) from e
+                    copy_passage = None
+                    # raise RuntimeError("No copy passage found for ID=" + passage_id) from e
             else:
-                extra_passage = None
+                copy_passage = None
             for terminal in passage.layer(layer0.LAYER_ID).all:
                 if features_passage:
                     try:
@@ -102,13 +102,13 @@ def main(args):
                         raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage_id
                                            + " from " + args.features_source_dir) from e
                     terminal.extra.update(get_features(features_terminal))
-                if extra_passage:
+                if copy_passage:
                     try:
-                        extra_terminal = extra_passage.by_id(terminal.ID)
+                        copy_terminal = copy_passage.by_id(terminal.ID)
                     except KeyError as e:
                         raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage_id
-                                           + " from " + args.extra) from e
-                    terminal.extra.update(extra_terminal.extra)
+                                           + " from " + args.copy) from e
+                    terminal.extra.update(copy_terminal.extra)
         write_passage(passage, outdir=args.out_dir, verbose=False)
     print("Wrote passages to " + args.out_dir)
 
@@ -118,6 +118,6 @@ if __name__ == "__main__":
     argparser.add_argument("source_dir", help="directory to read source UCCA files from to manipulate")
     argparser.add_argument("-f", "--features-source-dir", help="directory to read source UCCA files to get structure "
                                                                "features")
-    argparser.add_argument("-e", "--extra", help="directory read source UCCA files for extra features")
+    argparser.add_argument("-c", "--copy", help="directory read source UCCA files for extra features to copy")
     argparser.add_argument("-o", "--out-dir", default=".", help="directory to write annotated UCCA files to")
     main(argparser.parse_args())
