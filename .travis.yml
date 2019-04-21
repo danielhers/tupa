@@ -13,6 +13,7 @@ install:
   - python setup.py install
   - pip install pytest
   - python -m spacy download en_core_web_md
+  - python -m spacy download de_core_news_md
 env:
   global:
     - TWINE_USERNAME=danielh
