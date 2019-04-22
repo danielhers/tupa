@@ -23,6 +23,7 @@ install:
   - cinst pandoc
   - python setup.py install
   - python -m spacy download en_core_web_md
+  - python -m spacy download de_core_news_md
 
 build: off
 
