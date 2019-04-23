@@ -1,7 +1,7 @@
 """Testing code for the tupa.features package, unit-testing only."""
+import os
 from collections import OrderedDict
 
-import os
 import pytest
 from ucca import textutil
 
@@ -59,7 +59,7 @@ def extract_features(feature_extractor, state, features):
 def _test_features(config, feature_extractor_creator, filename, write_features):
     feature_extractor = feature_extractor_creator(config)
     passage = load_passage(filename, annotate=feature_extractor_creator.annotated)
-    textutil.annotate(passage, as_array=True, vocab=config.vocab())
+    textutil.annotate(passage, as_array=True, as_extra=False, vocab=config.vocab())
     config.set_format(passage.extra.get("format") or "ucca")
     oracle = Oracle(passage)
     state = State(passage)
