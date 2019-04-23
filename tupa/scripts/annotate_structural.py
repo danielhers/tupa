@@ -57,7 +57,7 @@ def hack_id(sent_id):
     Replace STREUSLE sentence ID to Jakob's formatted passage ID (no "-"; zero-based)
     :param sent_id: STREUSLE sentence ID
     """
-    return "%09d" % (int(sent_id.replace("-0", "")) - 1)
+    return ("%09d" % (int(sent_id.replace("-0", "")) - 1)) if "-" in sent_id else sent_id
 
 
 def main(args):
@@ -68,13 +68,13 @@ def main(args):
     else:
         features_passage_by_id = None
     if args.copy:
-        copy_passage_by_id = {passage.ID: passage for passage in get_passages_with_progress_bar(
+        copy_passage_by_id = {hack_id(passage.ID): passage for passage in get_passages_with_progress_bar(
             args.copy, desc="Reading passages for copy features")}
     else:
         copy_passage_by_id = None
     for passage in get_passages_with_progress_bar(args.source_dir, desc="Annotating"):
         passage_id = passage.ID
-        if "reviews-" in passage_id:
+        if "-" in passage_id:
             passage_id = passage_id.replace("reviews-", "")
             if copy_passage_by_id:
                 passage_id = hack_id(passage_id)
@@ -82,16 +82,16 @@ def main(args):
                 try:
                     features_passage = features_passage_by_id[passage_id]
                 except KeyError as e:
-                    features_passage = None
-                    # raise RuntimeError("No feature source passage found for ID=" + passage_id) from e
+                    # features_passage = None
+                    raise RuntimeError("No feature source passage found for ID=" + passage_id) from e
             else:
                 features_passage = None
             if copy_passage_by_id:
                 try:
                     copy_passage = copy_passage_by_id[passage_id]
                 except KeyError as e:
-                    copy_passage = None
-                    # raise RuntimeError("No copy passage found for ID=" + passage_id) from e
+                    # copy_passage = None
+                    raise RuntimeError("No copy passage found for ID=" + passage_id) from e
             else:
                 copy_passage = None
             for terminal in passage.layer(layer0.LAYER_ID).all:
@@ -99,14 +99,14 @@ def main(args):
                     try:
                         features_terminal = features_passage.by_id(terminal.ID)
                     except KeyError as e:
-                        raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage_id
+                        raise RuntimeError("No terminal " + terminal.ID + " found in passage " + features_passage.ID
                                            + " from " + args.features_source_dir) from e
                     terminal.extra.update(get_features(features_terminal))
                 if copy_passage:
                     try:
                         copy_terminal = copy_passage.by_id(terminal.ID)
                     except KeyError as e:
-                        raise RuntimeError("No terminal " + terminal.ID + " found in passage ID " + passage_id
+                        raise RuntimeError("No terminal " + terminal.ID + " found in passage " + copy_passage.ID
                                            + " from " + args.copy) from e
                     terminal.extra.update(copy_terminal.extra)
         write_passage(passage, outdir=args.out_dir, verbose=False)
