@@ -333,7 +333,7 @@ class BatchParser(AbstractParser):
         pr_width = len(str(total))
         id_width = 1
         passages = self.add_progress_bar(textutil.annotate_all(
-            passages, as_array=True, lang=self.config.args.lang, verbose=self.config.args.verbose > 2,
+            passages, as_array=True, as_extra=False, lang=self.config.args.lang, verbose=self.config.args.verbose > 2,
             vocab=self.model.config.vocab(lang=self.config.args.lang)), display=display)
         for i, passage in enumerate(passages, start=1):
             parser = PassageParser(passage, self.config, self.models, self.training, self.evaluation)
