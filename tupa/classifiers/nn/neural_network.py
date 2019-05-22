@@ -119,7 +119,7 @@ class NeuralNetwork(Classifier, SubModel):
         indexed_dim = np.array([0, 0], dtype=int)  # specific, shared
         indexed_num = np.array([0, 0], dtype=int)
         for key, param in sorted(self.input_params.items()):
-            if not param.enabled:
+            if not param.enabled or key == 'W':
                 continue
             self.config.print("Initializing input parameter: %s" % param, level=4)
             if not param.numeric and key not in self.params:  # lookup feature
@@ -183,7 +183,7 @@ class NeuralNetwork(Classifier, SubModel):
         for key, indices in sorted(features.items()):
             param = self.input_params[key]
             lookup = self.params.get(key)
-            if not param.indexed or lookup is None:
+            if not param.indexed or lookup is None or key == 'W':
                 continue
             vectors = [lookup[k] for k in indices]
             for index in self.birnn_indices(param):
