@@ -16,7 +16,8 @@ from ..classifier import Classifier
 from ...config import Config, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN
 from ...model_util import MISSING_VALUE, remove_existing
 
-from allennlp.commands.elmo import ElmoEmbedder
+import torch
+from pytorch_pretrained_bert import BertTokenizer, BertModel
 
 from typing import List
 
@@ -63,6 +64,17 @@ class NeuralNetwork(Classifier, SubModel):
         self.losses = []
         self.steps = 0
         self.trainer_type = self.trainer = self.value = self.birnn = None
+
+        # init_bert_model
+        import logging
+        logging.basicConfig(level=logging.INFO)
+        is_uncased_model = "uncased" in self.config.args.bert_model
+        self.tokenizer = BertTokenizer.from_pretrained(self.config.args.bert_model, do_lower_case=is_uncased_model)
+        self.bert_model = BertModel.from_pretrained(self.config.args.bert_model)
+        self.bert_model.eval()
+        self.bert_model.to('cuda')
+        self.bert_layers_count = 24 if "large" in self.config.args.bert_model else 12
+        self.bert_embedding_len = 1024 if "large" in self.config.args.bert_model else 768
 
     @property
     def input_dim(self):
@@ -134,12 +146,13 @@ class NeuralNetwork(Classifier, SubModel):
                 i = self.birnn_indices(param)
                 indexed_dim[i] += param.dim  # add to the input dimensionality at each indexed time point
                 indexed_num[i] = np.fmax(indexed_num[i], param.num)  # indices to be looked up are collected
+
         if True:  # if config elmo
             if init:
-                elmo_weights = self.model.add_parameters(3, init=1)
-                self.params["elmo_weights"] = elmo_weights
+                bert_weights = self.model.add_parameters(self.bert_layers_count, init=1)
+                self.params["bert_weights"] = bert_weights
             i = self.birnn_indices(param)
-            indexed_dim[i] += 1024  # config - emo model
+            indexed_dim[i] += self.bert_embedding_len
         for birnn in self.get_birnns(axis):
             birnn.init_params(indexed_dim[int(birnn.shared)], indexed_num[int(birnn.shared)])
 
@@ -158,16 +171,52 @@ class NeuralNetwork(Classifier, SubModel):
             self.empty_values[key] = value = dy.inputVector(np.zeros(self.input_params[key].dim, dtype=float))
         return value
 
-    OPTIONS_FILE = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json"
-    WEIGHT_FILE = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5"
-    elmo = ElmoEmbedder(options_file=OPTIONS_FILE, weight_file=WEIGHT_FILE)
+    def get_bert_embed(self, passage: List[str]):
+        orig_tokens = passage
+        bert_tokens = []
+        # Token map will be an int -> int mapping between the `orig_tokens` index and
+        # the `bert_tokens` index.
+        orig_to_tok_map = []
 
-    def get_elmo_embed(self, passage: List[str]):
-        passage.insert(0, "<S>")
-        passage.append("</S>")
-        embeds = NeuralNetwork.elmo.embed_sentence(passage)
-        embeds = [i[1:-1] for i in embeds]
-        elmo_softmax = dy.softmax(self.params["elmo_weights"])
+        # Example:
+        # orig_tokens = ["John", "Johanson", "'s",  "house"]
+        # bert_tokens == ["[CLS]", "john", "johan", "##son", "'", "s", "house", "[SEP]"]
+        # orig_to_tok_map == [1, 2, 4, 6]
+
+        bert_tokens.append("[CLS]")
+        for orig_token in orig_tokens:
+            start_token = len(bert_tokens)
+            bert_token = self.tokenizer.tokenize(orig_token)
+            bert_tokens.extend(bert_token)
+            end_token = start_token + len(bert_token)
+            orig_to_tok_map.append(range(start_token, end_token))
+        bert_tokens.append("[SEP]")
+
+        indexed_tokens = self.tokenizer.convert_tokens_to_ids(bert_tokens)
+        segments_ids = [0] * len(bert_tokens)
+
+        tokens_tensor = torch.tensor([indexed_tokens])
+        segments_tensors = torch.tensor([segments_ids])
+        tokens_tensor = tokens_tensor.to('cuda')
+        segments_tensors = segments_tensors.to('cuda')
+
+        with torch.no_grad():
+            encoded_layers, _ = self.bert_model(tokens_tensor, segments_tensors)
+        assert len(encoded_layers) == self.bert_layers_count
+
+        aligned_encoded_layers = []
+        for layer in range(self.bert_layers_count):
+
+            for mapping_range in orig_to_tok_map:
+
+            for index in mapping_range:
+
+            a = tokens_tensor[mapping]
+
+        embeds = [i[1:-1] for i in encoded_layers]
+        bert_softmax = dy.softmax(self.params["bert_weights"])
+        embeds = []
+        assert len(embeds) == len(bert_softmax.d)
         embed_0 = dy.cmult(dy.inputTensor(embeds[0]), elmo_softmax[0])
         embed_1 = dy.cmult(dy.inputTensor(embeds[1]), elmo_softmax[1])
         embed_2 = dy.cmult(dy.inputTensor(embeds[2]), elmo_softmax[2])
@@ -190,12 +239,12 @@ class NeuralNetwork(Classifier, SubModel):
                 embeddings[index].append((key, vectors))
             self.config.print(lambda: "%s: %s" % (key, ", ".join("%d->%s" % (i, e.npvalue().tolist())
                                                                  for i, e in zip(indices, vectors))), level=4)
-        elmo_emded = self.get_elmo_embed(passage)
+        bert_emded = self.get_bert_embed(passage)
         for index in self.birnn_indices(param):
-            embeddings[index].append(('ELMO', elmo_emded))
+            embeddings[index].append(('BERT', bert_emded))
 
-        print("\n--Elmo Weights--: ")
-        print(str(dy.softmax(self.params["elmo_weights"]).value()))
+        print("\n--Bert Weights--: ")
+        print(str(dy.softmax(self.params["bert_weights"]).value()))
 
         for birnn in self.get_birnns(*axes):
             birnn.init_features(embeddings[int(birnn.shared)], train)
