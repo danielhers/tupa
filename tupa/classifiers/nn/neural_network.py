@@ -131,7 +131,11 @@ class NeuralNetwork(Classifier, SubModel):
         indexed_dim = np.array([0, 0], dtype=int)  # specific, shared
         indexed_num = np.array([0, 0], dtype=int)
         for key, param in sorted(self.input_params.items()):
-            if not param.enabled or key == 'W':
+            if not param.enabled:
+                continue
+            if key == 'W' and param.indexed:
+                i = self.birnn_indices(param)
+                indexed_num[i] = np.fmax(indexed_num[i], param.num)  # indices to be looked up are collected
                 continue
             self.config.print("Initializing input parameter: %s" % param, level=4)
             if not param.numeric and key not in self.params:  # lookup feature
@@ -181,7 +185,7 @@ class NeuralNetwork(Classifier, SubModel):
         # Example:
         # orig_tokens = ["John", "Johanson", "'s",  "house"]
         # bert_tokens == ["[CLS]", "john", "johan", "##son", "'", "s", "house", "[SEP]"]
-        # orig_to_tok_map == [1, 2, 4, 6]
+        # orig_to_tok_map == [(1), (2,3), (4,5), (6)]
 
         bert_tokens.append("[CLS]")
         for orig_token in orig_tokens:
@@ -189,39 +193,33 @@ class NeuralNetwork(Classifier, SubModel):
             bert_token = self.tokenizer.tokenize(orig_token)
             bert_tokens.extend(bert_token)
             end_token = start_token + len(bert_token)
-            orig_to_tok_map.append(range(start_token, end_token))
+            orig_to_tok_map.append(slice(start_token, end_token))
         bert_tokens.append("[SEP]")
 
         indexed_tokens = self.tokenizer.convert_tokens_to_ids(bert_tokens)
-        segments_ids = [0] * len(bert_tokens)
-
         tokens_tensor = torch.tensor([indexed_tokens])
-        segments_tensors = torch.tensor([segments_ids])
         tokens_tensor = tokens_tensor.to('cuda')
-        segments_tensors = segments_tensors.to('cuda')
 
         with torch.no_grad():
-            encoded_layers, _ = self.bert_model(tokens_tensor, segments_tensors)
+            encoded_layers, _ = self.bert_model(tokens_tensor)
         assert len(encoded_layers) == self.bert_layers_count
 
-        aligned_encoded_layers = []
+        aligned_layer = []
         for layer in range(self.bert_layers_count):
-
+            aligned_layer.append([])
             for mapping_range in orig_to_tok_map:
+                token_embeddings = encoded_layers[layer][0][mapping_range]
+                if self.config.args.bert_token_align_by == "mean":
+                    aligned_layer[layer].append(torch.mean(token_embeddings, dim=(0,)).cpu().data.numpy())
+                elif self.config.args.bert_token_align_by == "sum":
+                    aligned_layer[layer].append(torch.sum(token_embeddings, dim=(0,)).cpu().data.numpy())
+                else:  # first
+                    aligned_layer[layer].append(token_embeddings[0].cpu().data.numpy())
 
-            for index in mapping_range:
-
-            a = tokens_tensor[mapping]
-
-        embeds = [i[1:-1] for i in encoded_layers]
         bert_softmax = dy.softmax(self.params["bert_weights"])
-        embeds = []
-        assert len(embeds) == len(bert_softmax.d)
-        embed_0 = dy.cmult(dy.inputTensor(embeds[0]), elmo_softmax[0])
-        embed_1 = dy.cmult(dy.inputTensor(embeds[1]), elmo_softmax[1])
-        embed_2 = dy.cmult(dy.inputTensor(embeds[2]), elmo_softmax[2])
+        embeds = dy.cmult(dy.inputTensor(np.asarray(aligned_layer)), bert_softmax)
 
-        return (embed_0+embed_1+embed_2)/3
+        return dy.sum_dim(embeds, [0])/self.bert_layers_count
 
     def init_features(self, features, axes, train=False, passage=None):
         for axis in axes:

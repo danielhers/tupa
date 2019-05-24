@@ -244,6 +244,7 @@ class Config(object, metaclass=Singleton):
         self.arg_parser = ap = ArgParser(description="Transition-based parser for UCCA.",
                                          formatter_class=ArgumentDefaultsHelpFormatter)
         ap.add_argument("--bert_model")
+        ap.add_argument("--bert_token_align_by")
 
         ap.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
         ap.add_argument("--version", action="version", version="")
