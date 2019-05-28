@@ -235,7 +235,8 @@ class Model:
             axes.append(NODE_LABEL_KEY)
 
         passage = [node.text for node in state.passage.nodes.values() if isinstance(node, Terminal)]
-        self.classifier.init_features(self.feature_extractor.init_features(state), axes, train, passage)
+        lang = state.passage.attrib.get("lang")
+        self.classifier.init_features(self.feature_extractor.init_features(state), axes, train, passage, lang)
 
     def finalize(self, finished_epoch):
         """

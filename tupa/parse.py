@@ -73,7 +73,11 @@ class PassageParser(AbstractParser):
             assert not errors, errors
         self.in_format = self.format or "ucca"
         self.out_format = "ucca" if self.format in (None, "text") else self.format
-        self.lang = self.passage.attrib.get("lang", self.config.args.lang)
+        if self.config.args.bert_multilingual:
+            self.lang = self.passage.attrib.get("lang")
+            assert self.lang
+        else:
+            self.lang = self.passage.attrib.get("lang", self.config.args.lang)
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
         self.ignore_node = None if self.config.args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
         self.state_hash_history = set()
@@ -677,7 +681,7 @@ def main_generator():
 
 def main():
     print("TUPA version " + GIT_VERSION)
-    print("TUPA Experiment - Branch: bert_to_lstm_mlp_w/o_default_word_embeddings")
+    print("TUPA Experiment - Branch: bert_to_lstm_mlp_fully_configurable")
     set_traceback_listener()
     list(main_generator())
 

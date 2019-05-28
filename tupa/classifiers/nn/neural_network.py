@@ -65,16 +65,18 @@ class NeuralNetwork(Classifier, SubModel):
         self.steps = 0
         self.trainer_type = self.trainer = self.value = self.birnn = None
 
-        # init_bert_model
-        import logging
-        logging.basicConfig(level=logging.INFO)
-        is_uncased_model = "uncased" in self.config.args.bert_model
-        self.tokenizer = BertTokenizer.from_pretrained(self.config.args.bert_model, do_lower_case=is_uncased_model)
-        self.bert_model = BertModel.from_pretrained(self.config.args.bert_model)
-        self.bert_model.eval()
-        self.bert_model.to('cuda')
-        self.bert_layers_count = 24 if "large" in self.config.args.bert_model else 12
-        self.bert_embedding_len = 1024 if "large" in self.config.args.bert_model else 768
+        if self.config.args.use_bert:
+            if self.config.bert_multilingual:
+                assert "multilingual" in self.config.args.bert_model
+            import logging
+            logging.basicConfig(level=logging.INFO)
+            is_uncased_model = "uncased" in self.config.args.bert_model
+            self.tokenizer = BertTokenizer.from_pretrained(self.config.args.bert_model, do_lower_case=is_uncased_model)
+            self.bert_model = BertModel.from_pretrained(self.config.args.bert_model)
+            self.bert_model.eval()
+            self.bert_model.to('cuda')
+            self.bert_layers_count = 24 if "large" in self.config.args.bert_model else 12
+            self.bert_embedding_len = 1024 if "large" in self.config.args.bert_model else 768
 
     @property
     def input_dim(self):
@@ -133,9 +135,11 @@ class NeuralNetwork(Classifier, SubModel):
         for key, param in sorted(self.input_params.items()):
             if not param.enabled:
                 continue
-            if key == 'W' and param.indexed:
+            if (not self.config.args.use_default_word_embeddings or self.config.bert_multilingual) and key == 'W':
                 i = self.birnn_indices(param)
                 indexed_num[i] = np.fmax(indexed_num[i], param.num)  # indices to be looked up are collected
+                continue
+            if self.config.bert_multilingual and param.lang_specific:
                 continue
             self.config.print("Initializing input parameter: %s" % param, level=4)
             if not param.numeric and key not in self.params:  # lookup feature
@@ -151,12 +155,15 @@ class NeuralNetwork(Classifier, SubModel):
                 indexed_dim[i] += param.dim  # add to the input dimensionality at each indexed time point
                 indexed_num[i] = np.fmax(indexed_num[i], param.num)  # indices to be looked up are collected
 
-        if True:  # if config elmo
-            if init:
+        if self.config.args.use_bert and init:
+            if self.config.args.bert_layer_pooling == "weighed":
                 bert_weights = self.model.add_parameters(self.bert_layers_count, init=1)
                 self.params["bert_weights"] = bert_weights
-            i = self.birnn_indices(param)
-            indexed_dim[i] += self.bert_embedding_len
+
+            indexed_dim[0] += self.bert_embedding_len
+            if self.config.args.bert_multilingual:
+                indexed_dim[0] += 50
+
         for birnn in self.get_birnns(axis):
             birnn.init_params(indexed_dim[int(birnn.shared)], indexed_num[int(birnn.shared)])
 
@@ -175,7 +182,7 @@ class NeuralNetwork(Classifier, SubModel):
             self.empty_values[key] = value = dy.inputVector(np.zeros(self.input_params[key].dim, dtype=float))
         return value
 
-    def get_bert_embed(self, passage: List[str]):
+    def get_bert_embed(self, passage: List[str], lang):
         orig_tokens = passage
         bert_tokens = []
         # Token map will be an int -> int mapping between the `orig_tokens` index and
@@ -204,8 +211,9 @@ class NeuralNetwork(Classifier, SubModel):
             encoded_layers, _ = self.bert_model(tokens_tensor)
         assert len(encoded_layers) == self.bert_layers_count
 
+        layer_list = self.config.args.bert_layers
         aligned_layer = []
-        for layer in range(self.bert_layers_count):
+        for layer in layer_list:
             aligned_layer.append([])
             for mapping_range in orig_to_tok_map:
                 token_embeddings = encoded_layers[layer][0][mapping_range]
@@ -213,15 +221,40 @@ class NeuralNetwork(Classifier, SubModel):
                     aligned_layer[layer].append(torch.mean(token_embeddings, dim=(0,)).cpu().data.numpy())
                 elif self.config.args.bert_token_align_by == "sum":
                     aligned_layer[layer].append(torch.sum(token_embeddings, dim=(0,)).cpu().data.numpy())
-                else:  # first
+                elif self.config.args.bert_token_align_by == "first":
                     aligned_layer[layer].append(token_embeddings[0].cpu().data.numpy())
+                else:
+                    assert False
 
-        bert_softmax = dy.softmax(self.params["bert_weights"])
-        embeds = dy.cmult(dy.inputTensor(np.asarray(aligned_layer)), bert_softmax)
+        if self.config.args.bert_layers_pooling == "weighed":
+            bert_softmax = dy.softmax(self.params["bert_weights"])
+            embeds = dy.cmult(dy.inputTensor(np.asarray(aligned_layer)), bert_softmax)
+        elif self.config.args.bert_layers_pooling == "concat":
+            embeds = dy.inputTensor(np.concatenate(aligned_layer, axis=1))
+        elif self.config.args.bert_layers_pooling == "sum":
+            embeds = dy.inputTensor(np.sum(aligned_layer, axis=0))
+        else:
+            assert False
 
-        return dy.sum_dim(embeds, [0])/self.bert_layers_count
+        embeds = dy.sum_dim(embeds, [0])
 
-    def init_features(self, features, axes, train=False, passage=None):
+        if self.config.args.bert_multilingual:
+            assert lang
+            if (lang + "_embed") in self.params:
+                lang_embed = self.params[lang + "_embed"]
+            else:
+                lang_embed = self.model.add_parameters(50, init='glorot')
+                self.params[lang + "_embed"] = lang_embed
+
+            multilingual_embeds = []
+            for embed in embeds:
+                multilingual_embeds.append(dy.concatenate([lang_embed, embed]))
+
+            embeds = multilingual_embeds
+
+        return embeds
+
+    def init_features(self, features, axes, train=False, passage=None, lang=None):
         for axis in axes:
             self.init_model(axis, train)
         embeddings = [[], []]  # specific, shared
@@ -230,19 +263,20 @@ class NeuralNetwork(Classifier, SubModel):
         for key, indices in sorted(features.items()):
             param = self.input_params[key]
             lookup = self.params.get(key)
-            if not param.indexed or lookup is None or key == 'W':
+            if not param.indexed or lookup is None:
                 continue
             vectors = [lookup[k] for k in indices]
             for index in self.birnn_indices(param):
                 embeddings[index].append((key, vectors))
             self.config.print(lambda: "%s: %s" % (key, ", ".join("%d->%s" % (i, e.npvalue().tolist())
                                                                  for i, e in zip(indices, vectors))), level=4)
-        bert_emded = self.get_bert_embed(passage)
-        for index in self.birnn_indices(param):
-            embeddings[index].append(('BERT', bert_emded))
+        if self.config.args.use_bert:
+            bert_emded = self.get_bert_embed(passage, lang)
+            embeddings[0].append(('BERT', bert_emded))
 
-        print("\n--Bert Weights--: ")
-        print(str(dy.softmax(self.params["bert_weights"]).value()))
+            if "bert_weights" in self.params:
+                print("\n--Bert Weights--: ")
+                print(str(dy.softmax(self.params["bert_weights"]).value()))
 
         for birnn in self.get_birnns(*axes):
             birnn.init_features(embeddings[int(birnn.shared)], train)
@@ -252,6 +286,8 @@ class NeuralNetwork(Classifier, SubModel):
         for key, values in sorted(features.items()):
             param = self.input_params[key]
             lookup = self.params.get(key)
+            if self.config.args.bert_multilingual and param.lang_specific and key != 'W':
+                continue
             if param.numeric:
                 yield key, dy.inputVector(values)
             elif param.indexed:  # collect indices to be looked up

@@ -243,8 +243,17 @@ class Config(object, metaclass=Singleton):
     def __init__(self, *args):
         self.arg_parser = ap = ArgParser(description="Transition-based parser for UCCA.",
                                          formatter_class=ArgumentDefaultsHelpFormatter)
-        ap.add_argument("--bert_model")
-        ap.add_argument("--bert_token_align_by")
+
+        add_boolean_option(ap, "use_bert", default=True, description="If to use bert embeddings")
+        ap.add_argument("--bert_model", choices=["bert-base-uncased", "bert-large-uncased", "bert-base-cased",
+                                                 "bert-large-cased", "bert-base-multilingual-cased"],
+                        default="bert-base-multilingual-cased")
+        ap.add_argument("--bert_layers", type=int, nargs='+', default=[-1, -2, -3, -4])
+        ap.add_argument("--bert_layers_pooling", choices=["weighed", "sum", "concat"], default="sum")
+        ap.add_argument("--bert_token_align_by", choices=["first", "sum", "mean"], default="sum")
+        ap.add_argument("--bert_multilingual", choices=[0], type=int)
+        add_boolean_option(ap, "use_default_word_embeddings", default=False,
+                           description="If to use default word embeddings")
 
         ap.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
         ap.add_argument("--version", action="version", version="")
