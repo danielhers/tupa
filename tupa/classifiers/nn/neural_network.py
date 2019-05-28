@@ -157,7 +157,7 @@ class NeuralNetwork(Classifier, SubModel):
 
         if self.config.args.use_bert and init:
             if self.config.args.bert_layers_pooling == "weighed":
-                bert_weights = self.model.add_parameters(self.bert_layers_count, init=1)
+                bert_weights = self.model.add_parameters(len(self.config.args.bert_layers), init=1)
                 self.params["bert_weights"] = bert_weights
 
             indexed_dim[0] += self.bert_embedding_len
@@ -211,9 +211,8 @@ class NeuralNetwork(Classifier, SubModel):
             encoded_layers, _ = self.bert_model(tokens_tensor)
         assert len(encoded_layers) == self.bert_layers_count
 
-        layer_list = self.config.args.bert_layers
         aligned_layer = []
-        for layer in layer_list:
+        for layer in range(self.bert_layers_count):
             aligned_layer.append([])
             for mapping_range in orig_to_tok_map:
                 token_embeddings = encoded_layers[layer][0][mapping_range]
@@ -226,17 +225,19 @@ class NeuralNetwork(Classifier, SubModel):
                 else:
                     assert False
 
+        layer_list_to_use = self.config.args.bert_layers
+        aligned_layer = [aligned_layer[i] for i in layer_list_to_use]
+
         if self.config.args.bert_layers_pooling == "weighed":
             bert_softmax = dy.softmax(self.params["bert_weights"])
             embeds = dy.cmult(dy.inputTensor(np.asarray(aligned_layer)), bert_softmax)
+            embeds = dy.sum_dim(embeds, [0])
         elif self.config.args.bert_layers_pooling == "concat":
             embeds = dy.inputTensor(np.concatenate(aligned_layer, axis=1))
         elif self.config.args.bert_layers_pooling == "sum":
             embeds = dy.inputTensor(np.sum(aligned_layer, axis=0))
         else:
             assert False
-
-        embeds = dy.sum_dim(embeds, [0])
 
         if self.config.args.bert_multilingual:
             assert lang
@@ -251,6 +252,19 @@ class NeuralNetwork(Classifier, SubModel):
                 multilingual_embeds.append(dy.concatenate([lang_embed, embed]))
 
             embeds = multilingual_embeds
+
+        if self.config.args.bert_layers_pooling == "weighed":
+            single_token_embed_len = self.bert_embedding_len
+        elif self.config.args.bert_layers_pooling == "concat":
+            single_token_embed_len = self.bert_embedding_len * len(layer_list_to_use)
+        elif self.config.args.bert_layers_pooling == "sum":
+            single_token_embed_len = self.bert_embedding_len
+        else:
+            assert False
+        if self.config.args.bert_multilingual:
+            single_token_embed_len += 50
+
+        assert embeds.dim() == ((len(passage), single_token_embed_len), 1)
 
         return embeds
 
