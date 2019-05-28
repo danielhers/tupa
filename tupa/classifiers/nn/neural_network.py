@@ -66,7 +66,7 @@ class NeuralNetwork(Classifier, SubModel):
         self.trainer_type = self.trainer = self.value = self.birnn = None
 
         if self.config.args.use_bert:
-            if self.config.bert_multilingual:
+            if self.config.args.bert_multilingual:
                 assert "multilingual" in self.config.args.bert_model
             import logging
             logging.basicConfig(level=logging.INFO)
