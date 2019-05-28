@@ -66,7 +66,7 @@ class NeuralNetwork(Classifier, SubModel):
         self.trainer_type = self.trainer = self.value = self.birnn = None
 
         if self.config.args.use_bert:
-            if self.config.bert_multilingual:
+            if self.config.args.bert_multilingual:
                 assert "multilingual" in self.config.args.bert_model
             import logging
             logging.basicConfig(level=logging.INFO)
@@ -135,11 +135,11 @@ class NeuralNetwork(Classifier, SubModel):
         for key, param in sorted(self.input_params.items()):
             if not param.enabled:
                 continue
-            if (not self.config.args.use_default_word_embeddings or self.config.bert_multilingual) and key == 'W':
+            if (not self.config.args.use_default_word_embeddings or self.config.args.bert_multilingual) and key == 'W':
                 i = self.birnn_indices(param)
                 indexed_num[i] = np.fmax(indexed_num[i], param.num)  # indices to be looked up are collected
                 continue
-            if self.config.bert_multilingual and param.lang_specific:
+            if self.config.args.bert_multilingual and param.lang_specific:
                 continue
             self.config.print("Initializing input parameter: %s" % param, level=4)
             if not param.numeric and key not in self.params:  # lookup feature
@@ -156,7 +156,7 @@ class NeuralNetwork(Classifier, SubModel):
                 indexed_num[i] = np.fmax(indexed_num[i], param.num)  # indices to be looked up are collected
 
         if self.config.args.use_bert and init:
-            if self.config.args.bert_layer_pooling == "weighed":
+            if self.config.args.bert_layers_pooling == "weighed":
                 bert_weights = self.model.add_parameters(self.bert_layers_count, init=1)
                 self.params["bert_weights"] = bert_weights
 
