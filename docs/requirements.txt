@@ -1,2 +1,2 @@
 pypandoc==1.4
-sphinx-automodapi==0.10
+sphinx-automodapi==0.11
