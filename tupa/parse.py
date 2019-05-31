@@ -73,7 +73,7 @@ class PassageParser(AbstractParser):
             assert not errors, errors
         self.in_format = self.format or "ucca"
         self.out_format = "ucca" if self.format in (None, "text") else self.format
-        if self.config.args.bert_multilingual:
+        if self.config.args.bert_multilingual is not None:
             self.lang = self.passage.attrib.get("lang")
             assert self.lang
         else:

@@ -66,7 +66,7 @@ class NeuralNetwork(Classifier, SubModel):
         self.trainer_type = self.trainer = self.value = self.birnn = None
 
         if self.config.args.use_bert:
-            if self.config.args.bert_multilingual:
+            if self.config.args.bert_multilingual is not None:
                 assert "multilingual" in self.config.args.bert_model
             import logging
             logging.basicConfig(level=logging.INFO)
@@ -135,11 +135,11 @@ class NeuralNetwork(Classifier, SubModel):
         for key, param in sorted(self.input_params.items()):
             if not param.enabled:
                 continue
-            if (not self.config.args.use_default_word_embeddings or self.config.args.bert_multilingual) and key == 'W':
+            if (not self.config.args.use_default_word_embeddings or self.config.args.bert_multilingual is not None) and key == 'W':
                 i = self.birnn_indices(param)
                 indexed_num[i] = np.fmax(indexed_num[i], param.num)  # indices to be looked up are collected
                 continue
-            if self.config.args.bert_multilingual and param.lang_specific:
+            if self.config.args.bert_multilingual is not None and param.lang_specific:
                 continue
             self.config.print("Initializing input parameter: %s" % param, level=4)
             if not param.numeric and key not in self.params:  # lookup feature
@@ -160,9 +160,9 @@ class NeuralNetwork(Classifier, SubModel):
                 bert_weights = self.model.add_parameters(len(self.config.args.bert_layers), init=1)
                 self.params["bert_weights"] = bert_weights
 
-            indexed_dim[0] += self.bert_embedding_len
-            if self.config.args.bert_multilingual:
-                indexed_dim[0] += 50
+            indexed_dim[[0, 1]] += self.bert_embedding_len
+            if self.config.args.bert_multilingual == 0:
+                indexed_dim[[0, 1]] += 50
 
         for birnn in self.get_birnns(axis):
             birnn.init_params(indexed_dim[int(birnn.shared)], indexed_num[int(birnn.shared)])
@@ -239,7 +239,7 @@ class NeuralNetwork(Classifier, SubModel):
         else:
             assert False
 
-        if self.config.args.bert_multilingual:
+        if self.config.args.bert_multilingual == 0:
             assert lang
             if (lang + "_embed") in self.params:
                 lang_embed = self.params[lang + "_embed"]
@@ -261,7 +261,7 @@ class NeuralNetwork(Classifier, SubModel):
             single_token_embed_len = self.bert_embedding_len
         else:
             assert False
-        if self.config.args.bert_multilingual:
+        if self.config.args.bert_multilingual == 0:
             single_token_embed_len += 50
 
         assert embeds.dim() == ((len(passage), single_token_embed_len), 1)
@@ -287,6 +287,7 @@ class NeuralNetwork(Classifier, SubModel):
         if self.config.args.use_bert:
             bert_emded = self.get_bert_embed(passage, lang)
             embeddings[0].append(('BERT', bert_emded))
+            embeddings[1].append(('BERT', bert_emded))
 
             if "bert_weights" in self.params:
                 print("\n--Bert Weights--: ")
@@ -300,7 +301,7 @@ class NeuralNetwork(Classifier, SubModel):
         for key, values in sorted(features.items()):
             param = self.input_params[key]
             lookup = self.params.get(key)
-            if self.config.args.bert_multilingual and param.lang_specific and key != 'W':
+            if self.config.args.bert_multilingual is not None and param.lang_specific and key != 'W':
                 continue
             if param.numeric:
                 yield key, dy.inputVector(values)
