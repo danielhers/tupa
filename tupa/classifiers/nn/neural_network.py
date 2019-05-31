@@ -78,6 +78,8 @@ class NeuralNetwork(Classifier, SubModel):
             self.bert_layers_count = 24 if "large" in self.config.args.bert_model else 12
             self.bert_embedding_len = 1024 if "large" in self.config.args.bert_model else 768
 
+            self.last_weights = ""
+
     @property
     def input_dim(self):
         return OrderedDict((a, m.mlp.input_dim) for a, m in self.axes.items())
@@ -251,7 +253,7 @@ class NeuralNetwork(Classifier, SubModel):
             for embed in embeds:
                 multilingual_embeds.append(dy.concatenate([lang_embed, embed]))
 
-            embeds = multilingual_embeds
+            embeds = dy.transpose(dy.concatenate_cols(multilingual_embeds))
 
         if self.config.args.bert_layers_pooling == "weighed":
             single_token_embed_len = self.bert_embedding_len
@@ -290,8 +292,11 @@ class NeuralNetwork(Classifier, SubModel):
             embeddings[1].append(('BERT', bert_emded))
 
             if "bert_weights" in self.params:
+                print("\n--Bert Weights Changed--: ")
+                print(str(dy.softmax(self.params["bert_weights"]).value()) != self.last_weights)
                 print("\n--Bert Weights--: ")
                 print(str(dy.softmax(self.params["bert_weights"]).value()))
+                self.last_weights = str(dy.softmax(self.params["bert_weights"]).value())
 
         for birnn in self.get_birnns(*axes):
             birnn.init_features(embeddings[int(birnn.shared)], train)
