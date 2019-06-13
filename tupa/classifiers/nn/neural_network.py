@@ -266,7 +266,11 @@ class NeuralNetwork(Classifier, SubModel):
         if self.config.args.bert_multilingual == 0:
             single_token_embed_len += 50
 
+        # TODO: try dropout strategies like dropping at the per layer embeddings or dropping entire layers.
         assert embeds.dim() == ((len(passage), single_token_embed_len), 1)
+
+        if self.config.args.bert_dropout:
+            embeds = dy.dropout(embeds, self.config.args.bert_dropout)
 
         return embeds
 
