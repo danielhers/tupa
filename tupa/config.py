@@ -254,7 +254,7 @@ class Config(object, metaclass=Singleton):
         ap.add_argument("--bert_multilingual", choices=[0], type=int)
         add_boolean_option(ap, "use_default_word_embeddings", default=False,
                            description="If to use default word embeddings")
-        ap.add_argument("--bert_dropout", type=float, default=0, choices=np.linspace(0.1, 0.9, num=9))
+        ap.add_argument("--bert_dropout", type=float, default=0, choices=np.linspace(0, 0.9, num=10))
 
         ap.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
         ap.add_argument("--version", action="version", version="")

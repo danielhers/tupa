@@ -269,7 +269,7 @@ class NeuralNetwork(Classifier, SubModel):
         # TODO: try dropout strategies like dropping at the per layer embeddings or dropping entire layers.
         assert embeds.dim() == ((len(passage), single_token_embed_len), 1)
 
-        assert(0 < self.config.args.bert_dropout < 1)
+        assert(0 <= self.config.args.bert_dropout < 1)
         if train:
             embeds = dy.dropout(embeds, self.config.args.bert_dropout)
             # embeds_debug = embeds.value()
