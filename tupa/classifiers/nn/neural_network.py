@@ -184,7 +184,7 @@ class NeuralNetwork(Classifier, SubModel):
             self.empty_values[key] = value = dy.inputVector(np.zeros(self.input_params[key].dim, dtype=float))
         return value
 
-    def get_bert_embed(self, passage: List[str], lang):
+    def get_bert_embed(self, passage: List[str], lang, train=False):
         orig_tokens = passage
         bert_tokens = []
         # Token map will be an int -> int mapping between the `orig_tokens` index and
@@ -269,8 +269,14 @@ class NeuralNetwork(Classifier, SubModel):
         # TODO: try dropout strategies like dropping at the per layer embeddings or dropping entire layers.
         assert embeds.dim() == ((len(passage), single_token_embed_len), 1)
 
-        if 0 < self.config.args.bert_dropout < 1:
+        assert(0 < self.config.args.bert_dropout < 1)
+        if train:
             embeds = dy.dropout(embeds, self.config.args.bert_dropout)
+            # embeds_debug = embeds.value()
+            # print("\n----------")
+            # print(np.size(embeds_debug))
+            # print(np.count_nonzero(embeds_debug))
+            # print(np.count_nonzero(embeds_debug)/np.size(embeds_debug))
 
         return embeds
 
@@ -291,7 +297,7 @@ class NeuralNetwork(Classifier, SubModel):
             self.config.print(lambda: "%s: %s" % (key, ", ".join("%d->%s" % (i, e.npvalue().tolist())
                                                                  for i, e in zip(indices, vectors))), level=4)
         if self.config.args.use_bert:
-            bert_emded = self.get_bert_embed(passage, lang)
+            bert_emded = self.get_bert_embed(passage, lang, train)
             embeddings[0].append(('BERT', bert_emded))
             embeddings[1].append(('BERT', bert_emded))
 
