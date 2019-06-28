@@ -1,6 +1,3 @@
-from ..config import Config
-
-
 class Edge:
     """
     Temporary representation for core.Edge with only relevant information for parsing
@@ -13,10 +10,6 @@ class Edge:
 
     def add(self):
         assert self.parent is not self.child, "Trying to create self-loop edge on %s" % self.parent
-        if Config().args.verify:
-            assert self not in self.parent.outgoing, "Trying to create outgoing edge twice: %s" % self
-            assert self not in self.child.incoming, "Trying to create incoming edge twice: %s" % self
-            assert self.parent not in self.child.descendants, "Detected cycle created by edge: %s" % self
         self.parent.add_outgoing(self)
         self.child.add_incoming(self)
 

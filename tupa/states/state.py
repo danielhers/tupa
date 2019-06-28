@@ -1,9 +1,10 @@
 from collections import deque
 
+from graph import Graph
 from semstr.constraints import Constraints, Direction
 from semstr.util.amr import LABEL_ATTRIB
 from semstr.validation import CONSTRAINTS
-from ucca import core, layer0, layer1
+from ucca import layer0, layer1
 from ucca.layer0 import NodeTags
 from ucca.layer1 import EdgeTags
 
@@ -33,7 +34,7 @@ class State:
         try:
             l0 = graph.layer(layer0.LAYER_ID)
         except KeyError as e:
-            raise IOError("Graph %s is missing layer %s" % (graph.ID, layer0.LAYER_ID)) from e
+            raise IOError("Graph %s is missing layer %s" % (graph.id, layer0.LAYER_ID)) from e
         try:
             l1 = graph.layer(layer1.LAYER_ID)
         except KeyError:
@@ -263,9 +264,6 @@ class State:
             self.finished = True
         else:
             raise ValueError("Invalid action: %s" % action)
-        if self.args.verify:
-            intersection = set(self.stack).intersection(self.buffer)
-            assert not intersection, "Stack and buffer overlap: %s" % intersection
         action.index = len(self.actions)
         self.actions.append(action)
         self.type_validity_cache = {}
@@ -276,8 +274,6 @@ class State:
         :param kwargs: keyword arguments for Node()
         """
         node = Node(len(self.nodes), swap_index=self.calculate_swap_index(), root=self.graph, **kwargs)
-        if self.args.verify:
-            assert node not in self.nodes, "Node already exists"
         self.nodes.append(node)
         self.heads.add(node)
         self.log.append("node: %s (swap_index: %g)" % (node, node.swap_index))
@@ -338,26 +334,23 @@ class State:
         self.type_validity_cache = {}
         self.need_label = None
 
-    def create_graph(self, verify=True, **kwargs):
+    def create_graph(self, verify=False, **kwargs):
         """
         Create final graph from temporary representation
         :param verify: fail if this results in an improper graph
         :return: core.Graph created from self.nodes
         """
-        Config().print("Creating graph %s from state..." % self.graph.ID, level=2)
-        graph = core.Graph(self.graph.ID)
+        Config().print("Creating graph %s from state..." % self.graph.id, level=2)
+        graph = Graph(self.graph.id)
         graph_framework = kwargs.get("framework") or self.graph.extra.get("framework")
         if graph_framework:
-            graph.extra["framework"] = graph_framework
-        self.graph.layer(layer0.LAYER_ID).copy(graph)
-        l0 = graph.layer(layer0.LAYER_ID)
-        l1 = layer1.Layer1(graph)
-        self.root.node = l1.heads[0]
+            graph.framework = graph_framework
+        graph.input = self.graph.input
         if self.args.node_labels:
             self.root.set_node_label()
         if self.labeled:  # We have a reference graph
             self.root.set_node_id()
-        Node.attach_nodes(l0, l1, self.nodes, self.labeled, self.args.node_labels, verify)
+        Node.attach_nodes(self.nodes, self.labeled, self.args.node_labels, verify)
         return graph
 
     def node_ratio(self):

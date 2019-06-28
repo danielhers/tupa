@@ -255,7 +255,6 @@ class Config(object, metaclass=Singleton):
         add_boolean_option(group, "early-update", "early update procedure (finish example on first error)")
         group.add_argument("--save-every", type=int, help="every this many graphs, evaluate on dev and save model")
         add_boolean_option(group, "eval-test", "evaluate on test whenever evaluating on dev, but keep results hidden")
-        add_boolean_option(group, "ignore-case", "pre-convert all input files to lower-case in training and test")
 
         group = ap.add_argument_group(title="Output files")
         group.add_argument("-o", "--outdir", default=".", help="output directory for parsed files")
@@ -271,11 +270,9 @@ class Config(object, metaclass=Singleton):
                              "(otherwise created dynamically based on filename suffix), "
                              "and output frameworks for written files (each will be written; default: UCCA XML)")
         ap.add_argument("--lang", default="en", help="two-letter language code to use as the default language")
-        add_boolean_option(ap, "multilingual", "separate model parameters per language (graph.attrib['lang'])")
 
         group = ap.add_argument_group(title="Sanity checks")
         add_boolean_option(group, "check-loops", "check for parser state loop")
-        add_boolean_option(group, "verify", "check for oracle reproducing original graph")
         add_boolean_option(group, "validate-oracle", "require oracle output to respect constraints", default=True)
         add_param_arguments(ap)
 

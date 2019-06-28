@@ -1,4 +1,5 @@
 import concurrent.futures
+import json
 import os
 import sys
 import time
@@ -7,13 +8,9 @@ from enum import Enum
 from functools import partial
 from glob import glob
 
+import score
 from main import read_graphs
-from semstr.convert import FROM_FORMAT, TO_FORMAT, from_text
-from semstr.evaluate import Scores
-from semstr.util.amr import LABEL_ATTRIB
-from semstr.validation import validate
 from tqdm import tqdm
-from ucca import diffutil, ioutil, textutil, layer0, layer1
 
 from tupa.__version__ import GIT_VERSION
 from tupa.config import Config, Iterations
@@ -67,9 +64,6 @@ class GraphParser(AbstractParser):
         self.framework = self.graph.extra.get("framework") if self.training or self.evaluation else \
             sorted(set.intersection(*map(set, filter(None, (self.model.frameworks, self.config.args.frameworks)))) or
                    self.model.frameworks)[0]
-        if self.training and self.config.args.verify:
-            errors = list(validate(self.graph))
-            assert not errors, errors
         self.in_framework = self.framework or "ucca"
         self.out_framework = "ucca" if self.framework in (None, "text") else self.framework
         self.lang = self.graph.attrib.get("lang", self.config.args.lang)
@@ -80,19 +74,17 @@ class GraphParser(AbstractParser):
         self.config.set_framework(self.in_framework)
         self.state = State(self.graph)
         # Graph is considered labeled if there are any edges or node labels in it
-        edges, node_labels = map(any, zip(*[(n.outgoing, n.attrib.get(LABEL_ATTRIB))
-                                            for n in self.graph.layer(layer1.LAYER_ID).all]))
-        self.oracle = Oracle(self.graph) if self.training or self.config.args.verify or (
+        self.oracle = Oracle(self.graph) if self.training or (
                 (self.config.args.verbose > 1 or self.config.args.use_gold_node_labels or self.config.args.action_stats)
-                and (edges or node_labels)) else None
+                and "nodes" in self.graph) else None
         for model in self.models:
-            model.init_model(self.config.framework, lang=self.lang if self.config.args.multilingual else None)
+            model.init_model(self.config.framework)
             if ClassifierProperty.require_init_features in model.classifier_properties:
                 model.init_features(self.state, self.training)
 
     def parse(self, display=True, write=False, accuracies=None):
         self.init()
-        graph_id = self.graph.ID
+        graph_id = self.graph.id
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 executor.submit(self.parse_internal).result(self.config.args.timeout)
@@ -239,16 +231,11 @@ class GraphParser(AbstractParser):
         self.model.classifier.finished_item(self.training)
         for model in self.models[1:]:
             model.classifier.finished_item(renew=False)  # So that dynet.renew_cg happens only once
-        if not self.training or self.config.args.verify:
-            self.out = self.state.create_graph(verify=self.config.args.verify, framework=self.out_framework)
+        if not self.training:
+            self.out = self.state.create_graph(framework=self.out_framework)
         if write:
             for out_framework in self.config.args.frameworks or [self.out_framework]:
-                ioutil.write_graph(self.out, output_framework=out_framework, binary=out_framework == "pickle",
-                                     outdir=self.config.args.outdir, prefix=self.config.args.prefix,
-                                     converter=get_output_converter(out_framework), verbose=self.config.args.verbose,
-                                     append=self.config.args.join, basename=self.config.args.join)
-        if self.oracle and self.config.args.verify:
-            self.verify(self.out, self.graph)
+                json.dump(self.out.encode(), self.config.args.outdir, indent=None, ensure_ascii=False)
         ret = (self.out,)
         if self.evaluation:
             ret += (self.evaluate(self.evaluation),)
@@ -256,7 +243,7 @@ class GraphParser(AbstractParser):
         if display:
             self.config.print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), level=1)
         if accuracies is not None:
-            accuracies[self.graph.ID] = self.correct_action_count / self.action_count if self.action_count else 0
+            accuracies[self.graph.id] = self.correct_action_count / self.action_count if self.action_count else 0
         return ret
 
     @property
@@ -271,11 +258,9 @@ class GraphParser(AbstractParser):
     def evaluate(self, mode=ParseMode.test):
         if self.framework:
             self.config.print("Converting to %s and evaluating..." % self.framework)
-        score = evaluator(self.out, self.graph,
-                          verbose=self.out and self.config.args.verbose > 3)
-        self.f1 = average_f1(score)
-        score.lang = self.lang
-        return score
+        result = score.mces.evaluate(self.graph, self.out)
+        self.f1 = result["all"]["f"]
+        return result
 
     def check_loop(self):
         """
@@ -285,15 +270,6 @@ class GraphParser(AbstractParser):
         assert h not in self.state_hash_history, \
             "\n".join(["Transition loop", self.state.str("\n")] + [self.oracle.str("\n")] if self.oracle else ())
         self.state_hash_history.add(h)
-
-    def verify(self, guessed, ref):
-        """
-        Compare predicted graph to true graph and raise an exception if they differ
-        :param ref: true graph
-        :param guessed: predicted graph to compare
-        """
-        assert ref.equals(guessed), \
-            "Failed to produce true graph" + (diffutil.diff_graphs(ref, guessed) if self.training else "")
 
     @property
     def num_tokens(self):
@@ -313,8 +289,6 @@ class BatchParser(AbstractParser):
 
     def parse(self, graphs, display=True, write=False, accuracies=None):
         graphs, total = generate_and_len(single_to_iter(graphs))
-        if self.config.args.ignore_case:
-            graphs = to_lower_case(graphs)
         pr_width = len(str(total))
         id_width = 1
         graphs = self.add_progress_bar(textutil.annotate_all(
@@ -324,12 +298,12 @@ class BatchParser(AbstractParser):
             parser = GraphParser(graph, self.config, self.models, self.training, self.evaluation)
             if self.config.args.verbose and display:
                 progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) if total and i <= total else "%d" % i
-                id_width = max(id_width, len(str(graph.ID)))
-                print("%s %2s %-6s %-*s" % (progress, parser.lang, parser.in_framework, id_width, graph.ID),
+                id_width = max(id_width, len(str(graph.id)))
+                print("%s %2s %-6s %-*s" % (progress, parser.lang, parser.in_framework, id_width, graph.id),
                       end=self.config.line_end)
             else:
                 graphs.set_description()
-                postfix = {parser.lang + " " + parser.in_framework: graph.ID}
+                postfix = {parser.lang + " " + parser.in_framework: graph.id}
                 if display:
                     postfix["|t/s|"] = self.tokens_per_second()
                     if self.correct_action_count:
@@ -594,13 +568,6 @@ def single_to_iter(it):
 
 def generate_and_len(it):
     return it, (len(it) if hasattr(it, "__len__") else None)
-
-
-def to_lower_case(graphs):
-    for graph in graphs:
-        for terminal in graph.layer(layer0.LAYER_ID).all:
-            terminal.text = terminal.text.lower()
-        yield graph
 
 
 # Marks input graphs as text so that we don't accidentally train on them

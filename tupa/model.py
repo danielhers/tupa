@@ -130,16 +130,14 @@ class Model:
         labels = self.classifier.labels if self.classifier else OrderedDict()
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
             for param_def in self.param_defs():  # FIXME save parameters separately per framework, not just per language
-                for param_lang in (param_def.all_langs(self.feature_params) if self.lang else []) \
-                        if param_def.lang_specific and self.config.args.multilingual else [None]:
-                    key = param_def.key(param_lang)
-                    param = self.feature_params.get(key)
-                    enabled = param_def.enabled and (not param_lang or param_lang == self.lang)
-                    if param:
-                        param.enabled = enabled
-                    elif self.is_neural_network and enabled:
-                        self.feature_params[key] = param_def.create_from_config(param_lang)
-                        self.init_param(key)
+                key = param_def.key()
+                param = self.feature_params.get(key)
+                enabled = param_def.enabled
+                if param:
+                    param.enabled = enabled
+                elif self.is_neural_network and enabled:
+                    self.feature_params[key] = param_def.create_from_config()
+                    self.init_param(key)
             if axis and self.axis not in labels:
                 labels[self.axis] = self.init_actions()  # Uses config to determine actions
             if self.config.args.node_labels and not self.config.args.use_gold_node_labels and \
@@ -248,7 +246,6 @@ class Model:
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
                 skip_labels = (NODE_LABEL_KEY,) if node_labels and node_labels.size else ()
                 self.classifier.save(self.filename, skip_labels=skip_labels,
-                                     multilingual=self.config.args.multilingual,
                                      omit_features=self.config.args.omit_features)
                 textutil.models["vocab"] = self.config.args.vocab
                 save_json(self.filename + ".nlp.json", textutil.models)
@@ -264,7 +261,6 @@ class Model:
         if self.filename is not None:
             try:
                 self.config.args.classifier = Classifier.get_property(self.filename, "type")
-                self.config.args.multilingual = Classifier.get_property(self.filename, "multilingual")
                 self.config.args.omit_features = Classifier.get_property(self.filename, "omit_features")
                 self.init_model(init_params=False)
                 self.feature_extractor.load(self.filename, order=[p.name for p in self.param_defs()])

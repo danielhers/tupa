@@ -120,9 +120,6 @@ class Node:
                 elif self.node not in parent.node.children:
                     parent.node.add(EdgeTags.Terminal, self.node)
         elif edge and edge.child.text and layer0.is_punct(edge.child.get_terminal(l0)):
-            if Config().args.verify:
-                assert tag == EdgeTags.Punctuation, "Punctuation parent %s's edge tag is %s" % (parent.node_id, tag)
-                assert edge.tag == EdgeTags.Terminal, "Punctuation %s's edge tag is %s" % (self.node_id, edge.tag)
             if self.node is None:
                 self.node = l1.add_punct(parent.node, edge.child.get_terminal(l0))
                 edge.child.node = self.node[0].child

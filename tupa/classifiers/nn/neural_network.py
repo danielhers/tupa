@@ -133,7 +133,7 @@ class NeuralNetwork(Classifier, SubModel):
             birnn.init_params(indexed_dim[int(birnn.shared)], indexed_num[int(birnn.shared)])
 
     def birnn_indices(self, param):  # both specific and shared or just specific
-        return [0, 1] if not self.config.args.multilingual or not param.lang_specific else [0]
+        return [0, 1]
 
     def init_cg(self, renew=True):
         if renew:
