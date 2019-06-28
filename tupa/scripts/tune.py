@@ -33,8 +33,8 @@ class Params:
                                       [(a + "." + k, v) for a, p in self.hyperparams.items() for k, v in p.items()])
 
     def run(self, out_file):
-        assert Config().args.train and (Config().args.passages or Config().args.dev) or \
-               Config().args.passages and Config().args.folds, "insufficient parameters given to parser"
+        assert Config().args.train and (Config().args.graphs or Config().args.dev) or \
+               Config().args.graphs and Config().args.folds, "insufficient parameters given to parser"
         print("Running with %s" % self)
         Config().update(self.params)
         Config().update_hyperparams(**self.hyperparams)
@@ -57,8 +57,8 @@ class Params:
         return ret
 
 
-def get_values_based_on_format(values):
-    return values if "amr" in Config().args.formats else (0,)
+def get_values_based_on_framework(values):
+    return values if "amr" in Config().args.frameworks else (0,)
 
 
 def main():
@@ -84,13 +84,13 @@ def main():
         ("tag_dim",                 False,  range(15, 26)),
         ("dep_dim",                 False,  range(5, 16)),
         ("edge_label_dim",          False,  range(15, 26)),
-        ("node_label_dim",          False,  get_values_based_on_format(range(15, 30))),
-        ("node_category_dim",       False,  get_values_based_on_format(range(5, 15))),
-        ("max_node_categories",     False,  get_values_based_on_format(range(10, 26))),
+        ("node_label_dim",          False,  get_values_based_on_framework(range(15, 30))),
+        ("node_category_dim",       False,  get_values_based_on_framework(range(5, 15))),
+        ("max_node_categories",     False,  get_values_based_on_framework(range(10, 26))),
         ("punct_dim",               False,  3),
         ("action_dim",              False,  range(2, 6)),
         ("ner_dim",                 False,  range(3, 9)),
-        ("max_node_labels",         False,  get_values_based_on_format(range(1000, 4001))),
+        ("max_node_labels",         False,  get_values_based_on_framework(range(1000, 4001))),
         ("min_node_label_count",    False,  range(1, 101)),
         ("layer_dim",               False,  range(50, 301)),
         ("layers",                  False,  [2]),

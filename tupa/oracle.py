@@ -23,25 +23,16 @@ ACTIONS = (  # index by [NODE/EDGE][PARENT/CHILD or RIGHT/LEFT][True/False (remo
 
 class Oracle:
     """
-    Oracle to produce gold transition parses given UCCA passages
+    Oracle to produce gold transition parses given UCCA graphs
     To be used for creating training data for a transition-based UCCA parser
-    :param passage gold passage to get the correct edges from
+    :param graph gold graph to get the correct edges from
     """
-    def __init__(self, passage):
+    def __init__(self, graph):
         self.args = Config().args
-        self.unlabeled = Config().is_unlabeled()
-        l1 = passage.layer(layer1.LAYER_ID)
-        self.nodes_remaining = {n.ID for n in l1.all if n is not l1.heads[0] and
-                                (self.args.linkage or n.tag != layer1.NodeTags.Linkage) and
-                                (self.args.implicit or not is_implicit_node(n))}
-        self.edges_remaining = {e for n in passage.nodes.values() for e in n if (self.args.linkage or e.tag not in (
-                                layer1.EdgeTags.LinkRelation, layer1.EdgeTags.LinkArgument)) and
-                                (self.args.implicit or not is_implicit_node(e.child)) and
-                                (self.args.remote or not is_remote_edge(e))}
-        if self.unlabeled:  # Keep only one edge between each pair of nodes, since we cannot distinguish between them
-            unique_edges = {(e.parent.ID, e.child.ID, is_remote_edge(e)): e for e in self.edges_remaining}
-            self.edges_remaining = set(unique_edges.values())
-        self.passage = passage
+        l1 = graph.layer(layer1.LAYER_ID)
+        self.nodes_remaining = {n.ID for n in l1.all if n is not l1.heads[0]}
+        self.edges_remaining = {e for n in graph.nodes.values() for e in n}
+        self.graph = graph
         self.found = False
         self.log = None
 
@@ -153,8 +144,7 @@ class Oracle:
         if kind == LABEL:
             return Actions.Label(direction, orig_node=edge.orig_node, oracle=self)
         node = (edge.parent, edge.child)[direction] if kind == NODE else None
-        tag = "" if self.unlabeled else edge.tag
-        return ACTIONS[kind][direction][is_remote_edge(edge)](tag=tag, orig_edge=edge, orig_node=node, oracle=self)
+        return ACTIONS[kind][direction][is_remote_edge(edge)](tag=edge.tag, orig_edge=edge, orig_node=node, oracle=self)
 
     def remove(self, edge, node=None):
         self.edges_remaining.discard(edge)

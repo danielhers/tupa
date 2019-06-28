@@ -27,7 +27,7 @@ except AttributeError:
 
 class AxisModel:
     """
-    Format-specific parameters that are part of the network
+    Framework-specific parameters that are part of the network
     """
     def __init__(self, axis, num_labels, config, model, birnn_type):
         args = config.hyperparams.specific[axis]

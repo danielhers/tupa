@@ -7,14 +7,13 @@ from enum import Enum
 from functools import partial
 from glob import glob
 
+from main import read_graphs
 from semstr.convert import FROM_FORMAT, TO_FORMAT, from_text
-from semstr.evaluate import EVALUATORS, Scores
+from semstr.evaluate import Scores
 from semstr.util.amr import LABEL_ATTRIB
 from semstr.validation import validate
 from tqdm import tqdm
 from ucca import diffutil, ioutil, textutil, layer0, layer1
-from ucca.evaluation import LABELED, UNLABELED, EVAL_TYPES, evaluate as evaluate_ucca
-from ucca.normalization import normalize
 
 from tupa.__version__ import GIT_VERSION
 from tupa.config import Config, Iterations
@@ -60,42 +59,40 @@ class AbstractParser:
         return self.num_tokens / self.duration
 
 
-class PassageParser(AbstractParser):
-    """ Parser for a single passage, has a state and optionally an oracle """
-    def __init__(self, passage, *args, **kwargs):
+class GraphParser(AbstractParser):
+    """ Parser for a single graph, has a state and optionally an oracle """
+    def __init__(self, graph, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.passage = self.out = passage
-        self.format = self.passage.extra.get("format") if self.training or self.evaluation else \
-            sorted(set.intersection(*map(set, filter(None, (self.model.formats, self.config.args.formats)))) or
-                   self.model.formats)[0]
+        self.graph = self.out = graph
+        self.framework = self.graph.extra.get("framework") if self.training or self.evaluation else \
+            sorted(set.intersection(*map(set, filter(None, (self.model.frameworks, self.config.args.frameworks)))) or
+                   self.model.frameworks)[0]
         if self.training and self.config.args.verify:
-            errors = list(validate(self.passage))
+            errors = list(validate(self.graph))
             assert not errors, errors
-        self.in_format = self.format or "ucca"
-        self.out_format = "ucca" if self.format in (None, "text") else self.format
-        self.lang = self.passage.attrib.get("lang", self.config.args.lang)
-        # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
-        self.ignore_node = None if self.config.args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
+        self.in_framework = self.framework or "ucca"
+        self.out_framework = "ucca" if self.framework in (None, "text") else self.framework
+        self.lang = self.graph.attrib.get("lang", self.config.args.lang)
         self.state_hash_history = set()
         self.state = self.oracle = self.eval_type = None
 
     def init(self):
-        self.config.set_format(self.in_format)
-        self.state = State(self.passage)
-        # Passage is considered labeled if there are any edges or node labels in it
+        self.config.set_framework(self.in_framework)
+        self.state = State(self.graph)
+        # Graph is considered labeled if there are any edges or node labels in it
         edges, node_labels = map(any, zip(*[(n.outgoing, n.attrib.get(LABEL_ATTRIB))
-                                            for n in self.passage.layer(layer1.LAYER_ID).all]))
-        self.oracle = Oracle(self.passage) if self.training or self.config.args.verify or (
+                                            for n in self.graph.layer(layer1.LAYER_ID).all]))
+        self.oracle = Oracle(self.graph) if self.training or self.config.args.verify or (
                 (self.config.args.verbose > 1 or self.config.args.use_gold_node_labels or self.config.args.action_stats)
                 and (edges or node_labels)) else None
         for model in self.models:
-            model.init_model(self.config.format, lang=self.lang if self.config.args.multilingual else None)
+            model.init_model(self.config.framework, lang=self.lang if self.config.args.multilingual else None)
             if ClassifierProperty.require_init_features in model.classifier_properties:
                 model.init_features(self.state, self.training)
 
     def parse(self, display=True, write=False, accuracies=None):
         self.init()
-        passage_id = self.passage.ID
+        graph_id = self.graph.ID
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 executor.submit(self.parse_internal).result(self.config.args.timeout)
@@ -103,17 +100,17 @@ class PassageParser(AbstractParser):
         except ParserException as e:
             if self.training:
                 raise
-            self.config.log("passage %s: %s" % (passage_id, e))
+            self.config.log("graph %s: %s" % (graph_id, e))
             status = "(failed)"
         except concurrent.futures.TimeoutError:
-            self.config.log("passage %s: timeout (%fs)" % (passage_id, self.config.args.timeout))
+            self.config.log("graph %s: timeout (%fs)" % (graph_id, self.config.args.timeout))
             status = "(timeout)"
         return self.finish(status, display=display, write=write, accuracies=accuracies)
 
     def parse_internal(self):
         """
-        Internal method to parse a single passage.
-        If training, use oracle to train on given passages. Otherwise just parse with classifier.
+        Internal method to parse a single graph.
+        If training, use oracle to train on given graphs. Otherwise just parse with classifier.
         """
         self.config.print("  initial state: %s" % self.state)
         while True:
@@ -231,7 +228,7 @@ class PassageParser(AbstractParser):
         Otherwise, sorts all the other scores to choose the best valid one in O(n lg n)
         :return: valid action/label with maximum probability according to classifier
         """
-        return next(filter(is_valid, (values[i] for i in PassageParser.generate_descending(scores))))
+        return next(filter(is_valid, (values[i] for i in GraphParser.generate_descending(scores))))
 
     @staticmethod
     def generate_descending(scores):
@@ -243,17 +240,15 @@ class PassageParser(AbstractParser):
         for model in self.models[1:]:
             model.classifier.finished_item(renew=False)  # So that dynet.renew_cg happens only once
         if not self.training or self.config.args.verify:
-            self.out = self.state.create_passage(verify=self.config.args.verify, format=self.out_format)
+            self.out = self.state.create_graph(verify=self.config.args.verify, framework=self.out_framework)
         if write:
-            for out_format in self.config.args.formats or [self.out_format]:
-                if self.config.args.normalize and out_format == "ucca":
-                    normalize(self.out)
-                ioutil.write_passage(self.out, output_format=out_format, binary=out_format == "pickle",
+            for out_framework in self.config.args.frameworks or [self.out_framework]:
+                ioutil.write_graph(self.out, output_framework=out_framework, binary=out_framework == "pickle",
                                      outdir=self.config.args.outdir, prefix=self.config.args.prefix,
-                                     converter=get_output_converter(out_format), verbose=self.config.args.verbose,
+                                     converter=get_output_converter(out_framework), verbose=self.config.args.verbose,
                                      append=self.config.args.join, basename=self.config.args.join)
         if self.oracle and self.config.args.verify:
-            self.verify(self.out, self.passage)
+            self.verify(self.out, self.graph)
         ret = (self.out,)
         if self.evaluation:
             ret += (self.evaluate(self.evaluation),)
@@ -261,7 +256,7 @@ class PassageParser(AbstractParser):
         if display:
             self.config.print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), level=1)
         if accuracies is not None:
-            accuracies[self.passage.ID] = self.correct_action_count / self.action_count if self.action_count else 0
+            accuracies[self.graph.ID] = self.correct_action_count / self.action_count if self.action_count else 0
         return ret
 
     @property
@@ -274,15 +269,11 @@ class PassageParser(AbstractParser):
         return ""
 
     def evaluate(self, mode=ParseMode.test):
-        if self.format:
-            self.config.print("Converting to %s and evaluating..." % self.format)
-        self.eval_type = UNLABELED if self.config.is_unlabeled(self.in_format) else LABELED
-        evaluator = EVALUATORS.get(self.format, evaluate_ucca)
-        score = evaluator(self.out, self.passage, converter=get_output_converter(self.format),
-                          verbose=self.out and self.config.args.verbose > 3,
-                          constructions=self.config.args.constructions,
-                          eval_types=(self.eval_type,) if mode is ParseMode.dev else (LABELED, UNLABELED))
-        self.f1 = average_f1(score, self.eval_type)
+        if self.framework:
+            self.config.print("Converting to %s and evaluating..." % self.framework)
+        score = evaluator(self.out, self.graph,
+                          verbose=self.out and self.config.args.verbose > 3)
+        self.f1 = average_f1(score)
         score.lang = self.lang
         return score
 
@@ -297,12 +288,12 @@ class PassageParser(AbstractParser):
 
     def verify(self, guessed, ref):
         """
-        Compare predicted passage to true passage and raise an exception if they differ
-        :param ref: true passage
-        :param guessed: predicted passage to compare
+        Compare predicted graph to true graph and raise an exception if they differ
+        :param ref: true graph
+        :param guessed: predicted graph to compare
         """
-        assert ref.equals(guessed, ignore_node=self.ignore_node), \
-            "Failed to produce true passage" + (diffutil.diff_passages(ref, guessed) if self.training else "")
+        assert ref.equals(guessed), \
+            "Failed to produce true graph" + (diffutil.diff_graphs(ref, guessed) if self.training else "")
 
     @property
     def num_tokens(self):
@@ -314,54 +305,54 @@ class PassageParser(AbstractParser):
 
 
 class BatchParser(AbstractParser):
-    """ Parser for a single training iteration or single pass over dev/test passages """
+    """ Parser for a single training iteration or single pass over dev/test graphs """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.seen_per_format = defaultdict(int)
-        self.num_passages = 0
+        self.seen_per_framework = defaultdict(int)
+        self.num_graphs = 0
 
-    def parse(self, passages, display=True, write=False, accuracies=None):
-        passages, total = generate_and_len(single_to_iter(passages))
+    def parse(self, graphs, display=True, write=False, accuracies=None):
+        graphs, total = generate_and_len(single_to_iter(graphs))
         if self.config.args.ignore_case:
-            passages = to_lower_case(passages)
+            graphs = to_lower_case(graphs)
         pr_width = len(str(total))
         id_width = 1
-        passages = self.add_progress_bar(textutil.annotate_all(
-            passages, as_array=True, as_extra=False, lang=self.config.args.lang, verbose=self.config.args.verbose > 2,
+        graphs = self.add_progress_bar(textutil.annotate_all(
+            graphs, as_array=True, as_extra=False, lang=self.config.args.lang, verbose=self.config.args.verbose > 2,
             vocab=self.model.config.vocab(lang=self.config.args.lang)), display=display)
-        for i, passage in enumerate(passages, start=1):
-            parser = PassageParser(passage, self.config, self.models, self.training, self.evaluation)
+        for i, graph in enumerate(graphs, start=1):
+            parser = GraphParser(graph, self.config, self.models, self.training, self.evaluation)
             if self.config.args.verbose and display:
                 progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) if total and i <= total else "%d" % i
-                id_width = max(id_width, len(str(passage.ID)))
-                print("%s %2s %-6s %-*s" % (progress, parser.lang, parser.in_format, id_width, passage.ID),
+                id_width = max(id_width, len(str(graph.ID)))
+                print("%s %2s %-6s %-*s" % (progress, parser.lang, parser.in_framework, id_width, graph.ID),
                       end=self.config.line_end)
             else:
-                passages.set_description()
-                postfix = {parser.lang + " " + parser.in_format: passage.ID}
+                graphs.set_description()
+                postfix = {parser.lang + " " + parser.in_framework: graph.ID}
                 if display:
                     postfix["|t/s|"] = self.tokens_per_second()
                     if self.correct_action_count:
                         postfix["|a|"] = percents_str(self.correct_action_count, self.action_count, fraction=False)
                     if self.correct_label_count:
                         postfix["|l|"] = percents_str(self.correct_label_count, self.label_count, fraction=False)
-                    if self.evaluation and self.num_passages:
-                        postfix["|F1|"] = self.f1 / self.num_passages
-                passages.set_postfix(**postfix)
-            self.seen_per_format[parser.in_format] += 1
-            if self.training and self.config.args.max_training_per_format and \
-                    self.seen_per_format[parser.in_format] > self.config.args.max_training_per_format:
+                    if self.evaluation and self.num_graphs:
+                        postfix["|F1|"] = self.f1 / self.num_graphs
+                graphs.set_postfix(**postfix)
+            self.seen_per_framework[parser.in_framework] += 1
+            if self.training and self.config.args.max_training_per_framework and \
+                    self.seen_per_framework[parser.in_framework] > self.config.args.max_training_per_framework:
                 self.config.print("skipped", level=1)
                 continue
-            assert not (self.training and parser.in_format == "text"), "Cannot train on unannotated plain text"
+            assert not (self.training and parser.in_framework == "text"), "Cannot train on unannotated plain text"
             yield parser.parse(display=display, write=write, accuracies=accuracies)
             self.update_counts(parser)
-        if self.num_passages and display:
+        if self.num_graphs and display:
             self.summary()
 
     def add_progress_bar(self, it, total=None, display=True):
         return it if self.config.args.verbose and display else tqdm(
-            it, unit="passage", total=total, file=sys.stdout, desc="Initializing")
+            it, unit="graph", total=total, file=sys.stdout, desc="Initializing")
 
     def update_counts(self, parser):
         self.correct_action_count += parser.correct_action_count
@@ -369,22 +360,22 @@ class BatchParser(AbstractParser):
         self.correct_label_count += parser.correct_label_count
         self.label_count += parser.label_count
         self.num_tokens += parser.num_tokens
-        self.num_passages += 1
+        self.num_graphs += 1
         self.f1 += parser.f1
 
     def summary(self):
-        print("Parsed %d passages" % self.num_passages)
+        print("Parsed %d graphs" % self.num_graphs)
         if self.correct_action_count:
             accuracy_str = percents_str(self.correct_action_count, self.action_count, "correct actions ")
             if self.label_count:
                 accuracy_str += ", " + percents_str(self.correct_label_count, self.label_count, "correct labels ")
             print("Overall %s" % accuracy_str)
-        print("Total time: %.3fs (average time/passage: %.3fs, average tokens/s: %d)" % (
-            self.duration, self.time_per_passage(),
+        print("Total time: %.3fs (average time/graph: %.3fs, average tokens/s: %d)" % (
+            self.duration, self.time_per_graph(),
             self.tokens_per_second()), flush=True)
 
-    def time_per_passage(self):
-        return self.duration / self.num_passages
+    def time_per_graph(self):
+        return self.duration / self.num_graphs
 
 
 class Parser(AbstractParser):
@@ -398,18 +389,18 @@ class Parser(AbstractParser):
         self.trained = self.save_init = False
         self.accuracies = {}
 
-    def train(self, passages=None, dev=None, test=None, iterations=1):
+    def train(self, graphs=None, dev=None, test=None, iterations=1):
         """
-        Train parser on given passages
-        :param passages: iterable of passages to train on
-        :param dev: iterable of passages to tune on
-        :param test: iterable of passages that would be tested on after train finished
+        Train parser on given graphs
+        :param graphs: iterable of graphs to train on
+        :param dev: iterable of graphs to tune on
+        :param test: iterable of graphs that would be tested on after train finished
         :param iterations: iterable of Iterations objects whose i attributes are the number of iterations to perform
         """
         self.trained = True
         self.dev = dev
         self.test = test
-        if passages:
+        if graphs:
             self.init_train()
             iterations = [i if isinstance(i, Iterations) else Iterations(i)
                           for i in (iterations if hasattr(iterations, "__iter__") else (iterations,))]
@@ -429,12 +420,12 @@ class Parser(AbstractParser):
                 for self.epoch in range(start, end):
                     print("Training epoch %d of %d: " % (self.epoch, end - 1))
                     if self.config.args.curriculum and self.accuracies:
-                        print("Sorting passages by previous epoch accuracy...")
-                        passages = sorted(passages, key=lambda p: self.accuracies.get(p.ID, 0))
+                        print("Sorting graphs by previous epoch accuracy...")
+                        graphs = sorted(graphs, key=lambda p: self.accuracies.get(p.ID, 0))
                     else:
-                        self.config.random.shuffle(passages)
-                    if not sum(1 for _ in self.parse(passages, mode=ParseMode.train)):
-                        raise ParserException("Could not train on any passage")
+                        self.config.random.shuffle(graphs)
+                    if not sum(1 for _ in self.parse(graphs, mode=ParseMode.train)):
+                        raise ParserException("Could not train on any graph")
                     yield self.eval_and_save(self.iteration == len(iterations) and self.epoch == end - 1,
                                              finished_epoch=True)
                 print("Trained %d epochs" % (end - 1))
@@ -444,7 +435,7 @@ class Parser(AbstractParser):
                             self.model.load(is_finalized=False)  # Load best model to prepare for next iteration
                     elif test:
                         self.model.load()  # Load best model to prepare for test
-        else:  # No passages to train on, just load model
+        else:  # No graphs to train on, just load model
             for model in self.models:
                 model.load()
             self.print_config()
@@ -474,7 +465,7 @@ class Parser(AbstractParser):
                 if self.best_score:
                     self.save(finalized)
                 self.best_score = average_score
-                if self.config.args.eval_test and self.test and self.test is not True:  # There are passages to parse
+                if self.config.args.eval_test and self.test and self.test is not True:  # There are graphs to parse
                     self.eval(self.test, ParseMode.test, self.config.args.testscores, display=False)
             else:
                 print("Not better than previous best score (%.3f)" % self.best_score)
@@ -488,10 +479,10 @@ class Parser(AbstractParser):
         self.config.save(model.filename)
         model.save(save_init=self.save_init)
 
-    def eval(self, passages, mode, scores_filename, display=True):
-        print("Evaluating on %s passages" % mode.name)
-        passage_scores = [s for _, s in self.parse(passages, mode=mode, evaluate=True, display=display)]
-        scores = Scores(passage_scores)
+    def eval(self, graphs, mode, scores_filename, display=True):
+        print("Evaluating on %s graphs" % mode.name)
+        graph_scores = [s for _, s in self.parse(graphs, mode=mode, evaluate=True, display=display)]
+        scores = Scores(graph_scores)
         average_score = average_f1(scores)
         prefix = ".".join(map(str, [self.iteration, self.epoch] + (
             [self.batch] if self.config.args.save_every else [])))
@@ -501,19 +492,19 @@ class Parser(AbstractParser):
         print_scores(scores, scores_filename, prefix=prefix, prefix_title="iteration")
         return average_score, scores
 
-    def parse(self, passages, mode=ParseMode.test, evaluate=False, display=True, write=False):
+    def parse(self, graphs, mode=ParseMode.test, evaluate=False, display=True, write=False):
         """
-        Parse given passages
-        :param passages: iterable of passages to parse
+        Parse given graphs
+        :param graphs: iterable of graphs to parse
         :param mode: ParseMode value.
-                     If train, use oracle to train on given passages.
+                     If train, use oracle to train on given graphs.
                      Otherwise, just parse with classifier.
-        :param evaluate: whether to evaluate parsed passages with respect to given ones.
-                           Only possible when given passages are annotated.
-        :param display: whether to display information on each parsed passage
-        :param write: whether to write output passages to file
-        :return: generator of parsed passages (or in train mode, the original ones),
-                 or, if evaluation=True, of pairs of (Passage, Scores).
+        :param evaluate: whether to evaluate parsed graphs with respect to given ones.
+                           Only possible when given graphs are annotated.
+        :param display: whether to display information on each parsed graph
+        :param write: whether to write output graphs to file
+        :return: generator of parsed graphs (or in train mode, the original ones),
+                 or, if evaluation=True, of pairs of (Graph, Scores).
         """
         self.batch = 0
         assert mode in ParseMode, "Invalid parse mode: %s" % mode
@@ -521,41 +512,41 @@ class Parser(AbstractParser):
         if not training and not self.trained:
             yield from self.train()  # Try to load model from file
         parser = BatchParser(self.config, self.models, training, mode if mode is ParseMode.dev else evaluate)
-        for i, passage in enumerate(parser.parse(passages, display=display, write=write, accuracies=self.accuracies),
+        for i, graph in enumerate(parser.parse(graphs, display=display, write=write, accuracies=self.accuracies),
                                     start=1):
             if training and self.config.args.save_every and i % self.config.args.save_every == 0:
                 self.eval_and_save()
                 self.batch += 1
-            yield passage
+            yield graph
 
     def print_config(self):
         self.config.print("tupa %s" % (self.model.config if self.model else self.config), level=0)
 
 
-def train_test(train_passages, dev_passages, test_passages, args, model_suffix=""):
+def train_test(train_graphs, dev_graphs, test_graphs, args, model_suffix=""):
     """
-    Train and test parser on given passage
-    :param train_passages: passage to train on
-    :param dev_passages: passages to evaluate on every iteration
-    :param test_passages: passages to test on after training
+    Train and test parser on given graph
+    :param train_graphs: graph to train on
+    :param dev_graphs: graphs to evaluate on every iteration
+    :param test_graphs: graphs to test on after training
     :param args: extra argument
     :param model_suffix: string to append to model filename before file extension
     :return: generator of Scores objects: dev scores for each training iteration (if given dev), and finally test scores
     """
     model_files = [base + model_suffix + ext for base, ext in map(os.path.splitext, args.models or (args.classifier,))]
     p = Parser(model_files=model_files, config=Config(), beam=args.beam)
-    yield from filter(None, p.train(train_passages, dev=dev_passages, test=test_passages, iterations=args.iterations))
-    if test_passages:
+    yield from filter(None, p.train(train_graphs, dev=dev_graphs, test=test_graphs, iterations=args.iterations))
+    if test_graphs:
         if args.train or args.folds:
-            print("Evaluating on test passages")
-        passage_scores = []
-        evaluate = args.evaluate or train_passages
-        for result in p.parse(test_passages, evaluate=evaluate, write=args.write):
+            print("Evaluating on test graphs")
+        graph_scores = []
+        evaluate = args.evaluate or train_graphs
+        for result in p.parse(test_graphs, evaluate=evaluate, write=args.write):
             _, *score = result
-            passage_scores += score
-        if passage_scores:
-            scores = Scores(passage_scores)
-            if args.verbose <= 1 or len(passage_scores) > 1:
+            graph_scores += score
+        if graph_scores:
+            scores = Scores(graph_scores)
+            if args.verbose <= 1 or len(graph_scores) > 1:
                 print("\nAverage %s F1 score on test: %.3f" % (get_eval_type(scores), average_f1(scores)))
                 print("Aggregated scores:")
                 scores.print()
@@ -566,8 +557,8 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
 OUT_CONVERTERS = dict(TO_FORMAT)
 
 
-def get_output_converter(out_format, default=None):
-    converter = OUT_CONVERTERS.get(out_format)
+def get_output_converter(out_framework, default=None):
+    converter = OUT_CONVERTERS.get(out_framework)
     return partial(converter,
                    verbose=Config().args.verbose > 2) if converter else default
 
@@ -585,11 +576,11 @@ def print_scores(scores, filename, prefix=None, prefix_title=None):
         try:
             with open(filename, "a") as f:
                 if print_title:
-                    titles = scores.titles(LABELED) + scores.titles(UNLABELED)
+                    titles = scores.titles()
                     if prefix_title is not None:
                         titles = [prefix_title] + titles
                     print(",".join(titles), file=f)
-                fields = scores.fields(LABELED) + scores.fields(UNLABELED)
+                fields = scores.fields()
                 if prefix is not None:
                     fields.insert(0, prefix)
                 print(",".join(fields), file=f)
@@ -598,45 +589,32 @@ def print_scores(scores, filename, prefix=None, prefix_title=None):
 
 
 def single_to_iter(it):
-    return it if hasattr(it, "__iter__") else (it,)  # Single passage given
+    return it if hasattr(it, "__iter__") else (it,)  # Single graph given
 
 
 def generate_and_len(it):
     return it, (len(it) if hasattr(it, "__len__") else None)
 
 
-def to_lower_case(passages):
-    for passage in passages:
-        for terminal in passage.layer(layer0.LAYER_ID).all:
+def to_lower_case(graphs):
+    for graph in graphs:
+        for terminal in graph.layer(layer0.LAYER_ID).all:
             terminal.text = terminal.text.lower()
-        yield passage
+        yield graph
 
 
-def average_f1(scores, eval_type=None):
-    for e in (eval_type or get_eval_type(scores),) + EVAL_TYPES:
-        try:
-            return scores.average_f1(e)
-        except ValueError:
-            pass
-    return 0
-
-
-def get_eval_type(scores):
-    return UNLABELED if Config().is_unlabeled(scores.format) else LABELED
-
-
-# Marks input passages as text so that we don't accidentally train on them
-def from_text_format(*args, **kwargs):
-    for passage in from_text(*args, **kwargs):
-        passage.extra["format"] = "text"
-        yield passage
+# Marks input graphs as text so that we don't accidentally train on them
+def from_text_framework(*args, **kwargs):
+    for graph in from_text(*args, **kwargs):
+        graph.extra["framework"] = "text"
+        yield graph
 
 
 CONVERTERS = {k: partial(c, annotate=True) for k, c in FROM_FORMAT.items()}
-CONVERTERS[""] = CONVERTERS["txt"] = from_text_format
+CONVERTERS[""] = CONVERTERS["txt"] = from_text_framework
 
 
-def read_passages(args, files):
+def read_graphs(args, files):
     expanded = [f for pattern in files for f in sorted(glob(pattern)) or (pattern,)]
     return ioutil.read_files_and_dirs(expanded, sentences=False, paragraphs=False,
                                       converters=CONVERTERS, lang=Config().args.lang)
@@ -645,36 +623,36 @@ def read_passages(args, files):
 # noinspection PyTypeChecker,PyStringFormat
 def main_generator():
     args = Config().args
-    assert args.passages or args.train, "Either passages or --train is required (use -h for help)"
+    assert args.graphs or args.train, "Either graphs or --train is required (use -h for help)"
     assert args.models or args.train or args.folds, "Either --model or --train or --folds is required"
     assert not (args.train or args.dev) or not args.folds, "--train and --dev are incompatible with --folds"
     assert args.train or not args.dev, "--dev is only possible together with --train"
     if args.folds:
         fold_scores = []
-        all_passages = list(read_passages(args, args.passages))
-        assert len(all_passages) >= args.folds, \
-            "%d folds are not possible with only %d passages" % (args.folds, len(all_passages))
-        Config().random.shuffle(all_passages)
-        folds = [all_passages[i::args.folds] for i in range(args.folds)]
+        all_graphs = list(read_graphs(args, args.graphs))
+        assert len(all_graphs) >= args.folds, \
+            "%d folds are not possible with only %d graphs" % (args.folds, len(all_graphs))
+        Config().random.shuffle(all_graphs)
+        folds = [all_graphs[i::args.folds] for i in range(args.folds)]
         for i in range(args.folds):
             print("Fold %d of %d:" % (i + 1, args.folds))
-            dev_passages = folds[i]
-            test_passages = folds[(i + 1) % args.folds]
-            train_passages = [passage for fold in folds if fold is not dev_passages and fold is not test_passages
-                              for passage in fold]
-            s = list(train_test(train_passages, dev_passages, test_passages, args, "_%d" % i))
+            dev_graphs = folds[i]
+            test_graphs = folds[(i + 1) % args.folds]
+            train_graphs = [graph for fold in folds if fold is not dev_graphs and fold is not test_graphs
+                              for graph in fold]
+            s = list(train_test(train_graphs, dev_graphs, test_graphs, args, "_%d" % i))
             if s and s[-1] is not None:
                 fold_scores.append(s[-1])
         if fold_scores:
             scores = Scores(fold_scores)
-            print("Average test F1 score for each fold: " + ", ".join("%.3f" % average_f1(s) for s in fold_scores))
+            print("Average test F1 score for each fold: " + ", ".join("%.3f" % s["all"]["f"] for s in fold_scores))
             print("Aggregated scores across folds:\n")
             scores.print()
             yield scores
     else:  # Simple train/dev/test by given arguments
-        train_passages, dev_passages, test_passages = [read_passages(args, arg) for arg in
-                                                       (args.train, args.dev, args.passages)]
-        yield from train_test(train_passages, dev_passages, test_passages, args)
+        train_graphs, dev_graphs, test_graphs = [read_graphs(args, arg) for arg in
+                                                       (args.train, args.dev, args.graphs)]
+        yield from train_test(train_graphs, dev_graphs, test_graphs, args)
 
 
 def main():

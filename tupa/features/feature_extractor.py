@@ -1,4 +1,5 @@
 import re
+
 from ucca import layer0
 from ucca.layer1 import EdgeTags
 from ucca.textutil import Attr
@@ -215,8 +216,6 @@ EDGE_PRIORITY = {tag: i for i, tag in enumerate((
     EdgeTags.Relator,
     EdgeTags.Function,
     EdgeTags.Linker,
-    EdgeTags.LinkRelation,
-    EdgeTags.LinkArgument,
     EdgeTags.Ground,
     EdgeTags.Terminal,
     EdgeTags.Punctuation,

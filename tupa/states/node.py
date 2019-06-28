@@ -1,6 +1,6 @@
 from collections import deque
-
 from operator import attrgetter
+
 from semstr.util.amr import LABEL_ATTRIB, UNKNOWN_LABEL, LABEL_SEPARATOR
 from ucca import core, layer0
 from ucca.layer1 import EdgeTags
@@ -15,7 +15,7 @@ class Node:
     def __init__(self, index, swap_index=None, orig_node=None, text=None, paragraph=None, tag=None, label=None,
                  implicit=False, is_root=False, root=None):
         self.index = index  # Index in the configuration's node list
-        self.orig_node = orig_node  # Associated core.Node from the original Passage, during training
+        self.orig_node = orig_node  # Associated core.Node from the original Graph, during training
         self.node_id = orig_node.ID if orig_node else None  # ID of the original node
         self.text = text  # Text for terminals, None for non-terminals
         self.paragraph = paragraph  # int for terminals, None for non-terminals
@@ -35,13 +35,13 @@ class Node:
         self.parents = []  # Node list: the parents of all edges in incoming
         self.outgoing_tags = set()  # String set
         self.incoming_tags = set()  # String set
-        self.node = None  # Associated core.Node, when creating final Passage
+        self.node = None  # Associated core.Node, when creating final Graph
         self.implicit = implicit  # True or False
         self.swap_index = self.index if swap_index is None else swap_index  # To avoid swapping nodes more than once
         self.height = 0
         self._terminals = None
         self.is_root = is_root
-        self.root = root  # Original Passage object this belongs to
+        self.root = root  # Original Graph object this belongs to
 
     def add_incoming(self, edge):
         self.incoming.append(edge)
@@ -58,20 +58,15 @@ class Node:
     @staticmethod
     def attach_nodes(l0, l1, nodes, labeled=True, node_labels=False, verify=False):
         remotes = []  # To be handled after all nodes are created
-        linkages = []  # To be handled after all non-linkage nodes are created
         for node in Node.topological_sort(nodes):
             if labeled and verify:
                 assert node.text or node.outgoing or node.implicit, "Non-terminal leaf node: %s" % node
-            if node.is_linkage:
-                linkages.append(node)
-            else:
-                for edge in node.outgoing:
-                    if edge.remote:
-                        remotes.append((node, edge))
-                    else:
-                        edge.child.add_to_l1(l0, l1, node, edge.tag, labeled, node_labels)
+            for edge in node.outgoing:
+                if edge.remote:
+                    remotes.append((node, edge))
+                else:
+                    edge.child.add_to_l1(l0, l1, node, edge.tag, labeled, node_labels)
         Node.attach_remotes(l1, remotes, verify)
-        Node.attach_linkages(l1, linkages, verify)
 
     @staticmethod
     def topological_sort(nodes):
@@ -109,12 +104,12 @@ class Node:
 
     def add_to_l1(self, l0, l1, parent, tag, labeled, node_labels):
         """
-        Called when creating final Passage to add a new core.Node
-        :param l0: Layer0 of the passage
-        :param l1: Layer1 of the passage
+        Called when creating final Graph to add a new core.Node
+        :param l0: Layer0 of the graph
+        :param l1: Layer1 of the graph
         :param parent: node
         :param tag: edge tag to link to parent
-        :param labeled: there is a reference passage, so keep original node IDs in the "remarks" field
+        :param labeled: there is a reference graph, so keep original node IDs in the "remarks" field
         :param node_labels: whether to add a node label
         """
         edge = self.outgoing[0] if len(self.outgoing) == 1 else None
@@ -155,31 +150,6 @@ class Node:
                 if verify:
                     raise
 
-    @staticmethod
-    def attach_linkages(l1, linkages, verify=False):
-        for node in linkages:  # Add linkage nodes and edges
-            try:
-                link_relation = None
-                link_args = []
-                for edge in node.outgoing:
-                    assert edge.child.node, "Linkage edge to nonexistent node"
-                    if edge.tag == EdgeTags.LinkRelation:
-                        assert not link_relation, "Multiple link relations: %s, %s" % (link_relation, edge.child.node)
-                        link_relation = edge.child.node
-                    elif edge.tag == EdgeTags.LinkArgument:
-                        link_args.append(edge.child.node)
-                    else:
-                        Config().log("Ignored non-linkage edge %s from linkage node %s" % (edge, node))
-                assert link_relation is not None, "No link relations: %s" % node
-                # if len(link_args) < 2:
-                #     Config().log("Less than two link arguments for linkage node %s" % node)
-                node.node = l1.add_linkage(link_relation, *link_args)
-                if node.node_id:  # We are in training and we have a gold passage
-                    node.node.extra["remarks"] = node.node_id  # For reference
-            except AssertionError:
-                if verify:
-                    raise
-
     def get_terminal(self, l0):
         return l0.by_position(self.index)
 
@@ -190,13 +160,6 @@ class Node:
     def set_node_label(self):
         if self.node is not None:
             self.node.attrib[LABEL_ATTRIB] = self.label or UNKNOWN_LABEL
-
-    @property
-    def is_linkage(self):
-        """
-        Is this a LKG type node? (During parsing there are no node types)
-        """
-        return self.outgoing_tags and self.outgoing_tags.intersection((EdgeTags.LinkRelation, EdgeTags.LinkArgument))
 
     @property
     def descendants(self):

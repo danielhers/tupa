@@ -21,25 +21,25 @@ class InvalidActionError(AssertionError):
 
 class State:
     """
-    The parser's state, responsible for applying actions and creating the final Passage
-    :param passage: a Passage object to get the tokens from, and everything else if training
+    The parser's state, responsible for applying actions and creating the final Graph
+    :param graph: a Graph object to get the tokens from, and everything else if training
     """
-    def __init__(self, passage):
+    def __init__(self, graph):
         self.args = Config().args
-        self.constraints = CONSTRAINTS.get(passage.extra.get("format"), Constraints)(implicit=self.args.implicit)
+        self.constraints = CONSTRAINTS.get(graph.extra.get("framework"), Constraints)(implicit=True)
         self.log = []
         self.finished = False
-        self.passage = passage
+        self.graph = graph
         try:
-            l0 = passage.layer(layer0.LAYER_ID)
+            l0 = graph.layer(layer0.LAYER_ID)
         except KeyError as e:
-            raise IOError("Passage %s is missing layer %s" % (passage.ID, layer0.LAYER_ID)) from e
+            raise IOError("Graph %s is missing layer %s" % (graph.ID, layer0.LAYER_ID)) from e
         try:
-            l1 = passage.layer(layer1.LAYER_ID)
+            l1 = graph.layer(layer1.LAYER_ID)
         except KeyError:
-            l1 = layer1.Layer1(passage)
+            l1 = layer1.Layer1(graph)
         self.labeled = any(n.outgoing or n.attrib.get(LABEL_ATTRIB) for n in l1.all)
-        self.terminals = [Node(i, orig_node=t, root=passage, text=t.text, paragraph=t.paragraph, tag=t.tag)
+        self.terminals = [Node(i, orig_node=t, root=graph, text=t.text, paragraph=t.paragraph, tag=t.tag)
                           for i, t in enumerate(l0.all, start=1)]
         self.stack = []
         self.buffer = deque()
@@ -150,10 +150,10 @@ class State:
         if action.is_type(Actions.Finish):
             self.check(not self.buffer, "May only finish at the end of the input buffer", is_type=True)
             if self.args.swap:  # Without swap, the oracle may be incapable even of single action
-                self.check(self.root.outgoing or all(n is self.root or n.is_linkage or n.text for n in self.nodes),
+                self.check(self.root.outgoing or all(n is self.root or n.text for n in self.nodes),
                            message and "Root has no child at parse end", is_type=True)
             for n in self.nodes:
-                self.check(not self.args.require_connected or n is self.root or n.is_linkage or n.text or
+                self.check(not self.args.require_connected or n is self.root or n.text or
                            n.incoming, message and "Non-terminal %s has no parent at parse end" % n, is_type=True)
                 self.check(not self.args.node_labels or n.text or n.labeled,
                            message and "Non-terminal %s has no label at parse end" % n, is_type=True)
@@ -172,7 +172,7 @@ class State:
                         self.check(self.root.labeled or not self.args.node_labels,
                                    message and "Reducing root without label", is_type=True)
                     elif not s0.text:
-                        self.check(not self.args.require_connected or s0.is_linkage or s0.incoming,
+                        self.check(not self.args.require_connected or s0.incoming,
                                    message and "Reducing parentless non-terminal %s" % s0, is_type=True)
                         self.check(not self.constraints.required_outgoing or
                                    s0.outgoing_tags.intersection((EdgeTags.Terminal, EdgeTags.Punctuation, "")) or
@@ -275,7 +275,7 @@ class State:
         Called during parsing to add a new Node (not core.Node) to the temporary representation
         :param kwargs: keyword arguments for Node()
         """
-        node = Node(len(self.nodes), swap_index=self.calculate_swap_index(), root=self.passage, **kwargs)
+        node = Node(len(self.nodes), swap_index=self.calculate_swap_index(), root=self.graph, **kwargs)
         if self.args.verify:
             assert node not in self.nodes, "Node already exists"
         self.nodes.append(node)
@@ -338,27 +338,27 @@ class State:
         self.type_validity_cache = {}
         self.need_label = None
 
-    def create_passage(self, verify=True, **kwargs):
+    def create_graph(self, verify=True, **kwargs):
         """
-        Create final passage from temporary representation
-        :param verify: fail if this results in an improper passage
-        :return: core.Passage created from self.nodes
+        Create final graph from temporary representation
+        :param verify: fail if this results in an improper graph
+        :return: core.Graph created from self.nodes
         """
-        Config().print("Creating passage %s from state..." % self.passage.ID, level=2)
-        passage = core.Passage(self.passage.ID)
-        passage_format = kwargs.get("format") or self.passage.extra.get("format")
-        if passage_format:
-            passage.extra["format"] = passage_format
-        self.passage.layer(layer0.LAYER_ID).copy(passage)
-        l0 = passage.layer(layer0.LAYER_ID)
-        l1 = layer1.Layer1(passage)
+        Config().print("Creating graph %s from state..." % self.graph.ID, level=2)
+        graph = core.Graph(self.graph.ID)
+        graph_framework = kwargs.get("framework") or self.graph.extra.get("framework")
+        if graph_framework:
+            graph.extra["framework"] = graph_framework
+        self.graph.layer(layer0.LAYER_ID).copy(graph)
+        l0 = graph.layer(layer0.LAYER_ID)
+        l1 = layer1.Layer1(graph)
         self.root.node = l1.heads[0]
         if self.args.node_labels:
             self.root.set_node_label()
-        if self.labeled:  # We have a reference passage
+        if self.labeled:  # We have a reference graph
             self.root.set_node_id()
         Node.attach_nodes(l0, l1, self.nodes, self.labeled, self.args.node_labels, verify)
-        return passage
+        return graph
 
     def node_ratio(self):
         return (len(self.nodes) / len(self.terminals) - 1) if self.terminals else 0
