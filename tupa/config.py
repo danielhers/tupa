@@ -1,10 +1,11 @@
 import os
 import shlex
+import sys
 from copy import deepcopy
 
 import dynet_config
 import numpy as np
-from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
+from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS, FileType
 from logbook import Logger, FileHandler, StderrHandler
 from semstr.cfgutil import Singleton, add_verbose_arg, add_boolean_option, get_group_arg_names
 from semstr.convert import UCCA_EXT, CONVERTERS
@@ -82,7 +83,8 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--learning-rate", type=float, help="rate for model weight updates (default: by trainer/1)")
     add(group, "--learning-rate-decay", type=float, default=0, help="learning rate decay per iteration")
     add(group, "--swap-importance", type=float, default=1, help="learning rate factor for Swap")
-    add(group, "--max-training-per-framework", type=int, help="max number of training graphs per framework per iteration")
+    add(group, "--max-training-per-framework", type=int,
+        help="max number of training graphs per framework per iteration")
     add_boolean(group, "missing-node-features", "allow node features to be missing if not available", default=True)
     add(group, "--omit-features", help="string of feature properties to omit, out of " + FEATURE_PROPERTIES)
     add_boolean(group, "curriculum", "sort training graphs by action prediction accuracy in previous epoch")
@@ -210,7 +212,7 @@ class HyperparamsInitializer:
 
     def __bool__(self):
         return bool(self.str_args)
-    
+
     @classmethod
     def action(cls, args):
         return cls(*args.replace("=", " ").split())
@@ -232,7 +234,8 @@ class Config(object, metaclass=Singleton):
     def __init__(self, *args):
         self.arg_parser = ap = ArgParser(description="Transition-based parser for UCCA.",
                                          formatter_class=ArgumentDefaultsHelpFormatter)
-        ap.add_argument("graphs", nargs="*", help="graph files/directories to test on/parse")
+        ap.add_argument("input", nargs="?", type=FileType("r"), default=sys.stdin)
+        ap.add_argument("output", nargs="?", type=FileType("w"), default=sys.stdout)
         ap.add_argument("--version", action="version", version="")
         ap.add_argument("-C", "--config", is_config_file=True, help="configuration file to get arguments from")
         ap.add_argument("-m", "--models", nargs="+", help="model file basename(s) to load/save, ensemble if >1 "
@@ -257,10 +260,10 @@ class Config(object, metaclass=Singleton):
         add_boolean_option(group, "eval-test", "evaluate on test whenever evaluating on dev, but keep results hidden")
 
         group = ap.add_argument_group(title="Output files")
-        group.add_argument("-o", "--outdir", default=".", help="output directory for parsed files")
         group.add_argument("-p", "--prefix", default="", help="output filename prefix")
         add_boolean_option(group, "write", "writing parsed output to files", default=True, short_no="W")
-        group.add_argument("-j", "--join", help="if output framework is textual, write all to one file with this basename")
+        group.add_argument("-j", "--join",
+                           help="if output framework is textual, write all to one file with this basename")
         group.add_argument("-l", "--log", help="output log file (default: model filename + .log)")
         group.add_argument("--devscores", help="output CSV file for dev scores (default: model filename + .dev.csv)")
         group.add_argument("--testscores", help="output CSV file for test scores (default: model filename + .test.csv)")
@@ -320,7 +323,8 @@ class Config(object, metaclass=Singleton):
                 for attr in RESTORED_ARGS if args is None or attr in args}
 
     def set_framework(self, f=None, update=False, recursive=True):
-        if f in (None, "text") and not self.framework:  # In update or parsing UCCA (with no extra["framework"]) or plain text
+        if f in (
+        None, "text") and not self.framework:  # In update or parsing UCCA (with no extra["framework"]) or plain text
             f = "ucca"  # Default output framework is UCCA
         if update or self.framework != f:
             if f not in (None, "text"):

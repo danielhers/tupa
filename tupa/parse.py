@@ -5,8 +5,6 @@ import sys
 import time
 from collections import defaultdict
 from enum import Enum
-from functools import partial
-from glob import glob
 
 import score
 from main import read_graphs
@@ -487,7 +485,7 @@ class Parser(AbstractParser):
             yield from self.train()  # Try to load model from file
         parser = BatchParser(self.config, self.models, training, mode if mode is ParseMode.dev else evaluate)
         for i, graph in enumerate(parser.parse(graphs, display=display, write=write, accuracies=self.accuracies),
-                                    start=1):
+                                  start=1):
             if training and self.config.args.save_every and i % self.config.args.save_every == 0:
                 self.eval_and_save()
                 self.batch += 1
@@ -513,28 +511,16 @@ def train_test(train_graphs, dev_graphs, test_graphs, args, model_suffix=""):
     if test_graphs:
         if args.train or args.folds:
             print("Evaluating on test graphs")
-        graph_scores = []
         evaluate = args.evaluate or train_graphs
-        for result in p.parse(test_graphs, evaluate=evaluate, write=args.write):
-            _, *score = result
-            graph_scores += score
-        if graph_scores:
-            scores = Scores(graph_scores)
-            if args.verbose <= 1 or len(graph_scores) > 1:
-                print("\nAverage %s F1 score on test: %.3f" % (get_eval_type(scores), average_f1(scores)))
+        graphs = list(p.parse(test_graphs, evaluate=evaluate, write=args.write))
+        if graphs:
+            result = score.mces.evaluate(test_graphs, graphs)
+            if args.verbose <= 1 or len(graphs) > 1:
+                print("\nAverage F1 score on test: %.3f" % result["all"]["f"])
                 print("Aggregated scores:")
-                scores.print()
-            print_scores(scores, args.testscores)
-            yield scores
-
-
-OUT_CONVERTERS = dict(TO_FORMAT)
-
-
-def get_output_converter(out_framework, default=None):
-    converter = OUT_CONVERTERS.get(out_framework)
-    return partial(converter,
-                   verbose=Config().args.verbose > 2) if converter else default
+                result.print()
+            print_scores(result, args.testscores)
+            yield result
 
 
 def percents_str(part, total, infix="", fraction=True):
@@ -570,23 +556,6 @@ def generate_and_len(it):
     return it, (len(it) if hasattr(it, "__len__") else None)
 
 
-# Marks input graphs as text so that we don't accidentally train on them
-def from_text_framework(*args, **kwargs):
-    for graph in from_text(*args, **kwargs):
-        graph.extra["framework"] = "text"
-        yield graph
-
-
-CONVERTERS = {k: partial(c, annotate=True) for k, c in FROM_FORMAT.items()}
-CONVERTERS[""] = CONVERTERS["txt"] = from_text_framework
-
-
-def read_graphs(args, files):
-    expanded = [f for pattern in files for f in sorted(glob(pattern)) or (pattern,)]
-    return ioutil.read_files_and_dirs(expanded, sentences=False, paragraphs=False,
-                                      converters=CONVERTERS, lang=Config().args.lang)
-
-
 # noinspection PyTypeChecker,PyStringFormat
 def main_generator():
     args = Config().args
@@ -596,7 +565,7 @@ def main_generator():
     assert args.train or not args.dev, "--dev is only possible together with --train"
     if args.folds:
         fold_scores = []
-        all_graphs = list(read_graphs(args, args.graphs))
+        all_graphs = read_graphs(args.graphs)
         assert len(all_graphs) >= args.folds, \
             "%d folds are not possible with only %d graphs" % (args.folds, len(all_graphs))
         Config().random.shuffle(all_graphs)
@@ -606,19 +575,17 @@ def main_generator():
             dev_graphs = folds[i]
             test_graphs = folds[(i + 1) % args.folds]
             train_graphs = [graph for fold in folds if fold is not dev_graphs and fold is not test_graphs
-                              for graph in fold]
+                            for graph in fold]
             s = list(train_test(train_graphs, dev_graphs, test_graphs, args, "_%d" % i))
             if s and s[-1] is not None:
                 fold_scores.append(s[-1])
         if fold_scores:
-            scores = Scores(fold_scores)
             print("Average test F1 score for each fold: " + ", ".join("%.3f" % s["all"]["f"] for s in fold_scores))
             print("Aggregated scores across folds:\n")
-            scores.print()
-            yield scores
+            yield fold_scores
     else:  # Simple train/dev/test by given arguments
         train_graphs, dev_graphs, test_graphs = [read_graphs(args, arg) for arg in
-                                                       (args.train, args.dev, args.graphs)]
+                                                 (args.train, args.dev, args.graphs)]
         yield from train_test(train_graphs, dev_graphs, test_graphs, args)
 
 

@@ -40,4 +40,3 @@ def test_hyperparams(config):
 
 def test_boolean_params(config):
     assert config.args.evaluate
-    assert not config.args.verify
