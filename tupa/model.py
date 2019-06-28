@@ -5,7 +5,7 @@ from ucca import textutil
 
 from .action import Actions
 from .classifiers.classifier import Classifier
-from .config import Config, SEPARATOR, SPARSE, MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN, NOOP
+from .config import Config, SEPARATOR, BIRNN, NOOP
 from .features.feature_params import FeatureParameters
 from .model_util import UnknownDict, AutoIncrementDict, remove_backup, save_json, load_json
 
@@ -80,11 +80,7 @@ class ClassifierProperty(Enum):
 
 
 CLASSIFIER_PROPERTIES = {
-    SPARSE: (ClassifierProperty.update_only_on_error,),
-    MLP: (ClassifierProperty.trainable_after_saving,),
     BIRNN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
-    HIGHWAY_RNN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
-    HIERARCHICAL_RNN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
     NOOP: (ClassifierProperty.trainable_after_saving,),
 }
 
@@ -151,11 +147,6 @@ class Model:
                 labels[NODE_LABEL_KEY] = self.init_node_labels()  # Updates self.feature_params
         if self.classifier:  # Already initialized
             pass
-        elif self.config.args.classifier == SPARSE:
-            from .features.sparse_features import SparseFeatureExtractor
-            from .classifiers.linear.sparse_perceptron import SparsePerceptron
-            self.feature_extractor = SparseFeatureExtractor(omit_features=self.config.args.omit_features)
-            self.classifier = SparsePerceptron(self.config, labels)
         elif self.config.args.classifier == NOOP:
             from .features.empty_features import EmptyFeatureExtractor
             from .classifiers.noop import NoOp
@@ -165,8 +156,8 @@ class Model:
             from .features.dense_features import DenseFeatureExtractor
             from .classifiers.nn.neural_network import NeuralNetwork
             self.feature_extractor = DenseFeatureExtractor(self.feature_params,
-                                                           indexed=self.config.args.classifier != MLP,
-                                                           hierarchical=self.config.args.classifier == HIERARCHICAL_RNN,
+                                                           indexed=True,
+                                                           hierarchical=False,
                                                            node_dropout=self.config.args.node_dropout,
                                                            omit_features=self.config.args.omit_features)
             self.classifier = NeuralNetwork(self.config, labels)
@@ -192,7 +183,7 @@ class Model:
 
     @property
     def is_neural_network(self):
-        return self.config.args.classifier in (MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN)
+        return self.config.args.classifier in (BIRNN,)
 
     @property
     def is_retrainable(self):

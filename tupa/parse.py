@@ -9,7 +9,7 @@ from glob import glob
 
 from semstr.convert import FROM_FORMAT, TO_FORMAT, from_text
 from semstr.evaluate import EVALUATORS, Scores
-from semstr.util.amr import LABEL_ATTRIB, WIKIFIER
+from semstr.util.amr import LABEL_ATTRIB
 from semstr.validation import validate
 from tqdm import tqdm
 from ucca import diffutil, ioutil, textutil, layer0, layer1
@@ -81,7 +81,6 @@ class PassageParser(AbstractParser):
 
     def init(self):
         self.config.set_format(self.in_format)
-        WIKIFIER.enabled = self.config.args.wikification
         self.state = State(self.passage)
         # Passage is considered labeled if there are any edges or node labels in it
         edges, node_labels = map(any, zip(*[(n.outgoing, n.attrib.get(LABEL_ATTRIB))
@@ -104,10 +103,10 @@ class PassageParser(AbstractParser):
         except ParserException as e:
             if self.training:
                 raise
-            self.config.log("%s %s: %s" % (self.config.passage_word, passage_id, e))
+            self.config.log("passage %s: %s" % (passage_id, e))
             status = "(failed)"
         except concurrent.futures.TimeoutError:
-            self.config.log("%s %s: timeout (%fs)" % (self.config.passage_word, passage_id, self.config.args.timeout))
+            self.config.log("passage %s: timeout (%fs)" % (passage_id, self.config.args.timeout))
             status = "(timeout)"
         return self.finish(status, display=display, write=write, accuracies=accuracies)
 
@@ -362,7 +361,7 @@ class BatchParser(AbstractParser):
 
     def add_progress_bar(self, it, total=None, display=True):
         return it if self.config.args.verbose and display else tqdm(
-            it, unit=self.config.passages_word, total=total, file=sys.stdout, desc="Initializing")
+            it, unit="passage", total=total, file=sys.stdout, desc="Initializing")
 
     def update_counts(self, parser):
         self.correct_action_count += parser.correct_action_count
@@ -374,14 +373,14 @@ class BatchParser(AbstractParser):
         self.f1 += parser.f1
 
     def summary(self):
-        print("Parsed %d%s" % (self.num_passages, self.config.passages_word))
+        print("Parsed %d passages" % self.num_passages)
         if self.correct_action_count:
             accuracy_str = percents_str(self.correct_action_count, self.action_count, "correct actions ")
             if self.label_count:
                 accuracy_str += ", " + percents_str(self.correct_label_count, self.label_count, "correct labels ")
             print("Overall %s" % accuracy_str)
-        print("Total time: %.3fs (average time/%s: %.3fs, average tokens/s: %d)" % (
-            self.duration, self.config.passage_word, self.time_per_passage(),
+        print("Total time: %.3fs (average time/passage: %.3fs, average tokens/s: %d)" % (
+            self.duration, self.time_per_passage(),
             self.tokens_per_second()), flush=True)
 
     def time_per_passage(self):
@@ -564,9 +563,12 @@ def train_test(train_passages, dev_passages, test_passages, args, model_suffix="
             yield scores
 
 
+OUT_CONVERTERS = dict(TO_FORMAT)
+
+
 def get_output_converter(out_format, default=None):
-    converter = TO_FORMAT.get(out_format)
-    return partial(converter, wikification=Config().args.wikification,
+    converter = OUT_CONVERTERS.get(out_format)
+    return partial(converter,
                    verbose=Config().args.verbose > 2) if converter else default
 
 
@@ -636,7 +638,7 @@ CONVERTERS[""] = CONVERTERS["txt"] = from_text_format
 
 def read_passages(args, files):
     expanded = [f for pattern in files for f in sorted(glob(pattern)) or (pattern,)]
-    return ioutil.read_files_and_dirs(expanded, sentences=args.sentences, paragraphs=args.paragraphs,
+    return ioutil.read_files_and_dirs(expanded, sentences=False, paragraphs=False,
                                       converters=CONVERTERS, lang=Config().args.lang)
 
 

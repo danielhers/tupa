@@ -74,7 +74,7 @@ def main():
     domains = (
         # Parameter name            Shared  Domain of possible values
         ("seed",                    False,  2147483647),  # max value for int
-        ("classifier",              False,  [config.BIRNN, config.HIGHWAY_RNN]),
+        ("classifier",              False,  [config.BIRNN]),
         ("learning_rate",           False,  [None]),
         ("learning_rate_decay",     False,  5 * [0] + [0.01]),
         ("update_word_vectors",     False,  [True, False]),

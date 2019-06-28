@@ -1,9 +1,10 @@
-import dynet_config
-import numpy as np
 import os
 import shlex
-from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
 from copy import deepcopy
+
+import dynet_config
+import numpy as np
+from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
 from logbook import Logger, FileHandler, StderrHandler
 from semstr.cfgutil import Singleton, add_verbose_arg, add_boolean_option, get_group_arg_names
 from semstr.convert import UCCA_EXT, CONVERTERS
@@ -14,14 +15,10 @@ from tupa.model_util import load_enum
 
 # Classifiers
 
-SPARSE = "sparse"
-MLP = "mlp"
 BIRNN = "bilstm"
-HIGHWAY_RNN = "highway"
-HIERARCHICAL_RNN = "hbirnn"
 NOOP = "noop"
-NN_CLASSIFIERS = (MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN)
-CLASSIFIERS = (SPARSE, MLP, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN, NOOP)
+NN_CLASSIFIERS = (BIRNN,)
+CLASSIFIERS = (BIRNN, NOOP)
 
 FEATURE_PROPERTIES = "wmtudhencpqxyAPCIEMNT#^$"
 
@@ -35,7 +32,6 @@ FILE_FORMATS = [e.lstrip(".") for e in UCCA_EXT] + FORMATS
 
 # Required number of edge labels per format
 EDGE_LABELS_NUM = {"amr": 110, "sdp": 70, "conllu": 60}
-SPARSE_ARG_NAMES = set()
 NN_ARG_NAMES = set()
 DYNET_ARG_NAMES = set()
 RESTORED_ARGS = set()
@@ -66,7 +62,6 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--max-node-categories", type=int, default=0, help="max node categories to allow")
     add(group, "--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
     add_boolean(group, "use-gold-node-labels", "gold node labels when parsing")
-    add_boolean(group, "wikification", "use Spotlight to wikify any named node")
     add_boolean(group, "node-labels", "prediction of node labels, if supported by format", default=True)
 
     group = ap.add_argument_group(title="Structural constraints")
@@ -93,10 +88,6 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add_boolean(group, "missing-node-features", "allow node features to be missing if not available", default=True)
     add(group, "--omit-features", help="string of feature properties to omit, out of " + FEATURE_PROPERTIES)
     add_boolean(group, "curriculum", "sort training passages by action prediction accuracy in previous epoch")
-
-    group = ap.add_argument_group(title="Perceptron parameters")
-    add(group, "--min-update", type=int, default=5, help="minimum #updates for using a feature")
-    SPARSE_ARG_NAMES.update(get_group_arg_names(group))
 
     group = ap.add_argument_group(title="Neural network parameters")
     add(group, "--word-dim-external", type=int, default=300, help="dimension for external word embeddings")
@@ -253,8 +244,6 @@ class Config(object, metaclass=Singleton):
         add_boolean_option(ap, "evaluate", "evaluation of parsed passages", short="e")
         add_verbose_arg(ap, help="detailed parse output")
         constructions.add_argument(ap)
-        add_boolean_option(ap, "sentences", "split to sentences")
-        add_boolean_option(ap, "paragraphs", "split to paragraphs")
         ap.add_argument("--timeout", type=float, help="max number of seconds to wait for a single passage")
 
         group = ap.add_argument_group(title="Training parameters")
@@ -437,14 +426,6 @@ class Config(object, metaclass=Singleton):
     def line_end(self):
         return "\n" if self.args.verbose > 2 else " "  # show all in one line unless verbose
 
-    @property
-    def passage_word(self):
-        return "sentence" if self.args.sentences else "paragraph" if self.args.paragraphs else "passage"
-
-    @property
-    def passages_word(self):
-        return " %ss" % self.passage_word
-
     def log(self, message):
         try:
             if self._logger is None:
@@ -525,7 +506,6 @@ class Config(object, metaclass=Singleton):
                 and (args.swap or "swap_" not in k)
                 and (args.swap == COMPOUND or k != "max_swap")
                 and (not args.require_connected or k != "orphan_label")
-                and (args.classifier == SPARSE or k not in SPARSE_ARG_NAMES)
                 and (args.classifier in NN_CLASSIFIERS or k not in NN_ARG_NAMES | DYNET_ARG_NAMES)
                 and k != "passages"]
 

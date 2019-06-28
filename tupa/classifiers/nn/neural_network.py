@@ -2,21 +2,20 @@ import sys
 from collections import OrderedDict
 from itertools import repeat
 
-import dynet_config
-
 import dynet as dy
+import dynet_config
 import numpy as np
 from tqdm import tqdm
 
-from .birnn import EmptyRNN, BiRNN, HighwayRNN, HierarchicalBiRNN
+from .birnn import EmptyRNN, BiRNN
 from .constants import TRAINERS, TRAINER_LEARNING_RATE_PARAM_NAMES, TRAINER_KWARGS, CategoricalParameter
 from .mlp import MultilayerPerceptron
 from .sub_model import SubModel
 from ..classifier import Classifier
-from ...config import Config, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN
+from ...config import Config, BIRNN
 from ...model_util import MISSING_VALUE, remove_existing
 
-BIRNN_TYPES = {BIRNN: BiRNN, HIGHWAY_RNN: HighwayRNN, HIERARCHICAL_RNN: HierarchicalBiRNN}
+BIRNN_TYPES = {BIRNN: BiRNN}
 
 tqdm.monitor_interval = 0
 
