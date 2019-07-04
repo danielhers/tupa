@@ -56,9 +56,10 @@ class AbstractParser:
 
 class GraphParser(AbstractParser):
     """ Parser for a single graph, has a state and optionally an oracle """
-    def __init__(self, graph, *args, **kwargs):
+    def __init__(self, graph, *args, conllu=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.graph, self.overlay = graph
+        self.conllu = conllu
         self.out = self.graph
         self.framework = self.graph.framework if self.training or self.evaluation else \
             sorted(set.intersection(*map(set, filter(None, (self.model.frameworks, self.config.args.frameworks)))) or
@@ -70,7 +71,7 @@ class GraphParser(AbstractParser):
 
     def init(self):
         self.config.set_framework(self.in_framework)
-        self.state = State(self.graph)
+        self.state = State(self.graph, self.conllu)
         # Graph is considered labeled if there are any edges or node labels in it
         self.oracle = Oracle(self.graph) if self.training or (
                 (self.config.args.verbose > 1 or self.config.args.use_gold_node_labels or self.config.args.action_stats)
@@ -285,13 +286,15 @@ class BatchParser(AbstractParser):
         self.seen_per_framework = defaultdict(int)
         self.num_graphs = 0
 
-    def parse(self, graphs, display=True, write=False, accuracies=None):
+    def parse(self, graphs, display=True, write=False, accuracies=None, conllu=None):
         graphs, total = generate_and_len(single_to_iter(graphs))
         pr_width = len(str(total))
         id_width = 1
         graphs = self.add_progress_bar(graphs, display=display)
         for i, (graph, overlay) in enumerate(graphs, start=1):
-            parser = GraphParser((graph, overlay), self.config, self.models, self.training, self.evaluation)
+            graph_conllu = conllu[graph.id]
+            parser = GraphParser((graph, overlay), self.config, self.models, self.training, self.evaluation,
+                                 conllu=graph_conllu)
             if self.config.args.verbose and display:
                 progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) if total and i <= total else "%d" % i
                 id_width = max(id_width, len(str(graph.id)))
@@ -359,13 +362,14 @@ class Parser(AbstractParser):
         self.trained = self.save_init = False
         self.accuracies = {}
 
-    def train(self, graphs=None, dev=None, test=None, iterations=1):
+    def train(self, graphs=None, dev=None, test=None, iterations=1, conllu=None):
         """
         Train parser on given graphs
         :param graphs: iterable of graphs to train on
         :param dev: iterable of graphs to tune on
         :param test: iterable of graphs that would be tested on after train finished
         :param iterations: iterable of Iterations objects whose i attributes are the number of iterations to perform
+        :param conllu: dict of graph id to graph specifying conllu preprocessing
         """
         self.trained = True
         self.dev = dev
@@ -394,7 +398,7 @@ class Parser(AbstractParser):
                         graphs = sorted(graphs, key=lambda p: self.accuracies.get(p.ID, 0))
                     else:
                         self.config.random.shuffle(graphs)
-                    if not sum(1 for _ in self.parse(graphs, mode=ParseMode.train)):
+                    if not sum(1 for _ in self.parse(graphs, mode=ParseMode.train, conllu=conllu)):
                         raise ParserException("Could not train on any graph")
                     yield self.eval_and_save(self.iteration == len(iterations) and self.epoch == end - 1,
                                              finished_epoch=True)
@@ -462,7 +466,7 @@ class Parser(AbstractParser):
         print_scores(scores, scores_filename, prefix=prefix, prefix_title="iteration")
         return average_score, scores
 
-    def parse(self, graphs, mode=ParseMode.test, evaluate=False, display=True, write=False):
+    def parse(self, graphs, mode=ParseMode.test, evaluate=False, display=True, write=False, conllu=None):
         """
         Parse given graphs
         :param graphs: iterable of graphs to parse
@@ -473,6 +477,7 @@ class Parser(AbstractParser):
                            Only possible when given graphs are annotated.
         :param display: whether to display information on each parsed graph
         :param write: whether to write output graphs to file
+        :param conllu: dict of graph id to graph specifying conllu preprocessing
         :return: generator of parsed graphs (or in train mode, the original ones),
                  or, if evaluation=True, of pairs of (Graph, Scores).
         """
@@ -482,7 +487,8 @@ class Parser(AbstractParser):
         if not training and not self.trained:
             yield from self.train()  # Try to load model from file
         parser = BatchParser(self.config, self.models, training, mode if mode is ParseMode.dev else evaluate)
-        for i, graph in enumerate(parser.parse(graphs, display=display, write=write, accuracies=self.accuracies),
+        for i, graph in enumerate(parser.parse(graphs, display=display, write=write, accuracies=self.accuracies,
+                                               conllu=conllu),
                                   start=1):
             if training and self.config.args.save_every and i % self.config.args.save_every == 0:
                 self.eval_and_save()
@@ -504,13 +510,15 @@ def train_test(train_graphs, dev_graphs, test_graphs, args, model_suffix=""):
     :return: generator of Scores objects: dev scores for each training iteration (if given dev), and finally test scores
     """
     model_files = [base + model_suffix + ext for base, ext in map(os.path.splitext, args.models or (args.classifier,))]
+    conllu = {graph.id: graph for graph, _ in read_graphs_with_progress_bar(args.conllu)}
     p = Parser(model_files=model_files, config=Config(), beam=args.beam)
-    yield from filter(None, p.train(train_graphs, dev=dev_graphs, test=test_graphs, iterations=args.iterations))
+    yield from filter(None, p.train(train_graphs, dev=dev_graphs, test=test_graphs, iterations=args.iterations,
+                                    conllu=conllu))
     if test_graphs:
         if args.train or args.folds:
             print("Evaluating on test graphs")
         evaluate = args.evaluate or train_graphs
-        graphs = list(p.parse(test_graphs, evaluate=evaluate, write=args.write))
+        graphs = list(p.parse(test_graphs, evaluate=evaluate, write=args.write, conllu=conllu))
         if graphs:
             result = score.mces.evaluate(test_graphs, graphs)
             if args.verbose <= 1 or len(graphs) > 1:

@@ -23,15 +23,16 @@ class State:
     The parser's state, responsible for applying actions and creating the final Graph
     :param graph: a Graph object to get the tokens from, and everything else if training
     """
-    def __init__(self, graph):
+    def __init__(self, graph, conllu):
         self.args = Config().args
         self.constraints = CONSTRAINTS.get(graph.framework, Constraints)(implicit=True)
         self.log = []
         self.finished = False
         self.graph = graph
+        self.conllu = conllu
         self.labeled = any(n.outgoing_edges or n.label for n in graph.nodes)
         self.terminals = [Node(i, orig_node=t, root=graph, text=t.text, paragraph=t.paragraph, tag=t.tag)
-                          for i, t in enumerate(l0.all, start=1)]
+                          for i, t in enumerate(conllu.nodes, start=1)]
         self.stack = []
         self.buffer = deque()
         self.nodes = []

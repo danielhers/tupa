@@ -233,10 +233,11 @@ class Config(object, metaclass=Singleton):
     def __init__(self, *args):
         self.arg_parser = ap = ArgParser(description="Transition-based parser for UCCA.",
                                          formatter_class=ArgumentDefaultsHelpFormatter)
-        ap.add_argument("input", nargs="?", type=FileType("r"), default=sys.stdin)
-        ap.add_argument("output", nargs="?", type=FileType("w"), default=sys.stdout)
+        ap.add_argument("input", nargs="?", type=FileType("r"), default=sys.stdin, help="file with one MRP per line")
+        ap.add_argument("output", nargs="?", type=FileType("w"), default=sys.stdout, help="output file to create")
         ap.add_argument("--version", action="version", version="")
         ap.add_argument("-C", "--config", is_config_file=True, help="configuration file to get arguments from")
+        ap.add_argument("--conllu", type=FileType("r"), help="file with one MRP per line, to get conllu features from")
         ap.add_argument("-m", "--models", nargs="+", help="model file basename(s) to load/save, ensemble if >1 "
                                                           "(default: <framework>_<model_type>")
         ap.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=BIRNN, help="model type")
