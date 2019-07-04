@@ -35,32 +35,21 @@ class ParameterDefinition:
             raise ValueError("Can only disable parameter configuration by setting 'enabled' to False")
         setattr(self.args, self.dim_arg, 0)
 
-    @property
-    def lang_specific(self):
-        return self.attr_to_val.get("lang_specific")
-
-    def create_from_config(self, lang=None):
+    def create_from_config(self):
         kwargs = dict(self.attr_to_val)
-        kwargs.update({k: getattr(self.get_args(lang), v) for k, v in self.attr_to_arg.items()})
+        kwargs.update({k: getattr(self.get_args(), v) for k, v in self.attr_to_arg.items()})
         return FeatureParameters(self.name, **kwargs)
 
     def load_to_config(self, params):
-        for lang in list(self.all_langs(params)) or [None]:
-            param = params.get(self.key(lang))
-            self.get_args(lang).update({self.dim_arg: 0, self.size_arg: 0} if param is None else
-                                       {v: getattr(param, k) for k, v in self.attr_to_arg.items()})
+        param = params.get(self.key())
+        self.get_args().update({self.dim_arg: 0, self.size_arg: 0} if param is None else
+                               {v: getattr(param, k) for k, v in self.attr_to_arg.items()})
 
-    def get_args(self, lang):
-        return self.args.hyperparams.specific[lang] if lang else self.args
+    def get_args(self):
+        return self.args
 
-    def all_langs(self, params):
-        for key in params:
-            param_name, _, lang = key.partition(SEPARATOR)
-            if param_name == self.name and lang:
-                yield lang
-
-    def key(self, lang=None):
-        return SEPARATOR.join(filter(None, (self.name, lang)))
+    def key(self):
+        return self.name
 
     def __str__(self):
         return self.name
@@ -92,19 +81,19 @@ PARAM_DEFS = [
     ("c",            dict(dim="node_category_dim", size="max_node_categories")),
     ("W",            dict(dim="word_dim_external", size="max_words_external", dropout="word_dropout_external",
                           updated="update_word_vectors", filename="word_vectors", vocab="vocab"), dict(
-                                                                                 copy_from="w", lang_specific=True)),
-    ("w",            dict(dim="word_dim",       size="max_words",  dropout="word_dropout"),  dict(lang_specific=True)),
-    ("m",            dict(dim="lemma_dim",      size="max_lemmas", dropout="lemma_dropout"), dict(lang_specific=True)),
-    ("t",            dict(dim="tag_dim",        size="max_tags",   dropout="tag_dropout"),   dict(lang_specific=True)),
+                                                                                 copy_from="w")),
+    ("w",            dict(dim="word_dim",       size="max_words",  dropout="word_dropout")),
+    ("m",            dict(dim="lemma_dim",      size="max_lemmas", dropout="lemma_dropout")),
+    ("t",            dict(dim="tag_dim",        size="max_tags",   dropout="tag_dropout")),
     ("u",            dict(dim="pos_dim",        size="max_pos",    dropout="pos_dropout")),
     ("d",            dict(dim="dep_dim",        size="max_deps",   dropout="dep_dropout")),
     ("e",            dict(dim="edge_label_dim", size="max_edge_labels")),
     ("p",            dict(dim="punct_dim",      size="max_puncts")),
     ("A",            dict(dim="action_dim",     size="max_action_types")),
     ("T",            dict(dim="ner_dim",        size="max_ner_types")),
-    ("#",            dict(dim="shape_dim",      size="max_shapes"),                          dict(lang_specific=True)),
-    ("^",            dict(dim="prefix_dim",     size="max_prefixes"),                        dict(lang_specific=True)),
-    ("$",            dict(dim="suffix_dim",     size="max_suffixes"),                        dict(lang_specific=True)),
+    ("#",            dict(dim="shape_dim",      size="max_shapes")),
+    ("^",            dict(dim="prefix_dim",     size="max_prefixes")),
+    ("$",            dict(dim="suffix_dim",     size="max_suffixes")),
 ]
 
 
@@ -112,7 +101,7 @@ class Model:
     def __init__(self, filename, config=None, *args, **kwargs):
         self.config = config or Config().copy()
         self.filename = filename
-        self.feature_extractor = self.classifier = self.axis = self.lang = None
+        self.feature_extractor = self.classifier = self.axis = None
         self.feature_params = OrderedDict()
         self.is_finalized = False
         if args or kwargs:
@@ -125,11 +114,11 @@ class Model:
         return [ParameterDefinition(args or self.config.args, n, *k) for n, *k in NODE_LABEL_PARAM_DEFS +
                 ([] if only_node_labels else PARAM_DEFS)]
 
-    def init_model(self, axis=None, lang=None, init_params=True):
-        self.set_axis(axis, lang)
+    def init_model(self, axis=None, init_params=True):
+        self.set_axis(axis)
         labels = self.classifier.labels if self.classifier else OrderedDict()
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
-            for param_def in self.param_defs():  # FIXME save parameters separately per framework, not just per language
+            for param_def in self.param_defs():  # FIXME save parameters separately per framework
                 key = param_def.key()
                 param = self.feature_params.get(key)
                 enabled = param_def.enabled
@@ -163,17 +152,11 @@ class Model:
             raise ValueError("Invalid model type: '%s'" % self.config.args.classifier)
         self._update_input_params()
 
-    def set_axis(self, axis, lang):
+    def set_axis(self, axis):
         if axis is not None:
             self.axis = axis
         if self.axis is None:
             self.axis = self.config.framework
-        if lang is not None:
-            self.lang = lang
-        if self.lang is not None:
-            suffix = SEPARATOR + self.lang
-            if not self.axis.endswith(suffix):
-                self.axis += suffix
 
     @property
     def frameworks(self):

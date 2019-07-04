@@ -33,8 +33,8 @@ class Params:
                                       [(a + "." + k, v) for a, p in self.hyperparams.items() for k, v in p.items()])
 
     def run(self, out_file):
-        assert Config().args.train and (Config().args.graphs or Config().args.dev) or \
-               Config().args.graphs and Config().args.folds, "insufficient parameters given to parser"
+        assert Config().args.train and (Config().args.input or Config().args.dev) or \
+               Config().args.input and Config().args.folds, "insufficient parameters given to parser"
         print("Running with %s" % self)
         Config().update(self.params)
         Config().update_hyperparams(**self.hyperparams)

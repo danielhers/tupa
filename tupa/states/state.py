@@ -2,9 +2,7 @@ from collections import deque
 
 from graph import Graph
 from semstr.constraints import Constraints, Direction
-from semstr.util.amr import LABEL_ATTRIB
 from semstr.validation import CONSTRAINTS
-from ucca import layer0, layer1
 from ucca.layer0 import NodeTags
 from ucca.layer1 import EdgeTags
 
@@ -27,19 +25,11 @@ class State:
     """
     def __init__(self, graph):
         self.args = Config().args
-        self.constraints = CONSTRAINTS.get(graph.extra.get("framework"), Constraints)(implicit=True)
+        self.constraints = CONSTRAINTS.get(graph.framework, Constraints)(implicit=True)
         self.log = []
         self.finished = False
         self.graph = graph
-        try:
-            l0 = graph.layer(layer0.LAYER_ID)
-        except KeyError as e:
-            raise IOError("Graph %s is missing layer %s" % (graph.id, layer0.LAYER_ID)) from e
-        try:
-            l1 = graph.layer(layer1.LAYER_ID)
-        except KeyError:
-            l1 = layer1.Layer1(graph)
-        self.labeled = any(n.outgoing or n.attrib.get(LABEL_ATTRIB) for n in l1.all)
+        self.labeled = any(n.outgoing_edges or n.label for n in graph.nodes)
         self.terminals = [Node(i, orig_node=t, root=graph, text=t.text, paragraph=t.paragraph, tag=t.tag)
                           for i, t in enumerate(l0.all, start=1)]
         self.stack = []
@@ -47,7 +37,8 @@ class State:
         self.nodes = []
         self.heads = set()
         self.need_label = None  # If we are waiting for label_node() to be called, which node is to be labeled by it
-        self.root = self.add_node(orig_node=l1.heads[0], is_root=True)  # Root is not in the buffer
+        tops = [node for node in graph.nodes if node.is_top]
+        self.root = self.add_node(orig_node=tops[0], is_root=True)  # Root is not in the buffer
         self.stack.append(self.root)
         self.buffer += self.terminals
         self.nodes += self.terminals

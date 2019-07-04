@@ -51,21 +51,6 @@ To download and extract [a model pre-trained on the Wiki corpus](https://github.
 Run the parser using the model:
 
     python -m tupa example.txt -m models/ucca-bilstm
-    
-### Other languages
-
-To get [a model](https://github.com/huji-nlp/tupa/releases/download/v1.3.10/ucca-bilstm-1.3.10-fr.tar.gz) pre-trained on the [French *20K Leagues* corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_French-20K)
-or [a model](https://github.com/huji-nlp/tupa/releases/download/v1.3.10/ucca-bilstm-1.3.10-de.tar.gz) pre-trained on the [German *20K Leagues* corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_German-20K), run:
-
-    curl -LO https://github.com/huji-nlp/tupa/releases/download/v1.3.10/ucca-bilstm-1.3.10-fr.tar.gz
-    tar xvzf ucca-bilstm-1.3.10-fr.tar.gz
-    curl -LO https://github.com/huji-nlp/tupa/releases/download/v1.3.10/ucca-bilstm-1.3.10-de.tar.gz
-    tar xvzf ucca-bilstm-1.3.10-de.tar.gz
-
-Run the parser on a French/German text file (separate passages by blank lines):
-
-    python -m tupa exemple.txt -m models/ucca-bilstm-fr --lang fr
-    python -m tupa beispiel.txt -m models/ucca-bilstm-de --lang de
 
 Author
 ------

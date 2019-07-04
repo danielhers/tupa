@@ -10,8 +10,7 @@ from ..model_util import DropoutDict
 
 class FeatureParameters(Labels):
     def __init__(self, suffix, dim, size, dropout=0, updated=True, num=1, init=None, data=None, indexed=False,
-                 copy_from=None, filename=None, min_count=1, enabled=True, node_dropout=0, vocab=None,
-                 lang_specific=False):
+                 copy_from=None, filename=None, min_count=1, enabled=True, node_dropout=0, vocab=None):
         """
         :param suffix: one-character title for feature
         :param dim: vector dimension or, filename to load vectors from, or Word2Vec object
@@ -28,7 +27,6 @@ class FeatureParameters(Labels):
         :param enabled: whether to actually use this parameter in feature extraction
         :param node_dropout: probability to drop whole node in feature extraction
         :param vocab: name of file to load mapping of integer ID to word form (to avoid loading spaCy)
-        :param lang_specific: whether the feature params should be separate per language
         """
         super().__init__(size)
         self.suffix = suffix
@@ -46,20 +44,18 @@ class FeatureParameters(Labels):
         self.enabled = enabled
         self.node_dropout = node_dropout
         self.vocab = vocab
-        self.lang_specific = lang_specific
 
     def __repr__(self):
         return type(self).__name__ + "(" + ", ".join(
             map(str, (self.suffix, self.dim, self.size, self.dropout, self.updated, self.num, self.init, self.data,
                       self.indexed, self.copy_from, self.filename, self.min_count, self.enabled, self.node_dropout,
-                      self.vocab, self.lang_specific))) + ")"
+                      self.vocab))) + ")"
 
     def __eq__(self, other):
         return self.suffix == other.suffix and self.dim == other.dim and self.size == other.size and \
                self.dropout == other.dropout and self.updated == other.updated and self.num == other.num and \
                self.indexed == other.indexed and self.min_count == other.min_count and \
-               self.numeric == other.numeric and self.node_dropout == other.node_dropout and \
-               self.lang_specific == other.lang_specific
+               self.numeric == other.numeric and self.node_dropout == other.node_dropout
 
     def __hash__(self):
         return hash(self.suffix)
@@ -74,12 +70,11 @@ class FeatureParameters(Labels):
             self.data = DropoutDict(size=self.size, keys=keys, dropout=self.dropout, min_count=self.min_count)
 
     def word_vectors(self):
-        lang = Config().args.lang
-        vectors, self.dim = get_word_vectors(self.dim, self.size, self.filename, Config().vocab(self.vocab) or lang)
+        vectors, self.dim = get_word_vectors(self.dim, self.size, self.filename, Config().vocab(self.vocab))
         if self.size is not None:
             assert len(vectors) <= self.size, "Wrong number of loaded vectors: %d > %d" % (len(vectors), self.size)
-        assert vectors, "Cannot load word vectors. Install using `python -m spacy download %s` or choose a file " \
-                        "using the --word-vectors option." % lang
+        assert vectors, "Cannot load word vectors. Install using `python -m spacy download en` or choose a file " \
+                        "using the --word-vectors option."
         self.size = len(vectors)
         return vectors
 
@@ -118,8 +113,7 @@ class FeatureParameters(Labels):
                                  indexed=self.indexed, copy_from=self.copy_from, filename=self.filename,
                                  min_count=self.min_count, enabled=self.enabled,
                                  node_dropout=getattr(self, "node_dropout", 0),
-                                 vocab=getattr(self, "vocab", None),
-                                 lang_specific=getattr(self, "lang_specific", False))
+                                 vocab=getattr(self, "vocab", None))
 
     def unfinalize(self):
         self.data = DropoutDict(self.data, size=self.size, dropout=self.dropout, min_count=self.min_count)

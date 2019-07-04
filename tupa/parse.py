@@ -58,13 +58,13 @@ class GraphParser(AbstractParser):
     """ Parser for a single graph, has a state and optionally an oracle """
     def __init__(self, graph, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.graph = self.out = graph
-        self.framework = self.graph.extra.get("framework") if self.training or self.evaluation else \
+        self.graph, self.overlay = graph
+        self.out = self.graph
+        self.framework = self.graph.framework if self.training or self.evaluation else \
             sorted(set.intersection(*map(set, filter(None, (self.model.frameworks, self.config.args.frameworks)))) or
                    self.model.frameworks)[0]
         self.in_framework = self.framework or "ucca"
-        self.out_framework = "ucca" if self.framework in (None, "text") else self.framework
-        self.lang = self.graph.attrib.get("lang", self.config.args.lang)
+        self.target = "ucca" if self.framework in (None, "text") else self.framework
         self.state_hash_history = set()
         self.state = self.oracle = self.eval_type = None
 
@@ -230,10 +230,10 @@ class GraphParser(AbstractParser):
         for model in self.models[1:]:
             model.classifier.finished_item(renew=False)  # So that dynet.renew_cg happens only once
         if not self.training:
-            self.out = self.state.create_graph(framework=self.out_framework)
+            self.out = self.state.create_graph(framework=self.target)
         if write:
-            for out_framework in self.config.args.frameworks or [self.out_framework]:
-                json.dump(self.out.encode(), self.config.args.outdir, indent=None, ensure_ascii=False)
+            for target in self.config.args.frameworks or [self.target]:
+                json.dump(self.out.encode(), self.config.args.output, indent=None, ensure_ascii=False)
         ret = (self.out,)
         if self.evaluation:
             ret += (self.evaluate(self.evaluation),)
@@ -289,19 +289,17 @@ class BatchParser(AbstractParser):
         graphs, total = generate_and_len(single_to_iter(graphs))
         pr_width = len(str(total))
         id_width = 1
-        graphs = self.add_progress_bar(textutil.annotate_all(
-            graphs, as_array=True, as_extra=False, lang=self.config.args.lang, verbose=self.config.args.verbose > 2,
-            vocab=self.model.config.vocab(lang=self.config.args.lang)), display=display)
-        for i, graph in enumerate(graphs, start=1):
-            parser = GraphParser(graph, self.config, self.models, self.training, self.evaluation)
+        graphs = self.add_progress_bar(graphs, display=display)
+        for i, (graph, overlay) in enumerate(graphs, start=1):
+            parser = GraphParser((graph, overlay), self.config, self.models, self.training, self.evaluation)
             if self.config.args.verbose and display:
                 progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) if total and i <= total else "%d" % i
                 id_width = max(id_width, len(str(graph.id)))
-                print("%s %2s %-6s %-*s" % (progress, parser.lang, parser.in_framework, id_width, graph.id),
+                print("%s %-6s %-*s" % (progress, parser.in_framework, id_width, graph.id),
                       end=self.config.line_end)
             else:
                 graphs.set_description()
-                postfix = {parser.lang + " " + parser.in_framework: graph.id}
+                postfix = {parser.in_framework: graph.id}
                 if display:
                     postfix["|t/s|"] = self.tokens_per_second()
                     if self.correct_action_count:
@@ -324,7 +322,7 @@ class BatchParser(AbstractParser):
 
     def add_progress_bar(self, it, total=None, display=True):
         return it if self.config.args.verbose and display else tqdm(
-            it, unit="graph", total=total, file=sys.stdout, desc="Initializing")
+            it, unit="graph", total=total, file=sys.stderr, desc="Initializing")
 
     def update_counts(self, parser):
         self.correct_action_count += parser.correct_action_count
@@ -559,13 +557,12 @@ def generate_and_len(it):
 # noinspection PyTypeChecker,PyStringFormat
 def main_generator():
     args = Config().args
-    assert args.graphs or args.train, "Either graphs or --train is required (use -h for help)"
     assert args.models or args.train or args.folds, "Either --model or --train or --folds is required"
     assert not (args.train or args.dev) or not args.folds, "--train and --dev are incompatible with --folds"
     assert args.train or not args.dev, "--dev is only possible together with --train"
     if args.folds:
         fold_scores = []
-        all_graphs = read_graphs(args.graphs)
+        all_graphs = read_graphs_with_progress_bar(args.input)
         assert len(all_graphs) >= args.folds, \
             "%d folds are not possible with only %d graphs" % (args.folds, len(all_graphs))
         Config().random.shuffle(all_graphs)
@@ -583,14 +580,21 @@ def main_generator():
             print("Average test F1 score for each fold: " + ", ".join("%.3f" % s["all"]["f"] for s in fold_scores))
             print("Aggregated scores across folds:\n")
             yield fold_scores
-    else:  # Simple train/dev/test by given arguments
-        train_graphs, dev_graphs, test_graphs = [read_graphs(args, arg) for arg in
-                                                 (args.train, args.dev, args.graphs)]
-        yield from train_test(train_graphs, dev_graphs, test_graphs, args)
+    elif args.train:  # Simple train/dev/test by given arguments
+        train_graphs, dev_graphs = [read_graphs_with_progress_bar(arg) if arg else []
+                                    for arg in (args.input, args.dev)]
+        yield from train_test(train_graphs, dev_graphs, test_graphs=None, args=args)
+    else:
+        yield from train_test(train_graphs=None, dev_graphs=None,
+                              test_graphs=read_graphs_with_progress_bar(args.input), args=args)
+
+
+def read_graphs_with_progress_bar(fh):
+    return list(zip(*read_graphs(tqdm(fh, desc="Reading " + fh.name, unit=" graphs"), format="mrp")))
 
 
 def main():
-    print("TUPA version " + GIT_VERSION)
+    print("TUPA version " + GIT_VERSION + " (MRP)")
     set_traceback_listener()
     list(main_generator())
 

@@ -1,7 +1,6 @@
-import os
 import shlex
 import sys
-from copy import deepcopy
+from copy import copy
 
 import dynet_config
 import numpy as np
@@ -248,8 +247,8 @@ class Config(object, metaclass=Singleton):
         ap.add_argument("--timeout", type=float, help="max number of seconds to wait for a single graph")
 
         group = ap.add_argument_group(title="Training parameters")
-        group.add_argument("-t", "--train", nargs="+", default=(), help="graph files/directories to train on")
-        group.add_argument("-d", "--dev", nargs="+", default=(), help="graph files/directories to tune on")
+        group.add_argument("-t", "--train", action="store_true", help="train a model on the input")
+        group.add_argument("-d", "--dev", type=FileType("r"), help="graph files/directories to tune on")
         group.add_argument("-I", "--iterations", nargs="+", type=Iterations,
                            default=(Iterations(50), Iterations("100 --optimizer=" + EXTRA_TRAINER)),
                            help="number of training iterations along with optional hyperparameters per part")
@@ -272,7 +271,6 @@ class Config(object, metaclass=Singleton):
                         help="input frameworks for creating all parameters before training starts "
                              "(otherwise created dynamically based on filename suffix), "
                              "and output frameworks for written files (each will be written; default: UCCA XML)")
-        ap.add_argument("--lang", default="en", help="two-letter language code to use as the default language")
 
         group = ap.add_argument_group(title="Sanity checks")
         add_boolean_option(group, "check-loops", "check for parser state loop")
@@ -299,15 +297,12 @@ class Config(object, metaclass=Singleton):
         if self.args.config:
             print("Loading configuration from '%s'." % self.args.config)
 
-        if self.args.graphs and self.args.write:
-            os.makedirs(self.args.outdir, exist_ok=True)
-
         if self.args.models:
             if not self.args.log:
                 self.args.log = self.args.models[0] + ".log"
             if self.args.dev and not self.args.devscores:
                 self.args.devscores = self.args.models[0] + ".dev.csv"
-            if self.args.graphs and not self.args.testscores:
+            if self.args.input and not self.args.testscores:
                 self.args.testscores = self.args.models[0] + ".test.csv"
         elif not self.args.log:
             self.args.log = "parse.log"
@@ -419,9 +414,9 @@ class Config(object, metaclass=Singleton):
         except OSError:
             pass
 
-    def vocab(self, filename=None, lang=None):
+    def vocab(self, filename=None):
         if filename is None:
-            args = self.hyperparams.specific[lang] if lang else self.args
+            args = self.args
             filename = args.vocab
         if not filename:
             return None
@@ -464,10 +459,10 @@ class Config(object, metaclass=Singleton):
         cls = self.__class__
         ret = cls.__new__(cls)
         ret.arg_parser = self.arg_parser
-        ret.args = deepcopy(self.args)
-        ret.original_values = deepcopy(self.original_values)
-        ret.hyperparams = deepcopy(self.hyperparams)
-        ret.iteration_hyperparams = deepcopy(self.iteration_hyperparams)
+        ret.args = copy(self.args)
+        ret.original_values = copy(self.original_values)
+        ret.hyperparams = copy(self.hyperparams)
+        ret.iteration_hyperparams = copy(self.iteration_hyperparams)
         ret.framework = self.framework
         ret.random = self.random
         ret._logger = self._logger
@@ -492,4 +487,4 @@ class Config(object, metaclass=Singleton):
 
     def __str__(self):
         self.args.hyperparams = [HyperparamsInitializer(name, **args.vars()) for name, args in self.hyperparams.items()]
-        return " ".join(list(self.args.graphs) + self.args_str(self.args))
+        return " ".join(list(self.args.input) + self.args_str(self.args))
