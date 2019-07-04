@@ -272,11 +272,6 @@ class NeuralNetwork(Classifier, SubModel):
         assert(0 <= self.config.args.bert_dropout < 1)
         if train:
             embeds = dy.dropout(embeds, self.config.args.bert_dropout)
-            # embeds_debug = embeds.value()
-            # print("\n----------")
-            # print(np.size(embeds_debug))
-            # print(np.count_nonzero(embeds_debug))
-            # print(np.count_nonzero(embeds_debug)/np.size(embeds_debug))
 
         return embeds
 
