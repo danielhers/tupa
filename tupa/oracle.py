@@ -1,4 +1,4 @@
-from semstr.util.amr import LABEL_ATTRIB, LABEL_SEPARATOR
+from semstr.util.amr import LABEL_SEPARATOR
 from ucca import layer1
 
 from .action import Actions
@@ -30,7 +30,7 @@ class Oracle:
     def __init__(self, graph):
         self.args = Config().args
         l1 = graph.layer(layer1.LAYER_ID)
-        self.nodes_remaining = {n.ID for n in l1.all if n is not l1.heads[0]}
+        self.nodes_remaining = {n.id for n in l1.all if n is not l1.heads[0]}
         self.edges_remaining = {e for n in graph.nodes.values() for e in n}
         self.graph = graph
         self.found = False
@@ -87,14 +87,14 @@ class Oracle:
 
                 # Check for actions to create new nodes
                 for edge in incoming:
-                    if edge.parent.ID in self.nodes_remaining and not is_implicit_node(edge.parent) and (
+                    if edge.parent.id in self.nodes_remaining and not is_implicit_node(edge.parent) and (
                                 not is_remote_edge(edge) or
                                 # Allow remote parent if all its children are remote/implicit
                                 all(is_remote_edge(e) or is_implicit_node(e.child) for e in edge.parent)):
                         yield self.action(edge, NODE, PARENT)  # Node or RemoteNode
 
                 for edge in outgoing:
-                    if edge.child.ID in self.nodes_remaining and is_implicit_node(edge.child) and (
+                    if edge.child.id in self.nodes_remaining and is_implicit_node(edge.child) and (
                             not is_remote_edge(edge)):  # Allow implicit child if it is not remote
                         yield self.action(edge, NODE, CHILD)  # Implicit
 
@@ -107,20 +107,20 @@ class Oracle:
 
                     # Check for actions to create binary edges
                     for edge in incoming:
-                        if edge.parent.ID == s1.node_id:
+                        if edge.parent.id == s1.node_id:
                             yield self.action(edge, EDGE, RIGHT)  # RightEdge or RightRemote
 
                     for edge in outgoing:
-                        if edge.child.ID == s1.node_id:
+                        if edge.child.id == s1.node_id:
                             yield self.action(edge, EDGE, LEFT)  # LeftEdge or LeftRemote
-                        elif state.buffer and edge.child.ID == state.buffer[0].node_id and \
+                        elif state.buffer and edge.child.id == state.buffer[0].node_id and \
                                 len(state.buffer[0].orig_node.incoming) == 1:
                             yield self.action(Actions.Shift)  # Special case to allow discarding simple children quickly
 
                     if not self.found:
                         # Check if a swap is necessary, and how far (if compound swap is enabled)
-                        related = dict([(edge.child.ID,  edge) for edge in outgoing] +
-                                       [(edge.parent.ID, edge) for edge in incoming])
+                        related = dict([(edge.child.id,  edge) for edge in outgoing] +
+                                       [(edge.parent.id, edge) for edge in incoming])
                         distance = None  # Swap distance (how many nodes in the stack to swap)
                         for i, s in enumerate(state.stack[-3::-1], start=1):  # Skip top two: checked above, not related
                             edge = related.pop(s.node_id, None)
@@ -149,16 +149,16 @@ class Oracle:
     def remove(self, edge, node=None):
         self.edges_remaining.discard(edge)
         if node is not None:
-            self.nodes_remaining.discard(node.ID)
+            self.nodes_remaining.discard(node.id)
 
     def need_label(self, node):
         return self.args.node_labels and not self.args.use_gold_node_labels \
-               and not node.labeled and node.orig_node.attrib.get(LABEL_ATTRIB)
+               and not node.labeled and node.orig_node.label
 
     def get_label(self, state, node):
         true_label = raw_true_label = None
         if node.orig_node is not None:
-            raw_true_label = node.orig_node.attrib.get(LABEL_ATTRIB)
+            raw_true_label = node.orig_node.label
         if raw_true_label is not None:
             true_label, _, _ = raw_true_label.partition(LABEL_SEPARATOR)
             if self.args.validate_oracle:

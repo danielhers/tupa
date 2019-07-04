@@ -395,7 +395,7 @@ class Parser(AbstractParser):
                     print("Training epoch %d of %d: " % (self.epoch, end - 1))
                     if self.config.args.curriculum and self.accuracies:
                         print("Sorting graphs by previous epoch accuracy...")
-                        graphs = sorted(graphs, key=lambda p: self.accuracies.get(p.ID, 0))
+                        graphs = sorted(graphs, key=lambda p: self.accuracies.get(p.id, 0))
                     else:
                         self.config.random.shuffle(graphs)
                     if not sum(1 for _ in self.parse(graphs, mode=ParseMode.train, conllu=conllu)):

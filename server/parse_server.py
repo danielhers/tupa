@@ -9,6 +9,7 @@ import jinja2
 import matplotlib
 from flask import Flask, render_template, Response, request
 from flask_compress import Compress
+from semstr.convert import TO_FORMAT
 from ucca import layer1
 from ucca.convert import from_text, to_standard, from_standard
 from ucca.textutil import indent_xml
@@ -16,7 +17,6 @@ from ucca.visualization import draw
 from webassets import Environment as AssetsEnvironment
 from webassets.ext.jinja2 import AssetsExtension
 
-from semstr.convert import TO_FORMAT
 from tupa.parse import Parser
 
 matplotlib.use("Agg")
@@ -68,7 +68,7 @@ def parse():
 def visualize():
     xml = request.get_data()
     passage = from_standard(fromstring(xml))
-    print("Visualizing passage %s: %s" % (passage.ID, passage.layer(layer1.LAYER_ID).heads[0]))
+    print("Visualizing passage %s: %s" % (passage.id, passage.layer(layer1.LAYER_ID).heads[0]))
     canvas = FigureCanvasAgg(plt.figure())
     draw(passage)
     image = BytesIO()

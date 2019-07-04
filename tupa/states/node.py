@@ -2,7 +2,7 @@ from collections import deque
 from operator import attrgetter
 
 from semstr.util.amr import LABEL_ATTRIB, UNKNOWN_LABEL, LABEL_SEPARATOR
-from ucca import core, layer0
+from ucca import layer0
 from ucca.layer1 import EdgeTags
 
 from ..config import Config
@@ -12,14 +12,12 @@ class Node:
     """
     Temporary representation for core.Node with only relevant information for parsing
     """
-    def __init__(self, index, swap_index=None, orig_node=None, text=None, paragraph=None, tag=None, label=None,
+    def __init__(self, index, swap_index=None, orig_node=None, text=None, label=None,
                  implicit=False, is_root=False, root=None):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated core.Node from the original Graph, during training
-        self.node_id = orig_node.ID if orig_node else None  # ID of the original node
+        self.node_id = orig_node.id if orig_node else None  # ID of the original node
         self.text = text  # Text for terminals, None for non-terminals
-        self.paragraph = paragraph  # int for terminals, None for non-terminals
-        self.tag = tag  # Node tag of the original node (Word/Punctuation)
         if label is None:
             self.label = self.category = None
         else:  # Node label prediction is enabled
@@ -27,8 +25,8 @@ class Node:
             if not self.category:
                 self.category = None
         # Whether a label has been set yet (necessary because None is a valid label too):
-        self.labeled = self.orig_node is not None and self.orig_node.attrib.get(LABEL_ATTRIB) is None
-        self.node_index = int(self.node_id.split(core.Node.ID_SEPARATOR)[1]) if orig_node else None
+        self.labeled = self.orig_node is not None and self.orig_node.label is None
+        self.node_index = int(self.node_id) if orig_node else None
         self.outgoing = []  # Edge list
         self.incoming = []  # Edge list
         self.children = []  # Node list: the children of all edges in outgoing

@@ -31,7 +31,7 @@ class State:
         self.graph = graph
         self.conllu = conllu
         self.labeled = any(n.outgoing_edges or n.label for n in graph.nodes)
-        self.terminals = [Node(i, orig_node=t, root=graph, text=t.text, paragraph=t.paragraph, tag=t.tag)
+        self.terminals = [Node(i, orig_node=t, root=graph, text=t.label)
                           for i, t in enumerate(conllu.nodes, start=1)]
         self.stack = []
         self.buffer = deque()
