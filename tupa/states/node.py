@@ -16,7 +16,7 @@ class Node:
                  implicit=False, is_root=False, root=None):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated core.Node from the original Graph, during training
-        self.node_id = orig_node.id if orig_node else None  # ID of the original node
+        self.node_id = str(orig_node.id) if orig_node else None  # ID of the original node
         self.text = text  # Text for terminals, None for non-terminals
         if label is None:
             self.label = self.category = None
@@ -40,6 +40,11 @@ class Node:
         self._terminals = None
         self.is_root = is_root
         self.root = root  # Original Graph object this belongs to
+
+    def get(self, prop):
+        for p, v in zip(self.orig_node.properties, self.orig_node.values):
+            if p == prop:
+                return v
 
     def add_incoming(self, edge):
         self.incoming.append(edge)

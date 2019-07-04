@@ -20,7 +20,7 @@ NOOP = "noop"
 NN_CLASSIFIERS = (BIRNN,)
 CLASSIFIERS = (BIRNN, NOOP)
 
-FEATURE_PROPERTIES = "wmtudhencpqxyAPCIEMNT#^$"
+FEATURE_PROPERTIES = "wmtudhencpqxyAPCIEM"
 
 # Swap types
 REGULAR = "regular"
@@ -89,7 +89,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add_boolean(group, "curriculum", "sort training graphs by action prediction accuracy in previous epoch")
 
     group = ap.add_argument_group(title="Neural network parameters")
-    add(group, "--word-dim-external", type=int, default=300, help="dimension for external word embeddings")
+    add(group, "--word-dim-external", type=int, default=0, help="dimension for external word embeddings")
     add(group, "--word-vectors", help="file to load external word embeddings from (default: GloVe)")
     add(group, "--vocab", help="file mapping integer ID to word form (to avoid loading spaCy), or '-' to use word form")
     add_boolean(group, "update-word-vectors", "external word vectors in training parameters", default=True)
@@ -103,10 +103,6 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--node-category-dim", type=int, default=0, help="dimension for node category embeddings")
     add(group, "--punct-dim", type=int, default=1, help="dimension for separator punctuation embeddings")
     add(group, "--action-dim", type=int, default=3, help="dimension for input action type embeddings")
-    add(group, "--ner-dim", type=int, default=3, help="dimension for input entity type embeddings")
-    add(group, "--shape-dim", type=int, default=3, help="dimension for word shape embeddings")
-    add(group, "--prefix-dim", type=int, default=2, help="dimension for word prefix embeddings")
-    add(group, "--suffix-dim", type=int, default=3, help="dimension for word suffix embeddings")
     add(group, "--output-dim", type=int, default=50, help="dimension for output action embeddings")
     add(group, "--layer-dim", type=int, default=50, help="dimension for hidden layers")
     add(group, "--layers", type=int, default=2, help="number of hidden layers")
@@ -129,10 +125,6 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--max-puncts", type=int, default=5, help="max number of punctuations for embeddings")
     add(group, "--max-action-types", type=int, default=10, help="max number of action types for embeddings")
     add(group, "--max-action-labels", type=int, default=100, help="max number of action labels to allow")
-    add(group, "--max-ner-types", type=int, default=18, help="max number of entity types to allow")
-    add(group, "--max-shapes", type=int, default=30, help="max number of word shapes to allow")
-    add(group, "--max-prefixes", type=int, default=30, help="max number of 1-character word prefixes to allow")
-    add(group, "--max-suffixes", type=int, default=500, help="max number of 3-character word suffixes to allow")
     add(group, "--word-dropout", type=float, default=0.2, help="word dropout parameter")
     add(group, "--word-dropout-external", type=float, default=0, help="word dropout for word vectors")
     add(group, "--lemma-dropout", type=float, default=0.2, help="lemma dropout parameter")

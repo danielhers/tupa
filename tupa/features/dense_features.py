@@ -5,37 +5,37 @@ from .feature_params import FeatureParameters, NumericFeatureParameters
 from ..model_util import UNKNOWN_VALUE, MISSING_VALUE, UnknownDict, save_dict, load_dict
 
 FEATURE_TEMPLATES = (
-    "s0s1xd" "s1s0x" "s0b0xd" "b0s0x"  # specific edges
-    "s0wmtudencpT#^$xhqyPCIEMN"
-    "s1wmtudencT#^$xhyN"
-    "s2wmtudencT#^$xhy"
-    "s3wmtudencT#^$xhyN"
-    "b0wmtudncT#^$hPCIEMN"
-    "b1wmtudncT#^$"
-    "b2wmtudncT#^$"
-    "b3wmtudncT#^$"
-    "s0lwmenc#^$"
-    "s0rwmenc#^$"
-    "s1lwmenc#^$"
-    "s1rwmenc#^$"
-    "s0llwmen#^$"
-    "s0lrwmen#^$"
-    "s0rlwmen#^$"
-    "s0rrwmen#^$"
-    "s1llwmen#^$"
-    "s1lrwmen#^$"
-    "s1rlwmen#^$"
-    "s1rrwmen#^$"
-    "s0Lwmen#^$"
-    "s0Rwmen#^$"
-    "s1Lwmen#^$"
-    "s1Rwmen#^$"
-    "b0Lwmen#^$"
-    "b0Rwmen#^$"
-    "s0b0e" "b0s0e"  # specific edges
-    "a0eAa1eA",  # past actions
+    "s0s1xd" "s1s0x" "s0b0xd" "b0s0x"
+    "s0wmtudencpxhqyPCIEM"
+    "s1wmtudencxhy"
+    "s2wmtudencxhy"
+    "s3wmtudencxhy"
+    "b0wmtudnchPCIEM"
+    "b1wmtudnc"
+    "b2wmtudnc"
+    "b3wmtudnc"
+    "s0lwmenc"
+    "s0rwmenc"
+    "s1lwmenc"
+    "s1rwmenc"
+    "s0llwmen"
+    "s0lrwmen"
+    "s0rlwmen"
+    "s0rrwmen"
+    "s1llwmen"
+    "s1lrwmen"
+    "s1rlwmen"
+    "s1rrwmen"
+    "s0Lwmen"
+    "s0Rwmen"
+    "s1Lwmen"
+    "s1Rwmen"
+    "b0Lwmen"
+    "b0Rwmen"
+    "s0b0e" "b0s0e"
+    "a0eAa1eA",
 )
-INDEXED = "wmtudT"  # words, lemmas, fine POS tags, coarse/universal POS tags, dep rels, entity type
+INDEXED = "wmtud"  # words, lemmas, fine POS tags, coarse/universal POS tags, dep rels
 DEFAULT = ()  # intermediate value for missing features
 FILENAME_SUFFIX = ".enum"
 

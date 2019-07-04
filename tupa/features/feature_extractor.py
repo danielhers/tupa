@@ -1,14 +1,11 @@
 import re
-
-from ucca import layer0
-from ucca.layer1 import EdgeTags
-from ucca.textutil import Attr
+from operator import attrgetter
 
 from tupa.config import Config, FEATURE_PROPERTIES
 
 FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([%s]*)" % FEATURE_PROPERTIES)
 FEATURE_TEMPLATE_PATTERN = re.compile(r"^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
-NON_NUMERIC = "wmtudencpAT#^$"
+NON_NUMERIC = "wmtudencpA"
 
 
 class FeatureTemplate:
@@ -78,11 +75,6 @@ class FeatureTemplateElement:
                            I: number of implicit children
                            E: number of remote children
                            M: number of remote parents
-                           N: numeric value of named entity IOB
-                           T: named entity type
-                           #: word shape
-                           ^: word prefix (one character)
-                           $: word suffix (three characters)
                            If empty,
                              If the next node comes with the "x" property, the value will be 1 if there is an edge from
                              this node to the next one in the template, or 0 otherwise.
@@ -203,25 +195,6 @@ class FeatureExtractor:
         return sorted(list(map(str, self.feature_templates)))
 
 
-EDGE_PRIORITY = {tag: i for i, tag in enumerate((
-    EdgeTags.Center,
-    EdgeTags.Connector,
-    EdgeTags.ParallelScene,
-    EdgeTags.Process,
-    EdgeTags.State,
-    EdgeTags.Participant,
-    EdgeTags.Adverbial,
-    EdgeTags.Time,
-    EdgeTags.Elaborator,
-    EdgeTags.Relator,
-    EdgeTags.Function,
-    EdgeTags.Linker,
-    EdgeTags.Ground,
-    EdgeTags.Terminal,
-    EdgeTags.Punctuation,
-))}
-
-
 def head_terminal(node, *_):
     return head_terminal_height(node)
 
@@ -251,7 +224,7 @@ def head_terminal_height(node, return_height=False):
             if not edges or head_terminal_height.height > MAX_HEIGHT:
                 head_terminal_height.head_terminal = head_terminal_height.height = None
                 break
-            head_terminal_height.head_terminal = min(edges, key=lambda edge: EDGE_PRIORITY.get(edge.tag, 0)).child
+            head_terminal_height.head_terminal = min(edges, key=attrgetter("lab")).child
             head_terminal_height.height += 1
     return head_terminal_height.height if return_height else head_terminal_height.head_terminal
 
@@ -282,8 +255,9 @@ def dep_distance(node1, node2, *_):
     terminals = list(map(head_terminal, (node1, node2)))
     for v in 1, -1:
         t1, t2 = terminals[::v]
-        if t1.index + t1.tok[Attr.HEAD.value] == t2.index:
-            return v
+        for e in t1.outgoing_edges:
+            if e.tgt == t2:
+                return v
     return None
 
 
@@ -291,7 +265,7 @@ def get_punctuation(nodes, terminals):
     if len(nodes) < 2:
         return None
     t0, t1 = sorted([head_terminal(node) for node in nodes], key=lambda t: t.index)
-    return [t for t in terminals[t0.index:t1.index - 1] if t.tag == layer0.NodeTags.Punct]
+    return [t for t in terminals[t0.index:t1.index - 1] if t.get("upos") == "PUNCT"]
 
 
 ACTION_PROP_GETTERS = {
@@ -301,11 +275,11 @@ ACTION_PROP_GETTERS = {
 
 
 NODE_PROP_GETTERS = {
-    "w": lambda node, *_: head_terminal(node).tok[Attr.ORTH.value],
-    "m": lambda node, *_: head_terminal(node).tok[Attr.LEMMA.value],
-    "t": lambda node, *_: head_terminal(node).tok[Attr.TAG.value],
-    "u": lambda node, *_: head_terminal(node).tok[Attr.POS.value],
-    "d": lambda node, prev, binary: dep_distance(prev, node) if binary else head_terminal(node).tok[Attr.DEP.value],
+    "w": lambda node, *_: head_terminal(node).label,
+    "m": lambda node, *_: head_terminal(node).get("lemma"),
+    "t": lambda node, *_: head_terminal(node).get("xpos"),
+    "u": lambda node, *_: head_terminal(node).get("upos"),
+    "d": lambda node, prev, binary: dep_distance(prev, node) if binary else head_terminal(node).incoming_edges[0].lab,
     "h": height,
     "i": lambda node, *_: head_terminal(node).index - 1,
     "j": lambda node, *_: node.index,
@@ -319,16 +293,11 @@ NODE_PROP_GETTERS = {
     "I": lambda node, *_: sum(1 for n in node.children if n.implicit),
     "E": lambda node, *_: sum(1 for e in node.outgoing if e.remote),
     "M": lambda node, *_: sum(1 for e in node.incoming if e.remote),
-    "N": lambda node, *_: head_terminal(node).tok[Attr.ENT_IOB.value],
-    "T": lambda node, *_: head_terminal(node).tok[Attr.ENT_TYPE.value],
-    "#": lambda node, *_: head_terminal(node).tok[Attr.SHAPE.value],
-    "^": lambda node, *_: head_terminal(node).tok[Attr.PREFIX.value],
-    "$": lambda node, *_: head_terminal(node).tok[Attr.SUFFIX.value],
 }
 
 
 SEP_PROP_GETTERS = {
-    "p": lambda nodes, terminals: get_punctuation(nodes, terminals)[0].tok[Attr.ORTH.value],
+    "p": lambda nodes, terminals: get_punctuation(nodes, terminals)[0].label,
     "q": lambda nodes, terminals: len(get_punctuation(nodes, terminals)),
 }
 

@@ -1,13 +1,11 @@
 from collections import OrderedDict
 from enum import Enum
 
-from ucca import textutil
-
 from .action import Actions
 from .classifiers.classifier import Classifier
 from .config import Config, SEPARATOR, BIRNN, NOOP
 from .features.feature_params import FeatureParameters
-from .model_util import UnknownDict, AutoIncrementDict, remove_backup, save_json, load_json
+from .model_util import UnknownDict, AutoIncrementDict, remove_backup
 
 
 class ParameterDefinition:
@@ -90,10 +88,6 @@ PARAM_DEFS = [
     ("e",            dict(dim="edge_label_dim", size="max_edge_labels")),
     ("p",            dict(dim="punct_dim",      size="max_puncts")),
     ("A",            dict(dim="action_dim",     size="max_action_types")),
-    ("T",            dict(dim="ner_dim",        size="max_ner_types")),
-    ("#",            dict(dim="shape_dim",      size="max_shapes")),
-    ("^",            dict(dim="prefix_dim",     size="max_prefixes")),
-    ("$",            dict(dim="suffix_dim",     size="max_suffixes")),
 ]
 
 
@@ -230,8 +224,6 @@ class Model:
                 skip_labels = (NODE_LABEL_KEY,) if node_labels and node_labels.size else ()
                 self.classifier.save(self.filename, skip_labels=skip_labels,
                                      omit_features=self.config.args.omit_features)
-                textutil.models["vocab"] = self.config.args.vocab
-                save_json(self.filename + ".nlp.json", textutil.models)
                 remove_backup(self.filename)
             except Exception as e:
                 raise IOError("Failed saving model to '%s'" % self.filename) from e
@@ -255,13 +247,6 @@ class Model:
                 self.load_labels()
                 for param_def in self.param_defs(self.config):
                     param_def.load_to_config(self.feature_extractor.params)
-                try:
-                    textutil.models.update(load_json(self.filename + ".nlp.json"))
-                    vocab = textutil.models.get("vocab")
-                    if vocab:
-                        self.config.args.vocab = vocab
-                except FileNotFoundError:
-                    pass
                 self.config.print("\n".join("%s: %s" % i for i in self.feature_params.items()), level=1)
             except FileNotFoundError:
                 self.feature_extractor = self.classifier = None

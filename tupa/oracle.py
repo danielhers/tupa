@@ -29,9 +29,8 @@ class Oracle:
     """
     def __init__(self, graph):
         self.args = Config().args
-        l1 = graph.layer(layer1.LAYER_ID)
-        self.nodes_remaining = {n.id for n in l1.all if n is not l1.heads[0]}
-        self.edges_remaining = {e for n in graph.nodes.values() for e in n}
+        self.nodes_remaining = {n.id for n in graph.nodes if n is not n.is_top}
+        self.edges_remaining = {e for n in graph.nodes for e in n.outgoing_edges}
         self.graph = graph
         self.found = False
         self.log = None
@@ -77,7 +76,7 @@ class Oracle:
         if state.stack:
             s0 = state.stack[-1]
             incoming, outgoing = [[e for e in l if e in self.edges_remaining]
-                                  for l in (s0.orig_node.incoming, s0.orig_node.outgoing)]
+                                  for l in (s0.orig_node.incoming_edges, s0.orig_node.outgoing_edges)]
             if not incoming and not outgoing and not self.need_label(s0):
                 yield self.action(Actions.Reduce)
             else:
@@ -102,7 +101,7 @@ class Oracle:
                     s1 = state.stack[-2]
                     # Check for node label action: if all terminals have already been connected
                     if self.need_label(s1) and not any(is_terminal_edge(e) for e in
-                                                       self.edges_remaining.intersection(s1.orig_node.outgoing)):
+                                                       self.edges_remaining.intersection(s1.orig_node.outgoing_edges)):
                         yield self.action(s1, LABEL, 2)
 
                     # Check for actions to create binary edges
@@ -114,7 +113,7 @@ class Oracle:
                         if edge.child.id == s1.node_id:
                             yield self.action(edge, EDGE, LEFT)  # LeftEdge or LeftRemote
                         elif state.buffer and edge.child.id == state.buffer[0].node_id and \
-                                len(state.buffer[0].orig_node.incoming) == 1:
+                                len(state.buffer[0].orig_node.incoming_edges) == 1:
                             yield self.action(Actions.Shift)  # Special case to allow discarding simple children quickly
 
                     if not self.found:
