@@ -73,8 +73,11 @@ class PassageParser(AbstractParser):
             assert not errors, errors
         self.in_format = self.format or "ucca"
         self.out_format = "ucca" if self.format in (None, "text") else self.format
-        self.lang = self.passage.attrib.get("lang")
-        assert self.lang
+        if self.config.args.bert_multilingual is not None:
+            self.lang = self.passage.attrib.get("lang")
+            assert self.lang
+        else:
+            self.lang = self.passage.attrib.get("lang", "en")
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
         self.ignore_node = None if self.config.args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
         self.state_hash_history = set()

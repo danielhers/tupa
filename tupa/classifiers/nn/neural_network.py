@@ -15,9 +15,7 @@ from .sub_model import SubModel
 from ..classifier import Classifier
 from ...config import Config, BIRNN, HIGHWAY_RNN, HIERARCHICAL_RNN
 from ...model_util import MISSING_VALUE, remove_existing
-
 import torch
-from pytorch_pretrained_bert import BertTokenizer, BertModel
 
 from typing import List
 
@@ -66,6 +64,8 @@ class NeuralNetwork(Classifier, SubModel):
         self.trainer_type = self.trainer = self.value = self.birnn = None
 
         if self.config.args.use_bert:
+            from pytorch_pretrained_bert import BertTokenizer, BertModel
+
             if self.config.args.bert_multilingual is not None:
                 assert "multilingual" in self.config.args.bert_model
             import logging
