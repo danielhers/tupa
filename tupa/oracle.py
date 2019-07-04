@@ -86,14 +86,15 @@ class Oracle:
 
                 # Check for actions to create new nodes
                 for edge in incoming:
-                    if edge.parent.id in self.nodes_remaining and not is_implicit_node(edge.parent) and (
+                    if edge.src in self.nodes_remaining and not self.is_implicit_node(edge.src) and (
                                 not is_remote_edge(edge) or
                                 # Allow remote parent if all its children are remote/implicit
-                                all(is_remote_edge(e) or is_implicit_node(e.child) for e in edge.parent)):
+                                all(is_remote_edge(e) or self.is_implicit_node(e.tgt)
+                                    for e in self.graph.nodes[edge.src].outgoing_edges)):
                         yield self.action(edge, NODE, PARENT)  # Node or RemoteNode
 
                 for edge in outgoing:
-                    if edge.child.id in self.nodes_remaining and is_implicit_node(edge.child) and (
+                    if edge.tgt in self.nodes_remaining and self.is_implicit_node(edge.tgt) and (
                             not is_remote_edge(edge)):  # Allow implicit child if it is not remote
                         yield self.action(edge, NODE, CHILD)  # Implicit
 
@@ -106,20 +107,20 @@ class Oracle:
 
                     # Check for actions to create binary edges
                     for edge in incoming:
-                        if edge.parent.id == s1.node_id:
+                        if edge.src == s1.node_id:
                             yield self.action(edge, EDGE, RIGHT)  # RightEdge or RightRemote
 
                     for edge in outgoing:
-                        if edge.child.id == s1.node_id:
+                        if edge.tgt == s1.node_id:
                             yield self.action(edge, EDGE, LEFT)  # LeftEdge or LeftRemote
-                        elif state.buffer and edge.child.id == state.buffer[0].node_id and \
+                        elif state.buffer and edge.tgt == state.buffer[0].node_id and \
                                 len(state.buffer[0].orig_node.incoming_edges) == 1:
                             yield self.action(Actions.Shift)  # Special case to allow discarding simple children quickly
 
                     if not self.found:
                         # Check if a swap is necessary, and how far (if compound swap is enabled)
-                        related = dict([(edge.child.id,  edge) for edge in outgoing] +
-                                       [(edge.parent.id, edge) for edge in incoming])
+                        related = dict([(edge.tgt,  edge) for edge in outgoing] +
+                                       [(edge.src, edge) for edge in incoming])
                         distance = None  # Swap distance (how many nodes in the stack to swap)
                         for i, s in enumerate(state.stack[-3::-1], start=1):  # Skip top two: checked above, not related
                             edge = related.pop(s.node_id, None)
@@ -142,8 +143,8 @@ class Oracle:
             return edge  # Will be just an Action object in this case
         if kind == LABEL:
             return Actions.Label(direction, orig_node=edge.orig_node, oracle=self)
-        node = (edge.parent, edge.child)[direction] if kind == NODE else None
-        return ACTIONS[kind][direction][is_remote_edge(edge)](tag=edge.tag, orig_edge=edge, orig_node=node, oracle=self)
+        node = self.graph.nodes[(edge.src, edge.tgt)[direction]] if kind == NODE else None
+        return ACTIONS[kind][direction][is_remote_edge(edge)](tag=edge.lab, orig_edge=edge, orig_node=node, oracle=self)
 
     def remove(self, edge, node=None):
         self.edges_remaining.discard(edge)
@@ -174,14 +175,16 @@ class Oracle:
     def __str__(self):
         return str(" ")
 
-
-def is_terminal_edge(edge):
-    return edge.tag == layer1.EdgeTags.Terminal
+    def is_implicit_node(self, i):
+        return not self.graph.nodes[i].outgoing_edges
 
 
 def is_remote_edge(edge):
-    return edge.attrib.get("remote", False)
+    for p, v in zip(edge.attributes or [], edge.values or []):
+        if p == "remote":
+            return v in ("true", True)
+    return False
 
 
-def is_implicit_node(node):
-    return node.attrib.get("implicit", False)
+def is_terminal_edge(edge):
+    return edge.lab == layer1.EdgeTags.Terminal
