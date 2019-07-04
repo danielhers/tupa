@@ -520,10 +520,10 @@ def print_scores(results, filename, prefix=None, prefix_title=None):
         print_title = not os.path.exists(filename)
         try:
             with open(filename, "a") as f:
+                titles = sorted(results.keys())
+                if prefix_title is not None:
+                    titles = [prefix_title] + titles
                 if print_title:
-                    titles = sorted(results.keys())
-                    if prefix_title is not None:
-                        titles = [prefix_title] + titles
                     print(",".join(titles), file=f)
                 fields = [results[k] for k in titles]
                 if prefix is not None:
