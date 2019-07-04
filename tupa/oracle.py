@@ -107,13 +107,13 @@ class Oracle:
 
                     # Check for actions to create binary edges
                     for edge in incoming:
-                        if edge.src == s1.node_id:
+                        if edge.src == s1.id:
                             yield self.action(edge, EDGE, RIGHT)  # RightEdge or RightRemote
 
                     for edge in outgoing:
-                        if edge.tgt == s1.node_id:
+                        if edge.tgt == s1.id:
                             yield self.action(edge, EDGE, LEFT)  # LeftEdge or LeftRemote
-                        elif state.buffer and edge.tgt == state.buffer[0].node_id and \
+                        elif state.buffer and edge.tgt == state.buffer[0].id and \
                                 len(state.buffer[0].orig_node.incoming_edges) == 1:
                             yield self.action(Actions.Shift)  # Special case to allow discarding simple children quickly
 
@@ -123,7 +123,7 @@ class Oracle:
                                        [(edge.src, edge) for edge in incoming])
                         distance = None  # Swap distance (how many nodes in the stack to swap)
                         for i, s in enumerate(state.stack[-3::-1], start=1):  # Skip top two: checked above, not related
-                            edge = related.pop(s.node_id, None)
+                            edge = related.pop(s.id, None)
                             if edge is not None:
                                 if not self.args.swap:  # We have no chance to reach it, so stop trying
                                     self.remove(edge)

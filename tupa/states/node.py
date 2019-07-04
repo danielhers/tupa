@@ -1,11 +1,7 @@
 from collections import deque
 from operator import attrgetter
 
-from semstr.util.amr import LABEL_ATTRIB, UNKNOWN_LABEL, LABEL_SEPARATOR
-from ucca import layer0
-from ucca.layer1 import EdgeTags
-
-from ..config import Config
+from semstr.util.amr import UNKNOWN_LABEL, LABEL_SEPARATOR
 
 
 class Node:
@@ -16,7 +12,7 @@ class Node:
                  implicit=False, is_root=False, root=None):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated core.Node from the original Graph, during training
-        self.node_id = str(orig_node.id) if orig_node else None  # ID of the original node
+        self.id = str(orig_node.id) if orig_node else None  # ID of the original node
         self.text = text  # Text for terminals, None for non-terminals
         if label is None:
             self.label = self.category = None
@@ -26,7 +22,7 @@ class Node:
                 self.category = None
         # Whether a label has been set yet (necessary because None is a valid label too):
         self.labeled = self.orig_node is not None and self.orig_node.label is None
-        self.node_index = int(self.node_id) if orig_node else None
+        self.node_index = int(self.id) if orig_node else None
         self.outgoing = []  # Edge list
         self.incoming = []  # Edge list
         self.children = []  # Node list: the children of all edges in outgoing
@@ -59,107 +55,17 @@ class Node:
         self._terminals = None  # Invalidate terminals because we might have added some
 
     @staticmethod
-    def attach_nodes(l0, l1, nodes, labeled=True, node_labels=False, verify=False):
-        remotes = []  # To be handled after all nodes are created
-        for node in Node.topological_sort(nodes):
-            if labeled and verify:
-                assert node.text or node.outgoing or node.implicit, "Non-terminal leaf node: %s" % node
-            for edge in node.outgoing:
-                if edge.remote:
-                    remotes.append((node, edge))
-                else:
-                    edge.child.add_to_l1(l0, l1, node, edge.tag, labeled, node_labels)
-        Node.attach_remotes(l1, remotes, verify)
-
-    @staticmethod
-    def topological_sort(nodes):
-        """
-        Sort self.nodes topologically, each node appearing as early as possible
-        Also sort each node's outgoing and incoming edge according to the node order
-        """
-        levels = {}
-        level_by_index = {}
-        stack = [node for node in nodes if not node.outgoing]
-        while stack:
-            node = stack.pop()
-            if node.index not in level_by_index:
-                parents = [edge.parent for edge in node.incoming]
-                if parents:
-                    unexplored_parents = [parent for parent in parents
-                                          if parent.index not in level_by_index]
-                    if unexplored_parents:
-                        for parent in unexplored_parents:
-                            stack.append(node)
-                            stack.append(parent)
-                    else:
-                        level = 1 + max(level_by_index[parent.index] for parent in parents)
-                        levels.setdefault(level, []).append(node)
-                        level_by_index[node.index] = level
-                else:
-                    levels.setdefault(0, []).append(node)
-                    level_by_index[node.index] = 0
-        nodes = [node for level, level_nodes in sorted(levels.items())
-                 for node in sorted(level_nodes, key=lambda x: x.node_index or x.index)]
+    def attach_nodes(graph, nodes):
         for node in nodes:
-            node.outgoing.sort(key=lambda x: x.child.node_index or nodes.index(x.child))
-            node.incoming.sort(key=lambda x: x.parent.node_index or nodes.index(x.parent))
-        return nodes
-
-    def add_to_l1(self, l0, l1, parent, tag, labeled, node_labels):
-        """
-        Called when creating final Graph to add a new core.Node
-        :param l0: Layer0 of the graph
-        :param l1: Layer1 of the graph
-        :param parent: node
-        :param tag: edge tag to link to parent
-        :param labeled: there is a reference graph, so keep original node IDs in the "remarks" field
-        :param node_labels: whether to add a node label
-        """
-        edge = self.outgoing[0] if len(self.outgoing) == 1 else None
-        if self.text:  # For Word terminals (Punctuation already created by add_punct for parent)
-            if parent.node is not None:
-                if self.node is None:
-                    self.node = parent.node.add(EdgeTags.Terminal, self.get_terminal(l0)).child
-                elif self.node not in parent.node.children:
-                    parent.node.add(EdgeTags.Terminal, self.node)
-        elif edge and edge.child.text and layer0.is_punct(edge.child.get_terminal(l0)):
-            if self.node is None:
-                self.node = l1.add_punct(parent.node, edge.child.get_terminal(l0))
-                edge.child.node = self.node[0].child
-            elif parent.node is not None and self.node not in parent.node.children:
-                parent.node.add(EdgeTags.Punctuation, self.node)
-        else:  # The usual case
-            assert self.node is None, "Trying to create the same node twice (multiple incoming primary edges): " + \
-                                      ", ".join(map(str, self.incoming))
-            if parent is not None and parent.label and parent.node is None:  # If parent is an orphan and has a a label,
-                parent.add_to_l1(l0, l1, None, Config().args.orphan_label, labeled, node_labels)  # link to root
-            self.node = l1.add_fnode(None if parent is None else parent.node, tag, implicit=self.implicit)
-        if labeled:  # In training
-            self.set_node_id()
-        if node_labels:
-            self.set_node_label()
-
-    @staticmethod
-    def attach_remotes(l1, remotes, verify=False):
-        for node, edge in remotes:  # Add remote edges
-            try:
-                assert node.node is not None, "Remote edge from nonexistent node"
-                assert edge.child.node is not None, "Remote edge to nonexistent node"
-                l1.add_remote(node.node, edge.tag, edge.child.node)
-            except AssertionError:
-                if verify:
-                    raise
-
-    def get_terminal(self, l0):
-        return l0.by_position(self.index)
-
-    def set_node_id(self):
-        if self.node is not None and self.node_id is not None:
-            self.node.extra["remarks"] = self.node_id  # Keep original node ID for reference
+            node.node = graph.add_node(node.id)
+            node.set_node_label()
+        for node in nodes:
+            for edge in node.outgoing:
+                graph.add_edge(edge.parent.id, edge.child.id, edge.tag)
 
     def set_node_label(self):
         if self.node is not None:
-            self.node.attrib[LABEL_ATTRIB] = self.label or UNKNOWN_LABEL
+            self.node.label = self.label or UNKNOWN_LABEL
 
     @property
     def descendants(self):
@@ -188,17 +94,13 @@ class Node:
             self._terminals = sorted(terminals, key=attrgetter("index"))
         return self._terminals
 
-    @property
-    def tok(self):
-        return self.orig_node.tok
-
     def __repr__(self):
         return Node.__name__ + "(" + str(self.index) + \
                ((", " + self.text) if self.text else "") + \
-               ((", " + self.node_id) if self.node_id else "") + ")"
+               ((", " + self.id) if self.id else "") + ")"
 
     def __str__(self):
-        s = '"%s"' % self.text if self.text else self.node_id or str(self.index)
+        s = '"%s"' % self.text if self.text else self.id or str(self.index)
         if self.label:
             s += "/" + self.label
         return s

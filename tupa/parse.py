@@ -401,7 +401,7 @@ class Parser(AbstractParser):
                     if not sum(1 for _ in self.parse(graphs, mode=ParseMode.train, conllu=conllu)):
                         raise ParserException("Could not train on any graph")
                     yield self.eval_and_save(self.iteration == len(iterations) and self.epoch == end - 1,
-                                             finished_epoch=True)
+                                             finished_epoch=True, conllu=conllu)
                 print("Trained %d epochs" % (end - 1))
                 if dev:
                     if self.iteration < len(iterations):
@@ -424,7 +424,7 @@ class Parser(AbstractParser):
         self.print_config()
         self.best_score = self.model.classifier.best_score if self.model.classifier else 0
 
-    def eval_and_save(self, last=False, finished_epoch=False):
+    def eval_and_save(self, last=False, finished_epoch=False, conllu=None):
         scores = None
         model = self.model
         # noinspection PyAttributeOutsideInit
@@ -432,7 +432,7 @@ class Parser(AbstractParser):
         if self.dev:
             if not self.best_score:
                 self.save(finalized)
-            average_score, scores = self.eval(self.dev, ParseMode.dev, self.config.args.devscores)
+            average_score, scores = self.eval(self.dev, ParseMode.dev, self.config.args.devscores, conllu=conllu)
             if average_score >= self.best_score:
                 print("Better than previous best score (%.3f)" % self.best_score)
                 finalized.classifier.best_score = average_score
@@ -453,9 +453,9 @@ class Parser(AbstractParser):
         self.config.save(model.filename)
         model.save(save_init=self.save_init)
 
-    def eval(self, graphs, mode, scores_filename, display=True):
+    def eval(self, graphs, mode, scores_filename, display=True, conllu=None):
         print("Evaluating on %s graphs" % mode.name)
-        graph_scores = [s for _, s in self.parse(graphs, mode=mode, evaluate=True, display=display)]
+        graph_scores = [s for _, s in self.parse(graphs, mode=mode, evaluate=True, display=display, conllu=conllu)]
         scores = Scores(graph_scores)
         average_score = average_f1(scores)
         prefix = ".".join(map(str, [self.iteration, self.epoch] + (
@@ -491,7 +491,7 @@ class Parser(AbstractParser):
                                                conllu=conllu),
                                   start=1):
             if training and self.config.args.save_every and i % self.config.args.save_every == 0:
-                self.eval_and_save()
+                self.eval_and_save(conllu=conllu)
                 self.batch += 1
             yield graph
 

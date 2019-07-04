@@ -326,23 +326,20 @@ class State:
         self.type_validity_cache = {}
         self.need_label = None
 
-    def create_graph(self, verify=False, **kwargs):
+    def create_graph(self, **kwargs):
         """
         Create final graph from temporary representation
-        :param verify: fail if this results in an improper graph
         :return: core.Graph created from self.nodes
         """
         Config().print("Creating graph %s from state..." % self.graph.id, level=2)
         graph = Graph(self.graph.id)
-        graph_framework = kwargs.get("framework") or self.graph.extra.get("framework")
+        graph_framework = kwargs.get("framework") or self.graph.framework
         if graph_framework:
             graph.framework = graph_framework
         graph.input = self.graph.input
         if self.args.node_labels:
             self.root.set_node_label()
-        if self.labeled:  # We have a reference graph
-            self.root.set_node_id()
-        Node.attach_nodes(self.nodes, self.labeled, self.args.node_labels, verify)
+        Node.attach_nodes(graph, self.nodes)
         return graph
 
     def node_ratio(self):
