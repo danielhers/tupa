@@ -437,7 +437,7 @@ class Parser(AbstractParser):
     def eval(self, graphs, mode, scores_filename, display=True, conllu=None):
         print("Evaluating on %s graphs" % mode.name)
         out = list(self.parse(graphs, mode=mode, evaluate=True, display=display, conllu=conllu))
-        results = score.mces.evaluate(graphs, out)
+        results = score.mces.evaluate([g for g, _ in graphs], out)
         prefix = ".".join(map(str, [self.iteration, self.epoch] + (
             [self.batch] if self.config.args.save_every else [])))
         if display:
@@ -499,7 +499,7 @@ def train_test(train_graphs, dev_graphs, test_graphs, args, model_suffix=""):
         evaluate = args.evaluate or train_graphs
         out = list(p.parse(test_graphs, evaluate=evaluate, write=args.write, conllu=conllu))
         if out:
-            results = score.mces.evaluate(test_graphs, out)
+            results = score.mces.evaluate([g for g, _ in test_graphs], out)
             if args.verbose <= 1 or len(out) > 1:
                 print("\nAverage F1 score on test: %.3f" % results["all"]["f"])
                 print("Aggregated scores:")
