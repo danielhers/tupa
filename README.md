@@ -69,7 +69,7 @@ Run the parser on a French/German text file (separate passages by blank lines):
 
 Author
 ------
-* Daniel Hershcovich: danielh@cs.huji.ac.il
+* Daniel Hershcovich: daniel.hershcovich@gmail.com
 
 
 Citation
