@@ -269,8 +269,6 @@ class State:
         self.nodes.append(node)
         self.heads.add(node)
         self.log.append("node: %s (swap_index: %g)" % (node, node.swap_index))
-        if self.args.use_gold_node_labels:
-            self.need_label = node  # Labeled the node as soon as it is created rather than applying a LABEL action
         return node
 
     def calculate_swap_index(self):

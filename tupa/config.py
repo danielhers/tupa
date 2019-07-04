@@ -61,7 +61,6 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--max-node-labels", type=int, default=0, help="max number of node labels to allow")
     add(group, "--max-node-categories", type=int, default=0, help="max node categories to allow")
     add(group, "--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
-    add_boolean(group, "use-gold-node-labels", "gold node labels when parsing")
     add_boolean(group, "node-labels", "prediction of node labels, if supported by framework", default=True)
 
     group = ap.add_argument_group(title="Structural constraints")
@@ -233,7 +232,6 @@ class Config(object, metaclass=Singleton):
         ap.add_argument("-m", "--models", nargs="+", help="model file basename(s) to load/save, ensemble if >1 "
                                                           "(default: <framework>_<model_type>")
         ap.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=BIRNN, help="model type")
-        ap.add_argument("-B", "--beam", type=int, choices=(1,), default=1, help="beam size for beam search")
         add_boolean_option(ap, "evaluate", "evaluation of parsed graphs", short="e")
         add_verbose_arg(ap, help="detailed parse output")
         constructions.add_argument(ap)

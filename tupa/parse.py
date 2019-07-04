@@ -67,14 +67,14 @@ class GraphParser(AbstractParser):
         self.in_framework = self.framework or "ucca"
         self.target = "ucca" if self.framework in (None, "text") else self.framework
         self.state_hash_history = set()
-        self.state = self.oracle = self.eval_type = None
+        self.state = self.oracle = None
 
     def init(self):
         self.config.set_framework(self.in_framework)
         self.state = State(self.graph, self.conllu)
         # Graph is considered labeled if there are any edges or node labels in it
         self.oracle = Oracle(self.graph) if self.training or (
-                (self.config.args.verbose > 1 or self.config.args.use_gold_node_labels or self.config.args.action_stats)
+                (self.config.args.verbose > 1 or self.config.args.action_stats)
                 and "nodes" in self.graph) else None
         for model in self.models:
             model.init_model(self.config.framework)
@@ -121,8 +121,8 @@ class GraphParser(AbstractParser):
             self.config.print(lambda: "\n".join(["  predicted: %-15s true: %-15s taken: %-15s %s" % (
                 predicted_action, "|".join(map(str, true_actions.values())), action, self.state) if self.oracle else
                                           "  action: %-15s %s" % (action, self.state)] + (
-                ["  predicted label: %-9s true label: %s" % (predicted_label, true_label) if self.oracle and not
-                 self.config.args.use_gold_node_labels else "  label: %s" % label] if need_label else []) + [
+                ["  predicted label: %-9s true label: %s" % (predicted_label, true_label) if self.oracle
+                 else "  label: %s" % label] if need_label else []) + [
                 "    " + l for l in self.state.log]))
             if self.state.finished:
                 return  # action is Finish (or early update is triggered)
@@ -157,8 +157,6 @@ class GraphParser(AbstractParser):
     def choose(self, true, axis=None, name="action"):
         if axis is None:
             axis = self.model.axis
-        elif axis == NODE_LABEL_KEY and self.config.args.use_gold_node_labels:
-            return true, true
         labels = self.model.classifier.labels[axis]
         if axis == NODE_LABEL_KEY:
             true_keys = (labels[true],) if self.oracle else ()  # Must be before score()
@@ -233,17 +231,12 @@ class GraphParser(AbstractParser):
         if not self.training:
             self.out = self.state.create_graph(framework=self.target)
         if write:
-            for target in self.config.args.frameworks or [self.target]:
-                json.dump(self.out.encode(), self.config.args.output, indent=None, ensure_ascii=False)
-        ret = (self.out,)
-        if self.evaluation:
-            ret += (self.evaluate(self.evaluation),)
-            status = "%-14s %s F1=%.3f" % (status, self.eval_type, self.f1)
+            json.dump(self.out.encode(), self.config.args.output, indent=None, ensure_ascii=False)
         if display:
             self.config.print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), level=1)
         if accuracies is not None:
             accuracies[self.graph.id] = self.correct_action_count / self.action_count if self.action_count else 0
-        return ret
+        return self.out
 
     @property
     def accuracy_str(self):
@@ -253,13 +246,6 @@ class GraphParser(AbstractParser):
                 accuracy_str += " l=%-14s" % percents_str(self.correct_label_count, self.label_count)
             return "%-33s" % accuracy_str
         return ""
-
-    def evaluate(self, mode=ParseMode.test):
-        if self.framework:
-            self.config.print("Converting to %s and evaluating..." % self.framework)
-        result = score.mces.evaluate(self.graph, self.out)
-        self.f1 = result["all"]["f"]
-        return result
 
     def check_loop(self):
         """
@@ -292,9 +278,8 @@ class BatchParser(AbstractParser):
         id_width = 1
         graphs = self.add_progress_bar(graphs, display=display)
         for i, (graph, overlay) in enumerate(graphs, start=1):
-            graph_conllu = conllu[graph.id]
             parser = GraphParser((graph, overlay), self.config, self.models, self.training, self.evaluation,
-                                 conllu=graph_conllu)
+                                 conllu=conllu[graph.id])
             if self.config.args.verbose and display:
                 progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) if total and i <= total else "%d" % i
                 id_width = max(id_width, len(str(graph.id)))
@@ -309,8 +294,6 @@ class BatchParser(AbstractParser):
                         postfix["|a|"] = percents_str(self.correct_action_count, self.action_count, fraction=False)
                     if self.correct_label_count:
                         postfix["|l|"] = percents_str(self.correct_label_count, self.label_count, fraction=False)
-                    if self.evaluation and self.num_graphs:
-                        postfix["|F1|"] = self.f1 / self.num_graphs
                 graphs.set_postfix(**postfix)
             self.seen_per_framework[parser.in_framework] += 1
             if self.training and self.config.args.max_training_per_framework and \
@@ -334,7 +317,6 @@ class BatchParser(AbstractParser):
         self.label_count += parser.label_count
         self.num_tokens += parser.num_tokens
         self.num_graphs += 1
-        self.f1 += parser.f1
 
     def summary(self):
         print("Parsed %d graphs" % self.num_graphs)
@@ -353,11 +335,10 @@ class BatchParser(AbstractParser):
 
 class Parser(AbstractParser):
     """ Main class to implement transition-based UCCA parser """
-    def __init__(self, model_files=(), config=None, beam=1):
+    def __init__(self, model_files=(), config=None):
         super().__init__(config=config or Config(),
                          models=list(map(Model, (model_files,) if isinstance(model_files, str) else
                                          model_files or (config.args.classifier,))))
-        self.beam = beam  # Currently unused
         self.best_score = self.dev = self.test = self.iteration = self.epoch = self.batch = None
         self.trained = self.save_init = False
         self.accuracies = {}
@@ -455,16 +436,14 @@ class Parser(AbstractParser):
 
     def eval(self, graphs, mode, scores_filename, display=True, conllu=None):
         print("Evaluating on %s graphs" % mode.name)
-        graph_scores = [s for _, s in self.parse(graphs, mode=mode, evaluate=True, display=display, conllu=conllu)]
-        scores = Scores(graph_scores)
-        average_score = average_f1(scores)
+        out = list(self.parse(graphs, mode=mode, evaluate=True, display=display, conllu=conllu))
+        results = score.mces.evaluate(graphs, out)
         prefix = ".".join(map(str, [self.iteration, self.epoch] + (
             [self.batch] if self.config.args.save_every else [])))
         if display:
-            print("Evaluation %s, average %s F1 score on %s: %.3f%s" % (prefix, get_eval_type(scores), mode.name,
-                                                                        average_score, scores.details(average_f1)))
-        print_scores(scores, scores_filename, prefix=prefix, prefix_title="iteration")
-        return average_score, scores
+            print("Evaluation %s, average F1 score on %s: %.3f" % (prefix, mode.name, results["all"]["f"]))
+        print_scores(out, scores_filename, prefix=prefix, prefix_title="iteration")
+        return results["all"]["f"], out
 
     def parse(self, graphs, mode=ParseMode.test, evaluate=False, display=True, write=False, conllu=None):
         """
@@ -511,22 +490,22 @@ def train_test(train_graphs, dev_graphs, test_graphs, args, model_suffix=""):
     """
     model_files = [base + model_suffix + ext for base, ext in map(os.path.splitext, args.models or (args.classifier,))]
     conllu = {graph.id: graph for graph, _ in read_graphs_with_progress_bar(args.conllu)}
-    p = Parser(model_files=model_files, config=Config(), beam=args.beam)
+    p = Parser(model_files=model_files, config=Config())
     yield from filter(None, p.train(train_graphs, dev=dev_graphs, test=test_graphs, iterations=args.iterations,
                                     conllu=conllu))
     if test_graphs:
         if args.train or args.folds:
             print("Evaluating on test graphs")
         evaluate = args.evaluate or train_graphs
-        graphs = list(p.parse(test_graphs, evaluate=evaluate, write=args.write, conllu=conllu))
-        if graphs:
-            result = score.mces.evaluate(test_graphs, graphs)
-            if args.verbose <= 1 or len(graphs) > 1:
-                print("\nAverage F1 score on test: %.3f" % result["all"]["f"])
+        out = list(p.parse(test_graphs, evaluate=evaluate, write=args.write, conllu=conllu))
+        if out:
+            results = score.mces.evaluate(test_graphs, out)
+            if args.verbose <= 1 or len(out) > 1:
+                print("\nAverage F1 score on test: %.3f" % results["all"]["f"])
                 print("Aggregated scores:")
-                result.print()
-            print_scores(result, args.testscores)
-            yield result
+                print(results)
+            print_scores(results, args.testscores)
+            yield results
 
 
 def percents_str(part, total, infix="", fraction=True):
@@ -536,17 +515,17 @@ def percents_str(part, total, infix="", fraction=True):
     return ret
 
 
-def print_scores(scores, filename, prefix=None, prefix_title=None):
+def print_scores(results, filename, prefix=None, prefix_title=None):
     if filename:
         print_title = not os.path.exists(filename)
         try:
             with open(filename, "a") as f:
                 if print_title:
-                    titles = scores.titles()
+                    titles = sorted(results.keys())
                     if prefix_title is not None:
                         titles = [prefix_title] + titles
                     print(",".join(titles), file=f)
-                fields = scores.fields()
+                fields = [results[k] for k in titles]
                 if prefix is not None:
                     fields.insert(0, prefix)
                 print(",".join(fields), file=f)

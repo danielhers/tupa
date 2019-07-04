@@ -123,8 +123,7 @@ class Model:
                     self.init_param(key)
             if axis and self.axis not in labels:
                 labels[self.axis] = self.init_actions()  # Uses config to determine actions
-            if self.config.args.node_labels and not self.config.args.use_gold_node_labels and \
-                    NODE_LABEL_KEY not in labels:
+            if self.config.args.node_labels and NODE_LABEL_KEY not in labels:
                 labels[NODE_LABEL_KEY] = self.init_node_labels()  # Updates self.feature_params
         if self.classifier:  # Already initialized
             pass
@@ -196,7 +195,7 @@ class Model:
     def init_features(self, state, train):
         self.init_model()
         axes = [self.axis]
-        if self.config.args.node_labels and not self.config.args.use_gold_node_labels:
+        if self.config.args.node_labels:
             axes.append(NODE_LABEL_KEY)
         self.classifier.init_features(self.feature_extractor.init_features(state), axes, train)
 
