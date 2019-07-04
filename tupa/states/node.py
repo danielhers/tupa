@@ -12,7 +12,7 @@ class Node:
                  implicit=False, is_root=False, root=None):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated core.Node from the original Graph, during training
-        self.id = str(orig_node.id) if orig_node else None  # ID of the original node
+        self.id = str(orig_node.id) if orig_node else index  # ID of the original node
         self.text = text  # Text for terminals, None for non-terminals
         if label is None:
             self.label = self.category = None
