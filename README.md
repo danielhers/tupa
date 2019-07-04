@@ -21,7 +21,7 @@ Alternatively, install the latest code from GitHub (may be unstable):
 
     git clone https://github.com/danielhers/tupa
     cd tupa
-    python setup.py install
+    pip install .
 
 ### Train the parser
 
