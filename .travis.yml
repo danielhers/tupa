@@ -9,9 +9,21 @@ install:
   - pip install .
   - pip install pytest
   - python -m spacy download en_core_web_md
+env:
+  - FRAMEWORK=ucca
+  - FRAMEWORK=amr
+  - FRAMEWORK=dm
+  - FRAMEWORK=eds
+  - FRAMEWORK=psd
+stages:
+  - test
+  - parse
 jobs:
   include:
-    - os: osx
+    - stage: parse
+      script: python -m tupa -t test_files/$FRAMEWORK.mrp -d test_files/$FRAMEWORK.mrp --conllu test_files/udpipe.mrp
+    - stage: test
+      os: osx
       language:
       env: FRAMEWORK=unit
       before_install:
@@ -23,14 +35,6 @@ jobs:
         - conda create -q -n env python=3.6 numpy cython
         - source activate env
     - env: FRAMEWORK=unit
-    - stage: parse
-      env:
-        - FRAMEWORK=ucca
-        - FRAMEWORK=amr
-        - FRAMEWORK=dm
-        - FRAMEWORK=eds
-        - FRAMEWORK=psd
-      script: python -m tupa -t test_files/$FRAMEWORK.mrp -d test_files/$FRAMEWORK.mrp --conllu test_files/udpipe.mrp
 before_script: # https://github.com/travis-ci/travis-ci/issues/8982#issuecomment-354357640
   - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
 script:
