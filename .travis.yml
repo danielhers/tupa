@@ -16,8 +16,8 @@ env:
   - FRAMEWORK=eds
   - FRAMEWORK=psd
 stages:
-  - test
   - parse
+  - test
 jobs:
   include:
     - stage: parse
