@@ -4,10 +4,6 @@ sudo: false
 group: edge
 language: python
 python: 3.6
-addons:
-  apt:
-    packages:
-    - pandoc
 install:
   - pip uninstall -y numpy
   - pip install .
@@ -19,9 +15,6 @@ env:
   - FRAMEWORK=dm
   - FRAMEWORK=eds
   - FRAMEWORK=psd
-  global:
-    - TWINE_USERNAME=danielh
-    - secure: "Z1Y/2naCxRmTKarwOmx0a1AxJVSDheS7GRDJCnv1+CdHNvnqSXPjVKkaXbENTRRL7ACTtAF2tQKnhE9aEMJWGngmln81wo48OGwC28FyYrN/TiNdC6pTGtZiphOv7TphF0Q0zWRUO+BkXwn8P9TABmT8LLj48tzLs0ug2SZL9NJy4qnM8FD1IPY80z2TaVeLgXaGeCy7icLjkmoY/hO/1Ysw8vtMz2p57lnIt5Tq6Eu9yWMiP+RRCqUosn4y1RLL4I1eNQmtDH+Z+7COPPQ28SmRdutzIjpEYzY4kTFaM0cjw3rzTEGiANgqvOkbSrM33qd9Cht2g4k10SPLAikGVTa4P61dM7gusX3O6yuGaW2QIxtr9kU8oAEcFRyavbs6tU4s61jv62tFFqnKQzVJ7ouYF8jmywfkU+KzvSiAILd0lQh8vusvOtfPofEaAxnMCN7ASoVZGtCp7dKH0kXzCitrP0HgVRAmm5nTTeKhx1Up43G98m1wSreJUufcHkTc15Z3EhgPkWMr8wW9JIzdSt9Tt8eTL2A68CC+U4XWfeCXQ5/JV96PxFmTsAGYjXI5oWuxPB6AS81WaLZiJHaBN6njDU1FEJOZLnAiVpJXllyfjgB9BMjCjQHB5/zRhS51FkSj26CFXXr/Bg8QLHAlu0lL9eEcUdP02owo5DyYjaQ="
 jobs:
   include:
     - os: osx
