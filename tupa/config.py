@@ -1,9 +1,10 @@
-import dynet_config
-import numpy as np
 import os
 import shlex
-from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
 from copy import deepcopy
+
+import dynet_config
+import numpy as np
+from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS
 from logbook import Logger, FileHandler, StderrHandler
 from semstr.cfgutil import Singleton, add_verbose_arg, add_boolean_option, get_group_arg_names
 from semstr.convert import UCCA_EXT, CONVERTERS
@@ -243,6 +244,19 @@ class Config(object, metaclass=Singleton):
     def __init__(self, *args):
         self.arg_parser = ap = ArgParser(description="Transition-based parser for UCCA.",
                                          formatter_class=ArgumentDefaultsHelpFormatter)
+
+        add_boolean_option(ap, "use-bert", default=True, description="whether to use bert embeddings")
+        ap.add_argument("--bert-model", choices=["bert-base-uncased", "bert-large-uncased", "bert-base-cased",
+                                                 "bert-large-cased", "bert-base-multilingual-cased"],
+                        default="bert-base-multilingual-cased")
+        ap.add_argument("--bert-layers", type=int, nargs='+', default=[-1, -2, -3, -4])
+        ap.add_argument("--bert-layers-pooling", choices=["weighed", "sum", "concat"], default="weighed")
+        ap.add_argument("--bert-token-align-by", choices=["first", "sum", "mean"], default="sum")
+        ap.add_argument("--bert-multilingual", choices=[0], type=int)
+        add_boolean_option(ap, "use-default-word-embeddings", default=False,
+                           description="whether to use default word embeddings")
+        ap.add_argument("--bert-dropout", type=float, default=0, choices=np.linspace(0, 0.9, num=10))
+
         ap.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
         ap.add_argument("--version", action="version", version="")
         ap.add_argument("-C", "--config", is_config_file=True, help="configuration file to get arguments from")
