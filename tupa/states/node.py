@@ -100,7 +100,7 @@ class Node:
                ((", " + self.id) if self.id else "") + ")"
 
     def __str__(self):
-        s = '"%s"' % self.text if self.text else self.id or str(self.index)
+        s = '"%s"' % self.text if self.text else str(self.id) or str(self.index)
         if self.label:
             s += "/" + self.label
         return s
