@@ -442,7 +442,7 @@ class Parser(AbstractParser):
             [self.batch] if self.config.args.save_every else [])))
         if display:
             print("Evaluation %s, average F1 score on %s: %.3f" % (prefix, mode.name, results["all"]["f"]))
-        print_scores(out, scores_filename, prefix=prefix, prefix_title="iteration")
+        print_scores(results, scores_filename, prefix=prefix, prefix_title="iteration")
         return results["all"]["f"], out
 
     def parse(self, graphs, mode=ParseMode.test, evaluate=False, display=True, write=False, conllu=None):
