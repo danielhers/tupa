@@ -77,7 +77,7 @@ class PassageParser(AbstractParser):
             self.lang = self.passage.attrib.get("lang")
             assert self.lang, "Attribute 'lang' is required per passage when using multilingual BERT"
         else:
-            self.lang = self.passage.attrib.get("lang", "en")
+            self.lang = self.passage.attrib.get("lang", self.config.args.lang)
         # Used in verify_passage to optionally ignore a mismatch in linkage nodes:
         self.ignore_node = None if self.config.args.linkage else lambda n: n.tag == layer1.NodeTags.Linkage
         self.state_hash_history = set()
