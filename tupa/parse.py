@@ -521,11 +521,12 @@ def percents_str(part, total, infix="", fraction=True):
 def print_scores(results, filename, prefix=None, prefix_title=None):
     if filename:
         print_title = not os.path.exists(filename)
+        if prefix_title is not None:
+            results = dict(results)
+            results[prefix_title] = prefix
         try:
             with open(filename, "a") as f:
                 titles = sorted(results.keys())
-                if prefix_title is not None:
-                    titles = [prefix_title] + titles
                 if print_title:
                     print(",".join(titles), file=f)
                 fields = [results[k] for k in titles]
