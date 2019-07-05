@@ -57,11 +57,11 @@ class Node:
     @staticmethod
     def attach_nodes(graph, nodes):
         for node in nodes:
-            node.node = graph.add_node(node.id)
+            node.node = graph.add_node(int(node.id))
             node.set_node_label()
         for node in nodes:
             for edge in node.outgoing:
-                graph.add_edge(edge.parent.id, edge.child.id, edge.tag)
+                graph.add_edge(int(edge.parent.id), int(edge.child.id), edge.tag)
 
     def set_node_label(self):
         if self.node is not None:
