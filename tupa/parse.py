@@ -443,8 +443,8 @@ class Parser(AbstractParser):
         try:
             results = score.mces.evaluate([g for g, _ in graphs], out)
         except (KeyError, ValueError) as e:
-            raise ValueError("Failed evaluating graphs: " + "\n".join(json.dumps(
-                g.encode(), indent=None, ensure_ascii=False) for g, _ in graphs)) from e
+            raise ValueError("Failed evaluating graphs: \n" + "\n".join(json.dumps(
+                g.encode(), indent=None, ensure_ascii=False) for g in out)) from e
         prefix = ".".join(map(str, [self.iteration, self.epoch] + (
             [self.batch] if self.config.args.save_every else [])))
         if display:
@@ -522,18 +522,26 @@ def percents_str(part, total, infix="", fraction=True):
     return ret
 
 
+def flatten(d, prefix=""):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            yield from flatten(v, prefix=prefix + "." + str(k))
+        else:
+            yield k, v
+
+
 def print_scores(results, filename, prefix=None, prefix_title=None):
     if filename:
         print_title = not os.path.exists(filename)
         if prefix_title is not None:
             results = dict(results)
             results[prefix_title] = prefix
+        keys, values = list(zip(*sorted(flatten(results))))
         try:
             with open(filename, "a") as f:
-                titles = sorted(results.keys())
                 if print_title:
-                    print(",".join(titles), file=f)
-                print(",".join(results[k] for k in titles), file=f)
+                    print(*keys, file=f, sep=",")
+                print(*values, file=f, sep=",")
         except OSError:
             pass
 
