@@ -529,10 +529,7 @@ def print_scores(results, filename, prefix=None, prefix_title=None):
                 titles = sorted(results.keys())
                 if print_title:
                     print(",".join(titles), file=f)
-                fields = [results[k] for k in titles]
-                if prefix is not None:
-                    fields.insert(0, prefix)
-                print(",".join(fields), file=f)
+                print(",".join(results[k] for k in titles), file=f)
         except OSError:
             pass
 
