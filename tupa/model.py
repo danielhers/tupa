@@ -200,8 +200,8 @@ class Model:
         if self.config.args.node_labels:
             axes.append(NODE_LABEL_KEY)
 
-        passage = [node.text for node in state.passage.nodes.values() if isinstance(node, Terminal)]
-        lang = state.passage.attrib.get("lang")
+        passage = [node.label for node in state.graph.nodes if isinstance(node, Terminal)]
+        lang = getattr(state.graph, "lang", None)
         self.classifier.init_features(self.feature_extractor.init_features(state), axes, train, passage, lang)
 
     def finalize(self, finished_epoch):
