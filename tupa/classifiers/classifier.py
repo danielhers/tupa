@@ -38,7 +38,7 @@ class Classifier:
         if not self.is_frozen:
             self._update_num_labels()
 
-    def init_features(self, features, axes, train=False):
+    def init_features(self, features, axes, train=False, passage=None, lang=None):
         pass
 
     def update(self, features, axis, pred, true, importance=None):

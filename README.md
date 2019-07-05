@@ -56,6 +56,10 @@ Author
 ------
 * Daniel Hershcovich: daniel.hershcovich@gmail.com
 
+Contributors
+------------
+* Ofir Arviv: ofir.arviv@mail.huji.ac.il
+
 
 Citation
 --------

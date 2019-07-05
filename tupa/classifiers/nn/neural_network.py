@@ -59,6 +59,28 @@ class NeuralNetwork(Classifier, SubModel):
         self.steps = 0
         self.trainer_type = self.trainer = self.value = self.birnn = None
 
+        if self.config.args.use_bert:
+            import torch
+            from pytorch_pretrained_bert import BertTokenizer, BertModel
+            import logging
+
+            self.torch = torch
+            if self.config.args.bert_multilingual is not None:
+                assert "multilingual" in self.config.args.bert_model
+            logging.basicConfig(level=logging.INFO)
+            is_uncased_model = "uncased" in self.config.args.bert_model
+            self.tokenizer = BertTokenizer.from_pretrained(self.config.args.bert_model, do_lower_case=is_uncased_model)
+            self.bert_model = BertModel.from_pretrained(self.config.args.bert_model)
+            self.bert_model.eval()
+            self.bert_model.to('cuda')
+            self.bert_layers_count = 24 if "large" in self.config.args.bert_model else 12
+            self.bert_embedding_len = 1024 if "large" in self.config.args.bert_model else 768
+
+            self.last_weights = ""
+        else:
+            self.torch = self.tokenizer = self.bert_model = self.bert_layers_count = self.bert_embedding_len = \
+                self.last_weights = None
+
     @property
     def input_dim(self):
         return OrderedDict((a, m.mlp.input_dim) for a, m in self.axes.items())
@@ -116,6 +138,13 @@ class NeuralNetwork(Classifier, SubModel):
         for key, param in sorted(self.input_params.items()):
             if not param.enabled:
                 continue
+            if (not self.config.args.use_default_word_embeddings or self.config.args.bert_multilingual is not None) \
+                    and key == 'W':
+                i = self.birnn_indices(param)
+                indexed_num[i] = np.fmax(indexed_num[i], param.num)  # indices to be looked up are collected
+                continue
+            if self.config.args.bert_multilingual is not None and param.lang_specific:
+                continue
             self.config.print("Initializing input parameter: %s" % param, level=4)
             if not param.numeric and key not in self.params:  # lookup feature
                 if init:
@@ -129,6 +158,16 @@ class NeuralNetwork(Classifier, SubModel):
                 i = self.birnn_indices(param)
                 indexed_dim[i] += param.dim  # add to the input dimensionality at each indexed time point
                 indexed_num[i] = np.fmax(indexed_num[i], param.num)  # indices to be looked up are collected
+
+        if self.config.args.use_bert and init:
+            if self.config.args.bert_layers_pooling == "weighed":
+                bert_weights = self.model.add_parameters(len(self.config.args.bert_layers), init=1)
+                self.params["bert_weights"] = bert_weights
+
+            indexed_dim[[0, 1]] += self.bert_embedding_len
+            if self.config.args.bert_multilingual == 0:
+                indexed_dim[[0, 1]] += 50
+
         for birnn in self.get_birnns(axis):
             birnn.init_params(indexed_dim[int(birnn.shared)], indexed_num[int(birnn.shared)])
 
@@ -146,7 +185,98 @@ class NeuralNetwork(Classifier, SubModel):
             self.empty_values[key] = value = dy.inputVector(np.zeros(self.input_params[key].dim, dtype=float))
         return value
 
-    def init_features(self, features, axes, train=False):
+    def get_bert_embed(self, passage, lang, train=False):
+        orig_tokens = passage
+        bert_tokens = []
+        # Token map will be an int -> int mapping between the `orig_tokens` index and
+        # the `bert_tokens` index.
+        orig_to_tok_map = []
+
+        # Example:
+        # orig_tokens = ["John", "Johanson", "'s",  "house"]
+        # bert_tokens == ["[CLS]", "john", "johan", "##son", "'", "s", "house", "[SEP]"]
+        # orig_to_tok_map == [(1), (2,3), (4,5), (6)]
+
+        bert_tokens.append("[CLS]")
+        for orig_token in orig_tokens:
+            start_token = len(bert_tokens)
+            bert_token = self.tokenizer.tokenize(orig_token)
+            bert_tokens.extend(bert_token)
+            end_token = start_token + len(bert_token)
+            orig_to_tok_map.append(slice(start_token, end_token))
+        bert_tokens.append("[SEP]")
+
+        indexed_tokens = self.tokenizer.convert_tokens_to_ids(bert_tokens)
+        tokens_tensor = self.torch.tensor([indexed_tokens])
+        tokens_tensor = tokens_tensor.to('cuda')
+
+        with self.torch.no_grad():
+            encoded_layers, _ = self.bert_model(tokens_tensor)
+        assert len(encoded_layers) == self.bert_layers_count
+
+        aligned_layer = []
+        for layer in range(self.bert_layers_count):
+            aligned_layer.append([])
+            for mapping_range in orig_to_tok_map:
+                token_embeddings = encoded_layers[layer][0][mapping_range]
+                if self.config.args.bert_token_align_by == "mean":
+                    aligned_layer[layer].append(self.torch.mean(token_embeddings, dim=(0,)).cpu().data.numpy())
+                elif self.config.args.bert_token_align_by == "sum":
+                    aligned_layer[layer].append(self.torch.sum(token_embeddings, dim=(0,)).cpu().data.numpy())
+                elif self.config.args.bert_token_align_by == "first":
+                    aligned_layer[layer].append(token_embeddings[0].cpu().data.numpy())
+                else:
+                    assert False
+
+        layer_list_to_use = self.config.args.bert_layers
+        aligned_layer = [aligned_layer[i] for i in layer_list_to_use]
+
+        if self.config.args.bert_layers_pooling == "weighed":
+            bert_softmax = dy.softmax(self.params["bert_weights"])
+            embeds = dy.cmult(dy.inputTensor(np.asarray(aligned_layer)), bert_softmax)
+            embeds = dy.sum_dim(embeds, [0])
+        elif self.config.args.bert_layers_pooling == "concat":
+            embeds = dy.inputTensor(np.concatenate(aligned_layer, axis=1))
+        elif self.config.args.bert_layers_pooling == "sum":
+            embeds = dy.inputTensor(np.sum(aligned_layer, axis=0))
+        else:
+            assert False
+
+        if self.config.args.bert_multilingual == 0:
+            assert lang
+            if (lang + "_embed") in self.params:
+                lang_embed = self.params[lang + "_embed"]
+            else:
+                lang_embed = self.model.add_parameters(50, init='glorot')
+                self.params[lang + "_embed"] = lang_embed
+
+            multilingual_embeds = []
+            for embed in embeds:
+                multilingual_embeds.append(dy.concatenate([lang_embed, embed]))
+
+            embeds = dy.transpose(dy.concatenate_cols(multilingual_embeds))
+
+        if self.config.args.bert_layers_pooling == "weighed":
+            single_token_embed_len = self.bert_embedding_len
+        elif self.config.args.bert_layers_pooling == "concat":
+            single_token_embed_len = self.bert_embedding_len * len(layer_list_to_use)
+        elif self.config.args.bert_layers_pooling == "sum":
+            single_token_embed_len = self.bert_embedding_len
+        else:
+            assert False
+        if self.config.args.bert_multilingual == 0:
+            single_token_embed_len += 50
+
+        # TODO: try dropout strategies like dropping at the per layer embeddings or dropping entire layers.
+        assert embeds.dim() == ((len(passage), single_token_embed_len), 1)
+
+        assert(0 <= self.config.args.bert_dropout < 1)
+        if train:
+            embeds = dy.dropout(embeds, self.config.args.bert_dropout)
+
+        return embeds
+
+    def init_features(self, features, axes, train=False, passage=None, lang=None):
         for axis in axes:
             self.init_model(axis, train)
         embeddings = [[], []]  # specific, shared
@@ -162,6 +292,18 @@ class NeuralNetwork(Classifier, SubModel):
                 embeddings[index].append((key, vectors))
             self.config.print(lambda: "%s: %s" % (key, ", ".join("%d->%s" % (i, e.npvalue().tolist())
                                                                  for i, e in zip(indices, vectors))), level=4)
+        if self.config.args.use_bert:
+            bert_emded = self.get_bert_embed(passage, lang, train)
+            embeddings[0].append(('BERT', bert_emded))
+            embeddings[1].append(('BERT', bert_emded))
+
+            if "bert_weights" in self.params:
+                print("\n--Bert Weights Changed--: ")
+                print(str(dy.softmax(self.params["bert_weights"]).value()) != self.last_weights)
+                print("\n--Bert Weights--: ")
+                print(str(dy.softmax(self.params["bert_weights"]).value()))
+                self.last_weights = str(dy.softmax(self.params["bert_weights"]).value())
+
         for birnn in self.get_birnns(*axes):
             birnn.init_features(embeddings[int(birnn.shared)], train)
 
@@ -170,6 +312,8 @@ class NeuralNetwork(Classifier, SubModel):
         for key, values in sorted(features.items()):
             param = self.input_params[key]
             lookup = self.params.get(key)
+            if self.config.args.bert_multilingual is not None and param.lang_specific and key != 'W':
+                continue
             if param.numeric:
                 yield key, dy.inputVector(values)
             elif param.indexed:  # collect indices to be looked up

@@ -1,6 +1,8 @@
 from collections import OrderedDict
 from enum import Enum
 
+from ucca.layer0 import Terminal
+
 from .action import Actions
 from .classifiers.classifier import Classifier
 from .config import Config, SEPARATOR, BIRNN, NOOP
@@ -197,7 +199,10 @@ class Model:
         axes = [self.axis]
         if self.config.args.node_labels:
             axes.append(NODE_LABEL_KEY)
-        self.classifier.init_features(self.feature_extractor.init_features(state), axes, train)
+
+        passage = [node.text for node in state.passage.nodes.values() if isinstance(node, Terminal)]
+        lang = state.passage.attrib.get("lang")
+        self.classifier.init_features(self.feature_extractor.init_features(state), axes, train, passage, lang)
 
     def finalize(self, finished_epoch):
         """

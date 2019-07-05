@@ -66,6 +66,9 @@ class GraphParser(AbstractParser):
                    self.model.frameworks)[0]
         self.in_framework = self.framework or "ucca"
         self.target = "ucca" if self.framework in (None, "text") else self.framework
+        if self.config.args.bert_multilingual is not None:
+            self.lang = self.graph.lang
+            assert self.lang, "Attribute 'lang' is required per passage when using multilingual BERT"
         self.state_hash_history = set()
         self.state = self.oracle = None
 
