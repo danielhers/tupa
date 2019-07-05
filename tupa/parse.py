@@ -440,7 +440,11 @@ class Parser(AbstractParser):
     def eval(self, graphs, mode, scores_filename, display=True, conllu=None):
         print("Evaluating on %s graphs" % mode.name)
         out = list(self.parse(graphs, mode=mode, evaluate=True, display=display, conllu=conllu))
-        results = score.mces.evaluate([g for g, _ in graphs], out)
+        try:
+            results = score.mces.evaluate([g for g, _ in graphs], out)
+        except (KeyError, ValueError) as e:
+            raise ValueError("Failed evaluating graphs: " + "\n".join(json.dumps(
+                g.encode(), indent=None, ensure_ascii=False) for g, _ in graphs)) from e
         prefix = ".".join(map(str, [self.iteration, self.epoch] + (
             [self.batch] if self.config.args.save_every else [])))
         if display:
