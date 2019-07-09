@@ -1,6 +1,6 @@
 from configargparse import ArgParser
-from ucca.textutil import get_vocab
 
+from tupa.features.feature_params import load_spacy_model
 from tupa.model_util import save_json
 from tupa.scripts.export import load_model
 
@@ -24,7 +24,7 @@ def main():
         model = load_model(filename)
         params = model.feature_extractor.params
         if args.lang:
-            vocab = get_vocab(lang=args.lang)
+            vocab = load_spacy_model(args.lang).vocab
             for param in params.values():
                 if param.data:
                     param.data = [decode(vocab, v) for v in sorted(param.data, key=param.data.get)]

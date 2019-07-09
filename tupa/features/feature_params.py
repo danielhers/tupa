@@ -1,11 +1,98 @@
 from collections import OrderedDict
+from itertools import islice
+from operator import attrgetter
 
 import numpy as np
-from ucca.textutil import get_word_vectors
 
 from ..config import Config
 from ..labels import Labels
 from ..model_util import DropoutDict
+
+
+def load_spacy_model(model):
+    import spacy
+    try:
+        return spacy.load(model)
+    except OSError:
+        spacy.cli.download(model)
+        from spacy.cli import link
+        from spacy.util import get_package_path
+        link(model, model, force=True, model_path=get_package_path(model))
+        try:
+            return spacy.load(model)
+        except OSError as e:
+            raise OSError("Failed to get spaCy model. Download it manually using "
+                          "`python -m spacy download %s`." % model) from e
+
+
+def get_word_vectors(dim=None, size=None, filename=None, vocab=None):
+    """
+    Get word vectors from spaCy model or from text file
+    :param dim: dimension to trim vectors to (default: keep original)
+    :param size: maximum number of vectors to load (default: all)
+    :param filename: text file to load vectors from (default: from spaCy model)
+    :param vocab: instead of strings, look up keys of returned dict in vocab (use lang str, e.g. "en", for spaCy vocab)
+    :return: tuple of (dict of word [string or integer] -> vector [NumPy array], dimension)
+    """
+    orig_keys = vocab is None
+    if isinstance(vocab, str) or not filename:
+        vocab = load_spacy_model(vocab).vocab
+
+    def _lookup(word):
+        try:
+            return word.orth_ if orig_keys else word.orth
+        except AttributeError:
+            if orig_keys:
+                return word
+        lex = vocab[word]
+        return getattr(lex, "orth", lex)
+
+    if filename:
+        it = read_word_vectors(dim, size, filename)
+        nr_row, nr_dim = next(it)
+        vectors = OrderedDict(islice(((_lookup(w), v) for w, v in it if orig_keys or w in vocab), nr_row))
+    else:  # return spaCy vectors
+        nr_row, nr_dim = vocab.vectors.shape
+        if dim is not None and dim < nr_dim:
+            nr_dim = int(dim)
+            vocab.vectors.resize(shape=(int(size or nr_row), nr_dim))
+        lexemes = sorted([l for l in vocab if l.has_vector], key=attrgetter("prob"), reverse=True)[:size]
+        vectors = OrderedDict((_lookup(l), l.vector) for l in lexemes)
+    return vectors, nr_dim
+
+
+def read_word_vectors(dim, size, filename):
+    """
+    Read word vectors from text file, with an optional first row indicating size and dimension
+    :param dim: dimension to trim vectors to
+    :param size: maximum number of vectors to load
+    :param filename: text file to load vectors from
+    :return: generator: first element is (#vectors, #dims); and all the rest are (word [string], vector [NumPy array])
+    """
+    try:
+        first_line = True
+        nr_row = nr_dim = None
+        with open(filename, encoding="utf-8") as f:
+            for line in f:
+                fields = line.split()
+                if first_line:
+                    first_line = False
+                    try:
+                        nr_row, nr_dim = map(int, fields)
+                        is_header = True
+                    except ValueError:
+                        nr_dim = len(fields) - 1  # No header, just get vector length from first one
+                        is_header = False
+                    if dim and dim < nr_dim:
+                        nr_dim = dim
+                    yield size or nr_row, nr_dim
+                    if is_header:
+                        continue  # Read next line
+                word, *vector = fields
+                if len(vector) >= nr_dim:  # May not be equal if word is whitespace
+                    yield word, np.asarray(vector[-nr_dim:], dtype="f")
+    except OSError as e:
+        raise IOError("Failed loading word vectors from '%s'" % filename) from e
 
 
 class FeatureParameters(Labels):

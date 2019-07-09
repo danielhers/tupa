@@ -2,7 +2,6 @@ numpy>=1.15.0
 cython>=0.29
 tqdm>=4.32.2
 configargparse>=0.14.0
-ucca>=1.2.3,<1.3
 semstr[amr]>=1.2.2,<1.3
 dynet==2.1
 logbook==1.4.3
