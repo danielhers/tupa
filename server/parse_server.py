@@ -82,4 +82,4 @@ session_opts = {
 }
 
 if __name__ == "__main__":
-    app.run(debug=True, host=os.getenv("IP", "ucca"), port=int(os.getenv("PORT", 5001)))
+    app.run(debug=True, host=os.getenv("IP", "localhost"), port=int(os.getenv("PORT", 5001)))

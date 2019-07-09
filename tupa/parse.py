@@ -63,7 +63,7 @@ class GraphParser(AbstractParser):
         self.out = self.graph
         self.framework = self.graph.framework if self.training or self.evaluation else min(self.model.frameworks)
         self.in_framework = self.framework
-        self.targets = self.graph.targets()
+        self.targets = self.graph.targets() or [self.framework]
         if self.config.args.bert_multilingual is not None:
             self.lang = self.graph.lang
             assert self.lang, "Attribute 'lang' is required per passage when using multilingual BERT"
