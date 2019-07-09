@@ -439,7 +439,7 @@ class Parser(AbstractParser):
 
     def eval(self, graphs, mode, scores_filename, display=True, conllu=None):
         print("Evaluating on %s graphs" % mode.name)
-        out = list(self.parse(graphs, mode=mode, evaluate=True, display=display, conllu=conllu))
+        out = self.parse(graphs, mode=mode, evaluate=True, display=display, conllu=conllu)
         try:
             results = score.mces.evaluate([g for g, _ in graphs], out)
         except (KeyError, ValueError) as e:
@@ -504,7 +504,7 @@ def train_test(train_graphs, dev_graphs, test_graphs, args, model_suffix=""):
         if args.train or args.folds:
             print("Evaluating on test graphs")
         evaluate = args.evaluate or train_graphs
-        out = list(p.parse(test_graphs, evaluate=evaluate, write=args.write, conllu=conllu))
+        out = p.parse(test_graphs, evaluate=evaluate, write=args.write, conllu=conllu)
         if out:
             results = score.mces.evaluate([g for g, _ in test_graphs], out)
             if args.verbose <= 1 or len(out) > 1:
