@@ -50,8 +50,10 @@ jobs:
         - conda update -q conda
         - conda create -q -n env python=3.6 numpy cython
         - source activate env
-    - script: experiments/acl2017.sh
-    - script: experiments/acl2018.sh
+    - env: acl2017
+      script: experiments/acl2017.sh
+    - env: acl2018
+      script: experiments/acl2018.sh
 before_script: # https://github.com/travis-ci/travis-ci/issues/8982#issuecomment-354357640
   - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
 script:
