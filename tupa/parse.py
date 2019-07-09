@@ -335,7 +335,7 @@ class BatchParser(AbstractParser):
 
 
 class Parser(AbstractParser):
-    """ Main class to implement transition-based UCCA parser """
+    """ Main class to implement transition-based meaning representation parser """
     def __init__(self, model_files=(), config=None):
         super().__init__(config=config or Config(),
                          models=list(map(Model, (model_files,) if isinstance(model_files, str) else

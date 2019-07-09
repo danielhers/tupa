@@ -20,8 +20,8 @@ ACTIONS = (  # index by [NODE/EDGE][PARENT/CHILD or RIGHT/LEFT][True/False (remo
 
 class Oracle:
     """
-    Oracle to produce gold transition parses given UCCA graphs
-    To be used for creating training data for a transition-based UCCA parser
+    Oracle to produce gold transition parses given MRP graphs
+    To be used for creating training data for a transition-based meaning representation parser
     :param graph gold graph to get the correct edges from
     """
     def __init__(self, graph):

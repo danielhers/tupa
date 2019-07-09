@@ -269,7 +269,7 @@ class Iterations:
 
 class Config(object, metaclass=Singleton):
     def __init__(self, *args):
-        self.arg_parser = ap = ArgParser(description="Transition-based parser for UCCA.",
+        self.arg_parser = ap = ArgParser(description="Transition-based meaning representation parser.",
                                          formatter_class=ArgumentDefaultsHelpFormatter)
         ap.add_argument("input", nargs="?", type=FileType("r"), default=sys.stdin, help="file with one MRP per line")
         ap.add_argument("output", nargs="?", type=FileType("w"), default=sys.stdout, help="output file to create")
