@@ -202,30 +202,20 @@ def height(node, *_):
     return head_terminal_height(node, return_height=True)
 
 
-def static_vars(**kwargs):
-    def decorate(func):
-        for k, v in kwargs.items():
-            setattr(func, k, v)
-        return func
-    return decorate
-
-
 MAX_HEIGHT = 30
 
 
-@static_vars(node=None, head_terminal=None, height=None)
 def head_terminal_height(node, return_height=False):
-    if node is not head_terminal_height.node:
-        head_terminal_height.node = head_terminal_height.head_terminal = node
-        head_terminal_height.height = 0
-        while head_terminal_height.head_terminal.text is None:  # Not a terminal
-            edges = [edge for edge in node.outgoing if not edge.remote and not edge.child.implicit]
-            if not edges or head_terminal_height.height > MAX_HEIGHT:
-                head_terminal_height.head_terminal = head_terminal_height.height = None
-                break
-            head_terminal_height.head_terminal = min(edges, key=attrgetter("lab")).child
-            head_terminal_height.height += 1
-    return head_terminal_height.height if return_height else head_terminal_height.head_terminal
+    node = head = node
+    h = 0
+    while head.text is None:  # Not a terminal
+        edges = [edge for edge in node.outgoing if not edge.remote and not edge.child.implicit]
+        if not edges or h > MAX_HEIGHT:
+            head = h = None
+            break
+        head = min(edges, key=attrgetter("lab")).child
+        h += 1
+    return h if return_height else head
 
 
 def has_gaps(node, *_):  # Possibly the same as FoundationalNode.discontiguous
