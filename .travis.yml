@@ -8,11 +8,10 @@ install:
   - pip uninstall -y numpy
   - pip install .
   - pip install pytest
-  - python -m spacy download en_core_web_md
 jobs:
   include:
     - os: osx
-      language:
+      language: generic
       before_install:
         - curl -LO https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
         - bash Miniconda3-latest-MacOSX-x86_64.sh -b -p miniconda
