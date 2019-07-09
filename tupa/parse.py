@@ -61,11 +61,9 @@ class GraphParser(AbstractParser):
         self.graph, self.overlay = graph
         self.conllu = conllu
         self.out = self.graph
-        self.framework = self.graph.framework if self.training or self.evaluation else \
-            sorted(set.intersection(*map(set, filter(None, (self.model.frameworks, self.config.args.frameworks)))) or
-                   self.model.frameworks)[0]
-        self.in_framework = self.framework or "ucca"
-        self.target = "ucca" if self.framework in (None, "text") else self.framework
+        self.framework = self.graph.framework if self.training or self.evaluation else min(self.model.frameworks)
+        self.in_framework = self.framework
+        self.targets = self.graph.targets
         if self.config.args.bert_multilingual is not None:
             self.lang = self.graph.lang
             assert self.lang, "Attribute 'lang' is required per passage when using multilingual BERT"
@@ -232,7 +230,8 @@ class GraphParser(AbstractParser):
         for model in self.models[1:]:
             model.classifier.finished_item(renew=False)  # So that dynet.renew_cg happens only once
         if not self.training:
-            self.out = self.state.create_graph(framework=self.target)
+            for framework in self.targets:
+                self.out = self.state.create_graph(framework=framework)
         if write:
             json.dump(self.out.encode(), self.config.args.output, indent=None, ensure_ascii=False)
         if display:

@@ -2,11 +2,10 @@ from collections import OrderedDict
 
 
 class SubModel:
-    def __init__(self, params=None, save_path=(), shared=False, copy_shared=False):
+    def __init__(self, params=None, save_path=(), shared=False):
         self.params = OrderedDict() if params is None else params  # string (param identifier) -> parameter
         self.save_path = save_path
         self.shared = shared
-        self.copy_shared = copy_shared
 
     def save_sub_model(self, d, *args):
         self.get_sub_dict(d).update(args + (("param_keys", list(self.params.keys())),))

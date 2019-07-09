@@ -3,8 +3,6 @@ from collections import deque
 from graph import Graph
 from semstr.constraints import Constraints, Direction
 from semstr.validation import CONSTRAINTS
-from ucca.layer0 import NodeTags
-from ucca.layer1 import EdgeTags
 
 from .edge import Edge
 from .node import Node
@@ -90,9 +88,6 @@ class State:
         def _check_possible_child(node, t):
             self.check(node is not self.root, message and "Root may not have parents", is_type=True)
             if self.args.constraints and t is not None:
-                self.check(not t or (node.text is None) != (t == EdgeTags.Terminal),
-                           message and "Edge tag must be %s iff child is terminal, but node %s has edge tag %s" %
-                           (EdgeTags.Terminal, node, t))
                 for rule in self.constraints.tag_rules:
                     violation = rule.violation(node, t, Direction.incoming, message=message)
                     self.check(violation is None, violation)
@@ -168,7 +163,6 @@ class State:
                         self.check(not self.args.require_connected or s0.incoming,
                                    message and "Reducing parentless non-terminal %s" % s0, is_type=True)
                         self.check(not self.constraints.required_outgoing or
-                                   s0.outgoing_tags.intersection((EdgeTags.Terminal, EdgeTags.Punctuation, "")) or
                                    s0.outgoing_tags.intersection(self.constraints.required_outgoing),
                                    message and "Reducing non-terminal %s without %s edge" % (
                                        s0, self.constraints.required_outgoing), is_type=True)
@@ -310,10 +304,7 @@ class State:
                     break
             else:
                 return None
-            return parent, child, (EdgeTags.Terminal if child and child.text else
-                                   EdgeTags.Punctuation if child and child.children and all(
-                                       c.tag == NodeTags.Punct for c in child.children)
-                                   else action.tag)  # In unlabeled parsing, keep a valid graph
+            return parent, child, action.tag  # In unlabeled parsing, keep a valid graph
         except IndexError:
             return None
 

@@ -4,11 +4,8 @@ from copy import copy
 
 import dynet_config
 import numpy as np
-from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS, FileType
+from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS, FileType, Action
 from logbook import Logger, FileHandler, StderrHandler
-from semstr.cfgutil import Singleton, add_verbose_arg, add_boolean_option, get_group_arg_names
-from semstr.convert import UCCA_EXT, CONVERTERS
-from ucca import constructions
 
 from tupa.classifiers.nn.constants import *
 from tupa.model_util import load_enum
@@ -26,10 +23,6 @@ FEATURE_PROPERTIES = "wmtudhencpqxyAPCIEM"
 REGULAR = "regular"
 COMPOUND = "compound"
 
-# Input/output frameworks
-FORMATS = ["ucca"] + list(CONVERTERS)
-FILE_FORMATS = [e.lstrip(".") for e in UCCA_EXT] + FORMATS
-
 # Required number of edge labels per framework
 EDGE_LABELS_NUM = {"amr": 110, "sdp": 70, "conllu": 60}
 NN_ARG_NAMES = set()
@@ -37,6 +30,49 @@ DYNET_ARG_NAMES = set()
 RESTORED_ARGS = set()
 
 SEPARATOR = "."
+
+
+class Singleton(type):
+    instance = None
+
+    def __call__(cls, *args, **kwargs):
+        if not cls.instance:
+            cls.instance = super().__call__(*args, **kwargs)
+        return cls.instance
+
+    def reload(cls):
+        cls.instance = None
+
+
+class VAction(Action):
+    def __call__(self, parser, args, values, option_string=None):
+        if values is None:
+            values = "1"
+        try:
+            values = int(values)
+        except ValueError:
+            values = values.count("v") + 1
+        setattr(args, self.dest, values)
+
+
+def add_verbose_arg(argparser, **kwargs):
+    return argparser.add_argument("-v", "--verbose", nargs="?", action=VAction, default=0, **kwargs)
+
+
+def get_group_arg_names(group):
+    return [a.dest for a in group._group_actions]
+
+
+def add_boolean_option(argparser, name, description, default=False, short=None, short_no=None):
+    group = argparser.add_mutually_exclusive_group()
+    options = [] if short is None else ["-" + short]
+    options.append("--" + name)
+    group.add_argument(*options, action="store_true", default=default, help="include " + description)
+    no_options = [] if short_no is None else ["-" + short_no]
+    no_options.append("--no-" + name)
+    group.add_argument(*no_options, action="store_false", dest=name.replace("-", "_"), default=default,
+                       help="exclude " + description)
+    return group
 
 
 def add_param_arguments(ap=None, arg_default=None):  # arguments with possible framework-specific parameter values
@@ -245,7 +281,6 @@ class Config(object, metaclass=Singleton):
         ap.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=BIRNN, help="model type")
         add_boolean_option(ap, "evaluate", "evaluation of parsed graphs", short="e")
         add_verbose_arg(ap, help="detailed parse output")
-        constructions.add_argument(ap)
         ap.add_argument("--timeout", type=float, help="max number of seconds to wait for a single graph")
 
         group = ap.add_argument_group(title="Training parameters")
@@ -269,10 +304,6 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--devscores", help="output CSV file for dev scores (default: model filename + .dev.csv)")
         group.add_argument("--testscores", help="output CSV file for test scores (default: model filename + .test.csv)")
         group.add_argument("--action-stats", help="output CSV file for action statistics")
-        ap.add_argument("-f", "--frameworks", nargs="+", choices=FILE_FORMATS, default=(),
-                        help="input frameworks for creating all parameters before training starts "
-                             "(otherwise created dynamically based on filename suffix), "
-                             "and output frameworks for written files (each will be written; default: UCCA XML)")
 
         group = ap.add_argument_group(title="Sanity checks")
         add_boolean_option(group, "check-loops", "check for parser state loop")
@@ -292,8 +323,6 @@ class Config(object, metaclass=Singleton):
                         help="shared hyperparameters or hyperparameters for specific frameworks, "
                              'e.g., "shared --lstm-layer-dim=100 --lstm-layers=1" "ucca --word-dim=300"',
                         default=[HyperparamsInitializer.action("shared --lstm-layers 2")])
-        ap.add_argument("--copy-shared", nargs="*", choices=FORMATS, help="frameworks whose parameters shall be "
-                                                                          "copied from loaded shared parameters")
         self.args = FallbackNamespace(ap.parse_args(args if args else None))
 
         if self.args.config:
@@ -320,9 +349,6 @@ class Config(object, metaclass=Singleton):
                 for attr in RESTORED_ARGS if args is None or attr in args}
 
     def set_framework(self, f=None, update=False, recursive=True):
-        if f in (
-        None, "text") and not self.framework:  # In update or parsing UCCA (with no extra["framework"]) or plain text
-            f = "ucca"  # Default output framework is UCCA
         if update or self.framework != f:
             if f not in (None, "text"):
                 self.framework = f

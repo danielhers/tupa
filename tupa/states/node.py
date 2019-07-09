@@ -1,8 +1,6 @@
 from collections import deque
 from operator import attrgetter
 
-from semstr.util.amr import UNKNOWN_LABEL, LABEL_SEPARATOR
-
 
 class Node:
     """
@@ -17,7 +15,7 @@ class Node:
         if label is None:
             self.label = self.category = None
         else:  # Node label prediction is enabled
-            self.label, _, self.category = label.partition(LABEL_SEPARATOR)
+            self.label, _, self.category = label.partition("|")
             if not self.category:
                 self.category = None
         # Whether a label has been set yet (necessary because None is a valid label too):
@@ -65,7 +63,7 @@ class Node:
 
     def set_node_label(self):
         if self.node is not None:
-            self.node.label = self.label or UNKNOWN_LABEL
+            self.node.label = self.label or "name"
 
     @property
     def descendants(self):

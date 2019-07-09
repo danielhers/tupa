@@ -12,13 +12,12 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import sys
 
 sys.path.insert(0, os.path.abspath('..'))
 from recommonmark.parser import CommonMarkParser
@@ -368,9 +367,5 @@ class Mock(MagicMock):
         return MagicMock()
 
 
-MOCK_MODULES = ['numpy', 'spacy', 'ucca', 'ucca.convert', 'ucca.normalization', 'ucca.ioutil', 'ucca.constructions',
-                'ucca.convert', 'ucca.core', 'ucca.evaluation', 'ucca.layer0', 'ucca.layer1', 'ucca.textutil',
-                'ucca.validation', 'ucca.visualization', 'semstr', 'semstr.convert', 'semstr.evaluate',
-                'semstr.constraints', 'semstr.util.amr', 'semstr.validation', 'semstr.cfgutil', 'dynet', 'dynet_config',
-                'configargparse', 'tqdm', 'logbook']
+MOCK_MODULES = ['numpy', 'dynet', 'dynet_config', 'configargparse', 'tqdm', 'logbook']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

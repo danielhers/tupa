@@ -57,10 +57,6 @@ class Params:
         return ret
 
 
-def get_values_based_on_framework(values):
-    return values if "amr" in Config().args.frameworks else (0,)
-
-
 def main():
     if not os.path.exists(MODELS_DIR):
         os.makedirs(MODELS_DIR)
@@ -84,13 +80,13 @@ def main():
         ("tag_dim",                 False,  range(15, 26)),
         ("dep_dim",                 False,  range(5, 16)),
         ("edge_label_dim",          False,  range(15, 26)),
-        ("node_label_dim",          False,  get_values_based_on_framework(range(15, 30))),
-        ("node_category_dim",       False,  get_values_based_on_framework(range(5, 15))),
-        ("max_node_categories",     False,  get_values_based_on_framework(range(10, 26))),
+        ("node_label_dim",          False,  range(15, 30)),
+        ("node_category_dim",       False,  range(5, 15)),
+        ("max_node_categories",     False,  range(10, 26)),
         ("punct_dim",               False,  3),
         ("action_dim",              False,  range(2, 6)),
         ("ner_dim",                 False,  range(3, 9)),
-        ("max_node_labels",         False,  get_values_based_on_framework(range(1000, 4001))),
+        ("max_node_labels",         False,  range(1000, 4001)),
         ("min_node_label_count",    False,  range(1, 101)),
         ("layer_dim",               False,  range(50, 301)),
         ("layers",                  False,  [2]),

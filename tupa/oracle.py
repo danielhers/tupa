@@ -1,6 +1,3 @@
-from semstr.util.amr import LABEL_SEPARATOR
-from ucca import layer1
-
 from .action import Actions
 from .config import Config, COMPOUND
 from .states.state import InvalidActionError
@@ -81,7 +78,7 @@ class Oracle:
                 yield self.action(Actions.Reduce)
             else:
                 # Check for node label action: if all terminals have already been connected
-                if self.need_label(s0) and not any(is_terminal_edge(e) for e in outgoing):
+                if self.need_label(s0) and not any(self.is_terminal_edge(e) for e in outgoing):
                     yield self.action(s0, LABEL, 1)
 
                 # Check for actions to create new nodes
@@ -101,7 +98,7 @@ class Oracle:
                 if len(state.stack) > 1:
                     s1 = state.stack[-2]
                     # Check for node label action: if all terminals have already been connected
-                    if self.need_label(s1) and not any(is_terminal_edge(e) for e in
+                    if self.need_label(s1) and not any(self.is_terminal_edge(e) for e in
                                                        self.edges_remaining.intersection(s1.orig_node.outgoing_edges)):
                         yield self.action(s1, LABEL, 2)
 
@@ -159,7 +156,7 @@ class Oracle:
         if node.orig_node is not None:
             raw_true_label = node.orig_node.label
         if raw_true_label is not None:
-            true_label, _, _ = raw_true_label.partition(LABEL_SEPARATOR)
+            true_label, _, _ = raw_true_label.partition("|")
             if self.args.validate_oracle:
                 try:
                     state.check_valid_label(true_label, message=True)
@@ -177,13 +174,12 @@ class Oracle:
     def is_implicit_node(self, i):
         return not self.graph.nodes[i].outgoing_edges
 
+    def is_terminal_edge(self, edge):
+        return bool(self.graph.nodes[edge.tgt].anchors)
+
 
 def is_remote_edge(edge):
     for p, v in zip(edge.attributes or [], edge.values or []):
         if p == "remote":
             return v in ("true", True)
     return False
-
-
-def is_terminal_edge(edge):
-    return edge.lab == layer1.EdgeTags.Terminal

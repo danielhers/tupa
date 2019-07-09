@@ -1,27 +1,22 @@
+import json
 import os
 from base64 import b64encode
-from io import BytesIO
+from io import BytesIO, StringIO
 from urllib.parse import quote
-from xml.etree.ElementTree import fromstring, tostring
 
 import flask_assets
 import jinja2
 import matplotlib
+import pydot
 from flask import Flask, render_template, Response, request
 from flask_compress import Compress
-from semstr.convert import TO_FORMAT
-from ucca import layer1
-from ucca.convert import from_text, to_standard, from_standard
-from ucca.textutil import indent_xml
-from ucca.visualization import draw
+from main import read_graphs
 from webassets import Environment as AssetsEnvironment
 from webassets.ext.jinja2 import AssetsExtension
 
 from tupa.parse import Parser
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 SCRIPT_DIR = os.path.dirname(__file__)
 
@@ -57,35 +52,26 @@ def parser_demo():
 def parse():
     text = request.values["input"]
     print("Parsing text: '%s'" % text)
-    in_passage = next(from_text(text))
-    out_passage = next(get_parser().parse(in_passage))[0]
-    root = to_standard(out_passage)
-    xml = tostring(root).decode()
-    return Response(indent_xml(xml), headers={"Content-Type": "xml/application"})
+    out = next(get_parser().parse(text))[0]
+    return Response(json.dumps(out.encode(), indent=None, ensure_ascii=False),
+                    headers={"Content-Type": "application/json"})
 
 
 @app.route("/visualize", methods=["POST"])
 def visualize():
-    xml = request.get_data()
-    passage = from_standard(fromstring(xml))
-    print("Visualizing passage %s: %s" % (passage.id, passage.layer(layer1.LAYER_ID).heads[0]))
-    canvas = FigureCanvasAgg(plt.figure())
-    draw(passage)
+    json = request.get_data()
+    graph = read_graphs(json, format="mrp")[0]
+    print("Visualizing graph %s: %s" % (graph.id, json))
+    s = StringIO()
+    graph.dot(s)
+    (graph,) = pydot.graph_from_dot_data(s.getvalue())
     image = BytesIO()
-    canvas.print_png(image)
+    graph.write_png(image)
     data = b64encode(image.getvalue()).decode()
     return Response(quote(data.rstrip("\n")))
 
-CONTENT_TYPES = {"xml": "xml/application", "json": "application/json"}
 
-
-@app.route("/download", methods=["POST"])
-def download():
-    xml = request.values["input"]
-    out_format = request.values["format"]
-    print("Converting to " + out_format)
-    out = xml if out_format == "xml" else "\n".join(TO_FORMAT[out_format](from_standard(fromstring(xml))))
-    return Response(out, headers={"Content-Type": CONTENT_TYPES.get(out_format, "text/plain")})
+CONTENT_TYPES = {"json": "application/json"}
 
 
 session_opts = {

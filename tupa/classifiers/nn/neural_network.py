@@ -31,8 +31,7 @@ class AxisModel:
     """
     def __init__(self, axis, num_labels, config, model, birnn_type):
         args = config.hyperparams.specific[axis]
-        self.birnn = birnn_type(config, args, model, save_path=("axes", axis, "birnn"),
-                                copy_shared=args.copy_shared == [] or axis in (args.copy_shared or ()))
+        self.birnn = birnn_type(config, args, model, save_path=("axes", axis, "birnn"))
         self.mlp = MultilayerPerceptron(config, args, model, num_labels=num_labels, save_path=("axes", axis, "mlp"))
 
 
@@ -482,7 +481,6 @@ class NeuralNetwork(Classifier, SubModel):
             del values[:len(model.params)]  # Take next len(model.params) values
             if self.config.args.verbose <= 3:
                 self.config.print(model.params_str)
-        self.copy_shared_birnn(filename, d)
         assert not values, "Loaded values: %d more than expected" % len(values)
         if self.weight_decay and self.config.args.dynet_apply_weight_decay_on_load:
             t = tqdm(list(self.all_params(as_array=False).items()),
@@ -502,21 +500,6 @@ class NeuralNetwork(Classifier, SubModel):
     def load_param_values(self, filename, d=None):
         return list(tqdm(dy.load_generator(filename, self.model), total=self.params_num(d) if d else None,
                          desc="Loading model from '%s'" % filename, unit="param", file=sys.stdout))
-
-    def copy_shared_birnn(self, filename, d):
-        shared_values = None
-        values = self.load_param_values(filename, d)  # Load parameter values again so that shared parameters are copied
-        for model in self.sub_models():
-            if model is self.birnn:
-                shared_values = values[:len(model.params)]
-            del values[:len(model.params)]  # Take next len(model.params) values
-        for axis, model in self.axes.items():
-            if model.birnn.copy_shared:
-                model.birnn.load_sub_model(d, *shared_values, load_path=self.birnn.save_path)
-                if self.config.args.verbose <= 3:
-                    self.config.print(lambda: "Copied from %s to %s" %
-                                      ("/".join(self.birnn.save_path), model.birnn.params_str()), level=1)
-                self.init_axis_model(axis, init=False)  # Update input_dim
 
     def params_num(self, d):
         return sum(len(m.get_sub_dict(d).get("param_keys", ())) for m in self.sub_models())
