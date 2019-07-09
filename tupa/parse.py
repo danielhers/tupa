@@ -62,7 +62,6 @@ class GraphParser(AbstractParser):
         self.conllu = conllu
         self.out = self.graph
         self.framework = self.graph.framework if self.training or self.evaluation else min(self.model.frameworks)
-        self.in_framework = self.framework
         self.targets = self.graph.targets() or [self.framework]
         if self.config.args.bert_multilingual is not None:
             self.lang = self.graph.lang
@@ -71,7 +70,7 @@ class GraphParser(AbstractParser):
         self.state = self.oracle = None
 
     def init(self):
-        self.config.set_framework(self.in_framework)
+        self.config.set_framework(self.framework)
         self.state = State(self.graph, self.conllu)
         # Graph is considered labeled if there are any edges or node labels in it
         self.oracle = Oracle(self.graph) if self.training or (
@@ -285,11 +284,11 @@ class BatchParser(AbstractParser):
             if self.config.args.verbose and display:
                 progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) if total and i <= total else "%d" % i
                 id_width = max(id_width, len(str(graph.id)))
-                print("%s %-6s %-*s" % (progress, parser.in_framework, id_width, graph.id),
+                print("%s %-6s %-*s" % (progress, parser.framework, id_width, graph.id),
                       end=self.config.line_end)
             else:
                 graphs.set_description()
-                postfix = {parser.in_framework: graph.id}
+                postfix = {parser.framework: graph.id}
                 if display:
                     postfix["|t/s|"] = self.tokens_per_second()
                     if self.correct_action_count:
@@ -297,12 +296,12 @@ class BatchParser(AbstractParser):
                     if self.correct_label_count:
                         postfix["|l|"] = percents_str(self.correct_label_count, self.label_count, fraction=False)
                 graphs.set_postfix(**postfix)
-            self.seen_per_framework[parser.in_framework] += 1
+            self.seen_per_framework[parser.framework] += 1
             if self.training and self.config.args.max_training_per_framework and \
-                    self.seen_per_framework[parser.in_framework] > self.config.args.max_training_per_framework:
+                    self.seen_per_framework[parser.framework] > self.config.args.max_training_per_framework:
                 self.config.print("skipped", level=1)
                 continue
-            assert not (self.training and parser.in_framework == "text"), "Cannot train on unannotated plain text"
+            assert not (self.training and parser.framework == "text"), "Cannot train on unannotated plain text"
             yield parser.parse(display=display, write=write, accuracies=accuracies)
             self.update_counts(parser)
         if self.num_graphs and display:
