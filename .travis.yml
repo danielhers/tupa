@@ -1,4 +1,3 @@
-cache: apt
 dist: trusty
 sudo: false
 group: edge
