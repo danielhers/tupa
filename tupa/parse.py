@@ -560,7 +560,7 @@ def main_generator():
     assert args.train or not args.dev, "--dev is only possible together with --train"
     if args.folds:
         fold_scores = []
-        all_graphs = read_graphs_with_progress_bar(args.input)
+        all_graphs = read_graphs_with_progress_bar(args.input, alignment=args.alignment)
         assert len(all_graphs) >= args.folds, \
             "%d folds are not possible with only %d graphs" % (args.folds, len(all_graphs))
         Config().random.shuffle(all_graphs)
@@ -579,16 +579,17 @@ def main_generator():
             print("Aggregated scores across folds:\n")
             yield fold_scores
     elif args.train:  # Simple train/dev/test by given arguments
-        train_graphs, dev_graphs = [read_graphs_with_progress_bar(arg) if arg else []
+        train_graphs, dev_graphs = [read_graphs_with_progress_bar(arg, alignment=args.alignment) if arg else []
                                     for arg in (args.input, args.dev)]
         yield from train_test(train_graphs, dev_graphs, test_graphs=None, args=args)
     else:
         yield from train_test(train_graphs=None, dev_graphs=None,
-                              test_graphs=read_graphs_with_progress_bar(args.input), args=args)
+                              test_graphs=read_graphs_with_progress_bar(args.input, alignment=args.alignment),
+                              args=args)
 
 
-def read_graphs_with_progress_bar(fh):
-    return list(zip(*read_graphs(tqdm(fh, desc="Reading " + fh.name, unit=" graphs"), format="mrp")))
+def read_graphs_with_progress_bar(fh, **kwargs):
+    return list(zip(*read_graphs(tqdm(fh, desc="Reading " + fh.name, unit=" graphs"), format="mrp", **kwargs)))
 
 
 def main():
