@@ -137,7 +137,6 @@ class Model:
             from .classifiers.nn.neural_network import NeuralNetwork
             self.feature_extractor = DenseFeatureExtractor(self.feature_params,
                                                            indexed=True,
-                                                           hierarchical=False,
                                                            node_dropout=self.config.args.node_dropout,
                                                            omit_features=self.config.args.omit_features)
             self.classifier = NeuralNetwork(self.config, labels)

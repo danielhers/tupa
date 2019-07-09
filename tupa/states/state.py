@@ -86,7 +86,6 @@ class State:
                        message and "Implicit nodes may not have children: %s" % s0, is_type=True)
 
         def _check_possible_child(node, t):
-            self.check(node is not self.root, message and "Root may not have parents", is_type=True)
             if self.args.constraints and t is not None:
                 for rule in self.constraints.tag_rules:
                     violation = rule.violation(node, t, Direction.incoming, message=message)
