@@ -165,8 +165,9 @@ class Oracle:
         return true_label, raw_true_label
 
     def str(self, sep):
-        return "nodes left: [%s]%sedges left: [%s]" % (" ".join(self.nodes_remaining), sep,
-                                                       " ".join(map(str, self.edges_remaining)))
+        return "nodes left: [%s]%sedges left: [%s]" % (
+            " ".join(map(str, self.nodes_remaining)), sep,
+            " ".join("%s->%s[%s]" % (e.src, e.tgt, e.lab) for e in self.edges_remaining))
 
     def __str__(self):
         return str(" ")
