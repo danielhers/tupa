@@ -15,7 +15,7 @@ if python -m virtualenv --version || pip install --user virtualenv; then
     python -m virtualenv --python=/usr/bin/python3 venv
     . venv/bin/activate              # on bash
 fi
-pip install "tupa==1.3.2"
+pip install ucca==1.0.67 tupa==1.3.2
 git clone https://github.com/huji-nlp/ucca-corpora --branch v1.2
 mkdir -p models wiki-sentences 20k{,-fr,-de}-sentences
 python -m scripts.standard_to_sentences ucca-corpora/wiki/xml -o wiki-sentences
