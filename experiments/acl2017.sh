@@ -27,7 +27,7 @@ tar xvzf mlp.tgz
 tar xvzf bilstm.tgz
 python -m spacy download en_core_web_lg
 for TEST_SET in wiki-sentences/test 20k-sentences; do
-    for MODEL in sparse mlp bilstm; do
-        python -m tupa.parse -c $MODEL -m models/ucca-$MODEL -We $TEST_SET
-    done
+    python -m tupa.parse -c sparse -m models/sparse -We $TEST_SET
+    python -m tupa.parse -c mlp -m models/ucca-mlp -We $TEST_SET
+    python -m tupa.parse -c bilstm -m models/ucca-bilstm -We $TEST_SET
 done
