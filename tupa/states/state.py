@@ -94,10 +94,6 @@ class State:
                            message and "%s may not be a '%s' child (currently %s, %s)" % (
                                node, t, ", ".join(map(str, node.incoming)) or "parentless",
                                ", ".join(map(str, node.outgoing)) or "childless"))
-            self.check(self.constraints.possible_multiple_incoming is None or t is None or
-                       action.remote or t in self.constraints.possible_multiple_incoming or
-                       all(e.remote or e.tag in self.constraints.possible_multiple_incoming for e in node.incoming),
-                       message and "Multiple non-remote '%s' parents not allowed for %s" % (t, node))
 
         def _check_possible_edge(p, c, t):
             _check_possible_parent(p, t)

@@ -26,7 +26,7 @@ class Oracle:
     """
     def __init__(self, graph):
         self.args = Config().args
-        self.nodes_remaining = {n.id for n in graph.nodes if n is not n.is_top}
+        self.nodes_remaining = {n.id for n in graph.nodes}
         self.edges_remaining = {e for n in graph.nodes for e in n.outgoing_edges}
         self.graph = graph
         self.found = False
@@ -87,7 +87,7 @@ class Oracle:
                                 not is_remote_edge(edge) or
                                 # Allow remote parent if all its children are remote/implicit
                                 all(is_remote_edge(e) or self.is_implicit_node(e.tgt)
-                                    for e in self.graph.nodes[edge.src].outgoing_edges)):
+                                    for e in self.graph.find_node(edge.src).outgoing_edges)):
                         yield self.action(edge, NODE, PARENT)  # Node or RemoteNode
 
                 for edge in outgoing:
@@ -140,7 +140,7 @@ class Oracle:
             return edge  # Will be just an Action object in this case
         if kind == LABEL:
             return Actions.Label(direction, orig_node=edge.orig_node, oracle=self)
-        node = self.graph.nodes[(edge.src, edge.tgt)[direction]] if kind == NODE else None
+        node = self.graph.find_node((edge.src, edge.tgt)[direction]) if kind == NODE else None
         return ACTIONS[kind][direction][is_remote_edge(edge)](tag=edge.lab, orig_edge=edge, orig_node=node, oracle=self)
 
     def remove(self, edge, node=None):
@@ -173,10 +173,10 @@ class Oracle:
         return str(" ")
 
     def is_implicit_node(self, i):
-        return not self.graph.nodes[i].outgoing_edges
+        return not self.graph.find_node(i).outgoing_edges
 
     def is_terminal_edge(self, edge):
-        return bool(self.graph.nodes[edge.tgt].anchors)
+        return bool(self.graph.find_node(edge.tgt).anchors)
 
 
 def is_remote_edge(edge):
