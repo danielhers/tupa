@@ -30,23 +30,11 @@ tar xvzf ucca-bilstm-1.3.2.tar.gz
 tar xvzf ucca-bilstm-1.3.2-fr.tar.gz
 tar xvzf ucca-bilstm-1.3.2-de.tar.gz
 tar xvzf ucca-amr-bilstm-1.3.2.tar.gz
-tar xvzf ucca-amr-bilstm-1.3.2-fr.tar.gz
-tar xvzf ucca-amr-bilstm-1.3.2-de.tar.gz
 tar xvzf ucca-dm-bilstm-1.3.2.tar.gz
-tar xvzf ucca-dm-bilstm-1.3.2-fr.tar.gz
-tar xvzf ucca-dm-bilstm-1.3.2-de.tar.gz
 tar xvzf ucca-ud++-bilstm-1.3.2.tar.gz
-tar xvzf ucca-ud++-bilstm-1.3.2-fr.tar.gz
-tar xvzf ucca-ud++-bilstm-1.3.2-de.tar.gz
 tar xvzf ucca-amr-dm-bilstm-1.3.2.tar.gz
-tar xvzf ucca-amr-dm-bilstm-1.3.2-fr.tar.gz
-tar xvzf ucca-amr-dm-bilstm-1.3.2-de.tar.gz
 tar xvzf ucca-amr-ud++-bilstm-1.3.2.tar.gz
-tar xvzf ucca-amr-ud++-bilstm-1.3.2-fr.tar.gz
-tar xvzf ucca-amr-ud++-bilstm-1.3.2-de.tar.gz
 tar xvzf ucca-amr-dm-ud++-bilstm-1.3.2.tar.gz
-tar xvzf ucca-amr-dm-ud++-bilstm-1.3.2-fr.tar.gz
-tar xvzf ucca-amr-dm-ud++-bilstm-1.3.2-de.tar.gz
 for TEST_SET in wiki-sentences/test 20k-sentences; do
     for AUX in "" -amr -dm -ud++ -amr-dm -amr-ud++ -amr-dm-ud++; do
         python -m tupa -m models/ucca$AUX-bilstm -We $TEST_SET
