@@ -22,9 +22,9 @@ python -m scripts.standard_to_sentences ucca-corpora/wiki/xml -o wiki-sentences
 python -m scripts.standard_to_sentences ucca-corpora/vmlslm/en -o 20k-sentences
 python -m scripts.standard_to_sentences ucca-corpora/vmlslm/fr -o 20k-fr-sentences
 python -m scripts.standard_to_sentences ucca-corpora/20k_de/xml -o 20k-de-sentences
-python -m scripts.split_corpus wiki-sentences -t 4268 -d 454 -l
-python -m scripts.split_corpus 20k-fr-sentences -t 413 -d 67 -l
-python -m scripts.split_corpus 20k-de-sentences -t 3429 -d 561 -l
+python -m scripts.split_corpus wiki-sentences -q -t 4268 -d 454 -l
+python -m scripts.split_corpus 20k-fr-sentences -q -t 413 -d 67 -l
+python -m scripts.split_corpus 20k-de-sentences -q -t 3429 -d 561 -l
 curl -L --remote-name-all https://github.com/huji-nlp/tupa/releases/download/v1.3.2/ucca{,-amr,-dm,-ud++,-amr-dm,-amr-ud++,-amr-dm-ud++}-bilstm-1.3.2{,-fr,-de}.tar.gz
 tar xvzf ucca-*.tar.gz
 for TEST_SET in wiki-sentences/test 20k-sentences; do

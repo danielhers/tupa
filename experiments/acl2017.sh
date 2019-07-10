@@ -20,7 +20,7 @@ git clone https://github.com/huji-nlp/ucca-corpora --branch v1.2
 mkdir -p models wiki-sentences 20k-sentences
 python -m scripts.standard_to_sentences ucca-corpora/wiki/xml -o wiki-sentences
 python -m scripts.standard_to_sentences ucca-corpora/vmlslm/en -o 20k-sentences
-python -m scripts.split_corpus wiki-sentences -t 4268 -d 454 -l
+python -m scripts.split_corpus wiki-sentences -q -t 4268 -d 454 -l
 curl -L --remote-name-all https://github.com/huji-nlp/tupa/releases/download/v1.0/{sparse,mlp,bilstm}.tgz
 tar xvzf sparse.tgz
 tar xvzf mlp.tgz
