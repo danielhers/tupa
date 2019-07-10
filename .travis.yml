@@ -50,6 +50,10 @@ jobs:
         - source activate env
     - env: acl2017
       script: experiments/acl2017.sh
+      addons:
+        apt:
+          packages:
+            - libboost-all-dev
     - env: acl2018
       script: experiments/acl2018.sh
 before_script: # https://github.com/travis-ci/travis-ci/issues/8982#issuecomment-354357640
