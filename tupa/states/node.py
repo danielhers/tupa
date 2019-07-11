@@ -10,6 +10,7 @@ class StateNode:
                  implicit=False, is_root=False, properties=None):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated graph.Node from the original Graph, during training
+        self.orig_anchors = self.anchors(self.orig_node) if orig_node else None
         self.id = str(orig_node.id) if orig_node else index  # ID of the original node
         self.text = text  # Text for terminals, None for non-terminals
         if label is None:
@@ -102,3 +103,7 @@ class StateNode:
 
     def __iter__(self):
         return iter(self.outgoing)
+
+    @classmethod
+    def anchors(cls, node):
+        return set.union(set(range(x["from"], x["to"] + 1)) for x in node.anchors)

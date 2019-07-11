@@ -11,7 +11,7 @@ from ..config import Config
 
 ROOT_ID = -1
 ROOT_LAB = "top"
-ANCHOR = "anchor"
+ANCHOR_LAB = "anchor"
 DEFAULT_LABEL = "name"
 
 
@@ -39,8 +39,12 @@ class State:
         self.graph = graph
         self.conllu = conllu
         self.labeled = bool(graph and graph.nodes)
-        self.terminals = [StateNode(i, text=node.label, orig_node=node)  # Virtual nodes for tokens
-                          for i, node in enumerate(conllu.nodes)]
+        self.terminals = []
+        for i, conllu_node in enumerate(self.conllu.nodes):
+            text = conllu_node.label
+            new_conllu_node = self.graph.add_node(
+                label=text, properties=conllu_node.properties, values=conllu_node.values)
+            self.terminals.append(StateNode(i, text=text, orig_node=new_conllu_node))  # Virtual node for tokens
         self.stack = []
         self.buffer = deque()
         self.nodes = []
@@ -50,6 +54,11 @@ class State:
         for node in self.graph.nodes:
             if node.is_top:
                 self.graph.add_edge(ROOT_ID, node.id, ROOT_LAB)
+            if node.anchors:
+                anchors = StateNode.anchors(node)
+                for terminal in self.terminals:
+                    if anchors & terminal.orig_anchors:
+                        self.graph.add_edge(node.id, terminal.orig_node.id, ANCHOR_LAB)
         self.root = self.add_node(is_root=True, orig_node=root_node)  # Virtual root whose children are top nodes
         self.stack.append(self.root)
         self.buffer += self.terminals
