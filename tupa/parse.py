@@ -47,13 +47,14 @@ class AbstractParser:
 
 class GraphParser(AbstractParser):
     """ Parser for a single graph, has a state and optionally an oracle """
-    def __init__(self, graph, *args, conllu=None, **kwargs):
+    def __init__(self, graph, *args, conllu=None, alignment=None, target=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.graph, self.overlay = graph
         self.conllu = conllu
+        self.alignment = alignment
         self.out = self.graph
         self.framework = self.graph.framework if self.training or self.evaluation else min(self.model.frameworks)
-        self.targets = self.graph.targets() or [self.framework]
+        self.target = target or self.framework
         if self.config.args.bert_multilingual is not None:
             self.lang = self.graph.lang
             assert self.lang, "Attribute 'lang' is required per passage when using multilingual BERT"
@@ -62,7 +63,7 @@ class GraphParser(AbstractParser):
 
     def init(self):
         self.config.set_framework(self.framework)
-        self.state = State(self.graph, self.conllu)
+        self.state = State(self.graph, self.conllu, self.alignment)
         # Graph is considered labeled if there are any edges or node labels in it
         self.oracle = Oracle(self.graph) if self.training or (
                 (self.config.args.verbose > 1 or self.config.args.action_stats)
@@ -214,8 +215,7 @@ class GraphParser(AbstractParser):
     def finish(self, status, display=True, write=False, accuracies=None):
         self.model.classifier.finished_item(self.training)
         if not self.training:
-            for framework in self.targets:
-                self.out = self.state.create_graph(framework=framework)
+            self.out = self.state.create_graph(framework=self.target)
         if write:
             json.dump(self.out.encode(), self.config.args.output, indent=None, ensure_ascii=False)
         if display:
@@ -258,37 +258,38 @@ class BatchParser(AbstractParser):
         self.seen_per_framework = defaultdict(int)
         self.num_graphs = 0
 
-    def parse(self, graphs, display=True, write=False, accuracies=None, conllu=None):
+    def parse(self, graphs, display=True, write=False, accuracies=None, conllu=None, alignment=None):
         graphs, total = generate_and_len(single_to_iter(graphs))
         pr_width = len(str(total))
         id_width = 1
         graphs = self.add_progress_bar(graphs, display=display)
         for i, (graph, overlay) in enumerate(graphs, start=1):
-            parser = GraphParser((graph, overlay), self.config, self.model, self.training, self.evaluation,
-                                 conllu=conllu[graph.id])
-            if self.config.args.verbose and display:
-                progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) if total and i <= total else "%d" % i
-                id_width = max(id_width, len(str(graph.id)))
-                print("%s %-6s %-*s" % (progress, parser.framework, id_width, graph.id),
-                      end=self.config.line_end)
-            else:
-                graphs.set_description()
-                postfix = {parser.framework: graph.id}
-                if display:
-                    postfix["|t/s|"] = self.tokens_per_second()
-                    if self.correct_action_count:
-                        postfix["|a|"] = percents_str(self.correct_action_count, self.action_count, fraction=False)
-                    if self.correct_label_count:
-                        postfix["|l|"] = percents_str(self.correct_label_count, self.label_count, fraction=False)
-                graphs.set_postfix(**postfix)
-            self.seen_per_framework[parser.framework] += 1
-            if self.training and self.config.args.max_training_per_framework and \
-                    self.seen_per_framework[parser.framework] > self.config.args.max_training_per_framework:
-                self.config.print("skipped", level=1)
-                continue
-            assert not (self.training and parser.framework == "text"), "Cannot train on unannotated plain text"
-            yield parser.parse(display=display, write=write, accuracies=accuracies)
-            self.update_counts(parser)
+            for target in graph.targets() or [graph.framework]:
+                parser = GraphParser((graph, overlay), self.config, self.model, self.training, self.evaluation,
+                                     conllu=conllu[graph.id], alignment=alignment.get(graph.id), target=target)
+                if self.config.args.verbose and display:
+                    progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) \
+                        if total and i <= total else "%d" % i
+                    id_width = max(id_width, len(str(graph.id)))
+                    print("%s %-6s %-*s" % (progress, target, id_width, graph.id),
+                          end=self.config.line_end)
+                else:
+                    graphs.set_description()
+                    postfix = {target: graph.id}
+                    if display:
+                        postfix["|t/s|"] = self.tokens_per_second()
+                        if self.correct_action_count:
+                            postfix["|a|"] = percents_str(self.correct_action_count, self.action_count, fraction=False)
+                        if self.correct_label_count:
+                            postfix["|l|"] = percents_str(self.correct_label_count, self.label_count, fraction=False)
+                    graphs.set_postfix(**postfix)
+                self.seen_per_framework[target] += 1
+                if self.training and self.config.args.max_training_per_framework and \
+                        self.seen_per_framework[target] > self.config.args.max_training_per_framework:
+                    self.config.print("skipped", level=1)
+                    continue
+                yield parser.parse(display=display, write=write, accuracies=accuracies)
+                self.update_counts(parser)
         if self.num_graphs and display:
             self.summary()
 
@@ -327,7 +328,7 @@ class Parser(AbstractParser):
         self.trained = self.save_init = False
         self.accuracies = {}
 
-    def train(self, graphs=None, dev=None, test=None, iterations=1, conllu=None):
+    def train(self, graphs=None, dev=None, test=None, iterations=1, conllu=None, alignment=None):
         """
         Train parser on given graphs
         :param graphs: iterable of graphs to train on
@@ -335,6 +336,7 @@ class Parser(AbstractParser):
         :param test: iterable of graphs that would be tested on after train finished
         :param iterations: iterable of Iterations objects whose i attributes are the number of iterations to perform
         :param conllu: dict of graph id to graph specifying conllu preprocessing
+        :param alignment: dict of graph id to graph specifying alignment preprocessing
         """
         self.trained = True
         self.dev = dev
@@ -363,10 +365,10 @@ class Parser(AbstractParser):
                         graphs = sorted(graphs, key=lambda p: self.accuracies.get(p.id, 0))
                     else:
                         self.config.random.shuffle(graphs)
-                    if not sum(1 for _ in self.parse(graphs, mode=ParseMode.train, conllu=conllu)):
+                    if not sum(1 for _ in self.parse(graphs, mode=ParseMode.train, conllu=conllu, alignment=alignment)):
                         raise ParserException("Could not train on any graph")
                     yield self.eval_and_save(self.iteration == len(iterations) and self.epoch == end - 1,
-                                             finished_epoch=True, conllu=conllu)
+                                             finished_epoch=True, conllu=conllu, alignment=alignment)
                 print("Trained %d epochs" % (end - 1))
                 if dev:
                     if self.iteration < len(iterations):
@@ -387,7 +389,7 @@ class Parser(AbstractParser):
         self.print_config()
         self.best_score = self.model.classifier.best_score if self.model.classifier else 0
 
-    def eval_and_save(self, last=False, finished_epoch=False, conllu=None):
+    def eval_and_save(self, last=False, finished_epoch=False, conllu=None, alignment=None):
         scores = None
         model = self.model
         # noinspection PyAttributeOutsideInit
@@ -395,7 +397,8 @@ class Parser(AbstractParser):
         if self.dev:
             if not self.best_score:
                 self.save(finalized)
-            average_score, scores = self.eval(self.dev, ParseMode.dev, self.config.args.devscores, conllu=conllu)
+            average_score, scores = self.eval(self.dev, ParseMode.dev, self.config.args.devscores,
+                                              conllu=conllu, alignment=alignment)
             if average_score >= self.best_score:
                 print("Better than previous best score (%.3f)" % self.best_score)
                 finalized.classifier.best_score = average_score
@@ -416,9 +419,9 @@ class Parser(AbstractParser):
         self.config.save(model.filename)
         model.save(save_init=self.save_init)
 
-    def eval(self, graphs, mode, scores_filename, display=True, conllu=None):
+    def eval(self, graphs, mode, scores_filename, display=True, conllu=None, alignment=None):
         print("Evaluating on %s graphs" % mode.name)
-        out = self.parse(graphs, mode=mode, evaluate=True, display=display, conllu=conllu)
+        out = self.parse(graphs, mode=mode, evaluate=True, display=display, conllu=conllu, alignment=alignment)
         try:
             results = score.mces.evaluate([g for g, _ in graphs], out)
         except (KeyError, ValueError) as e:
@@ -431,7 +434,8 @@ class Parser(AbstractParser):
         print_scores(results, scores_filename, prefix=prefix, prefix_title="iteration")
         return results["all"]["f"], out
 
-    def parse(self, graphs, mode=ParseMode.test, evaluate=False, display=True, write=False, conllu=None):
+    def parse(self, graphs, mode=ParseMode.test, evaluate=False, display=True, write=False,
+              conllu=None, alignment=None):
         """
         Parse given graphs
         :param graphs: iterable of graphs to parse
@@ -443,6 +447,7 @@ class Parser(AbstractParser):
         :param display: whether to display information on each parsed graph
         :param write: whether to write output graphs to file
         :param conllu: dict of graph id to graph specifying conllu preprocessing
+        :param alignment: dict of graph id to graph specifying alignment preprocessing
         :return: generator of parsed graphs (or in train mode, the original ones),
                  or, if evaluation=True, of pairs of (Graph, Scores).
         """
@@ -453,10 +458,10 @@ class Parser(AbstractParser):
             yield from self.train()  # Try to load model from file
         parser = BatchParser(self.config, self.model, training, mode if mode is ParseMode.dev else evaluate)
         for i, graph in enumerate(parser.parse(graphs, display=display, write=write, accuracies=self.accuracies,
-                                               conllu=conllu),
+                                               conllu=conllu, alignment=alignment),
                                   start=1):
             if training and self.config.args.save_every and i % self.config.args.save_every == 0:
-                self.eval_and_save(conllu=conllu)
+                self.eval_and_save(conllu=conllu, alignment=alignment)
                 self.batch += 1
             yield graph
 
@@ -477,22 +482,18 @@ def train_test(train_graphs, dev_graphs, test_graphs, args, model_suffix=""):
     base, ext = os.path.splitext(args.model or args.classifier)
     model_file = base + model_suffix + ext
     conllu = {graph.id: graph for graph, _ in read_graphs_with_progress_bar(args.conllu)}
+    alignment = {graph.id: graph for graph, _ in read_graphs_with_progress_bar(args.alignment)}
     p = Parser(model_file=model_file, config=Config())
     yield from filter(None, p.train(train_graphs, dev=dev_graphs, test=test_graphs, iterations=args.iterations,
-                                    conllu=conllu))
+                                    conllu=conllu, alignment=alignment))
     if test_graphs:
         if args.train or args.folds:
             print("Evaluating on test graphs")
         evaluate = args.evaluate or train_graphs
-        out = p.parse(test_graphs, evaluate=evaluate, write=args.write, conllu=conllu)
-        if out:
-            results = score.mces.evaluate([g for g, _ in test_graphs], out)
-            if args.verbose <= 1 or len(out) > 1:
-                print("\nAverage F1 score on test: %.3f" % results["all"]["f"])
-                print("Aggregated scores:")
-                print(results)
-            print_scores(results, args.testscores)
-            yield results
+        out = p.parse(test_graphs, evaluate=evaluate, write=args.write, conllu=conllu, alignment=alignment)
+        results = score.mces.evaluate([g for g, _ in test_graphs], out)
+        print_scores(results, args.testscores)
+        yield results
 
 
 def percents_str(part, total, infix="", fraction=True):
@@ -542,7 +543,7 @@ def main_generator():
     assert args.train or not args.dev, "--dev is only possible together with --train"
     if args.folds:
         fold_scores = []
-        all_graphs = read_graphs_with_progress_bar(args.input, alignment=args.alignment)
+        all_graphs = read_graphs_with_progress_bar(args.input)
         assert len(all_graphs) >= args.folds, \
             "%d folds are not possible with only %d graphs" % (args.folds, len(all_graphs))
         Config().random.shuffle(all_graphs)
@@ -561,16 +562,17 @@ def main_generator():
             print("Aggregated scores across folds:\n")
             yield fold_scores
     elif args.train:  # Simple train/dev/test by given arguments
-        train_graphs, dev_graphs = [read_graphs_with_progress_bar(arg, alignment=args.alignment) if arg else []
+        train_graphs, dev_graphs = [read_graphs_with_progress_bar(arg) if arg else []
                                     for arg in (args.input, args.dev)]
         yield from train_test(train_graphs, dev_graphs, test_graphs=None, args=args)
     else:
         yield from train_test(train_graphs=None, dev_graphs=None,
-                              test_graphs=read_graphs_with_progress_bar(args.input, alignment=args.alignment),
-                              args=args)
+                              test_graphs=read_graphs_with_progress_bar(args.input), args=args)
 
 
 def read_graphs_with_progress_bar(fh, **kwargs):
+    if fh is None:
+        return ()
     return list(zip(*read_graphs(tqdm(fh, desc="Reading " + fh.name, unit=" graphs"), format="mrp", **kwargs)))
 
 

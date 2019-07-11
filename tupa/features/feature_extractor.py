@@ -252,7 +252,7 @@ def get_punctuation(nodes, terminals):
     if len(nodes) < 2:
         return None
     t0, t1 = sorted([head_terminal(node) for node in nodes], key=lambda t: t.index)
-    return [t for t in terminals[t0.index:t1.index - 1] if t.get("upos") == "PUNCT"]
+    return [t for t in terminals[t0.index + 1:t1.index] if t.get("upos") == "PUNCT"]
 
 
 ACTION_PROP_GETTERS = {
@@ -268,8 +268,8 @@ NODE_PROP_GETTERS = {
     "u": lambda node, *_: head_terminal(node).get("upos"),
     "d": lambda node, prev, binary: dep_distance(prev, node) if binary else head_terminal(node).incoming_edges[0].lab,
     "h": height,
-    "i": lambda node, *_: head_terminal(node).index - 1,
-    "e": lambda node, prev, binary: next(e.tag for e in node.incoming if not binary or e.parent == prev),
+    "i": lambda node, *_: head_terminal(node).index,
+    "e": lambda node, prev, binary: next(e.lab for e in node.incoming if not binary or e.parent == prev),
     "n": lambda node, *_: node.label,
     "c": lambda node, *_: node.category,
     "x": lambda node, prev, binary: int(prev in node.parents) if binary else gap_type(node),

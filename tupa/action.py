@@ -7,7 +7,7 @@ class Action(dict):
 
     def __init__(self, action_type, tag=None, orig_edge=None, orig_node=None, oracle=None, id_=None):
         self.type = action_type  # String
-        self.tag = tag  # Usually the tag of the created edge; but if COMPOUND_SWAP, the distance
+        self.tag = tag  # Usually the label of the created edge; but if COMPOUND_SWAP, the distance
         self.orig_node = orig_node  # Node created by this action, if any (during training)
         self.orig_edge = orig_edge  # Edge created by this action, if any (during training)
         self.node = None  # Will be set by State when the node created by this action is known

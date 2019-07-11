@@ -4,12 +4,12 @@ from operator import attrgetter
 
 class Node:
     """
-    Temporary representation for core.Node with only relevant information for parsing
+    Temporary representation for graph.Node with only relevant information for parsing
     """
     def __init__(self, index, swap_index=None, orig_node=None, text=None, label=None,
                  implicit=False, is_root=False, root=None, properties=None):
         self.index = index  # Index in the configuration's node list
-        self.orig_node = orig_node  # Associated core.Node from the original Graph, during training
+        self.orig_node = orig_node  # Associated graph.Node from the original Graph, during training
         self.id = str(orig_node.id) if orig_node else index  # ID of the original node
         self.text = text  # Text for terminals, None for non-terminals
         if label is None:
@@ -25,15 +25,14 @@ class Node:
         self.incoming = []  # Edge list
         self.children = []  # Node list: the children of all edges in outgoing
         self.parents = []  # Node list: the parents of all edges in incoming
-        self.outgoing_tags = set()  # String set
-        self.incoming_tags = set()  # String set
-        self.node = None  # Associated core.Node, when creating final Graph
+        self.outgoing_labs = set()  # String set
+        self.incoming_labs = set()  # String set
+        self.node = None  # Associated graph.Node, when creating final Graph
         self.implicit = implicit  # True or False
         self.swap_index = self.index if swap_index is None else swap_index  # To avoid swapping nodes more than once
         self.height = 0
         self._terminals = None
         self.is_root = is_root
-        self.root = root  # Original Graph object this belongs to
         self.properties = properties
 
     def get(self, prop):
@@ -44,27 +43,14 @@ class Node:
     def add_incoming(self, edge):
         self.incoming.append(edge)
         self.parents.append(edge.parent)
-        self.incoming_tags.add(edge.tag)
+        self.incoming_labs.add(edge.lab)
 
     def add_outgoing(self, edge):
         self.outgoing.append(edge)
         self.children.append(edge.child)
-        self.outgoing_tags.add(edge.tag)
+        self.outgoing_labs.add(edge.lab)
         self.height = max(self.height, edge.child.height + 1)
         self._terminals = None  # Invalidate terminals because we might have added some
-
-    @staticmethod
-    def attach_nodes(graph, nodes):
-        for node in nodes:
-            node.node = graph.add_node(int(node.id))
-            node.set_node_label()
-        for node in nodes:
-            for edge in node.outgoing:
-                graph.add_edge(int(edge.parent.id), int(edge.child.id), edge.tag)
-
-    def set_node_label(self):
-        if self.node is not None:
-            self.node.label = self.label or "name"
 
     @property
     def descendants(self):

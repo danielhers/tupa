@@ -1,11 +1,11 @@
 class Edge:
     """
-    Temporary representation for core.Edge with only relevant information for parsing
+    Temporary representation for graph.Edge with only relevant information for parsing
     """
-    def __init__(self, parent, child, tag, attributes=None):
+    def __init__(self, parent, child, lab, attributes=None):
         self.parent = parent  # Node object from which this edge comes
         self.child = child  # Node object to which this edge goes
-        self.tag = tag  # String tag
+        self.lab = lab  # String label
         self.attributes = attributes  # dict of attribute name to value
 
     def add(self):
@@ -14,17 +14,17 @@ class Edge:
         self.child.add_incoming(self)
 
     def __repr__(self):
-        return Edge.__name__ + "(" + self.tag + ", " + repr(self.parent) + ", " + repr(self.child) +\
+        return Edge.__name__ + "(" + self.lab + ", " + repr(self.parent) + ", " + repr(self.child) + \
                ((", " + str(self.attributes)) if self.attributes else "") + ")"
 
     def __str__(self):
-        return "%s -%s-> %s%s" % (self.parent, self.tag, self.child,
+        return "%s -%s-> %s%s" % (self.parent, self.lab, self.child,
                                   (" (" + ",".join("%s=%s" % (k, v) for k, v in self.attributes.items()) + ")")
                                   if self.attributes else "")
 
     def __eq__(self, other):
         return other and self.parent.index == other.parent.index and self.child == other.child and \
-               self.tag == other.tag
+               self.lab == other.lab
 
     def __hash__(self):
-        return hash((self.parent.index, self.child.index, self.tag))
+        return hash((self.parent.index, self.child.index, self.lab))

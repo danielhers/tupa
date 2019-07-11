@@ -1,6 +1,6 @@
 from collections import deque
 
-from graph import Graph
+from graph import Graph, Node as GraphNode
 from semstr.constraints import Constraints, Direction
 from semstr.validation import CONSTRAINTS
 
@@ -8,6 +8,10 @@ from .edge import Edge
 from .node import Node
 from ..action import Actions
 from ..config import Config
+
+ROOT = "root"
+ANCHOR = "anchor"
+DEFAULT_LABEL = "name"
 
 
 class InvalidActionError(AssertionError):
@@ -19,30 +23,58 @@ class InvalidActionError(AssertionError):
 class State:
     """
     The parser's state, responsible for applying actions and creating the final Graph
-    :param graph: a Graph object to get the tokens from, and everything else if training
     """
-    def __init__(self, graph, conllu):
+    def __init__(self, graph=None, conllu=None, alignment=None):
+        """
+        :param graph: Graph for training, not needed for testing except for getting the graph id
+        :param conllu: Graph with node per token predicted by a syntactic parser
+        :param alignment: Graph with node.id corresponding to graph and node.label corresponding to conllu node.id
+        """
+        if conllu is None:
+            raise ValueError("conllu is required for tokens and features")
         self.args = Config().args
         self.constraints = CONSTRAINTS.get(graph.framework, Constraints)(implicit=True)
         self.log = []
         self.finished = False
         self.graph = graph
         self.conllu = conllu
-        self.labeled = any(n.outgoing_edges or n.label for n in graph.nodes)
-        self.terminals = [Node(i, orig_node=t, root=graph, text=t.label)
-                          for i, t in enumerate(conllu.nodes, start=1)]
+        self.alignment = alignment
+        self.labeled = bool(graph and graph.nodes)
+        self.terminals = [Node(i, text=node.label, orig_node=node) for i, node in enumerate(conllu.nodes)]
         self.stack = []
         self.buffer = deque()
         self.nodes = []
         self.heads = set()
         self.need_label = None  # If we are waiting for label_node() to be called, which node is to be labeled by it
-        tops = [node for node in graph.nodes if node.is_top]
-        self.root = self.add_node(orig_node=tops[0], is_root=True)  # Root is not in the buffer
+        self.root = self.add_node(is_root=True, orig_node=GraphNode(0))  # Artificial root for top nodes, not in buffer
         self.stack.append(self.root)
         self.buffer += self.terminals
-        self.nodes += self.terminals
         self.actions = []  # History of applied actions
         self.type_validity_cache = {}
+
+    def create_graph(self, framework=None):
+        """
+        Create final graph from temporary representation
+        :return: Graph created from self.nodes
+        """
+        Config().print("Creating graph %s from state..." % self.graph.id, level=2)
+        graph = Graph(self.graph.id, framework=framework or self.graph.framework)
+        graph.input = self.graph.input
+        for node in self.nodes:
+            if node.text is None and not node.is_root:
+                node.node = graph.add_node(int(node.id))
+                node.node.label = node.label or DEFAULT_LABEL
+        for node in self.nodes:
+            for edge in node.outgoing:
+                if node.is_root:
+                    edge.child.node.is_top = True
+                elif edge.child.text is not None:
+                    if node.anchors is None:
+                        node.anchors = []
+                    node.anchors += edge.child.orig_node.anchors
+                else:
+                    graph.add_edge(int(edge.parent.id), int(edge.child.id), edge.lab)
+        return graph
 
     def is_valid_action(self, action):
         """
@@ -158,7 +190,7 @@ class State:
                         self.check(not self.args.require_connected or s0.incoming,
                                    message and "Reducing parentless non-terminal %s" % s0, is_type=True)
                         self.check(not self.constraints.required_outgoing or
-                                   s0.outgoing_tags.intersection(self.constraints.required_outgoing),
+                                   s0.outgoing_labs.intersection(self.constraints.required_outgoing),
                                    message and "Reducing non-terminal %s without %s edge" % (
                                        s0, self.constraints.required_outgoing), is_type=True)
                     self.check(not self.args.node_labels or s0.text or s0.labeled,
@@ -251,7 +283,7 @@ class State:
 
     def add_node(self, **kwargs):
         """
-        Called during parsing to add a new Node (not core.Node) to the temporary representation
+        Called during parsing to add a new Node (not graph.Node) to the temporary representation
         :param kwargs: keyword arguments for Node()
         """
         node = Node(len(self.nodes), swap_index=self.calculate_swap_index(), root=self.graph, **kwargs)
@@ -309,22 +341,6 @@ class State:
         self.log.append("label: %s" % self.need_label)
         self.type_validity_cache = {}
         self.need_label = None
-
-    def create_graph(self, **kwargs):
-        """
-        Create final graph from temporary representation
-        :return: core.Graph created from self.nodes
-        """
-        Config().print("Creating graph %s from state..." % self.graph.id, level=2)
-        graph = Graph(self.graph.id)
-        graph_framework = kwargs.get("framework") or self.graph.framework
-        if graph_framework:
-            graph.framework = graph_framework
-        graph.input = self.graph.input
-        if self.args.node_labels:
-            self.root.set_node_label()
-        Node.attach_nodes(graph, self.nodes)
-        return graph
 
     def node_ratio(self):
         return (len(self.nodes) / len(self.terminals) - 1) if self.terminals else 0

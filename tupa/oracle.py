@@ -26,8 +26,7 @@ class Oracle:
     """
     def __init__(self, graph):
         self.args = Config().args
-        tops = [node for node in graph.nodes if node.is_top]
-        self.nodes_remaining = {n.id for n in graph.nodes if n is not tops[0]}
+        self.nodes_remaining = {n.id for n in graph.nodes}
         self.edges_remaining = {e for n in graph.nodes for e in n.outgoing_edges}
         self.graph = graph
         self.found = False
