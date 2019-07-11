@@ -15,7 +15,6 @@ from tupa.config import Config, Iterations
 from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
 from tupa.oracle import Oracle
 from tupa.states.state import State
-from tupa.traceutil import set_traceback_listener
 
 
 class ParserException(Exception):
@@ -577,7 +576,6 @@ def read_graphs_with_progress_bar(fh, **kwargs):
 
 def main():
     print("TUPA version " + GIT_VERSION + " (MRP)")
-    set_traceback_listener()
     list(main_generator())
 
 
