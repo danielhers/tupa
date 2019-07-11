@@ -40,13 +40,14 @@ class State:
         self.conllu = conllu
         self.alignment = alignment
         self.labeled = bool(graph and graph.nodes)
-        self.terminals = [StateNode(i, text=node.label, orig_node=node) for i, node in enumerate(conllu.nodes)]
+        self.terminals = [StateNode(i, text=node.label, orig_node=node)  # Virtual nodes for tokens
+                          for i, node in enumerate(conllu.nodes)]
         self.stack = []
         self.buffer = deque()
         self.nodes = []
         self.heads = set()
         self.need_label = None  # If we are waiting for label_node() to be called, which node is to be labeled by it
-        self.root = self.add_node(is_root=True, orig_node=Node(0))  # Artificial root for top nodes, not in buffer
+        self.root = self.add_node(is_root=True, orig_node=Node(0))  # Virtual root whose children will be top nodes
         self.stack.append(self.root)
         self.buffer += self.terminals
         self.actions = []  # History of applied actions
@@ -57,23 +58,30 @@ class State:
         Create final graph from temporary representation
         :return: Graph created from self.nodes
         """
-        Config().print("Creating graph %s from state..." % self.graph.id, level=2)
-        graph = Graph(self.graph.id, framework=framework or self.graph.framework)
+        if framework is None:
+            framework = self.graph.framework
+        Config().print("Creating %s graph %s from state..." % (framework, self.graph.id), level=2)
+        graph = Graph(self.graph.id, framework)
         graph.input = self.graph.input
         for node in self.nodes:
             if node.text is None and not node.is_root:
-                node.node = graph.add_node(int(node.id))
-                node.node.label = node.label or DEFAULT_LABEL
+                if node.label is None and framework != "ucca":
+                    node.label = DEFAULT_LABEL
+                properties, values = zip(*node.properties.items()) if node.properties else (None, None)
+                node.node = graph.add_node(int(node.id), label=node.label, properties=properties, values=values)
         for node in self.nodes:
             for edge in node.outgoing:
                 if node.is_root:
                     edge.child.node.is_top = True
                 elif edge.child.text is not None:
-                    if node.anchors is None:
-                        node.anchors = []
-                    node.anchors += edge.child.orig_node.anchors
+                    if framework != "amr":
+                        if node.anchors is None:
+                            node.anchors = []
+                        node.anchors += edge.child.orig_node.anchors
                 else:
-                    graph.add_edge(int(edge.parent.id), int(edge.child.id), edge.lab)
+                    attributes, values = zip(*edge.attributes.items()) if edge.attributes else (None, None)
+                    graph.add_edge(int(edge.parent.id), int(edge.child.id), edge.lab,
+                                   attributes=attributes, values=values)
         return graph
 
     def is_valid_action(self, action):
@@ -283,7 +291,7 @@ class State:
 
     def add_node(self, **kwargs):
         """
-        Called during parsing to add a new Node (not graph.Node) to the temporary representation
+        Called during parsing to add a new StateNode (not graph.Node) to the temporary representation
         :param kwargs: keyword arguments for StateNode()
         """
         node = StateNode(len(self.nodes), swap_index=self.calculate_swap_index(), root=self.graph, **kwargs)

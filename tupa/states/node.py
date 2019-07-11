@@ -7,7 +7,7 @@ class StateNode:
     Temporary representation for graph.Node with only relevant information for parsing
     """
     def __init__(self, index, swap_index=None, orig_node=None, text=None, label=None,
-                 implicit=False, is_root=False, root=None, properties=None):
+                 implicit=False, is_root=False, properties=None):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated graph.Node from the original Graph, during training
         self.id = str(orig_node.id) if orig_node else index  # ID of the original node
