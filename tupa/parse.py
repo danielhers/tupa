@@ -125,7 +125,8 @@ class GraphParser(AbstractParser):
                 true_actions = self.oracle.get_actions(self.state, self.model.actions, create=self.training)
             except (AttributeError, AssertionError) as e:
                 if self.training:
-                    raise ParserException("Error in getting action from oracle during training") from e
+                    raise ParserException("Error in getting action from oracle during training on "
+                                          + self.graph.id) from e
         return true_actions
 
     def get_true_label(self, node):
@@ -133,7 +134,7 @@ class GraphParser(AbstractParser):
             return self.oracle.get_label(self.state, node) if self.oracle else (None, None)
         except AssertionError as e:
             if self.training:
-                raise ParserException("Error in getting label from oracle during training") from e
+                raise ParserException("Error in getting label from oracle during training on " + self.graph.id) from e
             return None, None
 
     def label_node(self, action=None):
