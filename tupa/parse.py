@@ -48,6 +48,12 @@ class AbstractParser:
 class GraphParser(AbstractParser):
     """ Parser for a single graph, has a state and optionally an oracle """
     def __init__(self, graph, *args, conllu=None, alignment=None, target=None, **kwargs):
+        """
+        :param graph: gold Graph to get the correct nodes and edges from (in training), or just to get id from (in test)
+        :param conllu: Graph with node per token predicted by a syntactic parser
+        :param alignment: Graph with node.id corresponding to graph and node.label corresponding to conllu node.id
+        :param target: framework to parse to
+        """
         super().__init__(*args, **kwargs)
         self.graph, self.overlay = graph
         self.conllu = conllu
@@ -59,14 +65,22 @@ class GraphParser(AbstractParser):
             assert self.lang, "Attribute 'lang' is required per passage when using multilingual BERT"
         self.state_hash_history = set()
         self.state = self.oracle = None
+        if self.alignment:  # Copy alignments to anchors, updating graph
+            for alignment_node in self.alignment.nodes:
+                node = self.graph.find_node(alignment_node.id)
+                if node.anchors is None:
+                    node.anchors = []
+                for conllu_node_id in alignment_node.label:
+                    node.anchors += conllu.find_node(conllu_node_id).anchors
 
     def init(self):
         self.config.set_framework(self.framework)
         self.state = State(self.graph, self.conllu)
         # Graph is considered labeled if there are any nodes in it
-        self.oracle = Oracle(self.graph, self.conllu, self.alignment) if self.training or (
-                (self.config.args.verbose > 1 or self.config.args.action_stats)
-                and self.state.labeled) else None
+        if self.training or ((self.config.args.verbose > 1 or self.config.args.action_stats) and self.state.labeled):
+            self.oracle = Oracle(self.graph, self.conllu)
+        else:
+            self.oracle = None
         self.model.init_model(self.config.framework)
         if ClassifierProperty.require_init_features in self.model.classifier_properties:
             self.model.init_features(self.state, self.training)
