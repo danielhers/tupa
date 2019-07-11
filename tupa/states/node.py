@@ -2,7 +2,7 @@ from collections import deque
 from operator import attrgetter
 
 
-class Node:
+class StateNode:
     """
     Temporary representation for graph.Node with only relevant information for parsing
     """
@@ -21,10 +21,10 @@ class Node:
         # Whether a label has been set yet (necessary because None is a valid label too):
         self.labeled = self.orig_node is not None and self.orig_node.label is None
         self.node_index = int(self.id) if orig_node else None
-        self.outgoing = []  # Edge list
-        self.incoming = []  # Edge list
-        self.children = []  # Node list: the children of all edges in outgoing
-        self.parents = []  # Node list: the parents of all edges in incoming
+        self.outgoing = []  # StateEdge list
+        self.incoming = []  # StateEdge list
+        self.children = []  # StateNode list: the children of all edges in outgoing
+        self.parents = []  # StateNode list: the parents of all edges in incoming
         self.outgoing_labs = set()  # String set
         self.incoming_labs = set()  # String set
         self.node = None  # Associated graph.Node, when creating final Graph
@@ -80,7 +80,7 @@ class Node:
         return self._terminals
 
     def __repr__(self):
-        return Node.__name__ + "(" + str(self.index) + \
+        return StateNode.__name__ + "(" + str(self.index) + \
                ((", " + self.text) if self.text else "") + \
                ((", " + self.id) if self.id else "") + ")" + \
                ((" (" + ",".join("%s=%s" % (k, v) for k, v in self.properties.items()) + ")")

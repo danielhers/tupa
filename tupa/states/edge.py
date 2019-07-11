@@ -1,10 +1,10 @@
-class Edge:
+class StateEdge:
     """
     Temporary representation for graph.Edge with only relevant information for parsing
     """
     def __init__(self, parent, child, lab, attributes=None):
-        self.parent = parent  # Node object from which this edge comes
-        self.child = child  # Node object to which this edge goes
+        self.parent = parent  # StateNode object from which this edge comes
+        self.child = child  # StateNode object to which this edge goes
         self.lab = lab  # String label
         self.attributes = attributes  # dict of attribute name to value
 
@@ -14,7 +14,7 @@ class Edge:
         self.child.add_incoming(self)
 
     def __repr__(self):
-        return Edge.__name__ + "(" + self.lab + ", " + repr(self.parent) + ", " + repr(self.child) + \
+        return StateEdge.__name__ + "(" + self.lab + ", " + repr(self.parent) + ", " + repr(self.child) + \
                ((", " + str(self.attributes)) if self.attributes else "") + ")"
 
     def __str__(self):

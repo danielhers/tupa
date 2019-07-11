@@ -1,11 +1,11 @@
 from collections import deque
 
-from graph import Graph, Node as GraphNode
+from graph import Graph, Node
 from semstr.constraints import Constraints, Direction
 from semstr.validation import CONSTRAINTS
 
-from .edge import Edge
-from .node import Node
+from .edge import StateEdge
+from .node import StateNode
 from ..action import Actions
 from ..config import Config
 
@@ -40,13 +40,13 @@ class State:
         self.conllu = conllu
         self.alignment = alignment
         self.labeled = bool(graph and graph.nodes)
-        self.terminals = [Node(i, text=node.label, orig_node=node) for i, node in enumerate(conllu.nodes)]
+        self.terminals = [StateNode(i, text=node.label, orig_node=node) for i, node in enumerate(conllu.nodes)]
         self.stack = []
         self.buffer = deque()
         self.nodes = []
         self.heads = set()
         self.need_label = None  # If we are waiting for label_node() to be called, which node is to be labeled by it
-        self.root = self.add_node(is_root=True, orig_node=GraphNode(0))  # Artificial root for top nodes, not in buffer
+        self.root = self.add_node(is_root=True, orig_node=Node(0))  # Artificial root for top nodes, not in buffer
         self.stack.append(self.root)
         self.buffer += self.terminals
         self.actions = []  # History of applied actions
@@ -140,7 +140,7 @@ class State:
             self.check(self.constraints.allow_root_terminal_children or p is not self.root or c.text is None,
                        message and "Terminal child '%s' for root" % c, is_type=True)
             if self.constraints.multigraph:  # Nodes may be connected by more than one edge
-                edge = Edge(p, c, t)
+                edge = StateEdge(p, c, t)
                 self.check(self.constraints.allow_edge(edge), message and "Edge not allowed: %s (currently: %s)" % (
                                edge, ", ".join(map(str, p.outgoing)) or "childless"))
             else:  # Simple graph, i.e., no more than one edge between the same pair of nodes
@@ -258,7 +258,7 @@ class State:
                 parent = action.node = self.add_node(orig_node=action.orig_node)
             if child is None:
                 child = action.node = self.add_node(orig_node=action.orig_node, implicit=True)
-            action.edge = self.add_edge(Edge(parent, child, tag))
+            action.edge = self.add_edge(StateEdge(parent, child, tag))
             if action.node:
                 self.buffer.appendleft(action.node)
         elif action.is_type(Actions.Shift):  # Push buffer head to stack; shift buffer
@@ -284,9 +284,9 @@ class State:
     def add_node(self, **kwargs):
         """
         Called during parsing to add a new Node (not graph.Node) to the temporary representation
-        :param kwargs: keyword arguments for Node()
+        :param kwargs: keyword arguments for StateNode()
         """
-        node = Node(len(self.nodes), swap_index=self.calculate_swap_index(), root=self.graph, **kwargs)
+        node = StateNode(len(self.nodes), swap_index=self.calculate_swap_index(), root=self.graph, **kwargs)
         self.nodes.append(node)
         self.heads.add(node)
         self.log.append("node: %s (swap_index: %g)" % (node, node.swap_index))
