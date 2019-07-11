@@ -7,7 +7,7 @@ class Node:
     Temporary representation for core.Node with only relevant information for parsing
     """
     def __init__(self, index, swap_index=None, orig_node=None, text=None, label=None,
-                 implicit=False, is_root=False, root=None):
+                 implicit=False, is_root=False, root=None, properties=None):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated core.Node from the original Graph, during training
         self.id = str(orig_node.id) if orig_node else index  # ID of the original node
@@ -34,6 +34,7 @@ class Node:
         self._terminals = None
         self.is_root = is_root
         self.root = root  # Original Graph object this belongs to
+        self.properties = properties
 
     def get(self, prop):
         for p, v in zip(self.orig_node.properties, self.orig_node.values):
@@ -95,12 +96,16 @@ class Node:
     def __repr__(self):
         return Node.__name__ + "(" + str(self.index) + \
                ((", " + self.text) if self.text else "") + \
-               ((", " + self.id) if self.id else "") + ")"
+               ((", " + self.id) if self.id else "") + ")" + \
+               ((" (" + ",".join("%s=%s" % (k, v) for k, v in self.properties.items()) + ")")
+                if self.properties else "")
 
     def __str__(self):
         s = '"%s"' % self.text if self.text else str(self.id) or str(self.index)
         if self.label:
             s += "/" + self.label
+        if self.properties:
+            s += " (" + ",".join("%s=%s" % (k, v) for k, v in self.properties.items()) + ")"
         return s
 
     def __eq__(self, other):

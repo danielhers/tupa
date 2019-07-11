@@ -24,7 +24,7 @@ class Edge:
 
     def __eq__(self, other):
         return other and self.parent.index == other.parent.index and self.child == other.child and \
-               self.tag == other.tag and self.attributes == other.attributes
+               self.tag == other.tag
 
     def __hash__(self):
         return hash((self.parent.index, self.child.index, self.tag))
