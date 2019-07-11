@@ -82,7 +82,7 @@ If you make use of this software, please cite [the following paper](http://aclwe
 
     @InProceedings{hershcovich2017a,
       author    = {Hershcovich, Daniel  and  Abend, Omri  and  Rappoport, Ari},
-      title     = {A Transition-Based Directed Acyclic Graph Parser for UCCA},
+      title     = {A Transition-Based Directed Acyclic Graph Parser for {UCCA}},
       booktitle = {Proc. of ACL},
       year      = {2017},
       pages     = {1127--1138},
