@@ -25,9 +25,9 @@ curl -L --remote-name-all https://github.com/huji-nlp/tupa/releases/download/v1.
 tar xvzf sparse.tgz
 tar xvzf mlp.tgz
 tar xvzf bilstm.tgz
-python -m spacy download en_core_web_lg
+python -m spacy download en
 for TEST_SET in wiki-sentences/test 20k-sentences; do
-    python -m tupa.parse -c sparse -m models/sparse -We $TEST_SET
-    python -m tupa.parse -c mlp -m models/ucca-mlp -We $TEST_SET
-    python -m tupa.parse -c bilstm -m models/ucca-bilstm -We $TEST_SET
+    for MODEL in sparse mlp bilstm; do
+        python -m tupa.parse -c $MODEL -m models/$MODEL -We $TEST_SET
+    done
 done
