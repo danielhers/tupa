@@ -29,22 +29,14 @@ class ParseMode(Enum):
 
 
 class AbstractParser:
-    def __init__(self, config, models, training=False, evaluation=False):
+    def __init__(self, config, model, training=False, evaluation=False):
         self.config = config
-        self.models = models
+        self.model = model
         self.training = training
         self.evaluation = evaluation
         self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = \
             self.num_tokens = self.f1 = 0
         self.started = time.time()
-
-    @property
-    def model(self):
-        return self.models[0]
-
-    @model.setter
-    def model(self, model):
-        self.models[0] = model
 
     @property
     def duration(self):
@@ -76,10 +68,9 @@ class GraphParser(AbstractParser):
         self.oracle = Oracle(self.graph) if self.training or (
                 (self.config.args.verbose > 1 or self.config.args.action_stats)
                 and "nodes" in self.graph) else None
-        for model in self.models:
-            model.init_model(self.config.framework)
-            if ClassifierProperty.require_init_features in model.classifier_properties:
-                model.init_features(self.state, self.training)
+        self.model.init_model(self.config.framework)
+        if ClassifierProperty.require_init_features in self.model.classifier_properties:
+            self.model.init_features(self.state, self.training)
 
     def parse(self, display=True, write=False, accuracies=None):
         self.init()
@@ -165,9 +156,6 @@ class GraphParser(AbstractParser):
             true_keys = None
             is_valid = self.state.is_valid_action
         scores, features = self.model.score(self.state, axis)
-        for model in self.models[1:]:  # Ensemble if given more than one model; align label order and add scores
-            label_scores = dict(zip(model.classifier.labels[axis].all, self.model.score(self.state, axis)[0]))
-            scores += [label_scores.get(a, 0) for a in labels.all]  # Product of Experts, assuming log(softmax)
         self.config.print(lambda: "  %s scores: %s" % (name, tuple(zip(labels.all, scores))), level=4)
         try:
             label = pred = self.predict(scores, labels.all, is_valid)
@@ -182,10 +170,9 @@ class GraphParser(AbstractParser):
                     importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values] or None)
             if not is_correct and self.config.args.early_update:
                 self.state.finished = True
-        for model in self.models:
-            model.classifier.finished_step(self.training)
-            if axis != NODE_LABEL_KEY:
-                model.classifier.transition(label, axis=axis)
+        self.model.classifier.finished_step(self.training)
+        if axis != NODE_LABEL_KEY:
+            self.model.classifier.transition(label, axis=axis)
         return label, pred
 
     def correct(self, axis, label, pred, scores, true, true_keys):
@@ -226,8 +213,6 @@ class GraphParser(AbstractParser):
 
     def finish(self, status, display=True, write=False, accuracies=None):
         self.model.classifier.finished_item(self.training)
-        for model in self.models[1:]:
-            model.classifier.finished_item(renew=False)  # So that dynet.renew_cg happens only once
         if not self.training:
             for framework in self.targets:
                 self.out = self.state.create_graph(framework=framework)
@@ -279,7 +264,7 @@ class BatchParser(AbstractParser):
         id_width = 1
         graphs = self.add_progress_bar(graphs, display=display)
         for i, (graph, overlay) in enumerate(graphs, start=1):
-            parser = GraphParser((graph, overlay), self.config, self.models, self.training, self.evaluation,
+            parser = GraphParser((graph, overlay), self.config, self.model, self.training, self.evaluation,
                                  conllu=conllu[graph.id])
             if self.config.args.verbose and display:
                 progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) if total and i <= total else "%d" % i
@@ -336,10 +321,8 @@ class BatchParser(AbstractParser):
 
 class Parser(AbstractParser):
     """ Main class to implement transition-based meaning representation parser """
-    def __init__(self, model_files=(), config=None):
-        super().__init__(config=config or Config(),
-                         models=list(map(Model, (model_files,) if isinstance(model_files, str) else
-                                         model_files or (config.args.classifier,))))
+    def __init__(self, model_file=None, config=None):
+        super().__init__(config=config or Config(), model=Model(model_file or config.args.classifier))
         self.best_score = self.dev = self.test = self.iteration = self.epoch = self.batch = None
         self.trained = self.save_init = False
         self.accuracies = {}
@@ -392,12 +375,10 @@ class Parser(AbstractParser):
                     elif test:
                         self.model.load()  # Load best model to prepare for test
         else:  # No graphs to train on, just load model
-            for model in self.models:
-                model.load()
+            self.model.load()
             self.print_config()
 
     def init_train(self):
-        assert len(self.models) == 1, "Can only train one model at a time"
         if self.model.is_retrainable:
             try:
                 self.model.load(is_finalized=False)
@@ -470,7 +451,7 @@ class Parser(AbstractParser):
         training = (mode is ParseMode.train)
         if not training and not self.trained:
             yield from self.train()  # Try to load model from file
-        parser = BatchParser(self.config, self.models, training, mode if mode is ParseMode.dev else evaluate)
+        parser = BatchParser(self.config, self.model, training, mode if mode is ParseMode.dev else evaluate)
         for i, graph in enumerate(parser.parse(graphs, display=display, write=write, accuracies=self.accuracies,
                                                conllu=conllu),
                                   start=1):
@@ -493,9 +474,10 @@ def train_test(train_graphs, dev_graphs, test_graphs, args, model_suffix=""):
     :param model_suffix: string to append to model filename before file extension
     :return: generator of Scores objects: dev scores for each training iteration (if given dev), and finally test scores
     """
-    model_files = [base + model_suffix + ext for base, ext in map(os.path.splitext, args.models or (args.classifier,))]
+    base, ext = os.path.splitext(args.model or args.classifier)
+    model_file = base + model_suffix + ext
     conllu = {graph.id: graph for graph, _ in read_graphs_with_progress_bar(args.conllu)}
-    p = Parser(model_files=model_files, config=Config())
+    p = Parser(model_file=model_file, config=Config())
     yield from filter(None, p.train(train_graphs, dev=dev_graphs, test=test_graphs, iterations=args.iterations,
                                     conllu=conllu))
     if test_graphs:
@@ -555,7 +537,7 @@ def generate_and_len(it):
 # noinspection PyTypeChecker,PyStringFormat
 def main_generator():
     args = Config().args
-    assert args.models or args.train or args.folds, "Either --model or --train or --folds is required"
+    assert args.model or args.train or args.folds, "Either --model or --train or --folds is required"
     assert not (args.train or args.dev) or not args.folds, "--train and --dev are incompatible with --folds"
     assert args.train or not args.dev, "--dev is only possible together with --train"
     if args.folds:

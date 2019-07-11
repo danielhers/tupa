@@ -277,8 +277,7 @@ class Config(object, metaclass=Singleton):
         ap.add_argument("-C", "--config", is_config_file=True, help="configuration file to get arguments from")
         ap.add_argument("--conllu", type=FileType("r"), help="file with one MRP per line, to get conllu features from")
         ap.add_argument("--alignment", type=FileType("r", encoding="utf-8"), help="file to get AMR alignments from")
-        ap.add_argument("-m", "--models", nargs="+", help="model file basename(s) to load/save, ensemble if >1 "
-                                                          "(default: <framework>_<model_type>")
+        ap.add_argument("-m", "--model", help="model file basename to load/save (default: <framework>_<model_type>")
         ap.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=BIRNN, help="model type")
         add_boolean_option(ap, "evaluate", "evaluation of parsed graphs", short="e")
         add_verbose_arg(ap, help="detailed parse output")
@@ -329,13 +328,13 @@ class Config(object, metaclass=Singleton):
         if self.args.config:
             print("Loading configuration from '%s'." % self.args.config)
 
-        if self.args.models:
+        if self.args.model:
             if not self.args.log:
-                self.args.log = self.args.models[0] + ".log"
+                self.args.log = self.args.model + ".log"
             if self.args.dev and not self.args.devscores:
-                self.args.devscores = self.args.models[0] + ".dev.csv"
+                self.args.devscores = self.args.model + ".dev.csv"
             if self.args.input and not self.args.testscores:
-                self.args.testscores = self.args.models[0] + ".test.csv"
+                self.args.testscores = self.args.model + ".test.csv"
         elif not self.args.log:
             self.args.log = "parse.log"
         self.sub_configs = []  # Copies to be stored in Models so that they do not interfere with each other
