@@ -24,11 +24,10 @@ class State:
     """
     The parser's state, responsible for applying actions and creating the final Graph
     """
-    def __init__(self, graph=None, conllu=None, alignment=None):
+    def __init__(self, graph=None, conllu=None):
         """
         :param graph: Graph for training, not needed for testing except for getting the graph id
         :param conllu: Graph with node per token predicted by a syntactic parser
-        :param alignment: Graph with node.id corresponding to graph and node.label corresponding to conllu node.id
         """
         if conllu is None:
             raise ValueError("conllu is required for tokens and features")
@@ -38,7 +37,6 @@ class State:
         self.finished = False
         self.graph = graph
         self.conllu = conllu
-        self.alignment = alignment
         self.labeled = bool(graph and graph.nodes)
         self.terminals = [StateNode(i, text=node.label, orig_node=node)  # Virtual nodes for tokens
                           for i, node in enumerate(conllu.nodes)]

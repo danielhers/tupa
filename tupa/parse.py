@@ -53,8 +53,7 @@ class GraphParser(AbstractParser):
         self.conllu = conllu
         self.alignment = alignment
         self.out = self.graph
-        self.framework = self.graph.framework if self.training or self.evaluation else min(self.model.frameworks)
-        self.target = target or self.framework
+        self.framework = target or self.graph.framework
         if self.config.args.bert_multilingual is not None:
             self.lang = self.graph.lang
             assert self.lang, "Attribute 'lang' is required per passage when using multilingual BERT"
@@ -63,11 +62,11 @@ class GraphParser(AbstractParser):
 
     def init(self):
         self.config.set_framework(self.framework)
-        self.state = State(self.graph, self.conllu, self.alignment)
-        # Graph is considered labeled if there are any edges or node labels in it
-        self.oracle = Oracle(self.graph) if self.training or (
+        self.state = State(self.graph, self.conllu)
+        # Graph is considered labeled if there are any nodes in it
+        self.oracle = Oracle(self.graph, self.conllu, self.alignment) if self.training or (
                 (self.config.args.verbose > 1 or self.config.args.action_stats)
-                and "nodes" in self.graph) else None
+                and self.state.labeled) else None
         self.model.init_model(self.config.framework)
         if ClassifierProperty.require_init_features in self.model.classifier_properties:
             self.model.init_features(self.state, self.training)
@@ -215,7 +214,7 @@ class GraphParser(AbstractParser):
     def finish(self, status, display=True, write=False, accuracies=None):
         self.model.classifier.finished_item(self.training)
         if not self.training:
-            self.out = self.state.create_graph(framework=self.target)
+            self.out = self.state.create_graph(framework=self.framework)
         if write:
             json.dump(self.out.encode(), self.config.args.output, indent=None, ensure_ascii=False)
         if display:
