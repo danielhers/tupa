@@ -35,6 +35,7 @@ tar xvzf ucca-ud.-bilstm-1.3.2.tar.gz
 tar xvzf ucca-amr-dm-bilstm-1.3.2.tar.gz
 tar xvzf ucca-amr-ud.-bilstm-1.3.2.tar.gz
 tar xvzf ucca-amr-dm-ud.-bilstm-1.3.2.tar.gz
+export SPACY_MODEL_EN=en_core_web_lg
 for TEST_SET in wiki-sentences/test 20k-sentences; do
     for AUX in "" -amr -dm -ud++ -amr-dm -amr-ud++ -amr-dm-ud++; do
         python -m tupa -m models/ucca$AUX-bilstm -We $TEST_SET
