@@ -72,8 +72,6 @@ class FeatureTemplateElement:
                            P: number of parents
                            C: number of children
                            I: number of implicit children
-                           E: number of remote children
-                           M: number of remote parents
                            If empty,
                              If the next node comes with the "x" property, the value will be 1 if there is an edge from
                              this node to the next one in the template, or 0 otherwise.
@@ -209,7 +207,7 @@ def head_terminal_height(node, return_height=False):
     node = head = node
     h = 0
     while head.text is None:  # Not a terminal
-        edges = [edge for edge in node.outgoing if not edge.remote and not edge.child.implicit]
+        edges = [edge for edge in node.outgoing if not edge.child.implicit]
         if not edges or h > MAX_HEIGHT:
             head = h = None
             break
@@ -279,8 +277,6 @@ NODE_PROP_GETTERS = {
     "P": lambda node, *_: len(node.incoming),
     "C": lambda node, *_: len(node.outgoing),
     "I": lambda node, *_: sum(1 for n in node.children if n.implicit),
-    "E": lambda node, *_: sum(1 for e in node.outgoing if e.remote),
-    "M": lambda node, *_: sum(1 for e in node.incoming if e.remote),
 }
 
 

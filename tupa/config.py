@@ -17,7 +17,7 @@ NOOP = "noop"
 NN_CLASSIFIERS = (BIRNN,)
 CLASSIFIERS = (BIRNN, NOOP)
 
-FEATURE_PROPERTIES = "wmtudhencpqxyAPCIEM"
+FEATURE_PROPERTIES = "wmtudhencpqxyAPCI"
 
 # Swap types
 REGULAR = "regular"
@@ -100,7 +100,6 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add_boolean(group, "node-labels", "prediction of node labels, if supported by framework", default=True)
 
     group = ap.add_argument_group(title="Structural constraints")
-    add_boolean(group, "remote", "remote edges", default=True)
     add_boolean(group, "constraints", "scheme-specific rules", default=True)
     add_boolean(group, "require-connected", "constraint that output graph must be connected")
     add(group, "--orphan-label", default="orphan", help="edge label to use for nodes without parents")

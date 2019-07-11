@@ -48,10 +48,6 @@ class Action(dict):
         return Action(self.type, *args, **kwargs)
 
     @property
-    def remote(self):
-        return self.is_type(Actions.RemoteNode, Actions.LeftRemote, Actions.RightRemote)
-
-    @property
     def is_swap(self):
         return self.is_type(Actions.Swap)
 
@@ -59,14 +55,11 @@ class Action(dict):
 class Actions(Labels):
     Shift = Action("SHIFT")
     Node = Action("NODE")
-    RemoteNode = Action("REMOTE-NODE")
     Implicit = Action("IMPLICIT")
     Label = Action("LABEL")
     Reduce = Action("REDUCE")
     LeftEdge = Action("LEFT-EDGE")
     RightEdge = Action("RIGHT-EDGE")
-    LeftRemote = Action("LEFT-REMOTE")
-    RightRemote = Action("RIGHT-REMOTE")
     Swap = Action("SWAP")
     Finish = Action("FINISH")
 

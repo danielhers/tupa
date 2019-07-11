@@ -108,7 +108,7 @@ class State:
             self.check(self.constraints.allow_root_terminal_children or p is not self.root or c.text is None,
                        message and "Terminal child '%s' for root" % c, is_type=True)
             if self.constraints.multigraph:  # Nodes may be connected by more than one edge
-                edge = Edge(p, c, t, remote=action.remote)
+                edge = Edge(p, c, t)
                 self.check(self.constraints.allow_edge(edge), message and "Edge not allowed: %s (currently: %s)" % (
                                edge, ", ".join(map(str, p.outgoing)) or "childless"))
             else:  # Simple graph, i.e., no more than one edge between the same pair of nodes
@@ -226,7 +226,7 @@ class State:
                 parent = action.node = self.add_node(orig_node=action.orig_node)
             if child is None:
                 child = action.node = self.add_node(orig_node=action.orig_node, implicit=True)
-            action.edge = self.add_edge(Edge(parent, child, tag, remote=action.remote))
+            action.edge = self.add_edge(Edge(parent, child, tag))
             if action.node:
                 self.buffer.appendleft(action.node)
         elif action.is_type(Actions.Shift):  # Push buffer head to stack; shift buffer
@@ -285,9 +285,9 @@ class State:
         return edge
     
     PARENT_CHILD = (
-        ((Actions.LeftEdge, Actions.LeftRemote), (-1, -2)),
-        ((Actions.RightEdge, Actions.RightRemote), (-2, -1)),
-        ((Actions.Node, Actions.RemoteNode), (None, -1)),
+        ((Actions.LeftEdge,), (-1, -2)),
+        ((Actions.RightEdge,), (-2, -1)),
+        ((Actions.Node,), (None, -1)),
         ((Actions.Implicit,), (-1, None)),
     )
 

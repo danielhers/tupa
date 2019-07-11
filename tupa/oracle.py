@@ -6,14 +6,14 @@ from .states.state import InvalidActionError
 RIGHT = PARENT = NODE = 0
 LEFT = CHILD = EDGE = 1
 LABEL = 2
-ACTIONS = (  # index by [NODE/EDGE][PARENT/CHILD or RIGHT/LEFT][True/False (remote)]
+ACTIONS = (  # index by [NODE/EDGE][PARENT/CHILD or RIGHT/LEFT]
     (  # node actions
-        (Actions.Node, Actions.RemoteNode),  # creating a parent
-        (Actions.Implicit, None)  # creating a child (remote implicit is not allowed)
+        Actions.Node,  # creating a parent
+        Actions.Implicit  # creating a child
     ),
     (  # edge actions
-        (Actions.RightEdge, Actions.RightRemote),  # creating a right edge
-        (Actions.LeftEdge, Actions.LeftRemote)  # creating a left edge
+        Actions.RightEdge,  # creating a right edge
+        Actions.LeftEdge  # creating a left edge
     )
 )
 
@@ -26,7 +26,8 @@ class Oracle:
     """
     def __init__(self, graph):
         self.args = Config().args
-        self.nodes_remaining = {n.id for n in graph.nodes}
+        tops = [node for node in graph.nodes if node.is_top]
+        self.nodes_remaining = {n.id for n in graph.nodes if n is not tops[0]}
         self.edges_remaining = {e for n in graph.nodes for e in n.outgoing_edges}
         self.graph = graph
         self.found = False
@@ -83,16 +84,11 @@ class Oracle:
 
                 # Check for actions to create new nodes
                 for edge in incoming:
-                    if edge.src in self.nodes_remaining and not self.is_implicit_node(edge.src) and (
-                                not is_remote_edge(edge) or
-                                # Allow remote parent if all its children are remote/implicit
-                                all(is_remote_edge(e) or self.is_implicit_node(e.tgt)
-                                    for e in self.graph.find_node(edge.src).outgoing_edges)):
-                        yield self.action(edge, NODE, PARENT)  # Node or RemoteNode
+                    if edge.src in self.nodes_remaining and not self.is_implicit_node(edge.src):
+                        yield self.action(edge, NODE, PARENT)  # Node
 
                 for edge in outgoing:
-                    if edge.tgt in self.nodes_remaining and self.is_implicit_node(edge.tgt) and (
-                            not is_remote_edge(edge)):  # Allow implicit child if it is not remote
+                    if edge.tgt in self.nodes_remaining and self.is_implicit_node(edge.tgt):
                         yield self.action(edge, NODE, CHILD)  # Implicit
 
                 if len(state.stack) > 1:
@@ -105,11 +101,11 @@ class Oracle:
                     # Check for actions to create binary edges
                     for edge in incoming:
                         if edge.src == s1.id:
-                            yield self.action(edge, EDGE, RIGHT)  # RightEdge or RightRemote
+                            yield self.action(edge, EDGE, RIGHT)  # RightEdge
 
                     for edge in outgoing:
                         if edge.tgt == s1.id:
-                            yield self.action(edge, EDGE, LEFT)  # LeftEdge or LeftRemote
+                            yield self.action(edge, EDGE, LEFT)  # LeftEdge
                         elif state.buffer and edge.tgt == state.buffer[0].id and \
                                 len(state.buffer[0].orig_node.incoming_edges) == 1:
                             yield self.action(Actions.Shift)  # Special case to allow discarding simple children quickly
@@ -141,7 +137,7 @@ class Oracle:
         if kind == LABEL:
             return Actions.Label(direction, orig_node=edge.orig_node, oracle=self)
         node = self.graph.find_node((edge.src, edge.tgt)[direction]) if kind == NODE else None
-        return ACTIONS[kind][direction][is_remote_edge(edge)](tag=edge.lab, orig_edge=edge, orig_node=node, oracle=self)
+        return ACTIONS[kind][direction](tag=edge.lab, orig_edge=edge, orig_node=node, oracle=self)
 
     def remove(self, edge, node=None):
         self.edges_remaining.discard(edge)
@@ -177,10 +173,3 @@ class Oracle:
 
     def is_terminal_edge(self, edge):
         return bool(self.graph.find_node(edge.tgt).anchors)
-
-
-def is_remote_edge(edge):
-    for p, v in zip(edge.attributes or [], edge.values or []):
-        if p == "remote":
-            return v in ("true", True)
-    return False
