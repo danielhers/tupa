@@ -1,6 +1,6 @@
 from collections import deque
 
-from graph import Graph, Node
+from graph import Graph
 from semstr.constraints import Constraints, Direction
 from semstr.validation import CONSTRAINTS
 
@@ -9,7 +9,8 @@ from .node import StateNode
 from ..action import Actions
 from ..config import Config
 
-ROOT = "root"
+ROOT_ID = -1
+ROOT_LAB = "top"
 ANCHOR = "anchor"
 DEFAULT_LABEL = "name"
 
@@ -45,7 +46,11 @@ class State:
         self.nodes = []
         self.heads = set()
         self.need_label = None  # If we are waiting for label_node() to be called, which node is to be labeled by it
-        self.root = self.add_node(is_root=True, orig_node=Node(0))  # Virtual root whose children will be top nodes
+        root_node = self.graph.add_node(ROOT_ID)
+        for node in self.graph.nodes:
+            if node.is_top:
+                self.graph.add_edge(ROOT_ID, node.id, ROOT_LAB)
+        self.root = self.add_node(is_root=True, orig_node=root_node)  # Virtual root whose children are top nodes
         self.stack.append(self.root)
         self.buffer += self.terminals
         self.actions = []  # History of applied actions

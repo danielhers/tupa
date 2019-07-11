@@ -23,13 +23,12 @@ class Oracle:
     Oracle to produce gold transition parses given MRP graphs
     To be used for creating training data for a transition-based meaning representation parser
     :param graph: gold Graph to get the correct nodes and edges from
-    :param conllu: Graph with node per token predicted by a syntactic parser
+    :param conllu: Graph with node per token predicted by a tokenizer
     """
     def __init__(self, graph, conllu=None):
         self.args = Config().args
         self.nodes_remaining = {n.id for n in graph.nodes}
         self.edges_remaining = set(graph.edges)
-        self.tops_remaining = {n.id for n in graph.nodes if n.is_top}
         self.graph = graph
         self.conllu = conllu
         self.found = False
