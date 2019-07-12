@@ -44,15 +44,14 @@ class DenseFeatureExtractor(FeatureExtractor):
     """
     Extracts features from the parser state for classification. To be used with a NeuralNetwork classifier.
     """
-    def __init__(self, params, indexed, node_dropout=0, init_params=True, omit_features=None):
+    def __init__(self, params, node_dropout=0, init_params=True, omit_features=None):
         super().__init__(feature_templates=FEATURE_TEMPLATES, omit_features=omit_features)
-        self.indexed = indexed
         self.node_dropout = node_dropout
         if init_params:
             self.params = OrderedDict((k, p) for k, p in [(NumericFeatureParameters.SUFFIX, NumericFeatureParameters(1))
                                                           ] + list(params.items()))
             for param in self.params.values():
-                self.update_param_indexed(param)
+                param.indexed = param.prop in INDEXED
             num_values = self.num_values()
             for key, param in self.params.items():
                 param.num = num_values[key]
@@ -62,14 +61,11 @@ class DenseFeatureExtractor(FeatureExtractor):
     
     def init_param(self, key):
         param = self.params[key]
-        self.update_param_indexed(param)
+        param.indexed = param.prop in INDEXED
         param.num = self.num_values()[key]
 
     def num_values(self):
         return {k: len(v) for k, v in self.param_values(all_params=True).items()}
-
-    def update_param_indexed(self, param):
-        param.indexed = self.indexed and param.prop in INDEXED
 
     @property
     def feature_template(self):
@@ -136,7 +132,7 @@ class DenseFeatureExtractor(FeatureExtractor):
         return ret
 
     def finalize(self):
-        return type(self)(FeatureParameters.copy(self.params, UnknownDict), self.indexed, init_params=False,
+        return type(self)(FeatureParameters.copy(self.params, UnknownDict), init_params=False,
                           omit_features=self.omit_features)
 
     def unfinalize(self):
