@@ -1,7 +1,7 @@
+import re
 from itertools import groupby
 
 import dynet as dy
-import re
 
 from .constants import ACTIVATIONS, INITIALIZERS, CategoricalParameter
 from .sub_model import SubModel
@@ -147,8 +147,9 @@ class MultilayerPerceptron(SubModel):
         self.config.print("Loading MLP: %s" % self, level=4)
 
     def verify_dims(self):
+        assert self.params, "No MLP parameters found for %s" % ("/".join(self.save_path))
         if self.layers > 0:
-            self.verify_dim("input_dim", sum(W.as_array().shape[1] for W in map(self.params.get, ("W0", "W0+")) if W))
+            self.verify_dim("input_dim", self.params["W0"].as_array().shape[1])
             self.verify_dim("output_dim", self.params["W" + str(self.layers - 1)].as_array().shape[0])
             if self.num_labels:
                 self.verify_dim("num_labels", self.params["W" + str(self.layers)].as_array().shape[0])
