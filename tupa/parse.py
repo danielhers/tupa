@@ -65,13 +65,16 @@ class GraphParser(AbstractParser):
             assert self.lang, "Attribute 'lang' is required per passage when using multilingual BERT"
         self.state_hash_history = set()
         self.state = self.oracle = None
-        if self.alignment:  # Copy alignments to anchors, updating graph
-            for alignment_node in self.alignment.nodes:
-                node = self.graph.find_node(alignment_node.id)
-                if node.anchors is None:
-                    node.anchors = []
-                for conllu_node_id in alignment_node.label:
-                    node.anchors += conllu.find_node(conllu_node_id).anchors
+        if self.framework == "amr":
+            if self.alignment:  # Copy alignments to anchors, updating graph
+                for alignment_node in self.alignment.nodes:
+                    node = self.graph.find_node(alignment_node.id)
+                    if node.anchors is None:
+                        node.anchors = []
+                    for conllu_node_id in alignment_node.label:
+                        node.anchors += conllu.find_node(conllu_node_id).anchors
+            else:
+                raise ValueError("No alignment found for AMR graph " + self.graph.id)
 
     def init(self):
         self.config.set_framework(self.framework)
