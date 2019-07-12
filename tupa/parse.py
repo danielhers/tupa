@@ -5,6 +5,7 @@ import sys
 import time
 from collections import defaultdict
 from enum import Enum
+from itertools import chain
 
 import score
 from main import read_graphs
@@ -51,7 +52,8 @@ class GraphParser(AbstractParser):
         """
         :param graph: gold Graph to get the correct nodes and edges from (in training), or just to get id from (in test)
         :param conllu: Graph with node per token predicted by a syntactic parser
-        :param alignment: Graph with node.id corresponding to graph and node.label corresponding to conllu node.id
+        :param alignment: Graph with node.id corresponding to graph node id, node.label to conllu node.id (node align),
+                          node properties to graph edge labs, and node property values to conllu node.id (edge align)
         :param target: framework to parse to
         """
         super().__init__(*args, **kwargs)
@@ -71,8 +73,12 @@ class GraphParser(AbstractParser):
                     node = self.graph.find_node(alignment_node.id)
                     if node.anchors is None:
                         node.anchors = []
-                    for conllu_node_id in alignment_node.label:
-                        node.anchors += conllu.find_node(conllu_node_id).anchors
+                    for conllu_node_id in (alignment_node.label or []) + list(chain(*alignment_node.values or [])):
+                        conllu_node = conllu.find_node(conllu_node_id)
+                        if conllu_node is None:
+                            raise ValueError("Alignments incompatible with tokenization: token %s "
+                                             "not found in graph %s" % (conllu_node_id, self.graph.id))
+                        node.anchors += conllu_node.anchors
             else:
                 raise ValueError("No alignment found for AMR graph " + self.graph.id)
 
