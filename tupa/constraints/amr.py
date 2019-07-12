@@ -8,20 +8,13 @@ from word2number import w2n
 
 from .validation import Constraints, Valid
 
-COMMENT_PREFIX = "#"
-DEP_PREFIX = ":"
-TOP_DEP = ":top"
-ALIGNMENT_PREFIX = "e."
-ALIGNMENT_SEP = ","
 PLACEHOLDER_PATTERN = re.compile(r"<[^>]*>")
-SKIP_TOKEN_PATTERN = re.compile(r"[<>@]+")
 NUM_PATTERN = re.compile(r"[+-]?\d+(\.\d+)?")
 INT_PATTERN = re.compile(r"[+-]?(\d+)")
 TOKEN_PLACEHOLDER = "<t>"
 TOKEN_TITLE_PLACEHOLDER = "<T>"
 LEMMA_PLACEHOLDER = "<l>"
 NEGATION_PLACEHOLDER = "<n>"
-LABEL_ATTRIB = "label"
 LABEL_SEPARATOR = "|"  # after the separator there is the label category
 PUNCTUATION_REMOVER = str.maketrans("", "", string.punctuation)
 PREFIXED_RELATION_ENUM = ("op", "snt")
@@ -30,7 +23,6 @@ PREFIXED_RELATION_PATTERN = re.compile(r"(?:(op|snt)\d+|(prep)-\w+)(-of)?")
 PREFIXED_RELATION_SUBSTITUTION = r"\1\2\3"
 
 # Specific edge labels (relations)
-INSTANCE = "instance"
 POLARITY = "polarity"
 NAME = "name"
 OP = "op"
@@ -164,13 +156,6 @@ def is_valid_arg(node, label, *tags, is_parent=True):
                                    "valid args: " + ", ".join(valid_args))
 
 
-def get_node_attr(node, attr):
-    try:
-        return getattr(node, attr)
-    except AttributeError:
-        return node.attrib.get(attr)
-
-
 def resolve_label(node, label=None, reverse=False, conservative=False):
     """
     Replace any placeholder in the node's label with the corresponding terminals' text, and remove label category suffix
@@ -190,7 +175,7 @@ def resolve_label(node, label=None, reverse=False, conservative=False):
     read_resources()
 
     if label is None:
-        label = get_node_attr(node, LABEL_ATTRIB)
+        label = node.label
     if label is not None:
         category = None
         if reverse:
@@ -292,11 +277,11 @@ class AmrConstraints(Constraints):
         return edge.tag in PREFIXED_RELATION_ENUM or edge not in edge.parent.outgoing
 
     def allow_parent(self, node, tag):
-        label = get_node_attr(node, LABEL_ATTRIB)
+        label = node.label
         return (label is None or is_concept(label)) and (not tag or is_valid_arg(node, label, tag))
 
     def allow_child(self, node, tag):
-        return not tag or is_valid_arg(node, get_node_attr(node, LABEL_ATTRIB), tag, is_parent=False)
+        return not tag or is_valid_arg(node, node.label, tag, is_parent=False)
 
     def allow_label(self, node, label):
         return not node.parents or \
