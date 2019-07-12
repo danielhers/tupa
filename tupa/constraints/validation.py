@@ -123,6 +123,12 @@ class Constraints:
     def allow_label(self, node, label):
         return True
 
+    def allow_property_value(self, node, property_value):
+        return True
+
+    def allow_attribute_value(self, edge, attribute_value):
+        return True
+
 
 def ucca_constraints(**kwargs):
     from .ucca import UccaConstraints

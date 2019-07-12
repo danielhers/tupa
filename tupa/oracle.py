@@ -1,11 +1,13 @@
 from .action import Actions
-from .config import Config, COMPOUND, requires_node_labels
+from .config import Config, COMPOUND, requires_node_labels, requires_node_properties, requires_edge_attributes
 from .states.state import InvalidActionError
 
 # Constants for readability, used by Oracle.action
 RIGHT = PARENT = NODE = 0
 LEFT = CHILD = EDGE = 1
 LABEL = 2
+PROPERTY = 3
+ATTRIBUTE = 4
 ACTIONS = (  # index by [NODE/EDGE][PARENT/CHILD or RIGHT/LEFT]
     (  # node actions
         Actions.Node,  # creating a parent
@@ -76,7 +78,7 @@ class Oracle:
             s0 = state.stack[-1]
             incoming, outgoing = [[e for e in l if e in self.edges_remaining]
                                   for l in (s0.orig_node.incoming_edges, s0.orig_node.outgoing_edges)]
-            if not incoming and not outgoing and not self.need_label(s0):
+            if not incoming and not outgoing and not self.need_label(s0) and not self.need_property(s0):
                 yield self.action(Actions.Reduce)
             else:
                 # Check for node label action: if all terminals have already been connected
@@ -147,7 +149,15 @@ class Oracle:
 
     def need_label(self, node):
         return requires_node_labels(self.graph.framework) and \
-               not node.labeled and node.text is None and node.orig_node.label
+               node.text is None and node.label is None and node.orig_node.label
+
+    def need_property(self, node):
+        return requires_node_properties(self.graph.framework) and \
+               node.text is None and set(node.orig_node.properties).difference(node.properties or ())
+
+    def need_attribute(self, edge):
+        return requires_edge_attributes(self.graph.framework) and \
+               set(edge.orig_edge.attributes).difference(edge.attributes or ())
 
     def get_label(self, state, node):
         true_label = raw_true_label = None

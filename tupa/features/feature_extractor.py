@@ -5,7 +5,7 @@ from tupa.config import Config, FEATURE_PROPERTIES
 
 FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([%s]*)" % FEATURE_PROPERTIES)
 FEATURE_TEMPLATE_PATTERN = re.compile(r"^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)
-NON_NUMERIC = "wmtudencpA"
+CATEGORICAL = "wmtudencpANE"
 
 
 class FeatureTemplate:
@@ -64,6 +64,8 @@ class FeatureTemplateElement:
                            e: tag of first incoming edge / action tag
                            n: node label
                            c: node label category suffix
+                           N: node property
+                           E: edge attribute
                            p: unique separator punctuation between nodes
                            q: count of any separator punctuation between nodes
                            x: numeric value of gap type
@@ -138,7 +140,7 @@ class FeatureTemplateElement:
         return value
 
     def is_numeric(self, prop):
-        return bool(prop not in NON_NUMERIC or (prop == "d" and self.previous))
+        return bool(prop not in CATEGORICAL or (prop == "d" and self.previous))
 
 
 class FeatureExtractor:
@@ -270,6 +272,9 @@ NODE_PROP_GETTERS = {
     "e": lambda node, prev, binary: next(e.lab for e in node.incoming if not binary or e.parent == prev),
     "n": lambda node, *_: node.label,
     "c": lambda node, *_: node.category,
+    "N": lambda node, *_: ",".join("%s=%s" % (k, v) for k, v in sorted(node.properties.items())),
+    "E": lambda node, *_: next(",".join("%s=%s" % (k, v) for k, v in sorted(e.attributes.items()))
+                               for e in node.incoming),
     "x": lambda node, prev, binary: int(prev in node.parents) if binary else gap_type(node),
     "y": gap_length_sum,
     "P": lambda node, *_: len(node.incoming),

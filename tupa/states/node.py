@@ -18,8 +18,6 @@ class StateNode:
             self.label, _, self.category = label.partition("|")
             if not self.category:
                 self.category = None
-        # Whether a label has been set yet (necessary because None is a valid label too):
-        self.labeled = self.orig_node is not None and self.orig_node.label is None
         self.node_index = int(self.id) if orig_node else None
         self.outgoing = []  # StateEdge list
         self.incoming = []  # StateEdge list

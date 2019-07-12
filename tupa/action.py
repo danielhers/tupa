@@ -57,6 +57,8 @@ class Actions(Labels):
     Node = Action("NODE")
     Implicit = Action("IMPLICIT")
     Label = Action("LABEL")
+    Property = Action("PROPERTY")
+    Attribute = Action("ATTRIBUTE")
     Reduce = Action("REDUCE")
     LeftEdge = Action("LEFT-EDGE")
     RightEdge = Action("RIGHT-EDGE")

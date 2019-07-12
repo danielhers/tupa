@@ -5,7 +5,7 @@ from graph import Graph
 from .edge import StateEdge
 from .node import StateNode
 from ..action import Actions
-from ..config import Config, requires_node_labels, requires_anchors
+from ..config import Config, requires_node_labels, requires_node_properties, requires_edge_attributes, requires_anchors
 from ..constraints.validation import CONSTRAINTS, Constraints, Direction
 
 ROOT_ID = -1
@@ -50,7 +50,7 @@ class State:
         self.buffer = deque()
         self.nodes = []
         self.heads = set()
-        self.need_label = None  # If we are waiting for label_node() to be called, which node is to be labeled by it
+        self.need_label = self.need_property = self.need_attribute = self.last_edge = None  # Which edge/node is next
         root_node = self.graph.add_node(ROOT_ID)
         for node in self.graph.nodes:
             if node.is_top:
@@ -172,8 +172,25 @@ class State:
                 node = None
             self.check(node is not None, message and "Labeling invalid node %s when stack size is %d" % (
                 action.tag, len(self.stack)))
-            self.check(not node.labeled, message and "Labeling already-labeled node: %s" % node, is_type=True)
+            self.check(node.label is not None, message and "Labeling already-labeled node: %s" % node, is_type=True)
             self.check(node.text is None, message and "Terminals do not have labels: %s" % node, is_type=True)
+
+        def _check_possible_property():
+            self.check(requires_node_properties(self.graph.framework), message and "Node properties disabled",
+                       is_type=True)
+            try:
+                node = self.stack[-action.tag]
+            except IndexError:
+                node = None
+            self.check(node is not None, message and "Setting property on invalid node %s when stack size is %d" % (
+                action.tag, len(self.stack)))
+            self.check(node.text is None, message and "Terminals do not have properties: %s" % node, is_type=True)
+
+        def _check_possible_attribute():
+            self.check(requires_edge_attributes(self.graph.framework), message and "Edge attributes disabled",
+                       is_type=True)
+            self.check(self.last_edge is not None, message and "Setting attribute on edge when no edge exists",
+                       is_type=True)
 
         if self.args.constraints:
             self.check(self.constraints.allow_action(action, self.actions),
@@ -187,7 +204,7 @@ class State:
             for n in self.nodes:
                 self.check(not self.args.require_connected or n is self.root or n.text or
                            n.incoming, message and "Non-terminal %s has no parent at parse end" % n, is_type=True)
-                self.check(not requires_node_labels(self.framework) or n.text or n.labeled,
+                self.check(not requires_node_labels(self.framework) or n.text or n.label is not None,
                            message and "Non-terminal %s has no label at parse end" % n, is_type=True)
         else:
             self.check(self.action_ratio() < self.args.max_action_ratio,
@@ -196,12 +213,16 @@ class State:
                 self.check(self.buffer, message and "Shifting from empty buffer", is_type=True)
             elif action.is_type(Actions.Label):
                 _check_possible_label()
+            elif action.is_type(Actions.Property):
+                _check_possible_property()
+            elif action.is_type(Actions.Attribute):
+                _check_possible_attribute()
             else:   # Unary actions
                 self.check(self.stack, message and "%s with empty stack" % action, is_type=True)
                 s0 = self.stack[-1]
                 if action.is_type(Actions.Reduce):
                     if s0 is self.root:
-                        self.check(self.root.labeled or not requires_node_labels(self.framework),
+                        self.check(self.root.label is not None or not requires_node_labels(self.framework),
                                    message and "Reducing root without label", is_type=True)
                     elif not s0.text:
                         self.check(not self.args.require_connected or s0.incoming,
@@ -210,7 +231,7 @@ class State:
                                    s0.outgoing_labs.intersection(self.constraints.required_outgoing),
                                    message and "Reducing non-terminal %s without %s edge" % (
                                        s0, self.constraints.required_outgoing), is_type=True)
-                    self.check(not requires_node_labels(self.framework) or s0.text or s0.labeled,
+                    self.check(not requires_node_labels(self.framework) or s0.text or s0.label is not None,
                                message and "Reducing non-terminal %s without label" % s0, is_type=True)
                 elif action.is_type(Actions.Swap):
                     # A regular swap is possible since the stack has at least two elements;
@@ -255,6 +276,40 @@ class State:
             valid = self.constraints.allow_label(self.need_label, label)
             self.check(valid, message and "May not label %s as %s: %s" % (self.need_label, label, valid))
 
+    def is_valid_property_value(self, property_value):
+        """
+        :param property_value: property_value to check for validity
+        :return: is the property_value valid in the current state?
+        """
+        try:
+            self.check_valid_property_value(property_value)
+        except InvalidActionError:
+            return False
+        return True
+
+    def check_valid_property_value(self, property_value, message=False):
+        if self.args.constraints and property_value is not None:
+            valid = self.constraints.allow_property_value(self.need_property, property_value)
+            self.check(valid, message and "May not set property value for %s to %s: %s" % (
+                self.need_property, property_value, valid))
+
+    def is_valid_attribute_value(self, attribute_value):
+        """
+        :param attribute_value: attribute_value to check for validity
+        :return: is the attribute_value valid in the current state?
+        """
+        try:
+            self.check_valid_attribute_value(attribute_value)
+        except InvalidActionError:
+            return False
+        return True
+
+    def check_valid_attribute_value(self, attribute_value, message=False):
+        if self.args.constraints and attribute_value is not None:
+            valid = self.constraints.allow_attribute_value(self.need_attribute, attribute_value)
+            self.check(valid, message and "May not set attribute value for %s to %s: %s" % (
+                self.need_attribute, attribute_value, valid))
+
     @staticmethod
     def check(condition, *args, **kwargs):
         if not condition:
@@ -275,13 +330,17 @@ class State:
                 parent = action.node = self.add_node(orig_node=action.orig_node)
             if child is None:
                 child = action.node = self.add_node(orig_node=action.orig_node)
-            action.edge = self.add_edge(StateEdge(parent, child, tag))
+            action.edge = self.add_edge(StateEdge(parent, child, tag, orig_edge=action.orig_edge))
             if action.node:
                 self.buffer.appendleft(action.node)
         elif action.is_type(Actions.Shift):  # Push buffer head to stack; shift buffer
             self.stack.append(self.buffer.popleft())
         elif action.is_type(Actions.Label):
             self.need_label = self.stack[-action.tag]  # The parser is responsible to choose a label and set it
+        elif action.is_type(Actions.Property):
+            self.need_property = self.stack[-action.tag]  # The parser is responsible to choose a property and set it
+        elif action.is_type(Actions.Attribute):
+            self.need_attribute = self.last_edge  # The parser is responsible to choose an attribute and set it
         elif action.is_type(Actions.Reduce):  # Pop stack (no more edges to create with this node)
             self.stack.pop()
         elif action.is_type(Actions.Swap):  # Place second (or more) stack item back on the buffer
@@ -331,33 +390,53 @@ class State:
         edge.add()
         self.heads.discard(edge.child)
         self.log.append("edge: %s" % edge)
+        self.last_edge = edge
         return edge
     
     PARENT_CHILD = (
-        ((Actions.LeftEdge,), (-1, -2)),
-        ((Actions.RightEdge,), (-2, -1)),
-        ((Actions.Node,), (None, -1)),
-        ((Actions.Implicit,), (-1, None)),
+        (Actions.LeftEdge, (-1, -2)),
+        (Actions.RightEdge, (-2, -1)),
+        (Actions.Node, (None, -1)),
+        (Actions.Implicit, (-1, None)),
     )
 
     def get_parent_child_tag(self, action):
         try:
-            for types, indices in self.PARENT_CHILD:
-                if action.is_type(*types):
+            for action_type, indices in self.PARENT_CHILD:
+                if action.is_type(action_type):
                     parent, child = [None if i is None else self.stack[i] for i in indices]
                     break
             else:
                 return None
-            return parent, child, action.tag  # In unlabeled parsing, keep a valid graph
+            return parent, child, action.tag
         except IndexError:
             return None
 
-    def label_node(self, label):
+    def assign_node_label(self, label):
+        assert self.need_label is not None, "Called assign_node_label() when need_label is None"
+        assert label is not None, "Labeling node %s with None label" % self.need_label
         self.need_label.label = label
-        self.need_label.labeled = True
         self.log.append("label: %s" % self.need_label)
         self.type_validity_cache = {}
         self.need_label = None
+
+    def assign_edge_attribute(self, attribute_value):
+        assert self.need_attribute is not None, "Called assign_edge_attribute() when need_attribute is None"
+        assert attribute_value is not None, "Assigning edge %s with None attribute-value pair" % self.need_attribute
+        attrib, value = attribute_value.split("=")
+        self.need_attribute.attributes[attrib] = value
+        self.log.append("attribute: %s" % self.need_attribute)
+        self.type_validity_cache = {}
+        self.need_attribute = None
+
+    def assign_node_property(self, property_value):
+        assert self.need_property is not None, "Called assign_node_property() when need_property is None"
+        assert property_value is not None, "Assigning node %s with None property-value pair" % self.need_property
+        prop, value = property_value.split("=")
+        self.need_property.properties[prop] = value
+        self.log.append("property: %s" % self.need_property)
+        self.type_validity_cache = {}
+        self.need_property = None
 
     def node_ratio(self):
         return (len(self.nodes) / len(self.terminals) - 1) if self.terminals else 0

@@ -14,10 +14,9 @@ from tupa.model_util import load_enum
 
 BIRNN = "bilstm"
 NOOP = "noop"
-NN_CLASSIFIERS = (BIRNN,)
 CLASSIFIERS = (BIRNN, NOOP)
 
-FEATURE_PROPERTIES = "wmtudhencpqxyAPC"
+FEATURE_PROPERTIES = "wmtudhencpqxyANEPC"
 
 # Swap types
 REGULAR = "regular"
@@ -517,7 +516,7 @@ class Config(object, metaclass=Singleton):
                 and (args.swap or "swap_" not in k)
                 and (args.swap == COMPOUND or k != "max_swap")
                 and (not args.require_connected or k != "orphan_label")
-                and (args.classifier in NN_CLASSIFIERS or k not in NN_ARG_NAMES | DYNET_ARG_NAMES)
+                and (args.classifier == BIRNN or k not in NN_ARG_NAMES | DYNET_ARG_NAMES)
                 and k != "graphs"]
 
     def __str__(self):
@@ -527,6 +526,14 @@ class Config(object, metaclass=Singleton):
 
 def requires_node_labels(framework):
     return framework != "ucca"
+
+
+def requires_node_properties(framework):
+    return framework != "ucca"
+
+
+def requires_edge_attributes(framework):
+    return framework == "ucca"
 
 
 def requires_anchors(framework):

@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from .action import Actions
 from .classifiers.classifier import Classifier
-from .config import Config, SEPARATOR, NOOP, requires_node_labels
+from .config import Config, SEPARATOR, NOOP, requires_node_labels, requires_node_properties, requires_edge_attributes
 from .features.feature_params import FeatureParameters
 from .model_util import UnknownDict, AutoIncrementDict, remove_backup
 
@@ -57,6 +57,8 @@ class ParameterDefinition:
 
 
 NODE_LABEL_KEY = "n"
+NODE_PROPERTY_KEY = "N"
+EDGE_ATTRIBUTE_KEY = "E"
 
 
 NODE_LABEL_PARAM_DEFS = [
@@ -168,6 +170,10 @@ class Model:
         axes = [self.axis]
         if requires_node_labels(state.framework):
             axes.append(NODE_LABEL_KEY)
+        if requires_node_properties(state.framework):
+            axes.append(NODE_PROPERTY_KEY)
+        if requires_edge_attributes(state.framework):
+            axes.append(EDGE_ATTRIBUTE_KEY)
         tokens = [node.label for node in state.graph.nodes if node.anchors]
         lang = getattr(state.graph, "lang", None)
         self.classifier.init_features(self.feature_extractor.init_features(state), axes, train, tokens, lang)

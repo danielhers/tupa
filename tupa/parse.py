@@ -164,7 +164,7 @@ class GraphParser(AbstractParser):
         if need_label:
             true_label, raw_true_label = self.get_true_label(action or need_label)
             label, predicted_label = self.choose(true_label, NODE_LABEL_KEY, "node label")
-            self.state.label_node(raw_true_label if label == true_label else label)
+            self.state.assign_node_label(raw_true_label if label == true_label else label)
         return need_label, label, predicted_label, true_label
 
     def choose(self, true, axis=None, name="action"):
