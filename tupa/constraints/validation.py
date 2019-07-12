@@ -109,7 +109,7 @@ class Constraints:
              for t1, t2 in set_prod(mutually_exclusive_outgoing)]
 
     def allow_action(self, action, history):
-        return history or action.lab is None  # First action must not create nodes/edges
+        return history or action.tag is None  # First action must not create nodes/edges
 
     def allow_edge(self, edge):
         return True
