@@ -4,9 +4,9 @@ from graph import Graph
 
 from .edge import StateEdge
 from .node import StateNode
-from .validation.validation import CONSTRAINTS, Constraints, Direction
 from ..action import Actions
 from ..config import Config
+from ..constraints.validation import CONSTRAINTS, Constraints, Direction
 
 ROOT_ID = -1
 ROOT_LAB = "top"
