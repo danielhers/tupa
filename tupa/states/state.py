@@ -88,7 +88,7 @@ class State:
                     if framework != "amr":
                         if node.anchors is None:
                             node.anchors = []
-                        node.anchors += edge.child.orig_node.anchors
+                        node.anchors += edge.child.orig_node.anchors()
                 else:
                     attributes, values = zip(*edge.attributes.items()) if edge.attributes else (None, None)
                     graph.add_edge(int(edge.parent.id), int(edge.child.id), edge.lab,
