@@ -1,0 +1,88 @@
+# Built by Ulf Hermjakob, USC/ISI - March 15, 2016
+USE-HAVE-REL-ROLE-91-ARG2 ancestor
+USE-HAVE-REL-ROLE-91-ARG2 aunt
+USE-HAVE-REL-ROLE-91-ARG2 best-man
+USE-HAVE-REL-ROLE-91-ARG2 boss
+USE-HAVE-REL-ROLE-91-ARG2 boyfriend
+USE-HAVE-REL-ROLE-91-ARG2 bro :standard brother
+USE-HAVE-REL-ROLE-91-ARG2 brother
+USE-HAVE-REL-ROLE-91-ARG2 brother-in-law
+USE-HAVE-REL-ROLE-91-ARG2 buddy
+USE-HAVE-REL-ROLE-91-ARG2 child :sense relational-sense-only
+USE-HAVE-REL-ROLE-91-ARG2 client
+USE-HAVE-REL-ROLE-91-ARG2 comrade
+USE-HAVE-REL-ROLE-91-ARG2 cousin
+USE-HAVE-REL-ROLE-91-ARG2 dad :standard father
+USE-HAVE-REL-ROLE-91-ARG2 daddy :standard father
+USE-HAVE-REL-ROLE-91-ARG2 daughter
+USE-HAVE-REL-ROLE-91-ARG2 daughter-in-law
+USE-HAVE-REL-ROLE-91-ARG2 descendant
+USE-HAVE-REL-ROLE-91-ARG2 enemy
+USE-HAVE-REL-ROLE-91-ARG2 father
+USE-HAVE-REL-ROLE-91-ARG2 father-in-law
+USE-HAVE-REL-ROLE-91-ARG2 friend
+USE-HAVE-REL-ROLE-91-ARG2 girlfriend
+USE-HAVE-REL-ROLE-91-ARG2 godchild
+USE-HAVE-REL-ROLE-91-ARG2 goddaughter
+USE-HAVE-REL-ROLE-91-ARG2 godfather
+USE-HAVE-REL-ROLE-91-ARG2 godmother
+USE-HAVE-REL-ROLE-91-ARG2 godparent
+USE-HAVE-REL-ROLE-91-ARG2 godson
+USE-HAVE-REL-ROLE-91-ARG2 grandchild
+USE-HAVE-REL-ROLE-91-ARG2 granddad :standard grandfather
+USE-HAVE-REL-ROLE-91-ARG2 granddaddy :standard grandfather
+USE-HAVE-REL-ROLE-91-ARG2 granddaughter
+USE-HAVE-REL-ROLE-91-ARG2 grandfather
+USE-HAVE-REL-ROLE-91-ARG2 grandma :standard grandmother
+USE-HAVE-REL-ROLE-91-ARG2 grandmother
+USE-HAVE-REL-ROLE-91-ARG2 granny :standard grandmother
+USE-HAVE-REL-ROLE-91-ARG2 grandpa :standard grandfather
+USE-HAVE-REL-ROLE-91-ARG2 grandparent
+USE-HAVE-REL-ROLE-91-ARG2 grandson
+USE-HAVE-REL-ROLE-91-ARG2 housemate
+USE-HAVE-REL-ROLE-91-ARG2 husband
+USE-HAVE-REL-ROLE-91-ARG2 in-law # as in "my in-laws"
+USE-HAVE-REL-ROLE-91-ARG2 kid :standard child :sense relational-sense-only
+USE-HAVE-REL-ROLE-91-ARG2 landlord
+USE-HAVE-REL-ROLE-91-ARG2 maid-of-honor
+USE-HAVE-REL-ROLE-91-ARG2 mate
+USE-HAVE-REL-ROLE-91-ARG2 mom :standard mother
+USE-HAVE-REL-ROLE-91-ARG2 mommy :standard mother
+USE-HAVE-REL-ROLE-91-ARG2 mother
+USE-HAVE-REL-ROLE-91-ARG2 mother-in-law
+USE-HAVE-REL-ROLE-91-ARG2 mum :standard mother
+USE-HAVE-REL-ROLE-91-ARG2 mummy :standard mother
+USE-HAVE-REL-ROLE-91-ARG2 nephew
+USE-HAVE-REL-ROLE-91-ARG2 niece
+USE-HAVE-REL-ROLE-91-ARG2 parent
+USE-HAVE-REL-ROLE-91-ARG2 partner :sense significant-other
+USE-HAVE-REL-ROLE-91-ARG2 patient
+USE-HAVE-REL-ROLE-91-ARG2 peer :sense relational-sense-only
+USE-HAVE-REL-ROLE-91-ARG2 pop :standard father
+USE-HAVE-REL-ROLE-91-ARG2 practitioner # as in general practitioner
+USE-HAVE-REL-ROLE-91-ARG2 relative
+USE-HAVE-REL-ROLE-91-ARG2 roommate
+USE-HAVE-REL-ROLE-91-ARG2 shipmate
+USE-HAVE-REL-ROLE-91-ARG2 sibling
+USE-HAVE-REL-ROLE-91-ARG2 sis :standard sister
+USE-HAVE-REL-ROLE-91-ARG2 significant-other
+USE-HAVE-REL-ROLE-91-ARG2 sister
+USE-HAVE-REL-ROLE-91-ARG2 sister-in-law
+USE-HAVE-REL-ROLE-91-ARG2 son
+USE-HAVE-REL-ROLE-91-ARG2 son-in-law
+USE-HAVE-REL-ROLE-91-ARG2 spouse
+USE-HAVE-REL-ROLE-91-ARG2 stepbrother
+USE-HAVE-REL-ROLE-91-ARG2 stepchild
+USE-HAVE-REL-ROLE-91-ARG2 stepdaughter
+USE-HAVE-REL-ROLE-91-ARG2 stepfather
+USE-HAVE-REL-ROLE-91-ARG2 stepmother
+USE-HAVE-REL-ROLE-91-ARG2 stepsister
+USE-HAVE-REL-ROLE-91-ARG2 stepson
+USE-HAVE-REL-ROLE-91-ARG2 tenant
+USE-HAVE-REL-ROLE-91-ARG2 therapist
+USE-HAVE-REL-ROLE-91-ARG2 uncle
+USE-HAVE-REL-ROLE-91-ARG2 wife
+USE-HAVE-REL-ROLE-91-ARG2 sister city
+USE-HAVE-REL-ROLE-91-ARG2 twin town
+MAYBE-USE-HAVE-REL-ROLE-91-ARG2 doctor # as in "my doctor"
+MAYBE-USE-HAVE-REL-ROLE-91-ARG2 lawyer # as in "my lawyer"

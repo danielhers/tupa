@@ -1,11 +1,10 @@
 from collections import deque
 
 from graph import Graph
-from semstr.constraints import Constraints, Direction
-from semstr.validation import CONSTRAINTS
 
 from .edge import StateEdge
 from .node import StateNode
+from .validation.validation import CONSTRAINTS, Constraints, Direction
 from ..action import Actions
 from ..config import Config
 
