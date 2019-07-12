@@ -1,5 +1,6 @@
 from enum import Enum
 from itertools import groupby
+from operator import attrgetter
 
 
 class Direction(Enum):
@@ -185,7 +186,7 @@ def check_orphan_terminals(constraints, terminal):
 
 def check_multigraph(constraints, node):
     if not constraints.multigraph:
-        for parent_id, edges in groupby(node.incoming, key=lambda e: e.parent.id):
+        for parent_id, edges in groupby(node.incoming, key=attrgetter("parent.id")):
             edges = list(edges)
             if len(edges) > 1:
                 yield "Multiple edges from %s to %s (%s)" % (parent_id, node.id, join(edges))
