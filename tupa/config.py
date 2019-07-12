@@ -17,7 +17,7 @@ NOOP = "noop"
 NN_CLASSIFIERS = (BIRNN,)
 CLASSIFIERS = (BIRNN, NOOP)
 
-FEATURE_PROPERTIES = "wmtudhencpqxyAPCI"
+FEATURE_PROPERTIES = "wmtudhencpqxyAPC"
 
 # Swap types
 REGULAR = "regular"

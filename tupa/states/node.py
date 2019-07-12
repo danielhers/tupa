@@ -6,8 +6,7 @@ class StateNode:
     """
     Temporary representation for graph.Node with only relevant information for parsing
     """
-    def __init__(self, index, swap_index=None, orig_node=None, text=None, label=None,
-                 implicit=False, is_root=False, properties=None):
+    def __init__(self, index, swap_index=None, orig_node=None, text=None, label=None, is_root=False, properties=None):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated graph.Node from the original Graph, during training
         self.orig_anchors = self.anchors(self.orig_node) if orig_node else None
@@ -29,7 +28,6 @@ class StateNode:
         self.outgoing_labs = set()  # String set
         self.incoming_labs = set()  # String set
         self.node = None  # Associated graph.Node, when creating final Graph
-        self.implicit = implicit  # True or False
         self.swap_index = self.index if swap_index is None else swap_index  # To avoid swapping nodes more than once
         self.height = 0
         self._terminals = None

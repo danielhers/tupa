@@ -32,7 +32,7 @@ class State:
         if conllu is None:
             raise ValueError("conllu is required for tokens and features")
         self.args = Config().args
-        self.constraints = CONSTRAINTS.get(graph.framework, Constraints)(implicit=True)
+        self.constraints = CONSTRAINTS.get(graph.framework, Constraints)()
         self.log = []
         self.finished = False
         self.graph = graph
@@ -133,8 +133,6 @@ class State:
                 self.check(self.constraints.allow_parent(node, t),
                            message and "%s may not be a '%s' parent (currently %s)" % (
                                node, t, ", ".join(map(str, node.outgoing)) or "childless"))
-            self.check(not self.constraints.require_implicit_childless or not node.implicit,
-                       message and "Implicit nodes may not have children: %s" % s0, is_type=True)
 
         def _check_possible_child(node, t):
             if self.args.constraints and t is not None:
@@ -276,7 +274,7 @@ class State:
             if parent is None:
                 parent = action.node = self.add_node(orig_node=action.orig_node)
             if child is None:
-                child = action.node = self.add_node(orig_node=action.orig_node, implicit=True)
+                child = action.node = self.add_node(orig_node=action.orig_node)
             action.edge = self.add_edge(StateEdge(parent, child, tag))
             if action.node:
                 self.buffer.appendleft(action.node)

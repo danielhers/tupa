@@ -86,7 +86,7 @@ class Constraints:
                  allow_root_terminal_children=False, top_level_allowed=None, top_level_only=None,
                  possible_multiple_incoming=(), childless_incoming_trigger=(), childless_outgoing_allowed=(),
                  unique_incoming=(), unique_outgoing=(), mutually_exclusive_incoming=(), mutually_exclusive_outgoing=(),
-                 exclusive_outgoing=(), required_outgoing=(), implicit=False, **kwargs):
+                 exclusive_outgoing=(), required_outgoing=(), **kwargs):
         self.multigraph = multigraph
         self.require_implicit_childless = require_implicit_childless
         self.allow_orphan_terminals = allow_orphan_terminals
@@ -95,7 +95,6 @@ class Constraints:
         self.top_level_only = top_level_only
         self.possible_multiple_incoming = possible_multiple_incoming
         self.required_outgoing = required_outgoing
-        self.implicit = implicit
         self.tag_rules = \
             [LabRule(trigger={Direction.incoming: childless_incoming_trigger},
                      allowed={Direction.outgoing: childless_outgoing_allowed}),
@@ -109,7 +108,7 @@ class Constraints:
              for t1, t2 in set_prod(mutually_exclusive_outgoing)]
 
     def allow_action(self, action, history):
-        return self.implicit or history or action.lab is None  # First action must not create nodes/edges
+        return history or action.lab is None  # First action must not create nodes/edges
 
     def allow_edge(self, edge):
         return True
@@ -190,11 +189,6 @@ def check_multigraph(constraints, node):
             edges = list(edges)
             if len(edges) > 1:
                 yield "Multiple edges from %s to %s (%s)" % (parent_id, node.id, join(edges))
-
-
-def check_implicit_children(constraints, node):
-    if constraints.require_implicit_childless and node.attrib.get("implicit") and len(node.outgoing) > 1:
-        yield "Implicit node with children (%s)" % node.id
 
 
 def check_multiple_incoming(constraints, node):
