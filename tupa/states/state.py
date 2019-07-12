@@ -306,7 +306,7 @@ class State:
         Called during parsing to add a new StateNode (not graph.Node) to the temporary representation
         :param kwargs: keyword arguments for StateNode()
         """
-        node = StateNode(len(self.nodes), swap_index=self.calculate_swap_index(), root=self.graph, **kwargs)
+        node = StateNode(len(self.nodes), swap_index=self.calculate_swap_index(), **kwargs)
         self.nodes.append(node)
         self.heads.add(node)
         self.log.append("node: %s (swap_index: %g)" % (node, node.swap_index))
