@@ -124,26 +124,32 @@ class Constraints:
         return True
 
 
-def ucca_constraints(*args, **kwargs):
+def ucca_constraints(**kwargs):
     from .ucca import UccaConstraints
-    return UccaConstraints(*args, **kwargs)
+    return UccaConstraints(**kwargs)
 
 
-def sdp_constraints(*args, **kwargs):
+def sdp_constraints(**kwargs):
     from .sdp import SdpConstraints
-    return SdpConstraints(*args, **kwargs)
+    return SdpConstraints(**kwargs)
 
 
-def amr_constraints(*args, **kwargs):
+def amr_constraints(**kwargs):
     from .amr import AmrConstraints
-    return AmrConstraints(*args, **kwargs)
+    return AmrConstraints(**kwargs)
+
+
+def eds_constraints(**kwargs):
+    from .eds import EdsConstraints
+    return EdsConstraints(**kwargs)
 
 
 CONSTRAINTS = {
-    None:     ucca_constraints,
+    "ucca":   ucca_constraints,
     "amr":    amr_constraints,
     "dm":     sdp_constraints,
     "psd":    sdp_constraints,
+    "eds":    eds_constraints,
 }
 
 
