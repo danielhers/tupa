@@ -146,7 +146,7 @@ class Oracle:
             self.nodes_remaining.discard(node.id)
 
     def need_label(self, node):
-        return self.args.node_labels and not node.labeled and node.orig_node.label
+        return self.args.node_labels and not node.labeled and node.text is None and node.orig_node.label
 
     def get_label(self, state, node):
         true_label = raw_true_label = None
