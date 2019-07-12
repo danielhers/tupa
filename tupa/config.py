@@ -302,7 +302,6 @@ class Config(object, metaclass=Singleton):
                            help="number of training iterations along with optional hyperparameters per part")
         group.add_argument("--folds", type=int, choices=(3, 5, 10), help="#folds for cross validation")
         group.add_argument("--seed", type=int, default=1, help="random number generator seed")
-        add_boolean_option(group, "early-update", "early update procedure (finish example on first error)")
         group.add_argument("--save-every", type=int, help="every this many graphs, evaluate on dev and save model")
         add_boolean_option(group, "eval-test", "evaluate on test whenever evaluating on dev, but keep results hidden")
 

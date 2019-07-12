@@ -1,9 +1,8 @@
 from collections import OrderedDict
-from enum import Enum
 
 from .action import Actions
 from .classifiers.classifier import Classifier
-from .config import Config, SEPARATOR, BIRNN, NOOP, requires_node_labels
+from .config import Config, SEPARATOR, NOOP, requires_node_labels
 from .features.feature_params import FeatureParameters
 from .model_util import UnknownDict, AutoIncrementDict, remove_backup
 
@@ -60,17 +59,6 @@ class ParameterDefinition:
 NODE_LABEL_KEY = "n"
 
 
-class ClassifierProperty(Enum):
-    update_only_on_error = 1
-    require_init_features = 2
-    trainable_after_saving = 3
-
-
-CLASSIFIER_PROPERTIES = {
-    BIRNN: (ClassifierProperty.trainable_after_saving, ClassifierProperty.require_init_features),
-    NOOP: (ClassifierProperty.trainable_after_saving,),
-}
-
 NODE_LABEL_PARAM_DEFS = [
     (NODE_LABEL_KEY, dict(dim="node_label_dim",    size="max_node_labels",    dropout="node_label_dropout",
                           min_count="min_node_label_count"))
@@ -118,7 +106,7 @@ class Model:
                 enabled = param_def.enabled
                 if param:
                     param.enabled = enabled
-                elif self.is_neural_network and enabled:
+                elif enabled:
                     self.feature_params[key] = param_def.create_from_config()
                     self.init_param(key)
             if axis and self.axis not in labels:
@@ -132,7 +120,7 @@ class Model:
             from .classifiers.noop import NoOp
             self.feature_extractor = EmptyFeatureExtractor()
             self.classifier = NoOp(self.config, labels)
-        elif self.is_neural_network:
+        else:
             from .features.dense_features import DenseFeatureExtractor
             from .classifiers.nn.neural_network import NeuralNetwork
             self.feature_extractor = DenseFeatureExtractor(self.feature_params,
@@ -140,8 +128,6 @@ class Model:
                                                            node_dropout=self.config.args.node_dropout,
                                                            omit_features=self.config.args.omit_features)
             self.classifier = NeuralNetwork(self.config, labels)
-        else:
-            raise ValueError("Invalid model type: '%s'" % self.config.args.classifier)
         self._update_input_params()
 
     def set_axis(self, axis):
@@ -153,18 +139,6 @@ class Model:
     @property
     def frameworks(self):
         return [k.partition(SEPARATOR)[0] for k in self.classifier.labels]
-
-    @property
-    def is_neural_network(self):
-        return self.config.args.classifier in (BIRNN,)
-
-    @property
-    def is_retrainable(self):
-        return ClassifierProperty.trainable_after_saving in self.classifier_properties
-
-    @property
-    def classifier_properties(self):
-        return CLASSIFIER_PROPERTIES[self.config.args.classifier]
 
     @property
     def actions(self):
@@ -181,8 +155,7 @@ class Model:
         node_labels = self.feature_params.get(NODE_LABEL_KEY)
         if node_labels is None:
             node_labels = self.node_label_param_def().create_from_config()
-            if self.is_neural_network:
-                self.feature_params[NODE_LABEL_KEY] = node_labels
+            self.feature_params[NODE_LABEL_KEY] = node_labels
         self.init_param(NODE_LABEL_KEY)
         node_labels.init_data()
         return node_labels.data

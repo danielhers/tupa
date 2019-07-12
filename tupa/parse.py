@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from tupa.__version__ import GIT_VERSION
 from tupa.config import Config, Iterations
-from tupa.model import Model, NODE_LABEL_KEY, ClassifierProperty
+from tupa.model import Model, NODE_LABEL_KEY
 from tupa.oracle import Oracle
 from tupa.states.state import State
 
@@ -91,8 +91,7 @@ class GraphParser(AbstractParser):
         else:
             self.oracle = None
         self.model.init_model(self.config.framework)
-        if ClassifierProperty.require_init_features in self.model.classifier_properties:
-            self.model.init_features(self.state, self.training)
+        self.model.init_features(self.state, self.training)
 
     def parse(self, display=True, write=False, accuracies=None):
         self.init()
@@ -138,7 +137,7 @@ class GraphParser(AbstractParser):
                  else "  label: %s" % label] if need_label else []) + [
                 "    " + l for l in self.state.log]))
             if self.state.finished:
-                return  # action is Finish (or early update is triggered)
+                return  # action is Finish
 
     def get_true_actions(self):
         true_actions = {}
@@ -186,13 +185,11 @@ class GraphParser(AbstractParser):
             raise ParserException("No valid %s available\n%s" % (name, self.oracle.log if self.oracle else "")) from e
         label, is_correct, true_keys, true_values = self.correct(axis, label, pred, scores, true, true_keys)
         if self.training:
-            if not (is_correct and ClassifierProperty.update_only_on_error in self.model.classifier_properties):
-                assert not self.model.is_finalized, "Updating finalized model"
-                self.model.classifier.update(
-                    features, axis=axis, true=true_keys, pred=labels[pred] if axis == NODE_LABEL_KEY else pred.id,
-                    importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values] or None)
-            if not is_correct and self.config.args.early_update:
-                self.state.finished = True
+            assert not self.model.is_finalized, "Updating finalized model"
+            self.model.classifier.update(
+                features, axis=axis, true=true_keys, pred=labels[pred] if axis == NODE_LABEL_KEY else pred.id,
+                importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values] or None)
+            self.state.finished = True
         self.model.classifier.finished_step(self.training)
         if axis != NODE_LABEL_KEY:
             self.model.classifier.transition(label, axis=axis)
@@ -394,8 +391,7 @@ class Parser(AbstractParser):
                 print("Trained %d epochs" % (end - 1))
                 if dev:
                     if self.iteration < len(iterations):
-                        if self.model.is_retrainable:
-                            self.model.load(is_finalized=False)  # Load best model to prepare for next iteration
+                        self.model.load(is_finalized=False)  # Load best model to prepare for next iteration
                     elif test:
                         self.model.load()  # Load best model to prepare for test
         else:  # No graphs to train on, just load model
@@ -403,11 +399,10 @@ class Parser(AbstractParser):
             self.print_config()
 
     def init_train(self):
-        if self.model.is_retrainable:
-            try:
-                self.model.load(is_finalized=False)
-            except FileNotFoundError:
-                print("not found, starting from untrained model.")
+        try:
+            self.model.load(is_finalized=False)
+        except FileNotFoundError:
+            print("not found, starting from untrained model.")
         self.print_config()
         self.best_score = self.model.classifier.best_score if self.model.classifier else 0
 
