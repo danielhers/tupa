@@ -24,7 +24,10 @@ REGULAR = "regular"
 COMPOUND = "compound"
 
 # Required number of edge labels per framework
-EDGE_LABELS_NUM = {"amr": 110, "sdp": 70, "conllu": 60}
+NODE_LABELS_NUM = {"amr": 1000, "dm": 1000, "psd": 1000, "eds": 1000, "ucca": 0}
+NODE_PROPERTY_NUM = {"amr": 1000, "dm": 510, "psd": 1000, "eds": 1000, "ucca": 0}
+EDGE_LABELS_NUM = {"amr": 141, "dm": 59, "psd": 90, "eds": 10, "ucca": 15}
+EDGE_ATTRIBUTE_NUM = {"amr": 0, "dm": 0, "psd": 0, "eds": 0, "ucca": 1}
 NN_ARG_NAMES = set()
 DYNET_ARG_NAMES = set()
 RESTORED_ARGS = set()
@@ -94,9 +97,15 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
         ap = ArgParser()
 
     group = ap.add_argument_group(title="Node labels")
-    add(group, "--max-node-labels", type=int, default=0, help="max number of node labels to allow")
-    add(group, "--max-node-categories", type=int, default=0, help="max node categories to allow")
+    add(group, "--max-node-labels", type=int, default=1000, help="max number of node labels to allow")
+    add(group, "--max-node-categories", type=int, default=25, help="max node categories to allow")
     add(group, "--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
+
+    group = ap.add_argument_group(title="Node properties")
+    add(group, "--max-node-properties", type=int, default=100, help="max number of node properties to allow")
+
+    group = ap.add_argument_group(title="Edge attributes")
+    add(group, "--max-edge-attributes", type=int, default=2, help="max number of edge attributes to allow")
 
     group = ap.add_argument_group(title="Structural constraints")
     add_boolean(group, "constraints", "scheme-specific rules", default=True)
@@ -132,8 +141,10 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--pos-dim", type=int, default=20, help="dimension for coarse/universal POS tag embeddings")
     add(group, "--dep-dim", type=int, default=10, help="dimension for dependency relation embeddings")
     add(group, "--edge-label-dim", type=int, default=20, help="dimension for edge label embeddings")
-    add(group, "--node-label-dim", type=int, default=0, help="dimension for node label embeddings")
-    add(group, "--node-category-dim", type=int, default=0, help="dimension for node category embeddings")
+    add(group, "--edge-attribute-dim", type=int, default=1, help="dimension for edge attribute embeddings")
+    add(group, "--node-label-dim", type=int, default=20, help="dimension for node label embeddings")
+    add(group, "--node-category-dim", type=int, default=5, help="dimension for node category embeddings")
+    add(group, "--node-property-dim", type=int, default=20, help="dimension for node property embeddings")
     add(group, "--punct-dim", type=int, default=1, help="dimension for separator punctuation embeddings")
     add(group, "--action-dim", type=int, default=3, help="dimension for input action type embeddings")
     add(group, "--output-dim", type=int, default=50, help="dimension for output action embeddings")
@@ -155,6 +166,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--max-pos", type=int, default=100, help="max number of coarse POS tags to keep embeddings for")
     add(group, "--max-deps", type=int, default=100, help="max number of dep labels to keep embeddings for")
     add(group, "--max-edge-labels", type=int, default=15, help="max number of edge labels for embeddings")
+    add(group, "--max-edge-attributes", type=int, default=1, help="max number of edge attributes for embeddings")
     add(group, "--max-puncts", type=int, default=5, help="max number of punctuations for embeddings")
     add(group, "--max-action-types", type=int, default=10, help="max number of action types for embeddings")
     add(group, "--max-action-labels", type=int, default=100, help="max number of action labels to allow")
@@ -165,6 +177,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--pos-dropout", type=float, default=0.2, help="coarse POS tag dropout parameter")
     add(group, "--dep-dropout", type=float, default=0.5, help="dependency label dropout parameter")
     add(group, "--node-label-dropout", type=float, default=0.2, help="node label dropout parameter")
+    add(group, "--node-property-dropout", type=float, default=0.2, help="node property dropout parameter")
     add(group, "--node-dropout", type=float, default=0.1, help="probability to drop features for a whole node")
     add(group, "--dropout", type=float, default=0.4, help="dropout parameter between layers")
     add(group, "--max-length", type=int, default=120, help="maximum length of input sentence")
@@ -385,12 +398,14 @@ class Config(object, metaclass=Singleton):
                 setattr(self.args, name, value)
         self.original_values.update(self.create_original_values(params))
         self.hyperparams = self.create_hyperparams()
+        for f, num in NODE_LABELS_NUM.items():
+            self.hyperparams.specific[f].max_node_labels = num
         for f, num in EDGE_LABELS_NUM.items():
             self.hyperparams.specific[f].max_edge_labels = num
-        amr_hyperparams = self.hyperparams.specific["amr"]
-        for k, v in dict(node_label_dim=20, max_node_labels=1000, node_category_dim=5, max_node_categories=25).items():
-            if k not in amr_hyperparams and not getattr(amr_hyperparams, k, None):
-                setattr(amr_hyperparams, k, v)
+        for f, num in NODE_PROPERTY_NUM.items():
+            self.hyperparams.specific[f].max_node_properties = num
+        for f, num in EDGE_ATTRIBUTE_NUM.items():
+            self.hyperparams.specific[f].max_edge_attributes = num
         self.set_framework(update=True)
         self.set_dynet_arguments()
 
