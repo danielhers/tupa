@@ -191,14 +191,6 @@ def check_multigraph(constraints, node):
                 yield "Multiple edges from %s to %s (%s)" % (parent_id, node.id, join(edges))
 
 
-def check_multiple_incoming(constraints, node):
-    if constraints.possible_multiple_incoming:
-        incoming = [e for e in node.incoming if not e.attrib.get("remote") and
-                    e.lab not in constraints.possible_multiple_incoming]
-        if len(incoming) > 1:
-            yield "Multiple incoming non-remote (%s)" % join(incoming)
-
-
 def check_top_level_only(constraints, node):
     if constraints.top_level_only and not node.is_top:
         for edge in node:
