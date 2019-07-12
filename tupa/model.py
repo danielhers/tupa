@@ -3,7 +3,7 @@ from enum import Enum
 
 from .action import Actions
 from .classifiers.classifier import Classifier
-from .config import Config, SEPARATOR, BIRNN, NOOP
+from .config import Config, SEPARATOR, BIRNN, NOOP, requires_node_labels
 from .features.feature_params import FeatureParameters
 from .model_util import UnknownDict, AutoIncrementDict, remove_backup
 
@@ -123,7 +123,7 @@ class Model:
                     self.init_param(key)
             if axis and self.axis not in labels:
                 labels[self.axis] = self.init_actions()  # Uses config to determine actions
-            if self.config.args.node_labels and NODE_LABEL_KEY not in labels:
+            if NODE_LABEL_KEY not in labels:
                 labels[NODE_LABEL_KEY] = self.init_node_labels()  # Updates self.feature_params
         if self.classifier:  # Already initialized
             pass
@@ -194,9 +194,8 @@ class Model:
     def init_features(self, state, train):
         self.init_model()
         axes = [self.axis]
-        if self.config.args.node_labels:
+        if requires_node_labels(state.framework):
             axes.append(NODE_LABEL_KEY)
-
         tokens = [node.label for node in state.graph.nodes if node.anchors]
         lang = getattr(state.graph, "lang", None)
         self.classifier.init_features(self.feature_extractor.init_features(state), axes, train, tokens, lang)

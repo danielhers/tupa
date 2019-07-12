@@ -5,7 +5,7 @@ from graph import Graph
 from .edge import StateEdge
 from .node import StateNode
 from ..action import Actions
-from ..config import Config
+from ..config import Config, requires_node_labels, requires_anchors
 from ..constraints.validation import CONSTRAINTS, Constraints, Direction
 
 ROOT_ID = -1
@@ -24,10 +24,11 @@ class State:
     """
     The parser's state, responsible for applying actions and creating the final Graph
     """
-    def __init__(self, graph=None, conllu=None):
+    def __init__(self, graph=None, conllu=None, target=None):
         """
         :param graph: Graph for training, not needed for testing except for getting the graph id
         :param conllu: Graph with node per token predicted by a syntactic parser
+        :param target: target framework string
         """
         if conllu is None:
             raise ValueError("conllu is required for tokens and features")
@@ -37,6 +38,7 @@ class State:
         self.finished = False
         self.graph = graph
         self.conllu = conllu
+        self.framework = target or self.graph.framework
         self.labeled = bool(graph and graph.nodes)
         self.terminals = []
         for i, conllu_node in enumerate(self.conllu.nodes):
@@ -64,19 +66,17 @@ class State:
         self.actions = []  # History of applied actions
         self.type_validity_cache = {}
 
-    def create_graph(self, framework=None):
+    def create_graph(self):
         """
         Create final graph from temporary representation
         :return: Graph created from self.nodes
         """
-        if framework is None:
-            framework = self.graph.framework
-        Config().print("Creating %s graph %s from state..." % (framework, self.graph.id), level=2)
-        graph = Graph(self.graph.id, framework)
+        Config().print("Creating %s graph %s from state..." % (self.framework, self.graph.id), level=2)
+        graph = Graph(self.graph.id, self.framework)
         graph.input = self.graph.input
         for node in self.nodes:
             if node.text is None and not node.is_root:
-                if node.label is None and framework != "ucca":
+                if node.label is None and requires_node_labels(self.framework):
                     node.label = DEFAULT_LABEL
                 properties, values = zip(*node.properties.items()) if node.properties else (None, None)
                 node.node = graph.add_node(int(node.id), label=node.label, properties=properties, values=values)
@@ -85,7 +85,7 @@ class State:
                 if node.is_root:
                     edge.child.node.is_top = True
                 elif edge.child.text is not None:
-                    if framework != "amr":
+                    if requires_anchors(self.framework):
                         if node.anchors is None:
                             node.anchors = []
                         node.anchors += edge.child.orig_node.anchors()
@@ -165,7 +165,7 @@ class State:
             self.check(p not in c.descendants, message and "Detected cycle by edge: %s->%s" % (p, c), is_type=True)
 
         def _check_possible_label():
-            self.check(self.args.node_labels, message and "Node labels disabled", is_type=True)
+            self.check(requires_node_labels(self.graph.framework), message and "Node labels disabled", is_type=True)
             try:
                 node = self.stack[-action.tag]
             except IndexError:
@@ -187,7 +187,7 @@ class State:
             for n in self.nodes:
                 self.check(not self.args.require_connected or n is self.root or n.text or
                            n.incoming, message and "Non-terminal %s has no parent at parse end" % n, is_type=True)
-                self.check(not self.args.node_labels or n.text or n.labeled,
+                self.check(not requires_node_labels(self.framework) or n.text or n.labeled,
                            message and "Non-terminal %s has no label at parse end" % n, is_type=True)
         else:
             self.check(self.action_ratio() < self.args.max_action_ratio,
@@ -201,7 +201,7 @@ class State:
                 s0 = self.stack[-1]
                 if action.is_type(Actions.Reduce):
                     if s0 is self.root:
-                        self.check(self.root.labeled or not self.args.node_labels,
+                        self.check(self.root.labeled or not requires_node_labels(self.framework),
                                    message and "Reducing root without label", is_type=True)
                     elif not s0.text:
                         self.check(not self.args.require_connected or s0.incoming,
@@ -210,7 +210,7 @@ class State:
                                    s0.outgoing_labs.intersection(self.constraints.required_outgoing),
                                    message and "Reducing non-terminal %s without %s edge" % (
                                        s0, self.constraints.required_outgoing), is_type=True)
-                    self.check(not self.args.node_labels or s0.text or s0.labeled,
+                    self.check(not requires_node_labels(self.framework) or s0.text or s0.labeled,
                                message and "Reducing non-terminal %s without label" % s0, is_type=True)
                 elif action.is_type(Actions.Swap):
                     # A regular swap is possible since the stack has at least two elements;

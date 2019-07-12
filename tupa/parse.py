@@ -84,7 +84,7 @@ class GraphParser(AbstractParser):
 
     def init(self):
         self.config.set_framework(self.framework)
-        self.state = State(self.graph, self.conllu)
+        self.state = State(self.graph, self.conllu, self.framework)
         # Graph is considered labeled if there are any nodes in it
         if self.training or ((self.config.args.verbose > 1 or self.config.args.action_stats) and self.state.labeled):
             self.oracle = Oracle(self.graph, self.conllu)
@@ -237,7 +237,7 @@ class GraphParser(AbstractParser):
     def finish(self, status, display=True, write=False, accuracies=None):
         self.model.classifier.finished_item(self.training)
         if not self.training:
-            self.out = self.state.create_graph(framework=self.framework)
+            self.out = self.state.create_graph()
         if write:
             json.dump(self.out.encode(), self.config.args.output, indent=None, ensure_ascii=False)
         if display:

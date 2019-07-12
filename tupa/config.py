@@ -97,7 +97,6 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--max-node-labels", type=int, default=0, help="max number of node labels to allow")
     add(group, "--max-node-categories", type=int, default=0, help="max node categories to allow")
     add(group, "--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
-    add_boolean(group, "node-labels", "prediction of node labels, if supported by framework", default=True)
 
     group = ap.add_argument_group(title="Structural constraints")
     add_boolean(group, "constraints", "scheme-specific rules", default=True)
@@ -419,10 +418,6 @@ class Config(object, metaclass=Singleton):
         for attr, value in sorted(format_values.items()):
             self.print("Setting %s=%s" % (attr, value))
             setattr(self.args, attr, value)
-        if self.framework != "amr":
-            self.args.node_labels = False
-            self.args.node_label_dim = self.args.max_node_labels = \
-                self.args.node_category_dim = self.args.max_node_categories = 0
         self.args.max_action_labels = max(self.args.max_action_labels, 6 * self.args.max_edge_labels)
 
     @property
@@ -505,7 +500,6 @@ class Config(object, metaclass=Singleton):
                 for (k, v) in sorted(args.items()) if
                 v not in (None, (), "", self.arg_parser.get_default(k))
                 and not k.startswith("_")
-                and (args.node_labels or ("node_label" not in k and "node_categor" not in k))
                 and (args.swap or "swap_" not in k)
                 and (args.swap == COMPOUND or k != "max_swap")
                 and (not args.require_connected or k != "orphan_label")
@@ -515,3 +509,11 @@ class Config(object, metaclass=Singleton):
     def __str__(self):
         self.args.hyperparams = [HyperparamsInitializer(name, **args.vars()) for name, args in self.hyperparams.items()]
         return " ".join(list(self.args.input) + self.args_str(self.args))
+
+
+def requires_node_labels(framework):
+    return framework != "ucca"
+
+
+def requires_anchors(framework):
+    return framework != "amr"

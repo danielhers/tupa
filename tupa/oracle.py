@@ -1,5 +1,5 @@
 from .action import Actions
-from .config import Config, COMPOUND
+from .config import Config, COMPOUND, requires_node_labels
 from .states.state import InvalidActionError
 
 # Constants for readability, used by Oracle.action
@@ -146,7 +146,8 @@ class Oracle:
             self.nodes_remaining.discard(node.id)
 
     def need_label(self, node):
-        return self.args.node_labels and not node.labeled and node.text is None and node.orig_node.label
+        return requires_node_labels(self.graph.framework) and \
+               not node.labeled and node.text is None and node.orig_node.label
 
     def get_label(self, state, node):
         true_label = raw_true_label = None
