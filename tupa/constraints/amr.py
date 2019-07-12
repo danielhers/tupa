@@ -16,11 +16,11 @@ ALIGNMENT_SEP = ","
 PLACEHOLDER_PATTERN = re.compile(r"<[^>]*>")
 SKIP_TOKEN_PATTERN = re.compile(r"[<>@]+")
 NUM_PATTERN = re.compile(r"[+-]?\d+(\.\d+)?")
+INT_PATTERN = re.compile(r"[+-]?(\d+)")
 TOKEN_PLACEHOLDER = "<t>"
 TOKEN_TITLE_PLACEHOLDER = "<T>"
 LEMMA_PLACEHOLDER = "<l>"
 NEGATION_PLACEHOLDER = "<n>"
-WIKIFICATION_PLACEHOLDER = "<w>"
 LABEL_ATTRIB = "label"
 LABEL_SEPARATOR = "|"  # after the separator there is the label category
 PUNCTUATION_REMOVER = str.maketrans("", "", string.punctuation)
@@ -49,11 +49,7 @@ SEASON = "season"
 TIMEZONE = "timezone"
 
 # Specific node labels
-CONST = "Const"
-CONCEPT = "Concept"
-NUM = "Num"
 MINUS = "-"
-UNKNOWN_LABEL = CONCEPT + "(name)"
 MODES = ("expressive", "imperative", "interrogative")
 DATE_ENTITY = "date-entity"
 MONTHS = ("january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november",
@@ -111,11 +107,11 @@ read_resources.done = False
 
 
 def is_concept(label):
-    return label is not None and label.startswith(CONCEPT)
+    return label is not None and '"' not in label
 
 
 def is_int_in_range(label, s=None, e=None):
-    m = re.match(NUM + r"\(-?(\d+)\)", label)
+    m = INT_PATTERN.match(label)
     if not m:
         return Valid(False, "%s is not numeric" % label)
     num = int(m.group(1))
@@ -127,8 +123,8 @@ def is_valid_arg(node, label, *tags, is_parent=True):
     if label is None:  # Not labeled yet or unlabeled parsing
         return True
     label = resolve_label(node, label, conservative=True)
-    concept = label[len(CONCEPT) + 1:-1] if label.startswith(CONCEPT) else None
-    const = label[len(CONST) + 1:-1] if label.startswith(CONST) else None
+    concept = label if is_concept(label) else None
+    const = label[1:-1] if label[0] == label[-1] == '"' else None
     if PLACEHOLDER_PATTERN.search(label):
         return True
     valid = Valid(message="%s incompatible as %s of %s" % (label, "parent" if is_parent else "child", ", ".join(tags)))
@@ -205,10 +201,10 @@ def resolve_label(node, label=None, reverse=False, conservative=False):
         terminals = sorted([c for c in children if getattr(c, "text", None)],
                            key=lambda c: getattr(c, "index", getattr(c, "position", None)))
         if terminals:
-            if not reverse and label.startswith(NUM):  # numeric label (always 1 unless "numbers" layer is on)
+            if not reverse and NUM_PATTERN.match(label):  # numeric label (always 1 unless "numbers" layer is on)
                 number = terminals_to_number(terminals)  # try replacing spelled-out numbers/months with digits
                 if number is not None:
-                    label = NUM + "(%s)" % number
+                    label = str(number)
             else:
                 if len(terminals) > 1:
                     if reverse or label.count(TOKEN_PLACEHOLDER) == 1:
@@ -228,7 +224,7 @@ def resolve_label(node, label=None, reverse=False, conservative=False):
                     negation = NEGATIONS.get(terminal.text)
                     if negation is not None:
                         label = _replace(NEGATION_PLACEHOLDER, negation)
-                    if label.startswith(CONCEPT):
+                    if is_concept(label):
                         morph = VERBALIZATION.get(lemma)
                         if morph:
                             for prefix, value in morph.items():  # V: verb, N: noun, A: noun actor
