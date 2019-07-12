@@ -6,11 +6,11 @@ from ..model_util import UNKNOWN_VALUE, MISSING_VALUE, UnknownDict, save_dict, l
 
 FEATURE_TEMPLATES = (
     "s0s1xd" "s1s0x" "s0b0xd" "b0s0x"
-    "s0wmtudencpxhqyPCI"
+    "s0wmtudencpxhqyPC"
     "s1wmtudencxhy"
     "s2wmtudencxhy"
     "s3wmtudencxhy"
-    "b0wmtudnchPCI"
+    "b0wmtudnchPC"
     "b1wmtudnc"
     "b2wmtudnc"
     "b3wmtudnc"
