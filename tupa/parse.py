@@ -4,6 +4,7 @@ import os
 import sys
 import time
 from collections import defaultdict, Counter
+from copy import deepcopy
 from enum import Enum
 from itertools import chain
 
@@ -58,7 +59,7 @@ class GraphParser(AbstractParser):
         :param target: framework to parse to
         """
         super().__init__(*args, **kwargs)
-        self.graph, self.overlay = graph
+        self.graph, self.overlay = deepcopy(graph)
         self.conllu = conllu
         self.alignment = alignment
         self.out = self.graph
