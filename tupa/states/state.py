@@ -144,14 +144,14 @@ class State:
             _check_possible_parent(p, t)
             _check_possible_child(c, t)
             if self.args.constraints and t is not None:
-                if p is self.root:
+                if ROOT_LAB in p.incoming_labs:
                     self.check(self.constraints.top_level_allowed is None or not t or
                                t in self.constraints.top_level_allowed, message and "Root may not have %s edges" % t)
                 else:
                     self.check(self.constraints.top_level_only is None or
                                t not in self.constraints.top_level_only, message and "Only root may have %s edges" % t)
-            self.check(self.constraints.allow_root_terminal_children or p is not self.root or c.text is None,
-                       message and "Terminal child '%s' for root" % c, is_type=True)
+            self.check(self.constraints.allow_root_terminal_children or ROOT_LAB not in p.incoming_labs or
+                       c.text is None, message and "Terminal child '%s' for root" % c, is_type=True)
             if self.constraints.multigraph:  # Nodes may be connected by more than one edge
                 edge = StateEdge(p, c, t)
                 self.check(self.constraints.allow_edge(edge), message and "Edge not allowed: %s (currently: %s)" % (
@@ -195,10 +195,10 @@ class State:
         if action.is_type(Actions.Finish):
             self.check(not self.buffer, "May only finish at the end of the input buffer", is_type=True)
             if self.args.swap:  # Without swap, the oracle may be incapable even of single action
-                self.check(self.root.outgoing or all(n is self.root or n.text for n in self.nodes),
+                self.check(self.root.outgoing or all(ROOT_LAB in n.incoming_labs or n.text for n in self.nodes),
                            message and "Root has no child at parse end", is_type=True)
             for n in self.nodes:
-                self.check(not self.args.require_connected or n is self.root or n.text or
+                self.check(not self.args.require_connected or ROOT_LAB in n.incoming_labs or n.text or
                            n.incoming, message and "Non-terminal %s has no parent at parse end" % n, is_type=True)
                 self.check(not requires_node_labels(self.framework) or n.text or n.label is not None,
                            message and "Non-terminal %s has no label at parse end" % n, is_type=True)
@@ -217,10 +217,7 @@ class State:
                 self.check(self.stack, message and "%s with empty stack" % action, is_type=True)
                 s0 = self.stack[-1]
                 if action.is_type(Actions.Reduce):
-                    if s0 is self.root:
-                        self.check(self.root.label is not None or not requires_node_labels(self.framework),
-                                   message and "Reducing root without label", is_type=True)
-                    elif not s0.text:
+                    if s0.text is None:
                         self.check(not self.args.require_connected or s0.incoming,
                                    message and "Reducing parentless non-terminal %s" % s0, is_type=True)
                         self.check(not self.constraints.required_outgoing or
