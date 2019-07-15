@@ -157,7 +157,8 @@ class State:
                 self.check(self.constraints.allow_edge(edge), message and "Edge not allowed: %s (currently: %s)" % (
                                edge, ", ".join(map(str, p.outgoing)) or "childless"))
             else:  # Simple graph, i.e., no more than one edge between the same pair of nodes
-                self.check(c not in p.children, message and "%s is already %s's child" % (c, p), is_type=True)
+                self.check(c not in p.children, message and "%s is already %s's child: %s" % (
+                    c, p, ", ".join(map(str, p.outgoing))), is_type=True)
             self.check(p not in c.descendants, message and "Detected cycle by edge: %s->%s" % (p, c), is_type=True)
 
         def _check_possible_label():
