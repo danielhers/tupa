@@ -205,7 +205,8 @@ class State:
                     self.check(not self.args.require_connected or ROOT_LAB in node.incoming_labs or
                                node.incoming, message and "Non-terminal %s has no parent at parse end" % node)
                     self.check(not requires_node_labels(self.framework) or node.label is not None,
-                               message and "Non-terminal %s has no label at parse end" % node)
+                               message and "Non-terminal %s has no label at parse end (orig node label: '%s')" % (
+                                   node, node.orig_node.label if node.orig_node else None))
         else:
             self.check(self.action_ratio() < self.args.max_action_ratio,
                        message and "Actions/terminals ratio: %.3f" % self.args.max_action_ratio, is_type=True)
