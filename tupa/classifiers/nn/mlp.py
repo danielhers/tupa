@@ -147,7 +147,7 @@ class MultilayerPerceptron(SubModel):
         self.config.print("Loading MLP: %s" % self, level=4)
 
     def verify_dims(self):
-        assert self.params, "No MLP parameters found for %s" % ("/".join(self.save_path))
+        assert self.params, "No MLP parameters found for %s (classifier never used)" % ("/".join(self.save_path))
         if self.layers > 0:
             self.verify_dim("input_dim", self.params["W0"].as_array().shape[1])
             self.verify_dim("output_dim", self.params["W" + str(self.layers - 1)].as_array().shape[0])
