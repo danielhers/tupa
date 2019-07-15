@@ -177,6 +177,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--dep-dropout", type=float, default=0.5, help="dependency label dropout parameter")
     add(group, "--node-label-dropout", type=float, default=0.2, help="node label dropout parameter")
     add(group, "--node-property-dropout", type=float, default=0.2, help="node property dropout parameter")
+    add(group, "--edge-attribute-dropout", type=float, default=0.2, help="edge attribute dropout parameter")
     add(group, "--node-dropout", type=float, default=0.1, help="probability to drop features for a whole node")
     add(group, "--dropout", type=float, default=0.4, help="dropout parameter between layers")
     add(group, "--max-length", type=int, default=120, help="maximum length of input sentence")
