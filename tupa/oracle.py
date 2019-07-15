@@ -163,12 +163,12 @@ class Oracle:
                node is not None and node.text is None and node.label is None and node.orig_node.label
 
     def need_property(self, node):
-        return requires_node_properties(self.graph.framework) and \
-               node is not None and node.text is None and set(node.orig_node.properties).difference(node.properties or ())
+        return requires_node_properties(self.graph.framework) and node is not None and node.text is None and \
+               set(node.orig_node.properties or ()).difference(node.properties or ())
 
     def need_attribute(self, edge):
-        return requires_edge_attributes(self.graph.framework) and \
-               edge is not None and set(edge.orig_edge.attributes).difference(edge.attributes or ())
+        return requires_edge_attributes(self.graph.framework) and edge is not None and \
+               set(edge.orig_edge.attributes or ()).difference(edge.attributes or ())
 
     def get_node_label(self, state, node):
         true_label = raw_true_label = None

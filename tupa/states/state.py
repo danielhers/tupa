@@ -45,7 +45,7 @@ class State:
         for i, conllu_node in enumerate(self.conllu.nodes):
             text = conllu_node.label
             new_conllu_node = self.graph.add_node(
-                label=text, properties=conllu_node.properties, values=conllu_node.values)
+                label=text, anchors=conllu_node.anchors, properties=conllu_node.properties, values=conllu_node.values)
             self.terminals.append(StateNode(i, text=text, orig_node=new_conllu_node))  # Virtual node for tokens
         self.stack = []
         self.buffer = deque()
