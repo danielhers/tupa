@@ -270,6 +270,7 @@ class GraphParser(AbstractParser):
             self.out = self.state.create_graph()
         if write:
             json.dump(self.out.encode(), self.config.args.output, indent=None, ensure_ascii=False)
+            print(file=self.config.args.output)
         if display:
             self.config.print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), level=1)
         if accuracies is not None:
