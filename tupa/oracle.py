@@ -90,34 +90,35 @@ class Oracle:
 
                 if self.need_attribute(state.last_edge):
                     yield self.action(state.last_edge, ATTRIBUTE)
-
-                # Check for actions to create new nodes
-                for edge in incoming:
-                    if edge.src in self.nodes_remaining and not self.is_implicit_node(edge.src):
-                        yield self.action(edge, NODE, PARENT)  # Node
-
-                for edge in outgoing:
-                    if edge.tgt in self.nodes_remaining and self.is_implicit_node(edge.tgt):
-                        yield self.action(edge, NODE, CHILD)  # Implicit
-
-                if len(state.stack) > 1:
-                    s1 = state.stack[-2]
-                    # Check for node label action: if all terminals have already been connected
-                    if self.need_label(s1) and not any(self.is_terminal_edge(e) for e in
-                                                       self.edges_remaining.intersection(s1.orig_node.outgoing_edges)):
-                        yield self.action(s1, LABEL, 2)
-
-                    # Check for actions to create binary edges
+                else:
+                    # Check for actions to create new nodes
                     for edge in incoming:
-                        if edge.src == s1.id:
-                            yield self.action(edge, EDGE, RIGHT)  # RightEdge
+                        if edge.src in self.nodes_remaining and not self.is_implicit_node(edge.src):
+                            yield self.action(edge, NODE, PARENT)  # Node
 
                     for edge in outgoing:
-                        if edge.tgt == s1.id:
-                            yield self.action(edge, EDGE, LEFT)  # LeftEdge
-                        elif state.buffer and edge.tgt == state.buffer[0].id and \
-                                len(state.buffer[0].orig_node.incoming_edges) == 1:
-                            yield self.action(Actions.Shift)  # Special case to allow discarding simple children quickly
+                        if edge.tgt in self.nodes_remaining and self.is_implicit_node(edge.tgt):
+                            yield self.action(edge, NODE, CHILD)  # Implicit
+
+                    if len(state.stack) > 1:
+                        s1 = state.stack[-2]
+                        # Check for node label action: if all terminals have already been connected
+                        if self.need_label(s1) and not any(self.is_terminal_edge(e) for e in
+                                                           self.edges_remaining.intersection(
+                                                               s1.orig_node.outgoing_edges)):
+                            yield self.action(s1, LABEL, 2)
+
+                        # Check for actions to create binary edges
+                        for edge in incoming:
+                            if edge.src == s1.id:
+                                yield self.action(edge, EDGE, RIGHT)  # RightEdge
+
+                        for edge in outgoing:
+                            if edge.tgt == s1.id:
+                                yield self.action(edge, EDGE, LEFT)  # LeftEdge
+                            elif state.buffer and edge.tgt == state.buffer[0].id and \
+                                    len(state.buffer[0].orig_node.incoming_edges) == 1:
+                                yield self.action(Actions.Shift)  # Special case to allow discarding simple children
 
                     if not self.found:
                         # Check if a swap is necessary, and how far (if compound swap is enabled)
