@@ -84,7 +84,7 @@ class StateNode:
                 if self.properties else "")
 
     def __str__(self):
-        s = '"%s"' % self.text if self.text else str(self.id) or str(self.index)
+        s = "ROOT" if self.is_root else '"%s"' % self.text if self.text else str(self.id) or str(self.index)
         if self.label:
             s += "/" + self.label
         if self.properties:
