@@ -127,7 +127,7 @@ class GraphParser(AbstractParser):
             need_property, property_value, predicted_property_value, true_property_value = \
                 self.select_node_property_value(action)
             need_attribute, attribute_value, predicted_attribute_value, true_attribute_value = \
-                self.select_edge_attribute_value(action)
+                self.select_edge_attribute_value()
             if self.config.args.action_stats:
                 try:
                     with open(self.config.args.action_stats, "a") as f:
@@ -205,11 +205,11 @@ class GraphParser(AbstractParser):
             self.state.assign_node_property_value(property_value)
         return need_property, property_value, predicted_property_value, true_property_value
 
-    def select_edge_attribute_value(self, action=None):
+    def select_edge_attribute_value(self):
         true_attribute_value = attribute_value = predicted_attribute_value = None
         need_attribute = self.state.need_attribute  # Attribute action, requires a choice of attribute + value
         if need_attribute:
-            true_attribute_value = self.get_true_edge_attribute_value(action or need_attribute)
+            true_attribute_value = self.get_true_edge_attribute_value(need_attribute)
             attribute_value, predicted_attribute_value = self.choose(true_attribute_value, EDGE_ATTRIBUTE_KEY,
                                                                      "edge attribute")
             self.state.assign_edge_attribute_value(attribute_value)
