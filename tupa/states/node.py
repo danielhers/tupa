@@ -85,7 +85,7 @@ class StateNode:
 
     def __str__(self):
         s = "ROOT" if self.is_root else '"%s"' % self.text if self.text else str(self.id) or str(self.index)
-        if self.label:
+        if self.label is not None:
             s += "/" + self.label
         if self.properties:
             s += "(" + ",".join("%s=%s" % (k, v) for k, v in self.properties.items()) + ")"

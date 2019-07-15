@@ -169,8 +169,8 @@ class State:
                 node = None
             self.check(node is not None, message and "Labeling invalid node %s when stack size is %d" % (
                 action.tag, len(self.stack)))
-            self.check(node.label is not None, message and "Labeling already-labeled node: %s" % node, is_type=True)
-            self.check(node.text is None, message and "Setting label of virtual terminal: %s" % node, is_type=True)
+            self.check(node.label is None, message and "Labeling already-labeled node: %s" % node)
+            self.check(node.text is None, message and "Setting label of virtual terminal: %s" % node)
             self.check(node is not self.root, "Setting label of virtual root")
 
         def _check_possible_property():
@@ -182,16 +182,14 @@ class State:
                 node = None
             self.check(node is not None, message and "Setting property on invalid node %s when stack size is %d" % (
                 action.tag, len(self.stack)))
-            self.check(node.text is None, message and "Setting property of virtual terminal: %s" % node, is_type=True)
+            self.check(node.text is None, message and "Setting property of virtual terminal: %s" % node)
             self.check(node is not self.root, "Setting property of virtual root")
 
         def _check_possible_attribute():
-            self.check(requires_edge_attributes(self.graph.framework), message and "Edge attributes disabled",
-                       is_type=True)
-            self.check(self.last_edge is not None, message and "Setting attribute on edge when no edge exists",
-                       is_type=True)
+            self.check(requires_edge_attributes(self.graph.framework), message and "Edge attributes disabled")
+            self.check(self.last_edge is not None, message and "Setting attribute on edge when no edge exists")
             self.check(self.last_edge.lab not in (ROOT_LAB, ANCHOR_LAB),
-                       message and "Setting attribute on %s edge" % self.last_edge.lab, is_type=True)
+                       message and "Setting attribute on %s edge" % self.last_edge.lab)
 
         if self.args.constraints:
             self.check(self.constraints.allow_action(action, self.actions),
@@ -202,11 +200,12 @@ class State:
             if self.args.swap:  # Without swap, the oracle may be incapable even of single action
                 self.check(self.root.outgoing or all(ROOT_LAB in n.incoming_labs or n.text for n in self.nodes),
                            message and "Root has no child at parse end", is_type=True)
-            for n in self.nodes:
-                self.check(not self.args.require_connected or ROOT_LAB in n.incoming_labs or n.text or
-                           n.incoming, message and "Non-terminal %s has no parent at parse end" % n, is_type=True)
-                self.check(not requires_node_labels(self.framework) or n.text or n.label is not None,
-                           message and "Non-terminal %s has no label at parse end" % n, is_type=True)
+            for node in self.nodes:
+                if not node.is_root and node.text is None:
+                    self.check(not self.args.require_connected or ROOT_LAB in node.incoming_labs or
+                               node.incoming, message and "Non-terminal %s has no parent at parse end" % node)
+                    self.check(not requires_node_labels(self.framework) or node.label is not None,
+                               message and "Non-terminal %s has no label at parse end" % node)
         else:
             self.check(self.action_ratio() < self.args.max_action_ratio,
                        message and "Actions/terminals ratio: %.3f" % self.args.max_action_ratio, is_type=True)
