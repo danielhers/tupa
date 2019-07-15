@@ -292,7 +292,6 @@ class NeuralNetwork(Classifier, SubModel):
                                                                  for i, e in zip(indices, vectors))), level=4)
         if self.config.args.use_bert:
             bert_emded = self.get_bert_embed(passage, lang, train)
-            embeddings[0].append(('BERT', bert_emded))
             embeddings[1].append(('BERT', bert_emded))
 
             if "bert_weights" in self.params:
