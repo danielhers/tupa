@@ -228,23 +228,23 @@ class GraphParser(AbstractParser):
         if self.training:
             assert not self.model.is_finalized, "Updating finalized model"
             self.model.classifier.update(
-                features, axis=key, true=true_keys, pred=outputs[pred] if key is not None else pred.id,
+                features, axis=self.model.key(self.framework, key), true=true_keys,
+                pred=outputs[pred] if key is not None else pred.id,
                 importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values] or None)
             self.state.finished = True
         self.model.classifier.finished_step(self.training)
-        if key is None:
-            self.model.classifier.transition(output, axis=key)
         return output, pred
 
     def correct(self, key, output, pred, scores, true, true_keys):
         true_values = ()
-        is_correct = (output == true)
         if key is None:  # action
             true_keys, true_values = map(list, zip(*true.items())) if true else (None, None)
             output = true.get(pred.id)
             is_correct = (output is not None)
             if not is_correct:
                 output = true_values[scores[true_keys].argmax()] if self.training else pred
+        else:
+            is_correct = (output == true)
         if is_correct:
             self.correct_count[key] += 1
         elif key is not None and self.oracle and self.training:

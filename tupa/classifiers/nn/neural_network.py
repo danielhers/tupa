@@ -399,10 +399,6 @@ class NeuralNetwork(Classifier, SubModel):
             self.init_cg(renew)
         self.finished_step(train)
 
-    def transition(self, action, axis):
-        for birnn in self.get_birnns(axis):
-            birnn.transition(action)
-
     def finalize(self, finished_epoch=False, **kwargs):
         """
         Fit this model on collected samples

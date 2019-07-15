@@ -88,9 +88,6 @@ class BiRNN(SubModel):
     def get_representation(self, i):
         return self.input_reps[min(i, self.max_length - 1)]
 
-    def transition(self, action):
-        pass
-
     def save_sub_model(self, d, *args):
         values = super().save_sub_model(
             d,

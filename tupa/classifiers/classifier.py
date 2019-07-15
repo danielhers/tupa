@@ -83,9 +83,6 @@ class Classifier:
         """
         pass
 
-    def transition(self, action, axis):
-        pass
-
     def save(self, filename, skip_labels=(), **kwargs):
         """
         Save all parameters to file

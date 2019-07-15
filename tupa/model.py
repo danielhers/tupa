@@ -146,44 +146,31 @@ class Model:
         return Actions(size=self.config.args.max_action_labels)
 
     def init_param(self, key):
+        feature_param = self.feature_params.get(key)
+        if feature_param is None:
+            feature_param = self.param_defs(only=key)[0].create_from_config()
+            self.feature_params[key] = feature_param
         if self.feature_extractor:
             self.feature_extractor.init_param(key)
+        feature_param.init_data()
+        return feature_param
+
+    def init_outputs(self, framework, key, outputs):
+        axis = self.key(framework, key)
+        if axis not in outputs:
+            outputs[axis] = self.init_param(key).data
 
     def init_node_labels(self, framework, outputs):
         if requires_node_labels(framework):
-            node_label_key = self.key(framework, NODE_LABEL_KEY)
-            if node_label_key not in outputs:
-                node_labels = self.feature_params.get(node_label_key)
-                if node_labels is None:
-                    node_labels = self.param_defs(only=NODE_PROPERTY_KEY)[0].create_from_config()
-                    self.feature_params[node_label_key] = node_labels
-                self.init_param(node_label_key)
-                node_labels.init_data()
-                outputs[node_label_key] = node_labels.data
+            self.init_outputs(framework, NODE_LABEL_KEY, outputs)
 
     def init_node_properties(self, framework, outputs):
         if requires_node_properties(framework):
-            node_property_key = self.key(framework, NODE_PROPERTY_KEY)
-            if node_property_key not in outputs:
-                node_properties = self.feature_params.get(node_property_key)
-                if node_properties is None:
-                    node_properties = self.param_defs(only=NODE_PROPERTY_KEY)[0].create_from_config()
-                    self.feature_params[node_property_key] = node_properties
-                self.init_param(node_property_key)
-                node_properties.init_data()
-                outputs[node_property_key] = node_properties.data
+            self.init_outputs(framework, NODE_PROPERTY_KEY, outputs)
 
     def init_edge_attributes(self, framework, outputs):
         if requires_edge_attributes(framework):
-            edge_attribute_key = self.key(framework, EDGE_ATTRIBUTE_KEY)
-            if edge_attribute_key not in outputs:
-                edge_attributes = self.feature_params.get(edge_attribute_key)
-                if edge_attributes is None:
-                    edge_attributes = self.param_defs(only=EDGE_ATTRIBUTE_KEY)[0].create_from_config()
-                    self.feature_params[edge_attribute_key] = edge_attributes
-                self.init_param(edge_attribute_key)
-                edge_attributes.init_data()
-                outputs[edge_attribute_key] = edge_attributes.data
+            self.init_outputs(framework, EDGE_ATTRIBUTE_KEY, outputs)
 
     def score(self, state, framework, key):
         features = self.feature_extractor.extract_features(state)
@@ -193,11 +180,11 @@ class Model:
         self.init_model(framework)
         axes = [framework]
         if requires_node_labels(state.framework):
-            axes.append(NODE_LABEL_KEY)
+            axes.append(self.key(framework, NODE_LABEL_KEY))
         if requires_node_properties(state.framework):
-            axes.append(NODE_PROPERTY_KEY)
+            axes.append(self.key(framework, NODE_PROPERTY_KEY))
         if requires_edge_attributes(state.framework):
-            axes.append(EDGE_ATTRIBUTE_KEY)
+            axes.append(self.key(framework, EDGE_ATTRIBUTE_KEY))
         tokens = [node.label for node in state.graph.nodes if node.anchors]
         lang = getattr(state.graph, "lang", "en")
         self.classifier.init_features(self.feature_extractor.init_features(state), axes, train, tokens, lang)
