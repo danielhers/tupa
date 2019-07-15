@@ -268,8 +268,9 @@ class Model:
         Restoring from a model that was just loaded from file, or called by restore()
         """
         for axis, all_size in self.classifier.labels_t.items():  # all_size is a pair of (label list, size limit)
-            if axis in SHARED_OUTPUT_KEYS:  # These are labels/properties/attributes rather than action labels
-                feature_param = self.feature_extractor.params.get(axis)
+            framework, _, key = axis.partition("_")
+            if key in SHARED_OUTPUT_KEYS:  # These are labels/properties/attributes rather than action labels
+                feature_param = self.feature_extractor.params.get(key)
                 if feature_param and feature_param.size:  # Also used for features, so share the dict
                     del all_size
                     labels = feature_param.data
