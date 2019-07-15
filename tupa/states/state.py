@@ -170,7 +170,8 @@ class State:
             self.check(node is not None, message and "Labeling invalid node %s when stack size is %d" % (
                 action.tag, len(self.stack)))
             self.check(node.label is not None, message and "Labeling already-labeled node: %s" % node, is_type=True)
-            self.check(node.text is None, message and "Terminals do not have labels: %s" % node, is_type=True)
+            self.check(node.text is None, message and "Setting label of virtual terminal: %s" % node, is_type=True)
+            self.check(node is not self.root, "Setting label of virtual root")
 
         def _check_possible_property():
             self.check(requires_node_properties(self.graph.framework), message and "Node properties disabled",
@@ -181,13 +182,16 @@ class State:
                 node = None
             self.check(node is not None, message and "Setting property on invalid node %s when stack size is %d" % (
                 action.tag, len(self.stack)))
-            self.check(node.text is None, message and "Terminals do not have properties: %s" % node, is_type=True)
+            self.check(node.text is None, message and "Setting property of virtual terminal: %s" % node, is_type=True)
+            self.check(node is not self.root, "Setting property of virtual root")
 
         def _check_possible_attribute():
             self.check(requires_edge_attributes(self.graph.framework), message and "Edge attributes disabled",
                        is_type=True)
             self.check(self.last_edge is not None, message and "Setting attribute on edge when no edge exists",
                        is_type=True)
+            self.check(self.last_edge.lab not in (ROOT_LAB, ANCHOR_LAB),
+                       message and "Setting attribute on %s edge" % self.last_edge.lab, is_type=True)
 
         if self.args.constraints:
             self.check(self.constraints.allow_action(action, self.actions),
