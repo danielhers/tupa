@@ -1,4 +1,4 @@
-from .validation import Constraints
+from .validation import Constraints, ANCHOR_LAB
 
 
 class EdgeTags:
@@ -27,7 +27,7 @@ class UccaConstraints(Constraints):
                                             EdgeTags.Function, EdgeTags.Ground,
                                             EdgeTags.Punctuation},
                          childless_incoming_trigger=EdgeTags.Function,
-                         childless_outgoing_allowed={EdgeTags.Punctuation},
+                         childless_outgoing_allowed={EdgeTags.Punctuation, ANCHOR_LAB},
                          unique_incoming={EdgeTags.Function,
                                           EdgeTags.ParallelScene, EdgeTags.Linker,
                                           EdgeTags.Connector,

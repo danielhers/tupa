@@ -6,13 +6,8 @@ from .edge import StateEdge
 from .node import StateNode
 from ..action import Actions
 from ..config import Config, requires_node_labels, requires_node_properties, requires_edge_attributes, requires_anchors
-from ..constraints.validation import CONSTRAINTS, Constraints, Direction
+from ..constraints.validation import CONSTRAINTS, Constraints, Direction, ROOT_ID, ROOT_LAB, ANCHOR_LAB, DEFAULT_LABEL
 from ..model import NODE_LABEL_KEY, NODE_PROPERTY_KEY, EDGE_ATTRIBUTE_KEY
-
-ROOT_ID = -1
-ROOT_LAB = "top"
-ANCHOR_LAB = "anchor"
-DEFAULT_LABEL = "name"
 
 
 class InvalidActionError(AssertionError):

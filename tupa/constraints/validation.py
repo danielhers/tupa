@@ -3,6 +3,12 @@ from itertools import groupby
 from operator import attrgetter
 
 
+ROOT_ID = -1
+ROOT_LAB = "top"
+ANCHOR_LAB = "anchor"
+DEFAULT_LABEL = "name"
+
+
 class Direction(Enum):
     incoming = 0
     outgoing = 1
