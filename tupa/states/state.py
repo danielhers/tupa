@@ -82,9 +82,9 @@ class State:
                     edge.child.node.is_top = True
                 elif edge.child.text is not None:
                     if requires_anchors(self.framework):
-                        if node.anchors is None:
-                            node.anchors = []
-                        node.anchors += edge.child.orig_node.anchors()
+                        if node.node.anchors is None:
+                            node.node.anchors = []
+                        node.node.anchors += edge.child.orig_node.anchors
                 else:
                     attributes, values = zip(*edge.attributes.items()) if edge.attributes else (None, None)
                     graph.add_edge(int(edge.parent.id), int(edge.child.id), edge.lab,
