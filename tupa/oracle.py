@@ -125,8 +125,8 @@ class Oracle:
 
                     if not self.found:
                         # Check if a swap is necessary, and how far (if compound swap is enabled)
-                        related = dict([(edge.tgt,  edge) for edge in outgoing] +
-                                       [(edge.src, edge) for edge in incoming])
+                        related = dict([(edge.tgt, edge) for edge in outgoing if edge.tgt not in self.nodes_remaining] +
+                                       [(edge.src, edge) for edge in incoming if edge.src not in self.nodes_remaining])
                         distance = None  # Swap distance (how many nodes in the stack to swap)
                         for i, s in enumerate(state.stack[-3::-1], start=1):  # Skip top two: checked above, not related
                             edge = related.pop(s.id, None)
