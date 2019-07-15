@@ -4,8 +4,8 @@ from operator import attrgetter
 
 
 ROOT_ID = -1
-ROOT_LAB = "top"
-ANCHOR_LAB = "anchor"
+ROOT_LAB = "_top"
+ANCHOR_LAB = "_anchor"
 DEFAULT_LABEL = "name"
 
 
