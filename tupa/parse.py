@@ -231,7 +231,6 @@ class GraphParser(AbstractParser):
                 features, axis=self.model.key(self.framework, key), true=true_keys,
                 pred=outputs[pred] if key is not None else pred.id,
                 importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values] or None)
-            self.state.finished = True
         self.model.classifier.finished_step(self.training)
         return output, pred
 
