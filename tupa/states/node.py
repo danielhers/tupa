@@ -102,4 +102,4 @@ class StateNode:
 
     @classmethod
     def anchors(cls, node):
-        return set.union(*[set(range(x["from"], x["to"] + 1)) for x in node.anchors]) if node.anchors else set()
+        return set.union(*[set(range(x["from"], x["to"])) for x in node.anchors]) if node.anchors else set()

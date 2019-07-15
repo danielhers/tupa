@@ -38,7 +38,6 @@ class State:
         self.labeled = bool(graph and graph.nodes)
         self.stack = []
         self.buffer = deque()
-        self.nodes = []
         self.heads = set()
         self.need_label = self.need_property = self.need_attribute = self.last_edge = None  # Which edge/node is next
         graph_nodes = list(self.graph.nodes)  # Copy list of nodes before adding virtual root and terminals to graph
@@ -59,6 +58,7 @@ class State:
                         self.graph.add_edge(node.id, terminal.orig_node.id, ANCHOR_LAB)
         self.stack.append(self.root)
         self.buffer += self.terminals
+        self.nodes = [self.root] + self.terminals
         self.actions = []  # History of applied actions
         self.type_validity_cache = {}
 
