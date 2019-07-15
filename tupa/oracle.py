@@ -29,7 +29,7 @@ class Oracle:
     """
     def __init__(self, graph, conllu=None):
         self.args = Config().args
-        self.nodes_remaining = {n.id for n in graph.nodes}
+        self.nodes_remaining = {int(n.id) for n in graph.nodes}
         self.edges_remaining = set(graph.edges)
         self.graph = graph
         self.conllu = conllu
@@ -73,6 +73,10 @@ class Oracle:
         :param state: current State of the parser
         :return: generator of Action items to perform
         """
+        if int(state.root.orig_node.id) in self.nodes_remaining:
+            self.nodes_remaining.remove(int(state.root.orig_node.id))
+            for terminal in state.terminals:
+                self.nodes_remaining.remove(int(terminal.orig_node.id))
         self.found = False
         if state.stack:
             s0 = state.stack[-1]
@@ -113,13 +117,13 @@ class Oracle:
 
                         # Check for actions to create binary edges
                         for edge in incoming:
-                            if edge.src == s1.id:
+                            if edge.src == int(s1.id):
                                 yield self.action(edge, EDGE, RIGHT)  # RightEdge
 
                         for edge in outgoing:
-                            if edge.tgt == s1.id:
+                            if edge.tgt == int(s1.id):
                                 yield self.action(edge, EDGE, LEFT)  # LeftEdge
-                            elif state.buffer and edge.tgt == state.buffer[0].id and \
+                            elif state.buffer and edge.tgt == int(state.buffer[0].id) and \
                                     len(state.buffer[0].orig_node.incoming_edges) == 1:
                                 yield self.action(Actions.Shift)  # Special case to allow discarding simple children
 
@@ -129,7 +133,7 @@ class Oracle:
                                        [(edge.src, edge) for edge in incoming if edge.src not in self.nodes_remaining])
                         distance = None  # Swap distance (how many nodes in the stack to swap)
                         for i, s in enumerate(state.stack[-3::-1], start=1):  # Skip top two: checked above, not related
-                            edge = related.pop(s.id, None)
+                            edge = related.pop(int(s.id), None)
                             if edge is not None:
                                 if not self.args.swap:  # We have no chance to reach it, so stop trying
                                     self.remove(edge)
@@ -159,7 +163,7 @@ class Oracle:
     def remove(self, edge, node=None):
         self.edges_remaining.discard(edge)
         if node is not None:
-            self.nodes_remaining.discard(node.id)
+            self.nodes_remaining.discard(int(node.id))
 
     def need_label(self, node):
         return requires_node_labels(self.graph.framework) and \

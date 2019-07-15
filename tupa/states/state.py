@@ -36,19 +36,20 @@ class State:
         self.conllu = conllu
         self.framework = target or self.graph.framework
         self.labeled = bool(graph and graph.nodes)
+        self.stack = []
+        self.buffer = deque()
+        self.nodes = []
+        self.heads = set()
+        self.need_label = self.need_property = self.need_attribute = self.last_edge = None  # Which edge/node is next
+        graph_nodes = list(self.graph.nodes)  # Copy list of nodes before adding virtual root and terminals to graph
+        self.root = StateNode(ROOT_ID, is_root=True, orig_node=self.graph.add_node(ROOT_ID))  # Virtual root for tops
         self.terminals = []
         for i, conllu_node in enumerate(self.conllu.nodes):
             text = conllu_node.label
             new_conllu_node = self.graph.add_node(
                 label=text, anchors=conllu_node.anchors, properties=conllu_node.properties, values=conllu_node.values)
             self.terminals.append(StateNode(i, text=text, orig_node=new_conllu_node))  # Virtual node for tokens
-        self.stack = []
-        self.buffer = deque()
-        self.nodes = []
-        self.heads = set()
-        self.need_label = self.need_property = self.need_attribute = self.last_edge = None  # Which edge/node is next
-        self.root = StateNode(ROOT_ID, is_root=True, orig_node=self.graph.add_node(ROOT_ID))  # Virtual root for tops
-        for node in self.graph.nodes:
+        for node in graph_nodes:
             if node.is_top:
                 self.graph.add_edge(ROOT_ID, node.id, ROOT_LAB)
             if node.anchors:
