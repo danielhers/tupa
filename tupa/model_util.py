@@ -1,16 +1,16 @@
-import sys
-import time
-from collections import OrderedDict, Counter, defaultdict
-
 import csv
 import json
-import numpy as np
 import os
 import pickle
 import pprint as pp
 import shutil
+import sys
+import time
+from collections import OrderedDict, Counter, defaultdict
 from glob import glob
 from operator import itemgetter
+
+import numpy as np
 from tqdm import tqdm
 
 from .labels import Labels
@@ -156,7 +156,6 @@ def remove_existing(*filenames):
         try:
             shutil.copy2(filename, filename + "~")
             os.remove(filename)
-            print("Removed existing '%s'." % filename)
         except OSError:
             pass
 
@@ -178,14 +177,14 @@ def save_dict(filename, d):
     """
     remove_existing(filename)
     sys.setrecursionlimit(2000)
-    print("Saving to '%s'... " % filename, end="", flush=True)
+    print("Saving to '%s'... " % filename, end="", flush=True, file=sys.stderr)
     started = time.time()
     with open(filename, "wb") as h:
         try:
             pickle.dump(d, h, protocol=pickle.HIGHEST_PROTOCOL)
         except RecursionError as e:
             raise IOError("Failed dumping dictionary:\n" + pp.pformat(d, compact=True)) from e
-    print("Done (%.3fs)." % (time.time() - started))
+    print("Done (%.3fs)." % (time.time() - started), file=sys.stderr)
 
 
 def load_dict(filename):
@@ -206,10 +205,10 @@ def load_dict(filename):
         if exception is not None:
             raise FileNotFoundError("File not found: '%s'" % "', '".join(names)) from exception
 
-    print("Loading from '%s'... " % filename, end="", flush=True)
+    print("Loading from '%s'... " % filename, end="", flush=True, file=sys.stderr)
     started = time.time()
     d = try_load(filename, os.path.splitext(filename)[0])
-    print("Done (%.3fs)." % (time.time() - started))
+    print("Done (%.3fs)." % (time.time() - started), file=sys.stderr)
     return d
 
 
@@ -227,7 +226,7 @@ def save_json(filename, d):
     :param d: dictionary to save
     """
     remove_existing(filename)
-    print("Saving to '%s'." % filename)
+    print("Saving to '%s'." % filename, file=sys.stderr)
     with open(filename, "w") as h:
         json.dump(d, h, default=jsonify)
 
@@ -237,7 +236,7 @@ def load_json(filename):
     Load dictionary from JSON file
     :param filename: file to read from
     """
-    print("Loading from '%s'." % filename)
+    print("Loading from '%s'." % filename, file=sys.stderr)
     with open(filename, "r") as h:
         d = json.load(h)
     return d
@@ -282,4 +281,4 @@ def load_enum(filename):
         return IdentityVocab()
     else:
         with open(filename, encoding="utf-8") as f:
-            return Vocab(tqdm(csv.reader(f), desc="Loading '%s'" % filename, file=sys.stdout, unit=" rows"))
+            return Vocab(tqdm(csv.reader(f), desc="Loading '%s'" % filename, unit=" rows"))

@@ -335,7 +335,7 @@ class Config(object, metaclass=Singleton):
         self.args = FallbackNamespace(ap.parse_args(args if args else None))
 
         if self.args.config:
-            print("Loading configuration from '%s'." % self.args.config)
+            print("Loading configuration from '%s'." % self.args.config, file=sys.stderr)
 
         if self.args.model:
             if not self.args.log:
@@ -416,7 +416,7 @@ class Config(object, metaclass=Singleton):
     def update_iteration(self, iteration, print_message=True, recursive=True):
         if iteration.hyperparams:
             if print_message:
-                print("Updating: %s" % iteration.hyperparams)
+                print("Updating: %s" % iteration.hyperparams, file=sys.stderr)
             self.iteration_hyperparams = iteration.hyperparams.args
             self.update_by_hyperparams()
             if recursive:
@@ -465,13 +465,13 @@ class Config(object, metaclass=Singleton):
     def print(self, message, level=3):
         if self.args.verbose >= level:
             try:
-                print(message() if hasattr(message, "__call__") else message, flush=True)
+                print(message() if hasattr(message, "__call__") else message, flush=True, file=sys.stderr)
             except UnicodeEncodeError:
                 pass
 
     def save(self, filename):
         out_file = filename + ".yml"
-        print("Saving configuration to '%s'." % out_file)
+        print("Saving configuration to '%s'." % out_file, file=sys.stderr)
         with open(out_file, "w") as f:
             name = None
             values = []

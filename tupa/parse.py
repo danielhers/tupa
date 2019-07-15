@@ -329,7 +329,7 @@ class BatchParser(AbstractParser):
                         if total and i <= total else "%d" % i
                     id_width = max(id_width, len(str(graph.id)))
                     print("%s %-6s %-*s" % (progress, target, id_width, graph.id),
-                          end=self.config.line_end)
+                          end=self.config.line_end, file=sys.stderr)
                 else:
                     graphs.set_description()
                     postfix = {target: graph.id}
@@ -363,7 +363,7 @@ class BatchParser(AbstractParser):
         self.num_graphs += 1
 
     def summary(self):
-        print("Parsed %d graphs" % self.num_graphs)
+        print("Parsed %d graphs" % self.num_graphs, file=sys.stderr)
         if self.correct_count[None]:
             accuracy_str = percents_str(self.correct_count[None], self.count[None], "correct actions ")
             for key, title in (NODE_LABEL_KEY, "node labels"), (NODE_PROPERTY_KEY, "node properties"), \
@@ -371,10 +371,10 @@ class BatchParser(AbstractParser):
                 if self.count[key]:
                     accuracy_str += ", " + percents_str(self.correct_count[key], self.count[key],
                                                         "correct " + title + " ")
-            print("Overall %s" % accuracy_str)
+            print("Overall %s" % accuracy_str, file=sys.stderr)
         print("Total time: %.3fs (average time/graph: %.3fs, average tokens/s: %d)" % (
             self.duration, self.time_per_graph(),
-            self.tokens_per_second()), flush=True)
+            self.tokens_per_second()), flush=True, file=sys.stderr)
 
     def time_per_graph(self):
         return self.duration / self.num_graphs
@@ -412,16 +412,17 @@ class Parser(AbstractParser):
             for self.iteration, it in enumerate(iterations, start=1):
                 start = self.model.classifier.epoch + 1 if self.model.classifier else 1
                 if end and start < end + 1:
-                    print("Dropped %d epochs because best score was on %d" % (end - start + 1, start - 1))
+                    print("Dropped %d epochs because best score was on %d" % (end - start + 1, start - 1),
+                          file=sys.stderr)
                 end = it.epochs + 1
                 self.config.update_iteration(it)
                 if end < start + 1:
-                    print("Skipping %s, already trained %s epochs" % (it, start - 1))
+                    print("Skipping %s, already trained %s epochs" % (it, start - 1), file=sys.stderr)
                     continue
                 for self.epoch in range(start, end):
-                    print("Training epoch %d of %d: " % (self.epoch, end - 1))
+                    print("Training epoch %d of %d: " % (self.epoch, end - 1), file=sys.stderr)
                     if self.config.args.curriculum and self.accuracies:
-                        print("Sorting graphs by previous epoch accuracy...")
+                        print("Sorting graphs by previous epoch accuracy...", file=sys.stderr)
                         graphs = sorted(graphs, key=lambda p: self.accuracies.get(p.id, 0))
                     else:
                         self.config.random.shuffle(graphs)
@@ -429,7 +430,7 @@ class Parser(AbstractParser):
                         raise ParserException("Could not train on any graph")
                     yield self.eval_and_save(self.iteration == len(iterations) and self.epoch == end - 1,
                                              finished_epoch=True, conllu=conllu, alignment=alignment)
-                print("Trained %d epochs" % (end - 1))
+                print("Trained %d epochs" % (end - 1), file=sys.stderr)
                 if dev:
                     if self.iteration < len(iterations):
                         self.model.load(is_finalized=False)  # Load best model to prepare for next iteration
@@ -443,7 +444,7 @@ class Parser(AbstractParser):
         try:
             self.model.load(is_finalized=False)
         except FileNotFoundError:
-            print("not found, starting from untrained model.")
+            print("not found, starting from untrained model.", file=sys.stderr)
         self.print_config()
         self.best_score = self.model.classifier.best_score if self.model.classifier else 0
 
@@ -458,7 +459,7 @@ class Parser(AbstractParser):
             average_score, scores = self.eval(self.dev, ParseMode.dev, self.config.args.devscores,
                                               conllu=conllu, alignment=alignment)
             if average_score >= self.best_score:
-                print("Better than previous best score (%.3f)" % self.best_score)
+                print("Better than previous best score (%.3f)" % self.best_score, file=sys.stderr)
                 finalized.classifier.best_score = average_score
                 if self.best_score:
                     self.save(finalized)
@@ -466,7 +467,7 @@ class Parser(AbstractParser):
                 if self.config.args.eval_test and self.test and self.test is not True:  # There are graphs to parse
                     self.eval(self.test, ParseMode.test, self.config.args.testscores, display=False)
             else:
-                print("Not better than previous best score (%.3f)" % self.best_score)
+                print("Not better than previous best score (%.3f)" % self.best_score, file=sys.stderr)
         elif last or self.config.args.save_every is not None:
             self.save(finalized)
         if not last:
@@ -478,7 +479,7 @@ class Parser(AbstractParser):
         model.save(save_init=self.save_init)
 
     def eval(self, graphs, mode, scores_filename, display=True, conllu=None, alignment=None):
-        print("Evaluating on %s graphs" % mode.name)
+        print("Evaluating on %s graphs" % mode.name, file=sys.stderr)
         out = self.parse(graphs, mode=mode, evaluate=True, display=display, conllu=conllu, alignment=alignment)
         try:
             results = score.mces.evaluate([g for g, _ in graphs], out)
@@ -488,7 +489,8 @@ class Parser(AbstractParser):
         prefix = ".".join(map(str, [self.iteration, self.epoch] + (
             [self.batch] if self.config.args.save_every else [])))
         if display:
-            print("Evaluation %s, average F1 score on %s: %.3f" % (prefix, mode.name, results["all"]["f"]))
+            print("Evaluation %s, average F1 score on %s: %.3f" % (prefix, mode.name, results["all"]["f"]),
+                  file=sys.stderr)
         print_scores(results, scores_filename, prefix=prefix, prefix_title="iteration")
         return results["all"]["f"], out
 
@@ -546,7 +548,7 @@ def train_test(train_graphs, dev_graphs, test_graphs, args, model_suffix=""):
                                     conllu=conllu, alignment=alignment))
     if test_graphs:
         if args.train or args.folds:
-            print("Evaluating on test graphs")
+            print("Evaluating on test graphs", file=sys.stderr)
         evaluate = args.evaluate or train_graphs
         out = p.parse(test_graphs, evaluate=evaluate, write=args.write, conllu=conllu, alignment=alignment)
         results = score.mces.evaluate([g for g, _ in test_graphs], out)
@@ -607,7 +609,7 @@ def main_generator():
         Config().random.shuffle(all_graphs)
         folds = [all_graphs[i::args.folds] for i in range(args.folds)]
         for i in range(args.folds):
-            print("Fold %d of %d:" % (i + 1, args.folds))
+            print("Fold %d of %d:" % (i + 1, args.folds), file=sys.stderr)
             dev_graphs = folds[i]
             test_graphs = folds[(i + 1) % args.folds]
             train_graphs = [graph for fold in folds if fold is not dev_graphs and fold is not test_graphs
@@ -616,8 +618,9 @@ def main_generator():
             if s and s[-1] is not None:
                 fold_scores.append(s[-1])
         if fold_scores:
-            print("Average test F1 score for each fold: " + ", ".join("%.3f" % s["all"]["f"] for s in fold_scores))
-            print("Aggregated scores across folds:\n")
+            print("Average test F1 score for each fold: " + ", ".join("%.3f" % s["all"]["f"] for s in fold_scores),
+                  file=sys.stderr)
+            print("Aggregated scores across folds:\n", file=sys.stderr)
             yield fold_scores
     elif args.train:  # Simple train/dev/test by given arguments
         train_graphs, dev_graphs = [read_graphs_with_progress_bar(arg) if arg else []
@@ -635,7 +638,7 @@ def read_graphs_with_progress_bar(fh, **kwargs):
 
 
 def main():
-    print("TUPA version " + GIT_VERSION + " (MRP)")
+    print("TUPA version " + GIT_VERSION + " (MRP)", file=sys.stderr)
     list(main_generator())
 
 

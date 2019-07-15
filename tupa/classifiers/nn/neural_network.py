@@ -296,10 +296,10 @@ class NeuralNetwork(Classifier, SubModel):
             embeddings[1].append(('BERT', bert_emded))
 
             if "bert_weights" in self.params:
-                print("\n--Bert Weights Changed--: ")
-                print(str(dy.softmax(self.params["bert_weights"]).value()) != self.last_weights)
-                print("\n--Bert Weights--: ")
-                print(str(dy.softmax(self.params["bert_weights"]).value()))
+                self.config.print("\n--Bert Weights Changed--: ")
+                self.config.print(str(dy.softmax(self.params["bert_weights"]).value()) != self.last_weights)
+                self.config.print("\n--Bert Weights--: ")
+                self.config.print(str(dy.softmax(self.params["bert_weights"]).value()))
                 self.last_weights = str(dy.softmax(self.params["bert_weights"]).value())
 
         for birnn in self.get_birnns(*axes):
@@ -456,10 +456,10 @@ class NeuralNetwork(Classifier, SubModel):
         remove_existing(filename + ".data", filename + ".meta")
         try:
             self.set_weight_decay_lambda(0.0)  # Avoid applying weight decay due to clab/dynet#1206, we apply it on load
-            dy.save(filename, tqdm(values, desc="Saving model to '%s'" % filename, unit="param", file=sys.stdout))
+            dy.save(filename, tqdm(values, desc="Saving model to '%s'" % filename, unit="param"))
             self.set_weight_decay_lambda()
         except ValueError as e:
-            print("Failed saving model: %s" % e)
+            print("Failed saving model: %s" % e, file=sys.stderr)
 
     def load_model(self, filename, d):
         self.model = None
@@ -478,7 +478,7 @@ class NeuralNetwork(Classifier, SubModel):
         assert not values, "Loaded values: %d more than expected" % len(values)
         if self.weight_decay and self.config.args.dynet_apply_weight_decay_on_load:
             t = tqdm(list(self.all_params(as_array=False).items()),
-                     desc="Applying weight decay of %g" % self.weight_decay, unit="param", file=sys.stdout)
+                     desc="Applying weight decay of %g" % self.weight_decay, unit="param")
             for key, param in t:
                 t.set_postfix(param=key)
                 try:
@@ -493,7 +493,7 @@ class NeuralNetwork(Classifier, SubModel):
 
     def load_param_values(self, filename, d=None):
         return list(tqdm(dy.load_generator(filename, self.model), total=self.params_num(d) if d else None,
-                         desc="Loading model from '%s'" % filename, unit="param", file=sys.stdout))
+                         desc="Loading model from '%s'" % filename, unit="param"))
 
     def params_num(self, d):
         return sum(len(m.get_sub_dict(d).get("param_keys", ())) for m in self.sub_models())
@@ -515,9 +515,9 @@ class NeuralNetwork(Classifier, SubModel):
     def print_params(self, max_rows=10):
         for model in self.sub_models():
             for key, value in model.params.items():
-                print("[%s] %s" % (model.params_str(), key))
+                print("[%s] %s" % (model.params_str(), key), file=sys.stderr)
                 # noinspection PyBroadException
                 try:
-                    print(value.as_array()[:max_rows])
+                    print(value.as_array()[:max_rows], file=sys.stderr)
                 except Exception:
                     pass
