@@ -102,11 +102,14 @@ class Oracle:
 
                     if len(state.stack) > 1:
                         s1 = state.stack[-2]
+                        finished_terminals = not any(self.is_terminal_edge(e) for e in
+                                                     self.edges_remaining.intersection(s1.orig_node.outgoing_edges))
                         # Check for node label action: if all terminals have already been connected
-                        if self.need_label(s1) and not any(self.is_terminal_edge(e) for e in
-                                                           self.edges_remaining.intersection(
-                                                               s1.orig_node.outgoing_edges)):
+                        if self.need_label(s1) and finished_terminals:
                             yield self.action(s1, LABEL, 2)
+
+                        if self.need_property(s1) and finished_terminals:
+                            yield self.action(s1, PROPERTY, 2)
 
                         # Check for actions to create binary edges
                         for edge in incoming:

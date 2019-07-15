@@ -47,7 +47,7 @@ class State:
         self.nodes = []
         self.heads = set()
         self.need_label = self.need_property = self.need_attribute = self.last_edge = None  # Which edge/node is next
-        root_node = self.graph.add_node(ROOT_ID)
+        self.root = StateNode(ROOT_ID, is_root=True, orig_node=self.graph.add_node(ROOT_ID))  # Virtual root for tops
         for node in self.graph.nodes:
             if node.is_top:
                 self.graph.add_edge(ROOT_ID, node.id, ROOT_LAB)
@@ -56,7 +56,6 @@ class State:
                 for terminal in self.terminals:
                     if anchors & terminal.orig_anchors:
                         self.graph.add_edge(node.id, terminal.orig_node.id, ANCHOR_LAB)
-        self.root = self.add_node(is_root=True, orig_node=root_node)  # Virtual root whose children are top nodes
         self.stack.append(self.root)
         self.buffer += self.terminals
         self.actions = []  # History of applied actions
