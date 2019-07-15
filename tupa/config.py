@@ -166,7 +166,6 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--max-pos", type=int, default=100, help="max number of coarse POS tags to keep embeddings for")
     add(group, "--max-deps", type=int, default=100, help="max number of dep labels to keep embeddings for")
     add(group, "--max-edge-labels", type=int, default=15, help="max number of edge labels for embeddings")
-    add(group, "--max-edge-attributes", type=int, default=1, help="max number of edge attributes for embeddings")
     add(group, "--max-puncts", type=int, default=5, help="max number of punctuations for embeddings")
     add(group, "--max-action-types", type=int, default=10, help="max number of action types for embeddings")
     add(group, "--max-action-labels", type=int, default=100, help="max number of action labels to allow")
