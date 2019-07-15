@@ -125,7 +125,7 @@ class GraphParser(AbstractParser):
             self.state.transition(action)
             need_label, label, predicted_label, true_label = self.select_node_label(action)
             need_property, property_value, predicted_property_value, true_property_value = \
-                self.select_node_property_value(action)
+                self.select_node_property_value()
             need_attribute, attribute_value, predicted_attribute_value, true_attribute_value = \
                 self.select_edge_attribute_value()
             if self.config.args.action_stats:
@@ -195,11 +195,11 @@ class GraphParser(AbstractParser):
             self.state.assign_node_label(raw_true_label if label == true_label else label)
         return need_label, label, predicted_label, true_label
 
-    def select_node_property_value(self, action=None):
+    def select_node_property_value(self):
         true_property_value = property_value = predicted_property_value = None
         need_property = self.state.need_property  # Property action, requires a choice of property + value
         if need_property:
-            true_property_value = self.get_true_node_property_value(action or need_property)
+            true_property_value = self.get_true_node_property_value(need_property)
             property_value, predicted_property_value = self.choose(true_property_value, NODE_PROPERTY_KEY,
                                                                    "node property")
             self.state.assign_node_property_value(property_value)
