@@ -138,9 +138,9 @@ class GraphParser(AbstractParser):
                 predicted_action, "|".join(map(str, true_actions.values())), action, self.state) if self.oracle else
                                           "  action: %-15s %s" % (action, self.state)] + (
                 ["  predicted label: %-9s true label: %s" % (predicted_label, true_label)
-                 if self.oracle else "  label: %s" % label] if need_label else []
+                 if self.oracle else "  label: %s" % label] if need_label else [] +
                 ["  predicted property: %-9s true property: %s" % (predicted_property_value, true_property_value)
-                    if self.oracle else "  property: %s" % property_value] if need_property else []
+                    if self.oracle else "  property: %s" % property_value] if need_property else [] +
                 ["  predicted attribute: %-9s true attribute: %s" % (predicted_attribute_value, true_attribute_value)
                     if self.oracle else "  attribute: %s" % attribute_value] if need_attribute else []
             ) + ["    " + l for l in self.state.log]))
