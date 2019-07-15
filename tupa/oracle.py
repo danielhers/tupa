@@ -31,6 +31,7 @@ class Oracle:
         self.args = Config().args
         self.nodes_remaining = {int(n.id) for n in graph.nodes}
         self.edges_remaining = set(graph.edges)
+        self.terminal_ids = set()
         self.graph = graph
         self.conllu = conllu
         self.found = False
@@ -76,6 +77,7 @@ class Oracle:
         if int(state.root.orig_node.id) in self.nodes_remaining:
             self.nodes_remaining.remove(int(state.root.orig_node.id))
             for terminal in state.terminals:
+                self.terminal_ids.add(int(terminal.orig_node.id))
                 self.nodes_remaining.remove(int(terminal.orig_node.id))
         self.found = False
         if state.stack:
@@ -224,4 +226,4 @@ class Oracle:
         return not self.graph.find_node(i).outgoing_edges
 
     def is_terminal_edge(self, edge):
-        return bool(self.graph.find_node(edge.tgt).anchors)
+        return edge.tgt in self.terminal_ids
