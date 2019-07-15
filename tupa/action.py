@@ -47,10 +47,6 @@ class Action(dict):
     def __call__(self, *args, **kwargs):
         return Action(self.type, *args, **kwargs)
 
-    @property
-    def is_swap(self):
-        return self.is_type(Actions.Swap)
-
 
 class Actions(Labels):
     Shift = Action("SHIFT")

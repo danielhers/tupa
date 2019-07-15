@@ -123,7 +123,6 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     group = ap.add_argument_group(title="General classifier training parameters")
     add(group, "--learning-rate", type=float, help="rate for model weight updates (default: by trainer/1)")
     add(group, "--learning-rate-decay", type=float, default=0, help="learning rate decay per iteration")
-    add(group, "--swap-importance", type=float, default=1, help="learning rate factor for Swap")
     add(group, "--max-training-per-framework", type=int,
         help="max number of training graphs per framework per iteration")
     add_boolean(group, "missing-node-features", "allow node features to be missing if not available", default=True)

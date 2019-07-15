@@ -41,14 +41,13 @@ class Classifier:
     def init_features(self, features, axes, train=False, passage=None, lang=None):
         pass
 
-    def update(self, features, axis, pred, true, importance=None):
+    def update(self, features, axis, pred, true):
         """
         Update classifier weights according to predicted and true labels
         :param features: extracted feature values
         :param axis: axis of the label we are predicting
         :param pred: label predicted by the classifier (non-negative integer bounded by num_labels[axis])
         :param true: true labels (non-negative integers bounded by num_labels[axis])
-        :param importance: how much to scale the update for the weight update for each true label
         """
         assert not self.is_frozen, "Cannot update a frozen model"
         self._update_num_labels()

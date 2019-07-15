@@ -1,6 +1,5 @@
 import sys
 from collections import OrderedDict
-from itertools import repeat
 
 import dynet as dy
 import dynet_config
@@ -365,23 +364,22 @@ class NeuralNetwork(Classifier, SubModel):
         self.config.print("  no updates done yet, returning zero vector.", level=4)
         return np.zeros(num_labels)
 
-    def update(self, features, axis, pred, true, importance=None):
+    def update(self, features, axis, pred, true):
         """
         Update classifier weights according to predicted and true labels
         :param features: extracted feature values, in the form of a dict (name: value)
         :param axis: axis of the label we are predicting
         :param pred: label predicted by the classifier (non-negative integer bounded by num_labels[axis])
         :param true: true labels (non-negative integers bounded by num_labels[axis])
-        :param importance: how much to scale the update for the weight update for each true label
         """
-        super().update(features, axis, pred, true, importance)
-        losses = self.calc_loss(self.evaluate(features, axis, train=True), axis, true, importance or repeat(1))
+        super().update(features, axis, pred, true)
+        losses = self.calc_loss(self.evaluate(features, axis, train=True), axis, true)
         self.config.print(lambda: "  loss=" + ", ".join("%g" % l.value() for l in losses), level=4)
         self.losses += losses
         self.steps += 1
 
-    def calc_loss(self, scores, axis, true, importance):
-        ret = [i * dy.pickneglogsoftmax(scores, t) for t, i in zip(true, importance)]
+    def calc_loss(self, scores, axis, true):
+        ret = [dy.pickneglogsoftmax(scores, t) for t in true]
         if self.loss == "max_margin":
             ret.append(dy.max_dim(dy.log_softmax(scores, restrict=list(set(range(self.num_labels[axis])) - set(true)))))
         return ret

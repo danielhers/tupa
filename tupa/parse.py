@@ -229,8 +229,7 @@ class GraphParser(AbstractParser):
             assert not self.model.is_finalized, "Updating finalized model"
             self.model.classifier.update(
                 features, axis=self.model.key(self.framework, key), true=true_keys,
-                pred=outputs[pred] if key is not None else pred.id,
-                importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values] or None)
+                pred=outputs[pred] if key is not None else pred.id)
         self.model.classifier.finished_step(self.training)
         return output, pred
 
