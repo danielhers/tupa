@@ -85,6 +85,12 @@ class Oracle:
                 if self.need_label(s0) and not any(self.is_terminal_edge(e) for e in outgoing):
                     yield self.action(s0, LABEL, 1)
 
+                if self.need_property(s0):
+                    yield self.action(s0, PROPERTY, 1)
+
+                if self.need_attribute(state.last_edge):
+                    yield self.action(state.last_edge, ATTRIBUTE)
+
                 # Check for actions to create new nodes
                 for edge in incoming:
                     if edge.src in self.nodes_remaining and not self.is_implicit_node(edge.src):
@@ -133,14 +139,18 @@ class Oracle:
         if not self.found:
             yield self.action(Actions.Shift if state.buffer else Actions.Finish)
 
-    def action(self, edge, kind=None, direction=None):
+    def action(self, node_or_edge, kind=None, direction=None):
         self.found = True
         if kind is None:
-            return edge  # Will be just an Action object in this case
+            return node_or_edge  # Will be just an Action object in this case
         if kind == LABEL:
-            return Actions.Label(direction, orig_node=edge.orig_node, oracle=self)
-        node = self.graph.find_node((edge.src, edge.tgt)[direction]) if kind == NODE else None
-        return ACTIONS[kind][direction](tag=edge.lab, orig_edge=edge, orig_node=node, oracle=self)
+            return Actions.Label(direction, orig_node=node_or_edge.orig_node, oracle=self)
+        if kind == PROPERTY:
+            return Actions.Property(direction, orig_node=node_or_edge.orig_node, oracle=self)
+        if kind == ATTRIBUTE:
+            return Actions.Attribute(direction, orig_edge=node_or_edge.orig_edge, oracle=self)
+        node = self.graph.find_node((node_or_edge.src, node_or_edge.tgt)[direction]) if kind == NODE else None
+        return ACTIONS[kind][direction](tag=node_or_edge.lab, orig_edge=node_or_edge, orig_node=node, oracle=self)
 
     def remove(self, edge, node=None):
         self.edges_remaining.discard(edge)
@@ -171,6 +181,28 @@ class Oracle:
                 except InvalidActionError as e:
                     raise InvalidActionError("True label is invalid: " + "\n".join(map(str, (true_label, state, e))))
         return true_label, raw_true_label
+
+    def get_property_value(self, state, node):
+        true_property_value = next((k, v) for k, v in zip(node.orig_node.properties, node.orig_node.values)
+                                   if k not in (node.properties or ()))
+        if self.args.validate_oracle:
+            try:
+                state.check_valid_property_value(true_property_value, message=True)
+            except InvalidActionError as e:
+                raise InvalidActionError("True property-value pair is invalid: " +
+                                         "\n".join(map(str, (true_property_value, state, e))))
+        return true_property_value
+
+    def get_attribute_value(self, state, edge):
+        true_attribute_value = next((k, v) for k, v in zip(edge.orig_edge.properties, edge.orig_edge.values)
+                                    if k not in (edge.attributes or ()))
+        if self.args.validate_oracle:
+            try:
+                state.check_valid_attribute_value(true_attribute_value, message=True)
+            except InvalidActionError as e:
+                raise InvalidActionError("True attribute-value pair is invalid: " +
+                                         "\n".join(map(str, (true_attribute_value, state, e))))
+        return true_attribute_value
 
     def str(self, sep):
         return "nodes left: [%s]%sedges left: [%s]" % (
