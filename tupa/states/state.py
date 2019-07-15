@@ -432,7 +432,9 @@ class State:
     def assign_node_property_value(self, property_value):
         assert self.need_property is not None, "Called assign_node_property() when need_property is None"
         assert property_value is not None, "Assigning node %s with None property-value pair" % self.need_property
-        prop, value = property_value.split("=")
+        prop, value = property_value
+        if self.need_property.properties is None:
+            self.need_property.properties = {}
         self.need_property.properties[prop] = value
         self.log.append("property: %s" % self.need_property)
         self.type_validity_cache = {}
@@ -441,7 +443,9 @@ class State:
     def assign_edge_attribute_value(self, attribute_value):
         assert self.need_attribute is not None, "Called assign_edge_attribute() when need_attribute is None"
         assert attribute_value is not None, "Assigning edge %s with None attribute-value pair" % self.need_attribute
-        attrib, value = attribute_value.split("=")
+        attrib, value = attribute_value
+        if self.need_attribute.attributes is None:
+            self.need_attribute.attributes = {}
         self.need_attribute.attributes[attrib] = value
         self.log.append("attribute: %s" % self.need_attribute)
         self.type_validity_cache = {}
