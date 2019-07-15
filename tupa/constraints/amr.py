@@ -99,10 +99,6 @@ def read_resources():
 read_resources.done = False
 
 
-def is_concept(label):
-    return label is not None and '"' not in label
-
-
 def is_int_in_range(label, s=None, e=None):
     m = INT_PATTERN.match(label)
     if not m:
@@ -111,12 +107,12 @@ def is_int_in_range(label, s=None, e=None):
     return Valid(s is None or num >= s, "%s < %s" % (num, s)) and Valid(e is None or num <= e, "%s > %s" % (num, e))
 
 
-def is_valid_arg(node, label, *tags, is_parent=True):
+def is_valid_arg(node, label, *tags, is_parent=True, is_concept=True):
     read_resources()
     if label is None:  # Not labeled yet or unlabeled parsing
         return True
-    label = resolve_label(node, label, conservative=True)
-    concept = label if is_concept(label) else None
+    label = resolve_label(node, label, conservative=True, is_concept=is_concept)
+    concept = label if is_concept else None
     const = label[1:-1] if label[0] == label[-1] == '"' else None
     if PLACEHOLDER_PATTERN.search(label):
         return True
@@ -157,13 +153,14 @@ def is_valid_arg(node, label, *tags, is_parent=True):
                                    "valid args: " + ", ".join(valid_args))
 
 
-def resolve_label(node, label=None, reverse=False, conservative=False):
+def resolve_label(node, label=None, reverse=False, conservative=False, is_concept=True):
     """
     Replace any placeholder in the node's label with the corresponding terminals' text, and remove label category suffix
     :param node: node whose label is to be resolved
     :param label: the label if not taken from the node directly
     :param reverse: if True, *introduce* placeholders and categories into the label rather than removing them
     :param conservative: avoid replacement when risky due to multiple terminal children that could match
+    :param is_concept: is this a node label (not property value)
     :return: the resolved label, with or without placeholders and categories (depending on the value of reverse)
     """
     def _replace(old, new):  # replace only inside the label value/name
@@ -209,7 +206,7 @@ def resolve_label(node, label=None, reverse=False, conservative=False):
                     negation = NEGATIONS.get(terminal.text)
                     if negation is not None:
                         label = _replace(NEGATION_PLACEHOLDER, negation)
-                    if is_concept(label):
+                    if is_concept:
                         morph = VERBALIZATION.get(lemma)
                         if morph:
                             for prefix, value in morph.items():  # V: verb, N: noun, A: noun actor
@@ -277,8 +274,7 @@ class AmrConstraints(Constraints):
         return edge.tag in PREFIXED_RELATION_ENUM or edge not in edge.parent.outgoing
 
     def allow_parent(self, node, tag):
-        label = node.label
-        return (label is None or is_concept(label)) and (not tag or is_valid_arg(node, label, tag))
+        return not tag or is_valid_arg(node, node.label, tag)
 
     def allow_child(self, node, tag):
         return not tag or is_valid_arg(node, node.label, tag, is_parent=False)
