@@ -202,7 +202,7 @@ class Oracle:
         return true_property_value
 
     def get_edge_attribute_value(self, state, edge):
-        true_attribute_value = next((k, v) for k, v in zip(edge.orig_edge.properties, edge.orig_edge.values)
+        true_attribute_value = next((k, v) for k, v in zip(edge.orig_edge.attributes, edge.orig_edge.values)
                                     if k not in (edge.attributes or ()))
         if self.args.validate_oracle:
             try:
