@@ -119,7 +119,6 @@ class GraphParser(AbstractParser):
         while True:
             if self.config.args.check_loops:
                 self.check_loop()
-            self.label_node()  # In case root node needs labeling
             true_actions = self.get_true_actions()
             action, predicted_action = self.choose(true_actions)
             self.state.transition(action)
