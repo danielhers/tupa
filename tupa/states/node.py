@@ -88,7 +88,7 @@ class StateNode:
         if self.label:
             s += "/" + self.label
         if self.properties:
-            s += " (" + ",".join("%s=%s" % (k, v) for k, v in self.properties.items()) + ")"
+            s += "(" + ",".join("%s=%s" % (k, v) for k, v in self.properties.items()) + ")"
         return s
 
     def __eq__(self, other):
