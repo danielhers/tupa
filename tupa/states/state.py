@@ -7,6 +7,7 @@ from .node import StateNode
 from ..action import Actions
 from ..config import Config, requires_node_labels, requires_node_properties, requires_edge_attributes, requires_anchors
 from ..constraints.validation import CONSTRAINTS, Constraints, Direction
+from ..model import NODE_LABEL_KEY, NODE_PROPERTY_KEY, EDGE_ATTRIBUTE_KEY
 
 ROOT_ID = -1
 ROOT_LAB = "top"
@@ -309,6 +310,21 @@ class State:
             valid = self.constraints.allow_attribute_value(self.need_attribute, attribute_value)
             self.check(valid, message and "May not set attribute value for %s to %s: %s" % (
                 self.need_attribute, attribute_value, valid))
+
+    def is_valid_annotation(self, key=None):
+        """
+        :param key: one of NODE_LABEL_KEY, NODE_PROPERTY_KEY, EDGE_ATTRIBUTE_KEY or None
+        :return function to check validity of values
+        """
+        if key is None:
+            return self.is_valid_action
+        if key == NODE_LABEL_KEY:
+            return self.is_valid_label
+        if key == NODE_PROPERTY_KEY:
+            return self.is_valid_property_value
+        if key == EDGE_ATTRIBUTE_KEY:
+            return self.is_valid_attribute_value
+        raise ValueError("Invalid key: " + str(key))
 
     @staticmethod
     def check(condition, *args, **kwargs):

@@ -184,9 +184,9 @@ class Model:
             edge_attributes.init_data()
             outputs[edge_attribute_key] = edge_attributes.data
 
-    def score(self, state, axis):
+    def score(self, state, framework, key):
         features = self.feature_extractor.extract_features(state)
-        return self.classifier.score(features, axis=axis), features  # scores is a NumPy array
+        return self.classifier.score(features, axis=self.key(framework, key)), features  # scores is a NumPy array
 
     def init_features(self, framework, state, train):
         self.init_model(framework)

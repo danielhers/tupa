@@ -3,7 +3,7 @@ import json
 import os
 import sys
 import time
-from collections import defaultdict
+from collections import defaultdict, Counter
 from enum import Enum
 from itertools import chain
 
@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from tupa.__version__ import GIT_VERSION
 from tupa.config import Config, Iterations
-from tupa.model import Model, NODE_LABEL_KEY, NODE_PROPERTY_KEY, EDGE_ATTRIBUTE_KEY
+from tupa.model import Model, NODE_LABEL_KEY, NODE_PROPERTY_KEY, EDGE_ATTRIBUTE_KEY, SHARED_OUTPUT_KEYS
 from tupa.oracle import Oracle
 from tupa.states.state import State
 
@@ -34,9 +34,9 @@ class AbstractParser:
         self.model = model
         self.training = training
         self.evaluation = evaluation
-        self.action_count = self.correct_action_count = self.node_label_count = self.correct_node_label_count = \
-            self.node_property_count = self.correct_node_property_count = \
-            self.edge_attribute_count = self.correct_edge_attribute_count = self.num_tokens = self.f1 = 0
+        self.count = Counter()
+        self.correct_count = Counter()
+        self.num_tokens = self.f1 = 0
         self.started = time.time()
 
     @property
@@ -215,67 +215,41 @@ class GraphParser(AbstractParser):
             self.state.assign_edge_attribute_value(attribute_value)
         return need_attribute, attribute_value, predicted_attribute_value, true_attribute_value
 
-    def choose(self, true, axis=None, name="action"):
-        if axis is None:
-            axis = self.model.axis
-        labels = self.model.classifier.labels[axis]
-        if axis is not None:
-            true_keys = (labels[true],) if self.oracle else ()  # Must be before score()
-            is_valid = self.state.is_valid_label
-        else:
-            true_keys = None
-            is_valid = self.state.is_valid_action
-        scores, features = self.model.score(self.state, axis)
-        self.config.print(lambda: "  %s scores: %s" % (name, tuple(zip(labels.all, scores))), level=4)
+    def choose(self, true, key=None, name="action"):
+        outputs = self.model.output_values(self.framework, key)
+        true_keys = None if key is None else ((outputs[true],) if self.oracle else ())  # Must be before score()
+        scores, features = self.model.score(self.state, self.framework, key)
+        self.config.print(lambda: "  %s scores: %s" % (name, tuple(zip(outputs.all, scores))), level=4)
         try:
-            label = pred = self.predict(scores, labels.all, is_valid)
+            output = pred = self.predict(scores, outputs.all, self.state.is_valid_annotation(key))
         except StopIteration as e:
             raise ParserException("No valid %s available\n%s" % (name, self.oracle.log if self.oracle else "")) from e
-        label, is_correct, true_keys, true_values = self.correct(axis, label, pred, scores, true, true_keys)
+        output, is_correct, true_keys, true_values = self.correct(key, output, pred, scores, true, true_keys)
         if self.training:
             assert not self.model.is_finalized, "Updating finalized model"
             self.model.classifier.update(
-                features, axis=axis, true=true_keys, pred=labels[pred] if axis is not None else pred.id,
+                features, axis=key, true=true_keys, pred=outputs[pred] if key is not None else pred.id,
                 importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values] or None)
             self.state.finished = True
         self.model.classifier.finished_step(self.training)
-        if axis is None:
-            self.model.classifier.transition(label, axis=axis)
-        return label, pred
+        if key is None:
+            self.model.classifier.transition(output, axis=key)
+        return output, pred
 
-    def correct(self, axis, output, pred, scores, true, true_keys):
+    def correct(self, key, output, pred, scores, true, true_keys):
         true_values = ()
         is_correct = (output == true)
-        if axis == NODE_LABEL_KEY:
-            if self.oracle:
-                if is_correct:
-                    self.correct_node_label_count += 1
-                elif self.training:
-                    output = true
-            self.node_label_count += 1
-        elif axis == NODE_PROPERTY_KEY:
-            if self.oracle:
-                if is_correct:
-                    self.correct_node_property_count += 1
-                elif self.training:
-                    output = true
-            self.node_property_count += 1
-        elif axis == EDGE_ATTRIBUTE_KEY:
-            if self.oracle:
-                if is_correct:
-                    self.correct_edge_attribute_count += 1
-                elif self.training:
-                    output = true
-            self.edge_attribute_count += 1
-        else:  # action
+        if key is None:  # action
             true_keys, true_values = map(list, zip(*true.items())) if true else (None, None)
             output = true.get(pred.id)
             is_correct = (output is not None)
-            if is_correct:
-                self.correct_action_count += 1
-            else:
+            if not is_correct:
                 output = true_values[scores[true_keys].argmax()] if self.training else pred
-            self.action_count += 1
+        if is_correct:
+            self.correct_count[key] += 1
+        elif key is not None and self.oracle and self.training:
+            output = true
+        self.count[key] += 1
         return output, is_correct, true_keys, true_values
 
     @staticmethod
@@ -302,15 +276,20 @@ class GraphParser(AbstractParser):
         if display:
             self.config.print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), level=1)
         if accuracies is not None:
-            accuracies[self.graph.id] = self.correct_action_count / self.action_count if self.action_count else 0
+            accuracies[self.graph.id] = self.correct_count[None] / self.count[None] if self.count[None] else 0
         return self.out
 
     @property
     def accuracy_str(self):
-        if self.oracle and self.action_count:
-            accuracy_str = "a=%-14s" % percents_str(self.correct_action_count, self.action_count)
-            if self.node_label_count:
-                accuracy_str += " l=%-14s" % percents_str(self.correct_node_label_count, self.node_label_count)
+        if self.oracle and self.count[None]:
+            accuracy_str = "a=%-14s" % percents_str(self.correct_count[None], self.count[None])
+
+            if self.count[NODE_LABEL_KEY]:
+                accuracy_str += " l=%-14s" % percents_str(self.correct_count[NODE_LABEL_KEY],
+                                                          self.count[NODE_LABEL_KEY])
+            if self.count[NODE_PROPERTY_KEY]:
+                accuracy_str += " l=%-14s" % percents_str(self.correct_count[NODE_LABEL_KEY],
+                                                          self.count[NODE_LABEL_KEY])
             return "%-33s" % accuracy_str
         return ""
 
@@ -359,10 +338,12 @@ class BatchParser(AbstractParser):
                     postfix = {target: graph.id}
                     if display:
                         postfix["|t/s|"] = self.tokens_per_second()
-                        if self.correct_action_count:
-                            postfix["|a|"] = percents_str(self.correct_action_count, self.action_count, fraction=False)
-                        if self.correct_node_label_count:
-                            postfix["|l|"] = percents_str(self.correct_node_label_count, self.node_label_count, fraction=False)
+                        if self.correct_count[None]:
+                            postfix["|a|"] = percents_str(self.correct_count[None], self.count[None], fraction=False)
+                        for key in SHARED_OUTPUT_KEYS:
+                            if self.correct_count[key]:
+                                postfix["|" + key + "|"] = percents_str(self.correct_count[key], self.count[key],
+                                                                        fraction=False)
                     graphs.set_postfix(**postfix)
                 self.seen_per_framework[target] += 1
                 if self.training and self.config.args.max_training_per_framework and \
@@ -379,19 +360,20 @@ class BatchParser(AbstractParser):
             it, unit="graph", total=total, file=sys.stderr, desc="Initializing")
 
     def update_counts(self, parser):
-        self.correct_action_count += parser.correct_action_count
-        self.action_count += parser.action_count
-        self.correct_node_label_count += parser.correct_label_count
-        self.node_label_count += parser.label_count
+        self.count.update(parser.count)
+        self.correct_count.update(parser.correct_count)
         self.num_tokens += parser.num_tokens
         self.num_graphs += 1
 
     def summary(self):
         print("Parsed %d graphs" % self.num_graphs)
-        if self.correct_action_count:
-            accuracy_str = percents_str(self.correct_action_count, self.action_count, "correct actions ")
-            if self.node_label_count:
-                accuracy_str += ", " + percents_str(self.correct_node_label_count, self.node_label_count, "correct labels ")
+        if self.correct_count[None]:
+            accuracy_str = percents_str(self.correct_count[None], self.count[None], "correct actions ")
+            for key, title in (NODE_LABEL_KEY, "node labels"), (NODE_PROPERTY_KEY, "node properties"), \
+                              (EDGE_ATTRIBUTE_KEY, "edge attributes"):
+                if self.count[key]:
+                    accuracy_str += ", " + percents_str(self.correct_count[key], self.count[key],
+                                                        "correct " + title + " ")
             print("Overall %s" % accuracy_str)
         print("Total time: %.3fs (average time/graph: %.3fs, average tokens/s: %d)" % (
             self.duration, self.time_per_graph(),
