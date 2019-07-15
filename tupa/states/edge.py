@@ -20,7 +20,7 @@ class StateEdge:
 
     def __str__(self):
         return "%s -%s-> %s%s" % (self.parent, self.lab, self.child,
-                                  (" (" + ",".join("%s=%s" % (k, v) for k, v in self.attributes.items()) + ")")
+                                  ("(" + ",".join("%s=%s" % (k, v) for k, v in self.attributes.items()) + ")")
                                   if self.attributes else "")
 
     def __eq__(self, other):
