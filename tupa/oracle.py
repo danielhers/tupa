@@ -169,7 +169,7 @@ class Oracle:
         return requires_edge_attributes(self.graph.framework) and \
                set(edge.orig_edge.attributes).difference(edge.attributes or ())
 
-    def get_label(self, state, node):
+    def get_node_label(self, state, node):
         true_label = raw_true_label = None
         if node.orig_node is not None:
             raw_true_label = node.orig_node.label
@@ -182,7 +182,7 @@ class Oracle:
                     raise InvalidActionError("True label is invalid: " + "\n".join(map(str, (true_label, state, e))))
         return true_label, raw_true_label
 
-    def get_property_value(self, state, node):
+    def get_node_property_value(self, state, node):
         true_property_value = next((k, v) for k, v in zip(node.orig_node.properties, node.orig_node.values)
                                    if k not in (node.properties or ()))
         if self.args.validate_oracle:
@@ -193,7 +193,7 @@ class Oracle:
                                          "\n".join(map(str, (true_property_value, state, e))))
         return true_property_value
 
-    def get_attribute_value(self, state, edge):
+    def get_edge_attribute_value(self, state, edge):
         true_attribute_value = next((k, v) for k, v in zip(edge.orig_edge.properties, edge.orig_edge.values)
                                     if k not in (edge.attributes or ()))
         if self.args.validate_oracle:

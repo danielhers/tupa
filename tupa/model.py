@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from .action import Actions
 from .classifiers.classifier import Classifier
-from .config import Config, SEPARATOR, NOOP, requires_node_labels, requires_node_properties, requires_edge_attributes
+from .config import Config, NOOP, requires_node_labels, requires_node_properties, requires_edge_attributes
 from .features.feature_params import FeatureParameters
 from .model_util import UnknownDict, AutoIncrementDict, remove_backup
 
@@ -56,9 +56,11 @@ class ParameterDefinition:
             "%s=%s" % i for i in list(self.attr_to_arg.items()) + list(self.attr_to_val.items())))
 
 
+# Output keys that are also feature parameter keys
 NODE_LABEL_KEY = "n"
 NODE_PROPERTY_KEY = "N"
 EDGE_ATTRIBUTE_KEY = "E"
+SHARED_OUTPUT_KEYS = (NODE_LABEL_KEY, NODE_PROPERTY_KEY, EDGE_ATTRIBUTE_KEY)
 
 
 SHARED_OUTPUT_PARAM_DEFS = [
@@ -88,7 +90,7 @@ class Model:
     def __init__(self, filename, config=None, *args, **kwargs):
         self.config = config or Config().copy()
         self.filename = filename
-        self.feature_extractor = self.classifier = self.axis = None
+        self.feature_extractor = self.classifier = None
         self.feature_params = OrderedDict()
         self.is_finalized = False
         if args or kwargs:
@@ -101,8 +103,7 @@ class Model:
         return [ParameterDefinition(args or self.config.args, n, *k) for n, *k in SHARED_OUTPUT_PARAM_DEFS +
                 ([] if only_node_labels else PARAM_DEFS)]
 
-    def init_model(self, axis=None, init_params=True):
-        self.set_axis(axis)
+    def init_model(self, framework=None, init_params=True):
         outputs = self.classifier.labels if self.classifier else OrderedDict()
         if init_params:  # Actually use the config state to initialize the features and hyperparameters, otherwise empty
             for param_def in self.param_defs():  # FIXME save parameters separately per framework
@@ -114,12 +115,12 @@ class Model:
                 elif enabled:
                     self.feature_params[key] = param_def.create_from_config()
                     self.init_param(key)
-            if axis and self.axis not in outputs:
-                outputs[self.axis] = self.init_actions()  # Uses config to determine actions
+            if framework is not None and framework not in outputs:
+                outputs[framework] = self.init_actions()  # Uses config to determine actions
             # Updates self.feature_params:
-            self.init_node_labels(axis, outputs)
-            self.init_node_properties(axis, outputs)
-            self.init_edge_attributes(axis, outputs)
+            self.init_node_labels(framework, outputs)
+            self.init_node_properties(framework, outputs)
+            self.init_edge_attributes(framework, outputs)
         if self.classifier:  # Already initialized
             pass
         elif self.config.args.classifier == NOOP:
@@ -136,19 +137,12 @@ class Model:
             self.classifier = NeuralNetwork(self.config, outputs)
         self._update_input_params()
 
-    def set_axis(self, axis):
-        if axis is not None:
-            self.axis = axis
-        if self.axis is None:
-            self.axis = self.config.framework
+    def output_values(self, framework, key=None):
+        return self.classifier.labels[self.key(framework, key)]
 
-    @property
-    def frameworks(self):
-        return [k.partition(SEPARATOR)[0] for k in self.classifier.labels]
-
-    @property
-    def actions(self):
-        return self.classifier.labels[self.axis]
+    @staticmethod
+    def key(framework, key=None):
+        return "_".join(filter(None, (framework, key)))
 
     def init_actions(self):
         return Actions(size=self.config.args.max_action_labels)
@@ -158,7 +152,7 @@ class Model:
             self.feature_extractor.init_param(key)
 
     def init_node_labels(self, axis, outputs):
-        node_label_key = "_".join((axis, NODE_LABEL_KEY))
+        node_label_key = self.key(axis, NODE_LABEL_KEY)
         if node_label_key not in outputs:
             node_labels = self.feature_params.get(node_label_key)
             if node_labels is None:
@@ -169,7 +163,7 @@ class Model:
             outputs[node_label_key] = node_labels.data
 
     def init_node_properties(self, axis, outputs):
-        node_property_key = "_".join((axis, NODE_PROPERTY_KEY))
+        node_property_key = self.key(axis, NODE_PROPERTY_KEY)
         if node_property_key not in outputs:
             node_properties = self.feature_params.get(node_property_key)
             if node_properties is None:
@@ -180,7 +174,7 @@ class Model:
             outputs[node_property_key] = node_properties.data
 
     def init_edge_attributes(self, axis, outputs):
-        edge_attribute_key = "_".join((axis, EDGE_ATTRIBUTE_KEY))
+        edge_attribute_key = self.key(axis, EDGE_ATTRIBUTE_KEY)
         if edge_attribute_key not in outputs:
             edge_attributes = self.feature_params.get(edge_attribute_key)
             if edge_attributes is None:
@@ -194,9 +188,9 @@ class Model:
         features = self.feature_extractor.extract_features(state)
         return self.classifier.score(features, axis=axis), features  # scores is a NumPy array
 
-    def init_features(self, state, train):
-        self.init_model()
-        axes = [self.axis]
+    def init_features(self, framework, state, train):
+        self.init_model(framework)
+        axes = [framework]
         if requires_node_labels(state.framework):
             axes.append(NODE_LABEL_KEY)
         if requires_node_properties(state.framework):
@@ -204,7 +198,7 @@ class Model:
         if requires_edge_attributes(state.framework):
             axes.append(EDGE_ATTRIBUTE_KEY)
         tokens = [node.label for node in state.graph.nodes if node.anchors]
-        lang = getattr(state.graph, "lang", None)
+        lang = getattr(state.graph, "lang", "en")
         self.classifier.init_features(self.feature_extractor.init_features(state), axes, train, tokens, lang)
 
     def finalize(self, finished_epoch):
@@ -214,7 +208,6 @@ class Model:
         :return: a copy of this model with a new feature extractor and classifier (actually classifier may be the same)
         """
         self.config.print("Finalizing model", level=1)
-        self.init_model()
         return Model(None, config=self.config.copy(), model=self, is_finalized=True,
                      feature_extractor=self.feature_extractor.finalize(),
                      classifier=self.classifier.finalize(finished_epoch=finished_epoch))
@@ -224,11 +217,12 @@ class Model:
         Save feature and classifier parameters to files
         """
         if self.filename is not None:
-            self.init_model()
             try:
                 self.feature_extractor.save(self.filename, save_init=save_init)
-                node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
-                skip_labels = (NODE_LABEL_KEY,) if node_labels and node_labels.size else ()
+                skip_labels = []
+                for key in SHARED_OUTPUT_KEYS:
+                    feature_param = self.feature_extractor.params.get(key)
+                    skip_labels.append((key,) if feature_param and feature_param.size else ())
                 self.classifier.save(self.filename, skip_labels=skip_labels,
                                      omit_features=self.config.args.omit_features)
                 remove_backup(self.filename)
@@ -286,11 +280,11 @@ class Model:
         Restoring from a model that was just loaded from file, or called by restore()
         """
         for axis, all_size in self.classifier.labels_t.items():  # all_size is a pair of (label list, size limit)
-            if axis == NODE_LABEL_KEY:  # These are node labels rather than action labels
-                node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
-                if node_labels and node_labels.size:  # Also used for features, so share the dict
+            if axis in SHARED_OUTPUT_KEYS:  # These are labels/properties/attributes rather than action labels
+                feature_param = self.feature_extractor.params.get(axis)
+                if feature_param and feature_param.size:  # Also used for features, so share the dict
                     del all_size
-                    labels = node_labels.data
+                    labels = feature_param.data
                 else:  # Not used as a feature, just get labels
                     labels = UnknownDict() if self.is_finalized else AutoIncrementDict()
                     labels.load(all_size)

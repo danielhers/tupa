@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from tupa.__version__ import GIT_VERSION
 from tupa.config import Config, Iterations
-from tupa.model import Model, NODE_LABEL_KEY
+from tupa.model import Model, NODE_LABEL_KEY, NODE_PROPERTY_KEY, EDGE_ATTRIBUTE_KEY
 from tupa.oracle import Oracle
 from tupa.states.state import State
 
@@ -34,8 +34,9 @@ class AbstractParser:
         self.model = model
         self.training = training
         self.evaluation = evaluation
-        self.action_count = self.correct_action_count = self.label_count = self.correct_label_count = \
-            self.num_tokens = self.f1 = 0
+        self.action_count = self.correct_action_count = self.node_label_count = self.correct_node_label_count = \
+            self.node_property_count = self.correct_node_property_count = \
+            self.edge_attribute_count = self.correct_edge_attribute_count = self.num_tokens = self.f1 = 0
         self.started = time.time()
 
     @property
@@ -90,8 +91,8 @@ class GraphParser(AbstractParser):
             self.oracle = Oracle(self.graph, self.conllu)
         else:
             self.oracle = None
-        self.model.init_model(self.config.framework)
-        self.model.init_features(self.state, self.training)
+        self.model.init_model(self.framework)
+        self.model.init_features(self.framework, self.state, self.training)
 
     def parse(self, display=True, write=False, accuracies=None):
         self.init()
@@ -122,7 +123,11 @@ class GraphParser(AbstractParser):
             true_actions = self.get_true_actions()
             action, predicted_action = self.choose(true_actions)
             self.state.transition(action)
-            need_label, label, predicted_label, true_label = self.label_node(action)
+            need_label, label, predicted_label, true_label = self.select_node_label(action)
+            need_property, property_value, predicted_property_value, true_property_value = \
+                self.select_node_property_value(action)
+            need_attribute, attribute_value, predicted_attribute_value, true_attribute_value = \
+                self.select_edge_attribute_value(action)
             if self.config.args.action_stats:
                 try:
                     with open(self.config.args.action_stats, "a") as f:
@@ -132,9 +137,13 @@ class GraphParser(AbstractParser):
             self.config.print(lambda: "\n".join(["  predicted: %-15s true: %-15s taken: %-15s %s" % (
                 predicted_action, "|".join(map(str, true_actions.values())), action, self.state) if self.oracle else
                                           "  action: %-15s %s" % (action, self.state)] + (
-                ["  predicted label: %-9s true label: %s" % (predicted_label, true_label) if self.oracle
-                 else "  label: %s" % label] if need_label else []) + [
-                "    " + l for l in self.state.log]))
+                ["  predicted label: %-9s true label: %s" % (predicted_label, true_label)
+                 if self.oracle else "  label: %s" % label] if need_label else []
+                ["  predicted property: %-9s true property: %s" % (predicted_property_value, true_property_value)
+                    if self.oracle else "  property: %s" % property_value] if need_property else []
+                ["  predicted attribute: %-9s true attribute: %s" % (predicted_attribute_value, true_attribute_value)
+                    if self.oracle else "  attribute: %s" % attribute_value] if need_attribute else []
+            ) + ["    " + l for l in self.state.log]))
             if self.state.finished:
                 return  # action is Finish
 
@@ -142,35 +151,75 @@ class GraphParser(AbstractParser):
         true_actions = {}
         if self.oracle:
             try:
-                true_actions = self.oracle.get_actions(self.state, self.model.actions, create=self.training)
+                true_actions = self.oracle.get_actions(self.state, self.model.output_values(self.framework),
+                                                       create=self.training)
             except (AttributeError, AssertionError) as e:
                 if self.training:
                     raise ParserException("Error in getting action from oracle during training on "
                                           + self.graph.id) from e
         return true_actions
 
-    def get_true_label(self, node):
+    def get_true_node_label(self, node):
         try:
-            return self.oracle.get_label(self.state, node) if self.oracle else (None, None)
+            return self.oracle.get_node_label(self.state, node) if self.oracle else (None, None)
         except AssertionError as e:
             if self.training:
-                raise ParserException("Error in getting label from oracle during training on " + self.graph.id) from e
+                raise ParserException("Error in getting node label from oracle during training on "
+                                      + self.graph.id + ", node " + str(node)) from e
             return None, None
 
-    def label_node(self, action=None):
+    def get_true_node_property_value(self, node):
+        try:
+            return self.oracle.get_node_property_value(self.state, node) if self.oracle else (None, None)
+        except AssertionError as e:
+            if self.training:
+                raise ParserException("Error in getting node property from oracle during training on "
+                                      + self.graph.id + ", node " + str(node)) from e
+            return None, None
+
+    def get_true_edge_attribute_value(self, edge):
+        try:
+            return self.oracle.get_edge_attribute_value(self.state, edge) if self.oracle else (None, None)
+        except AssertionError as e:
+            if self.training:
+                raise ParserException("Error in getting edge attribute from oracle during training on "
+                                      + self.graph.id + ", edge " + str(edge)) from e
+            return None, None
+
+    def select_node_label(self, action=None):
         true_label = label = predicted_label = None
-        need_label = self.state.need_label  # Label action that requires a choice of label
+        need_label = self.state.need_label  # Label action, requires a choice of label
         if need_label:
-            true_label, raw_true_label = self.get_true_label(action or need_label)
+            true_label, raw_true_label = self.get_true_node_label(action or need_label)
             label, predicted_label = self.choose(true_label, NODE_LABEL_KEY, "node label")
             self.state.assign_node_label(raw_true_label if label == true_label else label)
         return need_label, label, predicted_label, true_label
+
+    def select_node_property_value(self, action=None):
+        true_property_value = property_value = predicted_property_value = None
+        need_property = self.state.need_property  # Property action, requires a choice of property + value
+        if need_property:
+            true_property_value = self.get_true_node_property_value(action or need_property)
+            property_value, predicted_property_value = self.choose(true_property_value, NODE_PROPERTY_KEY,
+                                                                   "node property")
+            self.state.assign_node_property_value(property_value)
+        return need_property, property_value, predicted_property_value, true_property_value
+
+    def select_edge_attribute_value(self, action=None):
+        true_attribute_value = attribute_value = predicted_attribute_value = None
+        need_attribute = self.state.need_attribute  # Attribute action, requires a choice of attribute + value
+        if need_attribute:
+            true_attribute_value = self.get_true_edge_attribute_value(action or need_attribute)
+            attribute_value, predicted_attribute_value = self.choose(true_attribute_value, EDGE_ATTRIBUTE_KEY,
+                                                                     "edge attribute")
+            self.state.assign_edge_attribute_value(attribute_value)
+        return need_attribute, attribute_value, predicted_attribute_value, true_attribute_value
 
     def choose(self, true, axis=None, name="action"):
         if axis is None:
             axis = self.model.axis
         labels = self.model.classifier.labels[axis]
-        if axis == NODE_LABEL_KEY:
+        if axis is not None:
             true_keys = (labels[true],) if self.oracle else ()  # Must be before score()
             is_valid = self.state.is_valid_label
         else:
@@ -186,34 +235,48 @@ class GraphParser(AbstractParser):
         if self.training:
             assert not self.model.is_finalized, "Updating finalized model"
             self.model.classifier.update(
-                features, axis=axis, true=true_keys, pred=labels[pred] if axis == NODE_LABEL_KEY else pred.id,
+                features, axis=axis, true=true_keys, pred=labels[pred] if axis is not None else pred.id,
                 importance=[self.config.args.swap_importance if a.is_swap else 1 for a in true_values] or None)
             self.state.finished = True
         self.model.classifier.finished_step(self.training)
-        if axis != NODE_LABEL_KEY:
+        if axis is None:
             self.model.classifier.transition(label, axis=axis)
         return label, pred
 
-    def correct(self, axis, label, pred, scores, true, true_keys):
-        true_values = is_correct = ()
+    def correct(self, axis, output, pred, scores, true, true_keys):
+        true_values = ()
+        is_correct = (output == true)
         if axis == NODE_LABEL_KEY:
             if self.oracle:
-                is_correct = (label == true)
                 if is_correct:
-                    self.correct_label_count += 1
+                    self.correct_node_label_count += 1
                 elif self.training:
-                    label = true
-            self.label_count += 1
+                    output = true
+            self.node_label_count += 1
+        elif axis == NODE_PROPERTY_KEY:
+            if self.oracle:
+                if is_correct:
+                    self.correct_node_property_count += 1
+                elif self.training:
+                    output = true
+            self.node_property_count += 1
+        elif axis == EDGE_ATTRIBUTE_KEY:
+            if self.oracle:
+                if is_correct:
+                    self.correct_edge_attribute_count += 1
+                elif self.training:
+                    output = true
+            self.edge_attribute_count += 1
         else:  # action
             true_keys, true_values = map(list, zip(*true.items())) if true else (None, None)
-            label = true.get(pred.id)
-            is_correct = (label is not None)
+            output = true.get(pred.id)
+            is_correct = (output is not None)
             if is_correct:
                 self.correct_action_count += 1
             else:
-                label = true_values[scores[true_keys].argmax()] if self.training else pred
+                output = true_values[scores[true_keys].argmax()] if self.training else pred
             self.action_count += 1
-        return label, is_correct, true_keys, true_values
+        return output, is_correct, true_keys, true_values
 
     @staticmethod
     def predict(scores, values, is_valid=None):
@@ -246,8 +309,8 @@ class GraphParser(AbstractParser):
     def accuracy_str(self):
         if self.oracle and self.action_count:
             accuracy_str = "a=%-14s" % percents_str(self.correct_action_count, self.action_count)
-            if self.label_count:
-                accuracy_str += " l=%-14s" % percents_str(self.correct_label_count, self.label_count)
+            if self.node_label_count:
+                accuracy_str += " l=%-14s" % percents_str(self.correct_node_label_count, self.node_label_count)
             return "%-33s" % accuracy_str
         return ""
 
@@ -298,8 +361,8 @@ class BatchParser(AbstractParser):
                         postfix["|t/s|"] = self.tokens_per_second()
                         if self.correct_action_count:
                             postfix["|a|"] = percents_str(self.correct_action_count, self.action_count, fraction=False)
-                        if self.correct_label_count:
-                            postfix["|l|"] = percents_str(self.correct_label_count, self.label_count, fraction=False)
+                        if self.correct_node_label_count:
+                            postfix["|l|"] = percents_str(self.correct_node_label_count, self.node_label_count, fraction=False)
                     graphs.set_postfix(**postfix)
                 self.seen_per_framework[target] += 1
                 if self.training and self.config.args.max_training_per_framework and \
@@ -318,8 +381,8 @@ class BatchParser(AbstractParser):
     def update_counts(self, parser):
         self.correct_action_count += parser.correct_action_count
         self.action_count += parser.action_count
-        self.correct_label_count += parser.correct_label_count
-        self.label_count += parser.label_count
+        self.correct_node_label_count += parser.correct_label_count
+        self.node_label_count += parser.label_count
         self.num_tokens += parser.num_tokens
         self.num_graphs += 1
 
@@ -327,8 +390,8 @@ class BatchParser(AbstractParser):
         print("Parsed %d graphs" % self.num_graphs)
         if self.correct_action_count:
             accuracy_str = percents_str(self.correct_action_count, self.action_count, "correct actions ")
-            if self.label_count:
-                accuracy_str += ", " + percents_str(self.correct_label_count, self.label_count, "correct labels ")
+            if self.node_label_count:
+                accuracy_str += ", " + percents_str(self.correct_node_label_count, self.node_label_count, "correct labels ")
             print("Overall %s" % accuracy_str)
         print("Total time: %.3fs (average time/graph: %.3fs, average tokens/s: %d)" % (
             self.duration, self.time_per_graph(),
