@@ -95,7 +95,7 @@ class Oracle:
                 else:
                     # Check for actions to create new nodes
                     for edge in incoming:
-                        if edge.src in self.nodes_remaining and not self.is_implicit_node(edge.parent):
+                        if edge.src in self.nodes_remaining and not edge.attributes  # Avoid remote node creation:
                             yield self.action(edge, NODE, PARENT)  # Node
 
                     for edge in outgoing:

@@ -53,8 +53,9 @@ class State:
                                   properties=dict(zip(conllu_node.properties or (), conllu_node.values or ())))
             self.terminals.append(StateNode(i, text=conllu_node.label, orig_node=orig_node))  # Virtual node for tokens
         id2node = {}
+        offset = len(self.conllu.nodes) + 1
         for graph_node in self.graph.nodes:
-            node_id = graph_node.id + len(self.conllu.nodes) + 1
+            node_id = graph_node.id + offset
             id2node[node_id] = orig_node = \
                 StateNode(node_id, orig_node=graph_node, label=graph_node.label,
                           properties=dict(zip(graph_node.properties or (), graph_node.values or ())))
@@ -68,8 +69,8 @@ class State:
                     if anchors & terminal.orig_anchors:
                         self.orig_edges.append(StateEdge(orig_node, terminal.orig_node, ANCHOR_LAB).add())
         for edge in self.graph.edges:
-            self.orig_edges.append(StateEdge(id2node[edge.src + len(self.conllu.nodes) + 1],
-                                             id2node[edge.tgt + len(self.conllu.nodes) + 1], edge.lab,
+            self.orig_edges.append(StateEdge(id2node[edge.src + offset],
+                                             id2node[edge.tgt + offset], edge.lab,
                                              dict(zip(edge.attributes or (), edge.values or ()))).add())
         for orig_node in self.orig_nodes:
             orig_node.label = resolve_label(orig_node, orig_node.label, reverse=True)
