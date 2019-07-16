@@ -52,7 +52,12 @@ class Oracle:
             all_actions.generate_id(action, create=create)
             if action.id is not None:
                 try:
-                    if self.args.validate_oracle:
+                    if self.args.validate_oracle and not action.is_type(Actions.Swap):
+                        # The oracle has a special permission to swap the same pair of nodes more than once,
+                        # although we do not allow the parser to do that to avoid infinite loops.
+                        # Multiple swaps might be necessary if we created the nodes in a non-projective order.
+                        # We prevent this in UCCA with a heuristic disallowing creating new nodes based on remote
+                        # parents (see below), but for other frameworks a more sophisticated check would be required.
                         state.check_valid_action(action, message=True)
                     actions[action.id] = action
                 except InvalidActionError as e:
