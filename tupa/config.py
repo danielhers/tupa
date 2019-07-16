@@ -357,14 +357,14 @@ class Config(object, metaclass=Singleton):
         return {attr: getattr(self.args, attr) if args is None else args[attr]
                 for attr in RESTORED_ARGS if args is None or attr in args}
 
-    def set_framework(self, f=None, update=False, recursive=True):
-        if update or self.framework != f:
-            if f not in (None, "text"):
-                self.framework = f
+    def set_framework(self, framework=None, update=False, recursive=True):
+        if update or self.framework != framework:
+            if framework is not None:
+                self.framework = framework
             self.update_by_hyperparams()
         if recursive:
             for config in self.descendants():
-                config.set_framework(f=f, update=update, recursive=False)
+                config.set_framework(framework=framework, update=update, recursive=False)
 
     def descendants(self):
         ret = []
@@ -396,14 +396,14 @@ class Config(object, metaclass=Singleton):
                 setattr(self.args, name, value)
         self.original_values.update(self.create_original_values(params))
         self.hyperparams = self.create_hyperparams()
-        for f, num in NODE_LABELS_NUM.items():
-            self.hyperparams.specific[f].max_node_labels = num
-        for f, num in EDGE_LABELS_NUM.items():
-            self.hyperparams.specific[f].max_edge_labels = num
-        for f, num in NODE_PROPERTY_NUM.items():
-            self.hyperparams.specific[f].max_node_properties = num
-        for f, num in EDGE_ATTRIBUTE_NUM.items():
-            self.hyperparams.specific[f].max_edge_attributes = num
+        for framework, num in NODE_LABELS_NUM.items():
+            self.hyperparams.specific[framework].max_node_labels = num
+        for framework, num in EDGE_LABELS_NUM.items():
+            self.hyperparams.specific[framework].max_edge_labels = num
+        for framework, num in NODE_PROPERTY_NUM.items():
+            self.hyperparams.specific[framework].max_node_properties = num
+        for framework, num in EDGE_ATTRIBUTE_NUM.items():
+            self.hyperparams.specific[framework].max_edge_attributes = num
         self.set_framework(update=True)
         self.set_dynet_arguments()
 

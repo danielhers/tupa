@@ -24,7 +24,7 @@ class ParameterDefinition:
 
     @property
     def enabled(self):
-        return bool(getattr(self.args, self.dim_arg))
+        return bool(getattr(self.args, self.dim_arg) and getattr(self.args, self.size_arg))
     
     @enabled.setter
     def enabled(self, value):
