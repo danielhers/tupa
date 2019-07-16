@@ -13,6 +13,7 @@ if [[ -n "${FRAMEWORK}" ]]; then
     SUFFIX=${FRAMEWORK}-${SUFFIX}
 fi
 
+mkdir -p models
 shuf ../mrp/2019/training/training.mrp > models/mrp-${SUFFIX}.train_dev.mrp
 
 if [[ -n "${FRAMEWORK}" ]]; then
