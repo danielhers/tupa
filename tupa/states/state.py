@@ -2,7 +2,7 @@ from collections import deque
 
 from graph import Graph
 
-from tupa.constraints.amr import resolve
+from tupa.recategorization import resolve
 from .edge import StateEdge
 from .node import StateNode
 from .ref_graph import RefGraph
@@ -270,8 +270,10 @@ class State:
     def check_valid_label(self, label, message=False):
         self.check(label is not None, message and "None node label")
         if self.args.constraints:
-            valid = self.constraints.allow_label(self.need_label, label)
-            self.check(valid, message and "May not label %s as %s: %s" % (self.need_label, label, valid))
+            resolved_label = resolve(self.need_label, label, conservative=True, is_node_label=True)
+            valid = self.constraints.allow_label(self.need_label, resolved_label)
+            self.check(valid, message and "May not label %s as %s (%s): %s" % (
+                self.need_label, label, resolved_label, valid))
 
     def is_valid_property_value(self, property_value):
         """
@@ -287,9 +289,14 @@ class State:
     def check_valid_property_value(self, property_value, message=False):
         self.check(property_value is not None, message and "None property-value pair")
         if self.args.constraints:
-            valid = self.constraints.allow_property_value(self.need_property, property_value)
-            self.check(valid, message and "May not set property value for %s to %s: %s" % (
-                self.need_property, property_value, valid))
+            try:
+                prop, value = property_value
+            except ValueError as e:
+                raise ValueError("Invalid property-value pair: " + str(property_value)) from e
+            resolved_value = resolve(self.need_property, value, conservative=True, is_node_label=False)
+            valid = self.constraints.allow_property_value(self.need_property, (prop, resolved_value))
+            self.check(valid, message and "May not set property value for %s to %s=%s (%s): %s" % (
+                self.need_property, prop, value, resolved_value, valid))
 
     def is_valid_attribute_value(self, attribute_value):
         """

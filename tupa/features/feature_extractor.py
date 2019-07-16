@@ -272,9 +272,8 @@ NODE_PROP_GETTERS = {
     "e": lambda node, prev, binary: next(e.lab for e in node.incoming if not binary or e.parent == prev),
     "n": lambda node, *_: node.label,
     "c": lambda node, *_: node.category,
-    "N": lambda node, *_: ",".join("%s=%s" % (k, v) for k, v in sorted(node.properties.items())),
-    "E": lambda node, *_: next(",".join("%s=%s" % (k, v) for k, v in sorted(e.attributes.items()))
-                               for e in node.incoming),
+    "N": lambda node, *_: next(node.properties.items()),  # FIXME extract all instead of a random one, average embedding
+    "E": lambda node, *_: next((k, v) for e in node.incoming for k, v in e.attributes.items()),
     "x": lambda node, prev, binary: int(prev in node.parents) if binary else gap_type(node),
     "y": gap_length_sum,
     "P": lambda node, *_: len(node.incoming),

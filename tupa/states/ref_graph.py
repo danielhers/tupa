@@ -1,4 +1,4 @@
-from tupa.constraints.amr import resolve
+from tupa.recategorization import resolve
 from .edge import StateEdge
 from .node import StateNode
 from ..constraints.validation import ROOT_ID, ROOT_LAB, ANCHOR_LAB
@@ -43,4 +43,4 @@ class RefGraph:
         for node in self.nodes:
             node.label = resolve(node, node.label, introduce_placeholders=True)
             node.properties = {prop: resolve(node, value, introduce_placeholders=True)
-                               for prop, value in node.properties.items()}
+                               for prop, value in (node.properties.items() if node.properties else ())}
