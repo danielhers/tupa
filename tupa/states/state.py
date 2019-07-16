@@ -41,39 +41,39 @@ class State:
         self.buffer = deque()
         self.heads = set()
         self.need_label = self.need_property = self.need_attribute = self.last_edge = None  # Which edge/node is next
-        self.orig_nodes = []
-        self.orig_edges = []
-        orig_root = StateNode(ROOT_ID)
-        orig_root.id = ROOT_ID
-        self.orig_nodes.append(orig_root)
-        self.root = StateNode(ROOT_ID, is_root=True, orig_node=orig_root)  # Virtual root for tops
+        self.ref_nodes = []
+        self.ref_edges = []
+        self.ref_root = StateNode(ROOT_ID)
+        self.ref_root.id = ROOT_ID
+        self.ref_nodes.append(self.ref_root)
+        self.root = StateNode(ROOT_ID, is_root=True, ref_node=self.ref_root)  # Virtual root for tops
         self.terminals = []
         for i, conllu_node in enumerate(self.conllu.nodes):
-            orig_node = StateNode(i, orig_node=conllu_node, label=conllu_node.label, anchors=conllu_node.anchors,
+            ref_node = StateNode(i, ref_node=conllu_node, label=conllu_node.label, anchors=conllu_node.anchors,
                                   properties=dict(zip(conllu_node.properties or (), conllu_node.values or ())))
-            self.terminals.append(StateNode(i, text=conllu_node.label, orig_node=orig_node))  # Virtual node for tokens
+            self.terminals.append(StateNode(i, text=conllu_node.label, ref_node=ref_node))  # Virtual node for tokens
         id2node = {}
         offset = len(self.conllu.nodes) + 1
         for graph_node in self.graph.nodes:
             node_id = graph_node.id + offset
-            id2node[node_id] = orig_node = \
-                StateNode(node_id, orig_node=graph_node, label=graph_node.label,
+            id2node[node_id] = ref_node = \
+                StateNode(node_id, ref_node=graph_node, label=graph_node.label,
                           properties=dict(zip(graph_node.properties or (), graph_node.values or ())))
-            orig_node.id = node_id
-            self.orig_nodes.append(orig_node)
+            ref_node.id = node_id
+            self.ref_nodes.append(ref_node)
             if graph_node.is_top:
-                self.orig_edges.append(StateEdge(orig_root, orig_node, ROOT_LAB).add())
+                self.ref_edges.append(StateEdge(self.ref_root, ref_node, ROOT_LAB).add())
             if graph_node.anchors:
                 anchors = StateNode.expand_anchors(graph_node)
                 for terminal in self.terminals:
-                    if anchors & terminal.orig_anchors:
-                        self.orig_edges.append(StateEdge(orig_node, terminal.orig_node, ANCHOR_LAB).add())
+                    if anchors & terminal.ref_anchors:
+                        self.ref_edges.append(StateEdge(ref_node, terminal.ref_node, ANCHOR_LAB).add())
         for edge in self.graph.edges:
-            self.orig_edges.append(StateEdge(id2node[edge.src + offset],
+            self.ref_edges.append(StateEdge(id2node[edge.src + offset],
                                              id2node[edge.tgt + offset], edge.lab,
                                              dict(zip(edge.attributes or (), edge.values or ()))).add())
-        for orig_node in self.orig_nodes:
-            orig_node.label = resolve_label(orig_node, orig_node.label, reverse=True)
+        for ref_node in self.ref_nodes:
+            ref_node.label = resolve_label(ref_node, ref_node.label, reverse=True)
         self.stack.append(self.root)
         self.buffer += self.terminals
         self.nodes = [self.root] + self.terminals
@@ -104,7 +104,7 @@ class State:
                     if requires_anchors(self.framework):
                         if node.node.anchors is None:
                             node.node.anchors = []
-                        node.node.anchors += edge.child.orig_node.anchors
+                        node.node.anchors += edge.child.ref_node.anchors
                 else:
                     attributes, values = zip(*edge.attributes.items()) if edge.attributes else (None, None)
                     graph.add_edge(int(edge.parent.id), int(edge.child.id), edge.lab,
@@ -232,7 +232,7 @@ class State:
                                node.incoming, message and "Non-terminal %s has no parent at parse end" % node)
                     self.check(not requires_node_labels(self.framework) or node.label is not None,
                                message and "Non-terminal %s has no label at parse end (orig node label: '%s')" % (
-                                   node, node.orig_node.label if node.orig_node else None))
+                                   node, node.ref_node.label if node.ref_node else None))
         else:
             self.check(self.action_ratio() < self.args.max_action_ratio,
                        message and "Actions/terminals ratio: %.3f" % self.args.max_action_ratio, is_type=True)
@@ -369,10 +369,10 @@ class State:
         if pct:
             parent, child, tag = pct
             if parent is None:
-                parent = action.node = self.add_node(orig_node=action.orig_node)
+                parent = action.node = self.add_node(ref_node=action.ref_node)
             if child is None:
-                child = action.node = self.add_node(orig_node=action.orig_node)
-            action.edge = self.add_edge(StateEdge(parent, child, tag, orig_edge=action.orig_edge))
+                child = action.node = self.add_node(ref_node=action.ref_node)
+            action.edge = self.add_edge(StateEdge(parent, child, tag, ref_edge=action.ref_edge))
             if action.node:
                 self.buffer.appendleft(action.node)
         elif action.is_type(Actions.Shift):  # Push buffer head to stack; shift buffer

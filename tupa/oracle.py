@@ -30,11 +30,11 @@ class Oracle:
     def __init__(self, state):
         self.args = Config().args
         self.framework = state.framework
-        self.terminal_ids = {int(terminal.orig_node.id) for terminal in state.terminals}
-        self.nodes_remaining = {int(n.id) for n in state.orig_nodes
-                                if n.id != state.root.orig_node.id
+        self.terminal_ids = {int(terminal.ref_node.id) for terminal in state.terminals}
+        self.nodes_remaining = {int(n.id) for n in state.ref_nodes
+                                if n.id != state.root.ref_node.id
                                 and int(n.id) not in self.terminal_ids}
-        self.edges_remaining = set(state.orig_edges)
+        self.edges_remaining = set(state.ref_edges)
         self.found = False
         self.log = None
 
@@ -79,7 +79,7 @@ class Oracle:
         if state.stack:
             s0 = state.stack[-1]
             incoming, outgoing = [[e for e in l if e in self.edges_remaining]
-                                  for l in (s0.orig_node.incoming, s0.orig_node.outgoing)]
+                                  for l in (s0.ref_node.incoming, s0.ref_node.outgoing)]
             if not incoming and not outgoing and not self.need_label(s0) and not self.need_property(s0):
                 yield self.action(Actions.Reduce)
             else:
@@ -105,7 +105,7 @@ class Oracle:
                     if len(state.stack) > 1:
                         s1 = state.stack[-2]
                         finished_terminals = not any(self.is_terminal_edge(e) for e in
-                                                     self.edges_remaining.intersection(s1.orig_node.outgoing))
+                                                     self.edges_remaining.intersection(s1.ref_node.outgoing))
                         # Check for node label action: if all terminals have already been connected
                         if self.need_label(s1) and finished_terminals:
                             yield self.action(s1, LABEL, 2)
@@ -122,7 +122,7 @@ class Oracle:
                             if edge.tgt == int(s1.id):
                                 yield self.action(edge, EDGE, LEFT)  # LeftEdge
                             elif state.buffer and edge.tgt == int(state.buffer[0].id) and \
-                                    len(state.buffer[0].orig_node.incoming) == 1:
+                                    len(state.buffer[0].ref_node.incoming) == 1:
                                 yield self.action(Actions.Shift)  # Special case to allow discarding simple children
 
                     if not self.found:
@@ -150,13 +150,13 @@ class Oracle:
         if kind is None:
             return node_or_edge  # Will be just an Action object in this case
         if kind == LABEL:
-            return Actions.Label(direction, orig_node=node_or_edge.orig_node, oracle=self)
+            return Actions.Label(direction, ref_node=node_or_edge.ref_node, oracle=self)
         if kind == PROPERTY:
-            return Actions.Property(direction, orig_node=node_or_edge.orig_node, oracle=self)
+            return Actions.Property(direction, ref_node=node_or_edge.ref_node, oracle=self)
         if kind == ATTRIBUTE:
-            return Actions.Attribute(direction, orig_edge=node_or_edge.orig_edge, oracle=self)
+            return Actions.Attribute(direction, ref_edge=node_or_edge.ref_edge, oracle=self)
         node = (node_or_edge.parent, node_or_edge.child)[direction] if kind == NODE else None
-        return ACTIONS[kind][direction](tag=node_or_edge.lab, orig_edge=node_or_edge, orig_node=node, oracle=self)
+        return ACTIONS[kind][direction](tag=node_or_edge.lab, ref_edge=node_or_edge, ref_node=node, oracle=self)
 
     def remove(self, edge, node=None):
         self.edges_remaining.discard(edge)
@@ -165,20 +165,20 @@ class Oracle:
 
     def need_label(self, node):
         return requires_node_labels(self.framework) and \
-               node is not None and node.text is None and node.label is None and node.orig_node.label
+               node is not None and node.text is None and node.label is None and node.ref_node.label
 
     def need_property(self, node):
         return requires_node_properties(self.framework) and node is not None and node.text is None and \
-               set(node.orig_node.properties or ()).difference(node.properties or ())
+               set(node.ref_node.properties or ()).difference(node.properties or ())
 
     def need_attribute(self, edge):
         return requires_edge_attributes(self.framework) and edge is not None and \
-               set(edge.orig_edge.attributes or ()).difference(edge.attributes or ())
+               set(edge.ref_edge.attributes or ()).difference(edge.attributes or ())
 
     def get_node_label(self, state, node):
         true_label = raw_true_label = None
-        if node.orig_node is not None:
-            raw_true_label = node.orig_node.label
+        if node.ref_node is not None:
+            raw_true_label = node.ref_node.label
         if raw_true_label is not None:
             true_label, _, _ = raw_true_label.partition("|")
             if self.args.validate_oracle:
@@ -189,7 +189,7 @@ class Oracle:
         return true_label, raw_true_label
 
     def get_node_property_value(self, state, node):
-        true_property_value = next((k, v) for k, v in node.orig_node.properties.items()
+        true_property_value = next((k, v) for k, v in node.ref_node.properties.items()
                                    if k not in (node.properties or ()))
         if self.args.validate_oracle:
             try:
@@ -200,7 +200,7 @@ class Oracle:
         return true_property_value
 
     def get_edge_attribute_value(self, state, edge):
-        true_attribute_value = next((k, v) for k, v in edge.orig_edge.attributes.items()
+        true_attribute_value = next((k, v) for k, v in edge.ref_edge.attributes.items()
                                     if k not in (edge.attributes or ()))
         if self.args.validate_oracle:
             try:

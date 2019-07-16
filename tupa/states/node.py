@@ -6,11 +6,11 @@ class StateNode:
     """
     Temporary representation for graph.Node with only relevant information for parsing
     """
-    def __init__(self, index, swap_index=None, orig_node=None, text=None, label=None, is_root=False, properties=None,
+    def __init__(self, index, swap_index=None, ref_node=None, text=None, label=None, is_root=False, properties=None,
                  anchors=None):
         self.index = index  # Index in the configuration's node list
-        self.orig_node = orig_node  # Associated graph.Node from the original Graph, during training
-        self.id = str(orig_node.id) if orig_node else index  # ID of the original node
+        self.ref_node = ref_node  # Associated graph.Node from the original Graph, during training
+        self.id = str(ref_node.id) if ref_node else index  # ID of the original node
         self.text = text  # Text for terminals, None for non-terminals
         if label is None:
             self.label = self.category = None
@@ -18,7 +18,7 @@ class StateNode:
             self.label, _, self.category = label.partition("|")
             if not self.category:
                 self.category = None
-        self.node_index = int(self.id) if orig_node else None
+        self.node_index = int(self.id) if ref_node else None
         self.outgoing = []  # StateEdge list
         self.incoming = []  # StateEdge list
         self.children = []  # StateNode list: the children of all edges in outgoing
@@ -32,10 +32,10 @@ class StateNode:
         self.is_root = is_root
         self.properties = properties
         self.anchors = anchors
-        self.orig_anchors = self.expand_anchors(self.orig_node) if orig_node else None
+        self.ref_anchors = self.expand_anchors(self.ref_node) if ref_node else None
 
     def get(self, prop):
-        return self.orig_node.properties.get(prop)
+        return self.ref_node.properties.get(prop)
 
     def add_incoming(self, edge):
         self.incoming.append(edge)

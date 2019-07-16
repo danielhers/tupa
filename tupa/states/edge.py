@@ -2,12 +2,12 @@ class StateEdge:
     """
     Temporary representation for graph.Edge with only relevant information for parsing
     """
-    def __init__(self, parent, child, lab, attributes=None, orig_edge=None):
+    def __init__(self, parent, child, lab, attributes=None, ref_edge=None):
         self.parent = parent  # StateNode object from which this edge comes
         self.child = child  # StateNode object to which this edge goes
         self.lab = lab  # String label
         self.attributes = attributes  # dict of attribute name to value
-        self.orig_edge = orig_edge
+        self.ref_edge = ref_edge
         self.src = int(parent.id)
         self.tgt = int(child.id)
 

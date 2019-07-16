@@ -5,11 +5,11 @@ from .labels import Labels
 class Action(dict):
     type_to_id = {}
 
-    def __init__(self, action_type, tag=None, orig_edge=None, orig_node=None, oracle=None, id_=None):
+    def __init__(self, action_type, tag=None, ref_edge=None, ref_node=None, oracle=None, id_=None):
         self.type = action_type  # String
         self.tag = tag  # Usually the label of the created edge; but if COMPOUND_SWAP, the distance
-        self.orig_node = orig_node  # Node created by this action, if any (during training)
-        self.orig_edge = orig_edge  # Edge created by this action, if any (during training)
+        self.ref_node = ref_node  # Node created by this action, if any (during training)
+        self.ref_edge = ref_edge  # Edge created by this action, if any (during training)
         self.node = None  # Will be set by State when the node created by this action is known
         self.edge = None  # Will be set by State when the edge created by this action is known
         self.oracle = oracle  # Reference to oracle, to inform it of actually created nodes/edges
@@ -27,7 +27,7 @@ class Action(dict):
 
     def apply(self):
         if self.oracle is not None:
-            self.oracle.remove(self.orig_edge, self.orig_node)
+            self.oracle.remove(self.ref_edge, self.ref_node)
 
     def __repr__(self):
         return Action.__name__ + "(" + ", ".join(map(str, filter(None, (self.type, self.tag)))) + ")"
