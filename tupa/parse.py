@@ -485,7 +485,7 @@ class Parser(AbstractParser):
         print("Evaluating on %s graphs" % mode.name, file=sys.stderr)
         out = self.parse(graphs, mode=mode, evaluate=True, display=display, conllu=conllu, alignment=alignment)
         try:
-            results = score.mces.evaluate([g for g, _ in graphs], out)
+            results = score.mces.evaluate([g for g, _ in graphs], out, cores=self.config.args.cores)
         except (KeyError, ValueError) as e:
             raise ValueError("Failed evaluating graphs: \n" + "\n".join(json.dumps(
                 g.encode(), indent=None, ensure_ascii=False) for g in out)) from e
@@ -554,7 +554,7 @@ def train_test(train_graphs, dev_graphs, test_graphs, args, model_suffix=""):
             print("Evaluating on test graphs", file=sys.stderr)
         evaluate = args.evaluate or train_graphs
         out = p.parse(test_graphs, evaluate=evaluate, write=args.write, conllu=conllu, alignment=alignment)
-        results = score.mces.evaluate([g for g, _ in test_graphs], out)
+        results = score.mces.evaluate([g for g, _ in test_graphs], out, cores=args.cores)
         print_scores(results, args.testscores)
         yield results
 

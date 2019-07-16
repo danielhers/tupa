@@ -292,6 +292,7 @@ class Config(object, metaclass=Singleton):
         add_boolean_option(ap, "evaluate", "evaluation of parsed graphs", short="e")
         add_verbose_arg(ap, help="detailed parse output")
         ap.add_argument("--timeout", type=float, help="max number of seconds to wait for a single graph")
+        ap.add_argument("--cores", type=int, default=1, help="number of CPU cores to use for running the evaluator")
 
         group = ap.add_argument_group(title="Training parameters")
         group.add_argument("-t", "--train", action="store_true", help="train a model on the input")
