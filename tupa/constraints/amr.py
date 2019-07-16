@@ -107,7 +107,7 @@ def is_int_in_range(label, s=None, e=None):
     return Valid(s is None or num >= s, "%s < %s" % (num, s)) and Valid(e is None or num <= e, "%s > %s" % (num, e))
 
 
-def is_valid_arg(node, label, *tags, is_parent=True, is_concept=True):
+def is_valid_arg(node, label, *labs, is_parent=True, is_concept=True):
     read_resources()
     if label is None:  # Not labeled yet or unlabeled parsing
         return True
@@ -116,36 +116,36 @@ def is_valid_arg(node, label, *tags, is_parent=True, is_concept=True):
     const = label[1:-1] if label[0] == label[-1] == '"' else None
     if PLACEHOLDER_PATTERN.search(label):
         return True
-    valid = Valid(message="%s incompatible as %s of %s" % (label, "parent" if is_parent else "child", ", ".join(tags)))
+    valid = Valid(message="%s incompatible as %s of %s" % (label, "parent" if is_parent else "child", ", ".join(labs)))
     if is_parent:  # node is a parent of the edge
-        if {DAY, MONTH, YEAR, YEAR2, DECADE, WEEKDAY, QUARTER, CENTURY, SEASON, TIMEZONE}.intersection(tags):
+        if {DAY, MONTH, YEAR, YEAR2, DECADE, WEEKDAY, QUARTER, CENTURY, SEASON, TIMEZONE}.intersection(labs):
             return valid(concept == DATE_ENTITY)
     elif const == MINUS:  # :polarity excl,b_isconst,b_const=-
-        return valid({POLARITY, ARG2, VALUE}.issuperset(tags))
-    elif POLARITY in tags:
+        return valid({POLARITY, ARG2, VALUE}.issuperset(labs))
+    elif POLARITY in labs:
         return valid(const == MINUS)
-    elif MODE in tags:  # :mode excl,b_isconst,b_const=[interrogative|expressive|imperative]
+    elif MODE in labs:  # :mode excl,b_isconst,b_const=[interrogative|expressive|imperative]
         return valid(const in MODES)
     elif const in MODES:
-        return valid(MODE in tags)
-    elif DAY in tags:  # :day  a=date-entity,b_isconst,b_const=[...]
+        return valid(MODE in labs)
+    elif DAY in labs:  # :day  a=date-entity,b_isconst,b_const=[...]
         return is_int_in_range(label, 1, 31)
-    elif MONTH in tags:  # :month  a=date-entity,b_isconst,b_const=[1|2|3|4|5|6|7|8|9|10|11|12]
+    elif MONTH in labs:  # :month  a=date-entity,b_isconst,b_const=[1|2|3|4|5|6|7|8|9|10|11|12]
         return is_int_in_range(label, 1, 12)
-    elif QUARTER in tags:  # :quarter  a=date-entity,b_isconst,b_const=[1|2|3|4]
+    elif QUARTER in labs:  # :quarter  a=date-entity,b_isconst,b_const=[1|2|3|4]
         return is_int_in_range(label, 1, 4)
-    elif {YEAR, YEAR2, DECADE, CENTURY}.intersection(tags):  # :year a=date-entity,b_isconst,b_const=[0-9]+
+    elif {YEAR, YEAR2, DECADE, CENTURY}.intersection(labs):  # :year a=date-entity,b_isconst,b_const=[0-9]+
         return is_int_in_range(label)
-    elif WEEKDAY in tags:  # :weekday  excl,a=date-entity,b=[monday|tuesday|wednesday|thursday|friday|saturday|sunday]
+    elif WEEKDAY in labs:  # :weekday  excl,a=date-entity,b=[monday|tuesday|wednesday|thursday|friday|saturday|sunday]
         return valid(concept in WEEKDAYS)
     elif concept in WEEKDAYS:
-        return valid(WEEKDAY in tags)
-    elif SEASON in tags:  # :season excl,a=date-entity,b=[winter|fall|spring|summer]+
+        return valid(WEEKDAY in labs)
+    elif SEASON in labs:  # :season excl,a=date-entity,b=[winter|fall|spring|summer]+
         return valid(concept in SEASONS)
 
     if not concept or "-" not in concept:
         return True  # What follows is a check for predicate arguments, only relevant for predicates
-    args = [t for t in tags if t.startswith("ARG") and (t.endswith("-of") != is_parent)]
+    args = [t for t in labs if t.startswith("ARG") and (t.endswith("-of") != is_parent)]
     if not args:
         return True
     valid_args = ROLESETS.get(concept, ())
@@ -269,13 +269,13 @@ class AmrConstraints(Constraints):
         return True
 
     def allow_edge(self, edge):  # Prevent multiple identical edges between the same pair of nodes
-        return edge.tag in PREFIXED_RELATION_ENUM or edge not in edge.parent.outgoing
+        return edge.lab in PREFIXED_RELATION_ENUM or edge not in edge.parent.outgoing
 
-    def allow_parent(self, node, tag):
-        return not tag or is_valid_arg(node, node.label, tag)
+    def allow_parent(self, node, lab):
+        return not lab or is_valid_arg(node, node.label, lab)
 
-    def allow_child(self, node, tag):
-        return not tag or is_valid_arg(node, node.label, tag, is_parent=False)
+    def allow_child(self, node, lab):
+        return not lab or is_valid_arg(node, node.label, lab, is_parent=False)
 
     def allow_label(self, node, label):
         return not node.parents or \
