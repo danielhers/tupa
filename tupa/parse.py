@@ -8,7 +8,7 @@ from enum import Enum
 from itertools import chain
 
 import score
-from main import read_graphs
+from main import read_graphs, NORMALIZATIONS
 from tqdm import tqdm
 
 from tupa.__version__ import GIT_VERSION
@@ -85,6 +85,7 @@ class GraphParser(AbstractParser):
 
     def init(self):
         self.config.set_framework(self.framework)
+        self.graph.normalize(NORMALIZATIONS)
         self.state = State(self.graph, self.conllu, self.framework)
         self.oracle = Oracle(self.state.ref_graph, self.framework) if self.training or (self.state.has_ref and
                 (self.config.args.verbose > 1 or self.config.args.action_stats)) else None
