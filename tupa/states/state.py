@@ -22,7 +22,7 @@ class State:
     """
     The parser's state, responsible for applying actions and creating the final Graph
     """
-    def __init__(self, graph=None, conllu=None, target=None):
+    def __init__(self, graph, conllu, target=None):
         """
         :param graph: Graph for training, not needed for testing except for getting the graph id
         :param conllu: Graph with node per token predicted by a syntactic parser
