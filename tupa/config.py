@@ -11,7 +11,6 @@ from tupa.classifiers.nn.constants import *
 from tupa.model_util import load_enum
 
 # Classifiers
-
 BIRNN = "bilstm"
 NOOP = "noop"
 CLASSIFIERS = (BIRNN, NOOP)
