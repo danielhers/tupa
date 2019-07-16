@@ -63,7 +63,7 @@ class State:
                     node.label = DEFAULT_LABEL
                 properties, values = zip(*node.properties.items()) if node.properties else (None, None)
                 node.node = graph.add_node(int(node.id), label=resolve(node, node.label), properties=properties,
-                                           values=[resolve(node, value) for value in values])
+                                           values=[resolve(node, value) for value in values or ()] or None)
         for node in self.nodes:
             for edge in node.outgoing:
                 if node.is_root:
