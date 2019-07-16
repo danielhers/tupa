@@ -146,7 +146,7 @@ class State:
                     self.check(self.constraints.top_level_only is None or
                                edge_lab not in self.constraints.top_level_only,
                                message and "Only root may have %s edges" % edge_lab)
-            self.check(ROOT_LAB not in parent_node.incoming_labs or child_node.text is None,
+            self.check(not parent_node.is_root or child_node.text is None,
                        message and "Virtual terminal child %s of virtual root" % child_node, is_type=True)
             if self.constraints.multigraph:  # Nodes may be connected by more than one edge
                 edge = StateEdge(parent_node, child_node, edge_lab)
