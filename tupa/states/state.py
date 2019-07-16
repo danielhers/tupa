@@ -69,7 +69,7 @@ class State:
                     if op is not None:
                         for i, op_i in enumerate(op.split("_"), start=1):
                             props[OP + str(i)] = op_i
-                properties, values = zip(*props.items())
+                properties, values = zip(*props.items()) if props else (None, None)
                 node.node = graph.add_node(int(node.id), label=resolve(node, node.label),
                                            properties=properties, values=values)
         for node in self.nodes:

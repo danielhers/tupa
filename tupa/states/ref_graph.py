@@ -47,5 +47,5 @@ class RefGraph:
             properties = node.properties.items() if node.properties else ()
             # Collapse :name (... / name) :op "..." into one string node
             if self.framework == "amr" and node.label == NAME:
-                properties = {OP: "_".join(v for k, v in sorted(properties))}
+                properties = [(OP, "_".join(v for k, v in sorted(properties)))]
             node.properties = {prop: resolve(node, value, introduce_placeholders=True) for prop, value in properties}
