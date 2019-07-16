@@ -69,11 +69,13 @@ def visualize():
     xml = request.get_data()
     passage = from_standard(fromstring(xml))
     print("Visualizing passage %s: %s" % (passage.ID, passage.layer(layer1.LAYER_ID).heads[0]))
-    canvas = FigureCanvasAgg(plt.figure())
+    fig = plt.figure()
+    canvas = FigureCanvasAgg(fig)
     draw(passage)
     image = BytesIO()
     canvas.print_png(image)
     data = b64encode(image.getvalue()).decode()
+    fig.close()
     return Response(quote(data.rstrip("\n")))
 
 CONTENT_TYPES = {"xml": "xml/application", "json": "application/json"}
