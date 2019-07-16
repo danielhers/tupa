@@ -16,14 +16,14 @@ TOKEN_PLACEHOLDER = "<t>"
 TOKEN_TITLE_PLACEHOLDER = "<T>"
 LEMMA_PLACEHOLDER = "<l>"
 NEGATION_PLACEHOLDER = "<n>"
-LABEL_SEPARATOR = "|"  # after the separator there is the label category
+CATEGORY_SEPARATOR = "|"  # after the separator there is the label category
 PUNCTUATION_REMOVER = str.maketrans("", "", string.punctuation)
 PREFIXED_RELATION_ENUM = ("op", "snt")
 PREFIXED_RELATION_PREP = "prep"
 PREFIXED_RELATION_PATTERN = re.compile(r"(?:(op|snt)\d+|(prep)-\w+)(-of)?")
 PREFIXED_RELATION_SUBSTITUTION = r"\1\2\3"
 
-# Specific edge labels (relations)
+# Specific relations
 POLARITY = "polarity"
 NAME = "name"
 OP = "op"
@@ -41,7 +41,7 @@ CENTURY = "century"
 SEASON = "season"
 TIMEZONE = "timezone"
 
-# Specific node labels
+# Specific node property values
 MINUS = "-"
 MODES = ("expressive", "imperative", "interrogative")
 DATE_ENTITY = "date-entity"
@@ -99,24 +99,24 @@ def read_resources():
 read_resources.done = False
 
 
-def is_int_in_range(label, s=None, e=None):
-    m = INT_PATTERN.match(label)
+def is_int_in_range(value, s=None, e=None):
+    m = INT_PATTERN.match(value)
     if not m:
-        return Valid(False, "%s is not numeric" % label)
+        return Valid(False, "%s is not numeric" % value)
     num = int(m.group(1))
     return Valid(s is None or num >= s, "%s < %s" % (num, s)) and Valid(e is None or num <= e, "%s > %s" % (num, e))
 
 
-def is_valid_arg(node, label, *labs, is_parent=True, is_concept=True):
+def is_valid_arg(node, value, *labs, is_parent=True, is_node_label=True):
     read_resources()
-    if label is None:  # Not labeled yet or unlabeled parsing
+    if value is None:  # Not labeled yet
         return True
-    label = resolve_label(node, label, conservative=True, is_concept=is_concept)
-    concept = label if is_concept else None
-    const = label[1:-1] if label[0] == label[-1] == '"' else None
-    if PLACEHOLDER_PATTERN.search(label):
+    value = resolve(node, value, conservative=True, is_node_label=is_node_label)
+    concept = value if is_node_label else None
+    const = value[1:-1] if value[0] == value[-1] == '"' else None
+    if PLACEHOLDER_PATTERN.search(value):
         return True
-    valid = Valid(message="%s incompatible as %s of %s" % (label, "parent" if is_parent else "child", ", ".join(labs)))
+    valid = Valid(message="%s incompatible as %s of %s" % (value, "parent" if is_parent else "child", ", ".join(labs)))
     if is_parent:  # node is a parent of the edge
         if {DAY, MONTH, YEAR, YEAR2, DECADE, WEEKDAY, QUARTER, CENTURY, SEASON, TIMEZONE}.intersection(labs):
             return valid(concept == DATE_ENTITY)
@@ -129,13 +129,13 @@ def is_valid_arg(node, label, *labs, is_parent=True, is_concept=True):
     elif const in MODES:
         return valid(MODE in labs)
     elif DAY in labs:  # :day  a=date-entity,b_isconst,b_const=[...]
-        return is_int_in_range(label, 1, 31)
+        return is_int_in_range(value, 1, 31)
     elif MONTH in labs:  # :month  a=date-entity,b_isconst,b_const=[1|2|3|4|5|6|7|8|9|10|11|12]
-        return is_int_in_range(label, 1, 12)
+        return is_int_in_range(value, 1, 12)
     elif QUARTER in labs:  # :quarter  a=date-entity,b_isconst,b_const=[1|2|3|4]
-        return is_int_in_range(label, 1, 4)
+        return is_int_in_range(value, 1, 4)
     elif {YEAR, YEAR2, DECADE, CENTURY}.intersection(labs):  # :year a=date-entity,b_isconst,b_const=[0-9]+
-        return is_int_in_range(label)
+        return is_int_in_range(value)
     elif WEEKDAY in labs:  # :weekday  excl,a=date-entity,b=[monday|tuesday|wednesday|thursday|friday|saturday|sunday]
         return valid(concept in WEEKDAYS)
     elif concept in WEEKDAYS:
@@ -153,66 +153,64 @@ def is_valid_arg(node, label, *labs, is_parent=True, is_concept=True):
                                    "valid args: " + ", ".join(valid_args))
 
 
-def resolve_label(node, label=None, reverse=False, conservative=False, is_concept=True):
+def resolve(node, value, introduce_placeholders=False, conservative=False, is_node_label=True):
     """
-    Replace any placeholder in the node's label with the corresponding terminals' text, and remove label category suffix
-    :param node: node whose label is to be resolved
-    :param label: the label if not taken from the node directly
-    :param reverse: if True, *introduce* placeholders and categories into the label rather than removing them
+    Replace any placeholder in node label/property with the corresponding terminals' text, and remove category suffix
+    :param node: node whose label or property value is to be resolved
+    :param value: the label or property value to resolve
+    :param introduce_placeholders: if True, *introduce* placeholders and categories into the label rather than resolving
     :param conservative: avoid replacement when risky due to multiple terminal children that could match
-    :param is_concept: is this a node label (not property value)
+    :param is_node_label: is this a node label (not property value)
     :return: the resolved label, with or without placeholders and categories (depending on the value of reverse)
     """
     def _replace(old, new):  # replace only inside the label value/name
         new = new.strip('"()')
-        if reverse:
+        if introduce_placeholders:
             old, new = new, old
-        replaceable = old and (len(old) > 2 or len(label) < 5)
-        return re.sub(re.escape(old) + r"(?![^<]*>|[^(]*\(|\d+$)", new, label, 1) if replaceable else label
+        replaceable = old and (len(old) > 2 or len(value) < 5)
+        return re.sub(re.escape(old) + r"(?![^<]*>|[^(]*\(|\d+$)", new, value, 1) if replaceable else value
 
     read_resources()
 
-    if label is None:
-        label = node.label
-    if label is not None:
+    if value is not None:
         category = None
-        if reverse:
-            category = CATEGORIES.get(label)  # category suffix to append to label
-        elif LABEL_SEPARATOR in label:
-            label = label[:label.find(LABEL_SEPARATOR)]  # remove category suffix
+        if introduce_placeholders:
+            category = CATEGORIES.get(value)  # category suffix to append to label
+        elif CATEGORY_SEPARATOR in value:
+            value = value[:value.find(CATEGORY_SEPARATOR)]  # remove category suffix
         terminals = sorted([c for c in node.children if getattr(c, "text", None)], key=attrgetter("index"))
         if terminals:
-            if not reverse and NUM_PATTERN.match(label):  # numeric label (always 1 unless "numbers" layer is on)
+            if not introduce_placeholders and NUM_PATTERN.match(value):  # numeric
                 number = terminals_to_number(terminals)  # try replacing spelled-out numbers/months with digits
                 if number is not None:
-                    label = str(number)
+                    value = str(number)
             else:
                 if len(terminals) > 1:
-                    if reverse or label.count(TOKEN_PLACEHOLDER) == 1:
-                        label = _replace(TOKEN_PLACEHOLDER, "".join(t.text for t in terminals))
-                    if reverse or label.count(TOKEN_TITLE_PLACEHOLDER) == 1:
-                        label = _replace(TOKEN_TITLE_PLACEHOLDER, "_".join(merge_punct(t.text for t in terminals)))
+                    if introduce_placeholders or value.count(TOKEN_PLACEHOLDER) == 1:
+                        value = _replace(TOKEN_PLACEHOLDER, "".join(t.text for t in terminals))
+                    if introduce_placeholders or value.count(TOKEN_TITLE_PLACEHOLDER) == 1:
+                        value = _replace(TOKEN_TITLE_PLACEHOLDER, "_".join(merge_punct(t.text for t in terminals)))
                     if conservative:
                         terminals = ()
                 for terminal in terminals:
                     lemma = lemmatize(terminal)
                     if lemma:
-                        if reverse and category is None:
+                        if introduce_placeholders and category is None:
                             category = CATEGORIES.get(lemma)
-                        label = _replace(LEMMA_PLACEHOLDER, lemma)
-                    label = _replace(TOKEN_PLACEHOLDER, terminal.text)
-                    label = _replace(TOKEN_TITLE_PLACEHOLDER, terminal.text.title())
+                        value = _replace(LEMMA_PLACEHOLDER, lemma)
+                    value = _replace(TOKEN_PLACEHOLDER, terminal.text)
+                    value = _replace(TOKEN_TITLE_PLACEHOLDER, terminal.text.title())
                     negation = NEGATIONS.get(terminal.text)
                     if negation is not None:
-                        label = _replace(NEGATION_PLACEHOLDER, negation)
-                    if is_concept:
+                        value = _replace(NEGATION_PLACEHOLDER, negation)
+                    if is_node_label:
                         morph = VERBALIZATION.get(lemma)
                         if morph:
                             for prefix, value in morph.items():  # V: verb, N: noun, A: noun actor
-                                label = _replace("<%s>" % prefix, value)
-        if reverse and category:
-            label += LABEL_SEPARATOR + category
-    return label
+                                value = _replace("<%s>" % prefix, value)
+        if introduce_placeholders and category:
+            value += CATEGORY_SEPARATOR + category
+    return value
 
 
 def terminals_to_number(terminals):

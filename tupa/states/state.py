@@ -2,7 +2,7 @@ from collections import deque
 
 from graph import Graph
 
-from tupa.constraints.amr import resolve_label
+from tupa.constraints.amr import resolve
 from .edge import StateEdge
 from .node import StateNode
 from .ref_graph import RefGraph
@@ -62,8 +62,8 @@ class State:
                 if node.label is None and requires_node_labels(self.framework):
                     node.label = DEFAULT_LABEL
                 properties, values = zip(*node.properties.items()) if node.properties else (None, None)
-                node.node = graph.add_node(int(node.id), label=resolve_label(node, node.label), properties=properties,
-                                           values=[resolve_label(node, value) for value in values])
+                node.node = graph.add_node(int(node.id), label=resolve(node, node.label), properties=properties,
+                                           values=[resolve(node, value) for value in values])
         for node in self.nodes:
             for edge in node.outgoing:
                 if node.is_root:

@@ -1,4 +1,4 @@
-from tupa.constraints.amr import resolve_label
+from tupa.constraints.amr import resolve
 from .edge import StateEdge
 from .node import StateNode
 from ..constraints.validation import ROOT_ID, ROOT_LAB, ANCHOR_LAB
@@ -41,6 +41,6 @@ class RefGraph:
                                         id2node[edge.tgt + offset], edge.lab,
                                         dict(zip(edge.attributes or (), edge.values or ()))).add())
         for node in self.nodes:
-            node.label = resolve_label(node, node.label, reverse=True)
-            node.properties = {prop: resolve_label(node, value, reverse=True)
+            node.label = resolve(node, node.label, introduce_placeholders=True)
+            node.properties = {prop: resolve(node, value, introduce_placeholders=True)
                                for prop, value in node.properties.items()}
