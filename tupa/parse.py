@@ -87,7 +87,7 @@ class GraphParser(AbstractParser):
         self.config.set_framework(self.framework)
         self.graph.normalize(NORMALIZATIONS)
         self.state = State(self.graph, self.conllu, self.framework)
-        self.oracle = Oracle(self.state.ref_graph, self.framework) if self.training or (self.state.has_ref and
+        self.oracle = Oracle(self.state.ref_graph) if self.training or (self.state.has_ref and
                 (self.config.args.verbose > 1 or self.config.args.action_stats)) else None
         self.model.init_model(self.framework)
         self.model.init_features(self.framework, self.state, self.training)

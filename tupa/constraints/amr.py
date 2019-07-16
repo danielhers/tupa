@@ -103,15 +103,24 @@ def is_valid_arg(value, *labs, is_parent=True, is_node_label=True):
     if is_parent:  # node is a parent of the edge
         if {DAY, MONTH, YEAR, YEAR2, DECADE, WEEKDAY, QUARTER, CENTURY, SEASON, TIMEZONE}.intersection(labs):
             return valid(value == DATE_ENTITY)
-    elif not is_node_label:  # property value, i.e., constant
-        if value == MINUS:  # :polarity excl,b_isconst,b_const=-
-            return valid({POLARITY, ARG2, VALUE}.issuperset(labs))
-        elif POLARITY in labs:
-            return valid(value == MINUS)
-        elif MODE in labs:  # :mode excl,b_isconst,b_const=[interrogative|expressive|imperative]
-            return valid(value in MODES)
-        elif value in MODES:
-            return valid(MODE in labs)
+    elif is_node_label:
+        if WEEKDAY in labs:  # :weekday  excl,a=date-entity,b=[monday|tuesday|wednesday|thursday|friday|saturday|sunday]
+            return valid(value in WEEKDAYS)
+        elif value in WEEKDAYS:
+            return valid(WEEKDAY in labs)
+        elif SEASON in labs:  # :season excl,a=date-entity,b=[winter|fall|spring|summer]+
+            return valid(value in SEASONS)
+        elif NAME in labs:
+            return valid(value == NAME)
+    # property value, i.e., constant
+    elif value == MINUS:  # :polarity excl,b_isconst,b_const=-
+        return valid({POLARITY, ARG2, VALUE}.issuperset(labs))
+    elif POLARITY in labs:
+        return valid(value == MINUS)
+    elif MODE in labs:  # :mode excl,b_isconst,b_const=[interrogative|expressive|imperative]
+        return valid(value in MODES)
+    elif value in MODES:
+        return valid(MODE in labs)
     elif DAY in labs:  # :day  a=date-entity,b_isconst,b_const=[...]
         return is_int_in_range(value, 1, 31)
     elif MONTH in labs:  # :month  a=date-entity,b_isconst,b_const=[1|2|3|4|5|6|7|8|9|10|11|12]
@@ -120,12 +129,6 @@ def is_valid_arg(value, *labs, is_parent=True, is_node_label=True):
         return is_int_in_range(value, 1, 4)
     elif {YEAR, YEAR2, DECADE, CENTURY}.intersection(labs):  # :year a=date-entity,b_isconst,b_const=[0-9]+
         return is_int_in_range(value)
-    elif WEEKDAY in labs:  # :weekday  excl,a=date-entity,b=[monday|tuesday|wednesday|thursday|friday|saturday|sunday]
-        return valid(value in WEEKDAYS)
-    elif value in WEEKDAYS:
-        return valid(WEEKDAY in labs)
-    elif SEASON in labs:  # :season excl,a=date-entity,b=[winter|fall|spring|summer]+
-        return valid(value in SEASONS)
 
     if not value or "-" not in value:
         return True  # What follows is a check for predicate arguments, only relevant for predicates
@@ -146,7 +149,7 @@ class AmrConstraints(Constraints):
         return True
 
     def allow_edge(self, edge):  # Prevent multiple identical edges between the same pair of nodes
-        return edge.lab in PREFIXED_RELATION_ENUM or edge not in edge.parent.outgoing
+        return edge not in edge.parent.outgoing
 
     def allow_parent(self, node, lab):
         return not lab or is_valid_arg(node.label, lab)

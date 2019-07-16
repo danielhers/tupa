@@ -2,6 +2,7 @@ from collections import deque
 
 from graph import Graph
 
+from tupa.constraints.amr import NAME, OP
 from tupa.recategorization import resolve
 from .edge import StateEdge
 from .node import StateNode
@@ -36,7 +37,7 @@ class State:
         self.framework = target or self.input_graph.framework
         self.constraints = CONSTRAINTS.get(self.framework, Constraints)()
         self.has_ref = bool(graph and graph.nodes)
-        self.ref_graph = RefGraph(self.input_graph, conllu)
+        self.ref_graph = RefGraph(self.input_graph, conllu, self.framework)
         self.root = StateNode(ROOT_ID, self.ref_graph.root.id, is_root=True, ref_node=self.ref_graph.root)
         self.terminals = [StateNode(t.index, t.id, text=t.label, ref_node=t) for t in self.ref_graph.terminals]
         self.stack = [self.root]
@@ -61,9 +62,16 @@ class State:
             if node.text is None and not node.is_root:
                 if node.label is None and requires_node_labels(self.framework):
                     node.label = DEFAULT_LABEL
-                properties, values = zip(*node.properties.items()) if node.properties else (None, None)
-                node.node = graph.add_node(int(node.id), label=resolve(node, node.label), properties=properties,
-                                           values=[resolve(node, value) for value in values or ()] or None)
+                props = {prop: resolve(node, value) for prop, value in (node.properties or {}).items()}
+                # Expand back names that have been collapsed
+                if self.framework == "amr" and node.label == NAME:
+                    op = props.pop(OP, default=None)
+                    if op is not None:
+                        for i, op_i in enumerate(op.split("_"), start=1):
+                            props[OP + str(i)] = op_i
+                properties, values = zip(*props.items())
+                node.node = graph.add_node(int(node.id), label=resolve(node, node.label),
+                                           properties=properties, values=values)
         for node in self.nodes:
             for edge in node.outgoing:
                 if node.is_root:

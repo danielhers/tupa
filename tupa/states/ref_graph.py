@@ -1,3 +1,4 @@
+from tupa.constraints.amr import NAME, OP
 from tupa.recategorization import resolve
 from .edge import StateEdge
 from .node import StateNode
@@ -5,7 +6,7 @@ from ..constraints.validation import ROOT_ID, ROOT_LAB, ANCHOR_LAB
 
 
 class RefGraph:
-    def __init__(self, graph, conllu):
+    def __init__(self, graph, conllu, framework):
         """
         Create reference graph, which is a copy of graph but has StateNodes and StateEdges instead of Nodes and Edges.
         Other differences:
@@ -14,6 +15,7 @@ class RefGraph:
         (3) Strings in node labels are replaced with placeholder when they match aligned terminal text
         :return: RefGraph with nodes, edges, root and terminals
         """
+        self.framework = framework
         self.terminals = [StateNode(i, conllu_node.id, ref_node=conllu_node, label=conllu_node.label,
                                     anchors=conllu_node.anchors,
                                     properties=dict(zip(conllu_node.properties or (), conllu_node.values or ())))
@@ -42,5 +44,8 @@ class RefGraph:
                                         dict(zip(edge.attributes or (), edge.values or ()))).add())
         for node in self.nodes:
             node.label = resolve(node, node.label, introduce_placeholders=True)
-            node.properties = {prop: resolve(node, value, introduce_placeholders=True)
-                               for prop, value in (node.properties.items() if node.properties else ())}
+            properties = node.properties.items() if node.properties else ()
+            # Collapse :name (... / name) :op "..." into one string node
+            if self.framework == "amr" and node.label == NAME:
+                properties = {OP: "_".join(v for k, v in sorted(properties))}
+            node.properties = {prop: resolve(node, value, introduce_placeholders=True) for prop, value in properties}

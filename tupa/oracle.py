@@ -27,9 +27,9 @@ class Oracle:
     :param ref_graph: gold RefGraph to get the correct nodes and edges from
     :param framework: string indicating graph framework
     """
-    def __init__(self, ref_graph, framework):
+    def __init__(self, ref_graph):
         self.args = Config().args
-        self.framework = framework
+        self.framework = ref_graph.framework
         self.terminal_ids = {int(terminal.id) for terminal in ref_graph.terminals}
         self.nodes_remaining = {int(n.id) for n in ref_graph.nodes
                                 if n.id != ref_graph.root.id and int(n.id) not in self.terminal_ids}
