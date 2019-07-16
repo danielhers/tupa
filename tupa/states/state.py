@@ -31,12 +31,11 @@ class State:
         if conllu is None:
             raise ValueError("conllu is required for tokens and features")
         self.args = Config().args
-        self.graph = graph
-        self.conllu = conllu
-        self.framework = target or self.graph.framework
+        self.input_graph = graph
+        self.framework = target or self.input_graph.framework
         self.constraints = CONSTRAINTS.get(self.framework, Constraints)()
         self.has_ref = bool(graph and graph.nodes)
-        self.ref_graph = RefGraph(self.graph, self.conllu)
+        self.ref_graph = RefGraph(self.input_graph, conllu)
         self.root = StateNode(ROOT_ID, self.ref_graph.root.id, is_root=True, ref_node=self.ref_graph.root)
         self.terminals = [StateNode(t.index, t.id, text=t.label, ref_node=t) for t in self.ref_graph.terminals]
         self.stack = [self.root]
@@ -54,9 +53,9 @@ class State:
         Create final graph from temporary representation
         :return: Graph created from self.nodes
         """
-        Config().print("Creating %s graph %s from state..." % (self.framework, self.graph.id), level=2)
-        graph = Graph(self.graph.id, self.framework)
-        graph.input = self.graph.input
+        Config().print("Creating %s graph %s from state..." % (self.framework, self.input_graph.id), level=2)
+        graph = Graph(self.input_graph.id, self.framework)
+        graph.input = self.input_graph.input
         for node in self.nodes:
             if node.text is None and not node.is_root:
                 if node.label is None and requires_node_labels(self.framework):
@@ -156,7 +155,7 @@ class State:
                 parent_node, child_node), is_type=True)
 
         def _check_possible_label():
-            self.check(requires_node_labels(self.graph.framework), message and "Node labels disabled", is_type=True)
+            self.check(requires_node_labels(self.framework), message and "Node labels disabled", is_type=True)
             try:
                 node_to_label = self.stack[-action.tag]
             except IndexError:
@@ -168,7 +167,7 @@ class State:
             self.check(node_to_label is not self.root, "Setting label of virtual root")
 
         def _check_possible_property():
-            self.check(requires_node_properties(self.graph.framework), message and "Node properties disabled",
+            self.check(requires_node_properties(self.framework), message and "Node properties disabled",
                        is_type=True)
             try:
                 node_for_prop = self.stack[-action.tag]
@@ -181,7 +180,7 @@ class State:
             self.check(node_for_prop is not self.root, "Setting property of virtual root")
 
         def _check_possible_attribute():
-            self.check(requires_edge_attributes(self.graph.framework), message and "Edge attributes disabled")
+            self.check(requires_edge_attributes(self.framework), message and "Edge attributes disabled")
             self.check(self.last_edge is not None, message and "Setting attribute on edge when no edge exists")
             self.check(self.last_edge.lab not in (ROOT_LAB, ANCHOR_LAB),
                        message and "Setting attribute on %s edge" % self.last_edge.lab)
