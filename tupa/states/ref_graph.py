@@ -42,3 +42,5 @@ class RefGraph:
                                         dict(zip(edge.attributes or (), edge.values or ()))).add())
         for node in self.nodes:
             node.label = resolve_label(node, node.label, reverse=True)
+            node.properties = {prop: resolve_label(node, value, reverse=True)
+                               for prop, value in node.properties.items()}
