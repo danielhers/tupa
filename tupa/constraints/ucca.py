@@ -2,21 +2,21 @@ from .validation import Constraints, ANCHOR_LAB
 
 
 class EdgeTags:
-    ParallelScene = 'H'
-    Participant = 'A'
-    Process = 'P'
-    State = 'S'
-    Adverbial = 'D'
-    Ground = 'G'
-    Center = 'C'
-    Elaborator = 'E'
-    Function = 'F'
-    Connector = 'N'
-    Relator = 'R'
-    Time = 'T'
-    Quantifier = 'Q'
-    Linker = 'L'
-    Punctuation = 'U'
+    ParallelScene = 'h'
+    Participant = 'a'
+    Process = 'p'
+    State = 's'
+    Adverbial = 'd'
+    Ground = 'g'
+    Center = 'c'
+    Elaborator = 'e'
+    Function = 'f'
+    Connector = 'n'
+    Relator = 'r'
+    Time = 't'
+    Quantifier = 'q'
+    Linker = 'l'
+    Punctuation = 'u'
 
 
 class UccaConstraints(Constraints):

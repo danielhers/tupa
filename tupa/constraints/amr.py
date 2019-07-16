@@ -17,7 +17,7 @@ POLARITY = "polarity"
 NAME = "name"
 OP = "op"
 MODE = "mode"
-ARG2 = "ARG2"
+ARG2 = "arg2"
 VALUE = "value"
 DAY = "day"
 MONTH = "month"
@@ -129,7 +129,7 @@ def is_valid_arg(value, *labs, is_parent=True, is_node_label=True):
 
     if not value or "-" not in value:
         return True  # What follows is a check for predicate arguments, only relevant for predicates
-    args = [t for t in labs if t.startswith("ARG") and (t.endswith("-of") != is_parent)]
+    args = [t for t in labs if t.startswith("arg") and (t.endswith("-of") != is_parent)]
     if not args:
         return True
     valid_args = ROLESETS.get(value, ())
