@@ -431,7 +431,7 @@ class Config(object, metaclass=Singleton):
         for attr, value in sorted(format_values.items()):
             self.print("Setting %s=%s" % (attr, value))
             setattr(self.args, attr, value)
-        self.args.max_action_labels = max(self.args.max_action_labels, 6 * self.args.max_edge_labels)
+        self.args.max_action_labels = max(self.args.max_action_labels, 4 * self.args.max_edge_labels)
 
     @property
     def line_end(self):
