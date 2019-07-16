@@ -6,11 +6,11 @@ class StateNode:
     """
     Temporary representation for graph.Node with only relevant information for parsing
     """
-    def __init__(self, index, swap_index=None, ref_node=None, text=None, label=None, is_root=False, properties=None,
-                 anchors=None):
+    def __init__(self, index, node_id, swap_index=None, ref_node=None, text=None, label=None, is_root=False,
+                 properties=None, anchors=None):
         self.index = index  # Index in the configuration's node list
-        self.ref_node = ref_node  # Associated graph.Node from the original Graph, during training
-        self.id = str(ref_node.id) if ref_node else index  # ID of the original node
+        self.id = str(node_id)  # ID of the reference node
+        self.ref_node = ref_node  # Associated StateNode or graph.Node from the original Graph, during training
         self.text = text  # Text for terminals, None for non-terminals
         if label is None:
             self.label = self.category = None

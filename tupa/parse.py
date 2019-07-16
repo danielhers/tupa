@@ -86,11 +86,8 @@ class GraphParser(AbstractParser):
     def init(self):
         self.config.set_framework(self.framework)
         self.state = State(self.graph, self.conllu, self.framework)
-        # Graph is considered labeled if there are any nodes in it
-        if self.training or ((self.config.args.verbose > 1 or self.config.args.action_stats) and self.state.labeled):
-            self.oracle = Oracle(self.state)
-        else:
-            self.oracle = None
+        self.oracle = Oracle(self.state) if self.training or (self.state.has_ref and
+                (self.config.args.verbose > 1 or self.config.args.action_stats)) else None
         self.model.init_model(self.framework)
         self.model.init_features(self.framework, self.state, self.training)
 

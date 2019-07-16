@@ -5,6 +5,7 @@ from graph import Graph
 from tupa.constraints.amr import resolve_label
 from .edge import StateEdge
 from .node import StateNode
+from .ref_graph import RefGraph
 from ..action import Actions
 from ..config import Config, requires_node_labels, requires_node_properties, requires_edge_attributes, requires_anchors
 from ..constraints.validation import CONSTRAINTS, Constraints, Direction, ROOT_ID, ROOT_LAB, ANCHOR_LAB, DEFAULT_LABEL
@@ -30,54 +31,22 @@ class State:
         if conllu is None:
             raise ValueError("conllu is required for tokens and features")
         self.args = Config().args
-        self.constraints = CONSTRAINTS.get(graph.framework, Constraints)()
-        self.log = []
-        self.finished = False
         self.graph = graph
         self.conllu = conllu
         self.framework = target or self.graph.framework
-        self.labeled = bool(graph and graph.nodes)
-        self.stack = []
-        self.buffer = deque()
+        self.constraints = CONSTRAINTS.get(self.framework, Constraints)()
+        self.has_ref = bool(graph and graph.nodes)
+        self.ref_graph = RefGraph(self.graph, self.conllu)
+        self.root = StateNode(ROOT_ID, self.ref_graph.root.id, is_root=True, ref_node=self.ref_graph.root)
+        self.terminals = [StateNode(t.index, t.id, text=t.label, ref_node=t) for t in self.ref_graph.terminals]
+        self.stack = [self.root]
+        self.buffer = deque(self.terminals)
         self.heads = set()
-        self.need_label = self.need_property = self.need_attribute = self.last_edge = None  # Which edge/node is next
-        self.ref_nodes = []
-        self.ref_edges = []
-        self.ref_root = StateNode(ROOT_ID)
-        self.ref_root.id = ROOT_ID
-        self.ref_nodes.append(self.ref_root)
-        self.root = StateNode(ROOT_ID, is_root=True, ref_node=self.ref_root)  # Virtual root for tops
-        self.terminals = []
-        for i, conllu_node in enumerate(self.conllu.nodes):
-            ref_node = StateNode(i, ref_node=conllu_node, label=conllu_node.label, anchors=conllu_node.anchors,
-                                  properties=dict(zip(conllu_node.properties or (), conllu_node.values or ())))
-            self.terminals.append(StateNode(i, text=conllu_node.label, ref_node=ref_node))  # Virtual node for tokens
-        id2node = {}
-        offset = len(self.conllu.nodes) + 1
-        for graph_node in self.graph.nodes:
-            node_id = graph_node.id + offset
-            id2node[node_id] = ref_node = \
-                StateNode(node_id, ref_node=graph_node, label=graph_node.label,
-                          properties=dict(zip(graph_node.properties or (), graph_node.values or ())))
-            ref_node.id = node_id
-            self.ref_nodes.append(ref_node)
-            if graph_node.is_top:
-                self.ref_edges.append(StateEdge(self.ref_root, ref_node, ROOT_LAB).add())
-            if graph_node.anchors:
-                anchors = StateNode.expand_anchors(graph_node)
-                for terminal in self.terminals:
-                    if anchors & terminal.ref_anchors:
-                        self.ref_edges.append(StateEdge(ref_node, terminal.ref_node, ANCHOR_LAB).add())
-        for edge in self.graph.edges:
-            self.ref_edges.append(StateEdge(id2node[edge.src + offset],
-                                             id2node[edge.tgt + offset], edge.lab,
-                                             dict(zip(edge.attributes or (), edge.values or ()))).add())
-        for ref_node in self.ref_nodes:
-            ref_node.label = resolve_label(ref_node, ref_node.label, reverse=True)
-        self.stack.append(self.root)
-        self.buffer += self.terminals
         self.nodes = [self.root] + self.terminals
         self.actions = []  # History of applied actions
+        self.log = []
+        self.finished = False
+        self.need_label = self.need_property = self.need_attribute = self.last_edge = None  # Which edge/node is next
         self.type_validity_cache = {}
 
     def create_graph(self):
@@ -399,12 +368,14 @@ class State:
         self.actions.append(action)
         self.type_validity_cache = {}
 
-    def add_node(self, **kwargs):
+    def add_node(self, ref_node=None):
         """
         Called during parsing to add a new StateNode (not graph.Node) to the temporary representation
-        :param kwargs: keyword arguments for StateNode()
+        :param ref_node: original StateNode() when training
         """
-        node = StateNode(len(self.nodes), swap_index=self.calculate_swap_index(), **kwargs)
+        index = len(self.nodes)
+        node = StateNode(index, index if ref_node is None else ref_node.id, swap_index=self.calculate_swap_index(),
+                         ref_node=ref_node)
         self.nodes.append(node)
         self.heads.add(node)
         self.log.append("node: %s (swap_index: %g)" % (node, node.swap_index))

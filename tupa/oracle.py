@@ -31,10 +31,10 @@ class Oracle:
         self.args = Config().args
         self.framework = state.framework
         self.terminal_ids = {int(terminal.ref_node.id) for terminal in state.terminals}
-        self.nodes_remaining = {int(n.id) for n in state.ref_nodes
+        self.nodes_remaining = {int(n.id) for n in state.ref_graph.nodes
                                 if n.id != state.root.ref_node.id
                                 and int(n.id) not in self.terminal_ids}
-        self.edges_remaining = set(state.ref_edges)
+        self.edges_remaining = set(state.ref_graph.edges)
         self.found = False
         self.log = None
 
