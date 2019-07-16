@@ -160,12 +160,10 @@ class NeuralNetwork(Classifier, SubModel):
 
         if self.config.args.use_bert and init:
             if self.config.args.bert_layers_pooling == "weighed":
-                bert_weights = self.model.add_parameters(len(self.config.args.bert_layers), init=1)
-                self.params["bert_weights"] = bert_weights
-
-            indexed_dim[[0, 1]] += self.bert_embedding_len
+                self.params["bert_weights"] = self.model.add_parameters(len(self.config.args.bert_layers), init=1)
+            indexed_dim[1] += self.bert_embedding_len
             if self.config.args.bert_multilingual == 0:
-                indexed_dim[[0, 1]] += 50
+                indexed_dim[1] += 50
 
         for birnn in self.get_birnns(axis):
             birnn.init_params(indexed_dim[int(birnn.shared)], indexed_num[int(birnn.shared)])
