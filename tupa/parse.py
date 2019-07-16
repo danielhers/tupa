@@ -223,7 +223,11 @@ class GraphParser(AbstractParser):
         try:
             output = pred = self.predict(scores, outputs.all, self.state.is_valid_annotation(key))
         except StopIteration as e:
-            raise ParserException("No valid %s available\n%s" % (name, self.oracle.log if self.oracle else "")) from e
+            if all(x is None for x in outputs.all):
+                output = pred = None
+            else:
+                raise ParserException("No valid %s available\n%s" % (
+                    name, self.oracle.log if self.oracle else "")) from e
         output, is_correct, true_keys, true_values = self.correct(key, output, pred, scores, true, true_keys)
         if self.training:
             assert not self.model.is_finalized, "Updating finalized model"

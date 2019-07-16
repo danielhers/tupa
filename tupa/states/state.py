@@ -289,7 +289,8 @@ class State:
         return True
 
     def check_valid_label(self, label, message=False):
-        if self.args.constraints and label is not None:
+        self.check(label is not None, message and "None node label")
+        if self.args.constraints:
             valid = self.constraints.allow_label(self.need_label, label)
             self.check(valid, message and "May not label %s as %s: %s" % (self.need_label, label, valid))
 
@@ -305,7 +306,8 @@ class State:
         return True
 
     def check_valid_property_value(self, property_value, message=False):
-        if self.args.constraints and property_value is not None:
+        self.check(property_value is not None, message and "None property-value pair")
+        if self.args.constraints:
             valid = self.constraints.allow_property_value(self.need_property, property_value)
             self.check(valid, message and "May not set property value for %s to %s: %s" % (
                 self.need_property, property_value, valid))
@@ -322,7 +324,8 @@ class State:
         return True
 
     def check_valid_attribute_value(self, attribute_value, message=False):
-        if self.args.constraints and attribute_value is not None:
+        self.check(attribute_value is not None, message and "None attribute-value pair")
+        if self.args.constraints:
             valid = self.constraints.allow_attribute_value(self.need_attribute, attribute_value)
             self.check(valid, message and "May not set attribute value for %s to %s: %s" % (
                 self.need_attribute, attribute_value, valid))
