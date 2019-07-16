@@ -70,7 +70,7 @@ class State:
         for edge in self.graph.edges:
             self.orig_edges.append(StateEdge(id2node[edge.src + len(self.conllu.nodes) + 1],
                                              id2node[edge.tgt + len(self.conllu.nodes) + 1], edge.lab,
-                                             dict(zip(edge.attributes or (), edge.values or ()))))
+                                             dict(zip(edge.attributes or (), edge.values or ()))).add())
         for orig_node in self.orig_nodes:
             orig_node.label = resolve_label(orig_node, orig_node.label, reverse=True)
         self.stack.append(self.root)
