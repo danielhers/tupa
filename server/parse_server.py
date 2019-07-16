@@ -75,7 +75,7 @@ def visualize():
     image = BytesIO()
     canvas.print_png(image)
     data = b64encode(image.getvalue()).decode()
-    fig.close()
+    plt.close()
     return Response(quote(data.rstrip("\n")))
 
 CONTENT_TYPES = {"xml": "xml/application", "json": "application/json"}
