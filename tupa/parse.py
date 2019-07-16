@@ -4,7 +4,6 @@ import os
 import sys
 import time
 from collections import defaultdict, Counter
-from copy import deepcopy
 from enum import Enum
 from itertools import chain
 
@@ -59,7 +58,7 @@ class GraphParser(AbstractParser):
         :param target: framework to parse to
         """
         super().__init__(*args, **kwargs)
-        self.graph, self.overlay = deepcopy(graph)
+        self.graph, self.overlay = graph
         self.conllu = conllu
         self.alignment = alignment
         self.out = self.graph
@@ -89,7 +88,7 @@ class GraphParser(AbstractParser):
         self.state = State(self.graph, self.conllu, self.framework)
         # Graph is considered labeled if there are any nodes in it
         if self.training or ((self.config.args.verbose > 1 or self.config.args.action_stats) and self.state.labeled):
-            self.oracle = Oracle(self.graph, self.conllu)
+            self.oracle = Oracle(self.state)
         else:
             self.oracle = None
         self.model.init_model(self.framework)

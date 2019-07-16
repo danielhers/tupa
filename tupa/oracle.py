@@ -27,13 +27,14 @@ class Oracle:
     :param graph: gold Graph to get the correct nodes and edges from
     :param conllu: Graph with node per token predicted by a tokenizer
     """
-    def __init__(self, graph, conllu=None):
+    def __init__(self, state):
         self.args = Config().args
-        self.nodes_remaining = {int(n.id) for n in graph.nodes}
-        self.edges_remaining = set(graph.edges)
-        self.terminal_ids = set()
-        self.graph = graph
-        self.conllu = conllu
+        self.framework = state.framework
+        self.terminal_ids = {int(terminal.orig_node.id) for terminal in state.terminals}
+        self.nodes_remaining = {int(n.id) for n in state.orig_nodes
+                                if n.id != state.root.orig_node.id
+                                and int(n.id) not in self.terminal_ids}
+        self.edges_remaining = set(state.orig_edges)
         self.found = False
         self.log = None
 
@@ -74,16 +75,11 @@ class Oracle:
         :param state: current State of the parser
         :return: generator of Action items to perform
         """
-        if int(state.root.orig_node.id) in self.nodes_remaining:
-            self.nodes_remaining.remove(int(state.root.orig_node.id))
-            for terminal in state.terminals:
-                self.terminal_ids.add(int(terminal.orig_node.id))
-                self.nodes_remaining.remove(int(terminal.orig_node.id))
         self.found = False
         if state.stack:
             s0 = state.stack[-1]
             incoming, outgoing = [[e for e in l if e in self.edges_remaining]
-                                  for l in (s0.orig_node.incoming_edges, s0.orig_node.outgoing_edges)]
+                                  for l in (s0.orig_node.incoming, s0.orig_node.outgoing)]
             if not incoming and not outgoing and not self.need_label(s0) and not self.need_property(s0):
                 yield self.action(Actions.Reduce)
             else:
@@ -99,17 +95,17 @@ class Oracle:
                 else:
                     # Check for actions to create new nodes
                     for edge in incoming:
-                        if edge.src in self.nodes_remaining and not self.is_implicit_node(edge.src):
+                        if edge.src in self.nodes_remaining and not self.is_implicit_node(edge.parent):
                             yield self.action(edge, NODE, PARENT)  # Node
 
                     for edge in outgoing:
-                        if edge.tgt in self.nodes_remaining and self.is_implicit_node(edge.tgt):
+                        if edge.tgt in self.nodes_remaining and self.is_implicit_node(edge.child):
                             yield self.action(edge, NODE, CHILD)  # Implicit
 
                     if len(state.stack) > 1:
                         s1 = state.stack[-2]
                         finished_terminals = not any(self.is_terminal_edge(e) for e in
-                                                     self.edges_remaining.intersection(s1.orig_node.outgoing_edges))
+                                                     self.edges_remaining.intersection(s1.orig_node.outgoing))
                         # Check for node label action: if all terminals have already been connected
                         if self.need_label(s1) and finished_terminals:
                             yield self.action(s1, LABEL, 2)
@@ -126,7 +122,7 @@ class Oracle:
                             if edge.tgt == int(s1.id):
                                 yield self.action(edge, EDGE, LEFT)  # LeftEdge
                             elif state.buffer and edge.tgt == int(state.buffer[0].id) and \
-                                    len(state.buffer[0].orig_node.incoming_edges) == 1:
+                                    len(state.buffer[0].orig_node.incoming) == 1:
                                 yield self.action(Actions.Shift)  # Special case to allow discarding simple children
 
                     if not self.found:
@@ -159,7 +155,7 @@ class Oracle:
             return Actions.Property(direction, orig_node=node_or_edge.orig_node, oracle=self)
         if kind == ATTRIBUTE:
             return Actions.Attribute(direction, orig_edge=node_or_edge.orig_edge, oracle=self)
-        node = self.graph.find_node((node_or_edge.src, node_or_edge.tgt)[direction]) if kind == NODE else None
+        node = (node_or_edge.parent, node_or_edge.child)[direction] if kind == NODE else None
         return ACTIONS[kind][direction](tag=node_or_edge.lab, orig_edge=node_or_edge, orig_node=node, oracle=self)
 
     def remove(self, edge, node=None):
@@ -168,15 +164,15 @@ class Oracle:
             self.nodes_remaining.discard(int(node.id))
 
     def need_label(self, node):
-        return requires_node_labels(self.graph.framework) and \
+        return requires_node_labels(self.framework) and \
                node is not None and node.text is None and node.label is None and node.orig_node.label
 
     def need_property(self, node):
-        return requires_node_properties(self.graph.framework) and node is not None and node.text is None and \
+        return requires_node_properties(self.framework) and node is not None and node.text is None and \
                set(node.orig_node.properties or ()).difference(node.properties or ())
 
     def need_attribute(self, edge):
-        return requires_edge_attributes(self.graph.framework) and edge is not None and \
+        return requires_edge_attributes(self.framework) and edge is not None and \
                set(edge.orig_edge.attributes or ()).difference(edge.attributes or ())
 
     def get_node_label(self, state, node):
@@ -193,7 +189,7 @@ class Oracle:
         return true_label, raw_true_label
 
     def get_node_property_value(self, state, node):
-        true_property_value = next((k, v) for k, v in zip(node.orig_node.properties, node.orig_node.values)
+        true_property_value = next((k, v) for k, v in node.orig_node.properties.items()
                                    if k not in (node.properties or ()))
         if self.args.validate_oracle:
             try:
@@ -204,7 +200,7 @@ class Oracle:
         return true_property_value
 
     def get_edge_attribute_value(self, state, edge):
-        true_attribute_value = next((k, v) for k, v in zip(edge.orig_edge.attributes, edge.orig_edge.values)
+        true_attribute_value = next((k, v) for k, v in edge.orig_edge.attributes.items()
                                     if k not in (edge.attributes or ()))
         if self.args.validate_oracle:
             try:
@@ -222,8 +218,9 @@ class Oracle:
     def __str__(self):
         return str(" ")
 
-    def is_implicit_node(self, i):
-        return not self.graph.find_node(i).outgoing_edges
+    @staticmethod
+    def is_implicit_node(node):
+        return not node.outgoing
 
     def is_terminal_edge(self, edge):
         return edge.tgt in self.terminal_ids

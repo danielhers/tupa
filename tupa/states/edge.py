@@ -8,11 +8,14 @@ class StateEdge:
         self.lab = lab  # String label
         self.attributes = attributes  # dict of attribute name to value
         self.orig_edge = orig_edge
+        self.src = int(parent.id)
+        self.tgt = int(child.id)
 
     def add(self):
         assert self.parent is not self.child, "Trying to create self-loop edge on %s" % self.parent
         self.parent.add_outgoing(self)
         self.child.add_incoming(self)
+        return self
 
     def __repr__(self):
         return StateEdge.__name__ + "(" + self.lab + ", " + repr(self.parent) + ", " + repr(self.child) + \

@@ -180,8 +180,7 @@ def resolve_label(node, label=None, reverse=False, conservative=False, is_concep
             category = CATEGORIES.get(label)  # category suffix to append to label
         elif LABEL_SEPARATOR in label:
             label = label[:label.find(LABEL_SEPARATOR)]  # remove category suffix
-        children = [c.children[0] if c.tag == "PNCT" else c for c in node.children]
-        terminals = sorted([c for c in children if getattr(c, "text", None)], key=attrgetter("index"))
+        terminals = sorted([c for c in node.children if getattr(c, "text", None)], key=attrgetter("index"))
         if terminals:
             if not reverse and NUM_PATTERN.match(label):  # numeric label (always 1 unless "numbers" layer is on)
                 number = terminals_to_number(terminals)  # try replacing spelled-out numbers/months with digits

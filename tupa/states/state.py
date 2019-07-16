@@ -2,6 +2,7 @@ from collections import deque
 
 from graph import Graph
 
+from tupa.constraints.amr import resolve_label
 from .edge import StateEdge
 from .node import StateNode
 from ..action import Actions
@@ -40,22 +41,38 @@ class State:
         self.buffer = deque()
         self.heads = set()
         self.need_label = self.need_property = self.need_attribute = self.last_edge = None  # Which edge/node is next
-        graph_nodes = list(self.graph.nodes)  # Copy list of nodes before adding virtual root and terminals to graph
-        self.root = StateNode(ROOT_ID, is_root=True, orig_node=self.graph.add_node(ROOT_ID))  # Virtual root for tops
+        self.orig_nodes = []
+        self.orig_edges = []
+        orig_root = StateNode(ROOT_ID)
+        orig_root.id = ROOT_ID
+        self.orig_nodes.append(orig_root)
+        self.root = StateNode(ROOT_ID, is_root=True, orig_node=orig_root)  # Virtual root for tops
         self.terminals = []
         for i, conllu_node in enumerate(self.conllu.nodes):
-            text = conllu_node.label
-            new_conllu_node = self.graph.add_node(
-                label=text, anchors=conllu_node.anchors, properties=conllu_node.properties, values=conllu_node.values)
-            self.terminals.append(StateNode(i, text=text, orig_node=new_conllu_node))  # Virtual node for tokens
-        for node in graph_nodes:
-            if node.is_top:
-                self.graph.add_edge(ROOT_ID, node.id, ROOT_LAB)
-            if node.anchors:
-                anchors = StateNode.anchors(node)
+            orig_node = StateNode(i, orig_node=conllu_node, label=conllu_node.label, anchors=conllu_node.anchors,
+                                  properties=dict(zip(conllu_node.properties or (), conllu_node.values or ())))
+            self.terminals.append(StateNode(i, text=conllu_node.label, orig_node=orig_node))  # Virtual node for tokens
+        id2node = {}
+        for graph_node in self.graph.nodes:
+            node_id = graph_node.id + len(self.conllu.nodes) + 1
+            id2node[node_id] = orig_node = \
+                StateNode(node_id, orig_node=graph_node, label=graph_node.label,
+                          properties=dict(zip(graph_node.properties or (), graph_node.values or ())))
+            orig_node.id = node_id
+            self.orig_nodes.append(orig_node)
+            if graph_node.is_top:
+                self.orig_edges.append(StateEdge(orig_root, orig_node, ROOT_LAB).add())
+            if graph_node.anchors:
+                anchors = StateNode.expand_anchors(graph_node)
                 for terminal in self.terminals:
                     if anchors & terminal.orig_anchors:
-                        self.graph.add_edge(node.id, terminal.orig_node.id, ANCHOR_LAB)
+                        self.orig_edges.append(StateEdge(orig_node, terminal.orig_node, ANCHOR_LAB).add())
+        for edge in self.graph.edges:
+            self.orig_edges.append(StateEdge(id2node[edge.src + len(self.conllu.nodes) + 1],
+                                             id2node[edge.tgt + len(self.conllu.nodes) + 1], edge.lab,
+                                             dict(zip(edge.attributes or (), edge.values or ()))))
+        for orig_node in self.orig_nodes:
+            orig_node.label = resolve_label(orig_node, orig_node.label, reverse=True)
         self.stack.append(self.root)
         self.buffer += self.terminals
         self.nodes = [self.root] + self.terminals
@@ -75,7 +92,9 @@ class State:
                 if node.label is None and requires_node_labels(self.framework):
                     node.label = DEFAULT_LABEL
                 properties, values = zip(*node.properties.items()) if node.properties else (None, None)
-                node.node = graph.add_node(int(node.id), label=node.label, properties=properties, values=values)
+                node.node = graph.add_node(int(node.id),
+                                           label=resolve_label(node, node.label),
+                                           properties=properties, values=values)
         for node in self.nodes:
             for edge in node.outgoing:
                 if node.is_root:
@@ -229,7 +248,7 @@ class State:
                                    s0.outgoing_labs.intersection(self.constraints.required_outgoing),
                                    message and "Reducing non-terminal %s without %s edge" % (
                                        s0, self.constraints.required_outgoing), is_type=True)
-                    self.check(not requires_node_labels(self.framework) or s0.text or s0.label is not None,
+                    self.check(not requires_node_labels(self.framework) or s0.text or s0.is_root or s0.label,
                                message and "Reducing non-terminal %s without label" % s0, is_type=True)
                 elif action.is_type(Actions.Swap):
                     # A regular swap is possible since the stack has at least two elements;

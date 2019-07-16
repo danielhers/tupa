@@ -6,10 +6,10 @@ class StateNode:
     """
     Temporary representation for graph.Node with only relevant information for parsing
     """
-    def __init__(self, index, swap_index=None, orig_node=None, text=None, label=None, is_root=False, properties=None):
+    def __init__(self, index, swap_index=None, orig_node=None, text=None, label=None, is_root=False, properties=None,
+                 anchors=None):
         self.index = index  # Index in the configuration's node list
         self.orig_node = orig_node  # Associated graph.Node from the original Graph, during training
-        self.orig_anchors = self.anchors(self.orig_node) if orig_node else None
         self.id = str(orig_node.id) if orig_node else index  # ID of the original node
         self.text = text  # Text for terminals, None for non-terminals
         if label is None:
@@ -31,11 +31,11 @@ class StateNode:
         self._terminals = None
         self.is_root = is_root
         self.properties = properties
+        self.anchors = anchors
+        self.orig_anchors = self.expand_anchors(self.orig_node) if orig_node else None
 
     def get(self, prop):
-        for p, v in zip(self.orig_node.properties, self.orig_node.values):
-            if p == prop:
-                return v
+        return self.orig_node.properties.get(prop)
 
     def add_incoming(self, edge):
         self.incoming.append(edge)
@@ -101,5 +101,6 @@ class StateNode:
         return iter(self.outgoing)
 
     @classmethod
-    def anchors(cls, node):
-        return set.union(*[set(range(x["from"], x["to"])) for x in node.anchors]) if node.anchors else set()
+    def expand_anchors(cls, node):
+        return set.union(*[set(range(x["from"], x["to"]))
+                           for x in node.anchors]) if node.anchors else set()
