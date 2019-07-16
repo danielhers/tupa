@@ -58,11 +58,11 @@ class LabRule:
                 allowed = None if self.allowed is None else self.allowed.get(d)
                 if allowed is not None and not all(contains(allowed, t) for t in labs(node, edge, d)):
                     return message and "Units getting %s '%s' edges must have only %s '%s' edges, but '%s' has '%s'" % (
-                        direction.name, lab, d.name, allowed, node, labs(node, edge, d))
+                        direction.name, lab, d.name, allowed, node, ",".join(labs(node, edge, d)))
                 disallowed = None if self.disallowed is None else self.disallowed.get(d)
                 if disallowed is not None and any(contains(disallowed, t) for t in labs(node, edge, d)):
                     return message and "Units getting %s '%s' edges must not have %s '%s' edges, but '%s' has '%s'" % (
-                        direction.name, lab, d.name, disallowed, node, labs(node, edge, d))
+                        direction.name, lab, d.name, disallowed, node, ",".join(labs(node, edge, d)))
         return None
 
 
@@ -91,7 +91,7 @@ class Valid:
 class Constraints:
     def __init__(self, multigraph=False, require_implicit_childless=True, allow_orphan_terminals=False,
                  top_level_allowed=None, top_level_only=None,
-                 possible_multiple_incoming=(), childless_incoming_trigger=(), childless_outgoing_allowed=(),
+                 possible_multiple_incoming=(), childless_incoming_trigger=(), childless_outgoing_allowed=(ANCHOR_LAB,),
                  unique_incoming=(), unique_outgoing=(), mutually_exclusive_incoming=(), mutually_exclusive_outgoing=(),
                  exclusive_outgoing=(), required_outgoing=(), **kwargs):
         self.multigraph = multigraph
