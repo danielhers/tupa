@@ -325,6 +325,9 @@ class BatchParser(AbstractParser):
         graphs = self.add_progress_bar(graphs, display=display)
         for i, (graph, overlay) in enumerate(graphs, start=1):
             for target in graph.targets() or [graph.framework]:
+                if not self.training and target not in self.model.classifier.labels:
+                    self.config.print("skipped target " + target, level=1)
+                    continue
                 parser = GraphParser((graph, overlay), self.config, self.model, self.training, self.evaluation,
                                      conllu=conllu[graph.id], alignment=alignment.get(graph.id), target=target)
                 if self.config.args.verbose and display:
