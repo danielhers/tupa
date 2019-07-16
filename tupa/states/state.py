@@ -65,7 +65,7 @@ class State:
                 props = {prop: resolve(node, value) for prop, value in (node.properties or {}).items()}
                 # Expand back names that have been collapsed
                 if self.framework == "amr" and node.label == NAME:
-                    op = props.pop(OP, default=None)
+                    op = props.pop(OP, None)
                     if op is not None:
                         for i, op_i in enumerate(op.split("_"), start=1):
                             props[OP + str(i)] = op_i
