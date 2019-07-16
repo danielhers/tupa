@@ -90,14 +90,13 @@ class Valid:
 # Generic class to define constraints on parser actions
 class Constraints:
     def __init__(self, multigraph=False, require_implicit_childless=True, allow_orphan_terminals=False,
-                 allow_root_terminal_children=False, top_level_allowed=None, top_level_only=None,
+                 top_level_allowed=None, top_level_only=None,
                  possible_multiple_incoming=(), childless_incoming_trigger=(), childless_outgoing_allowed=(),
                  unique_incoming=(), unique_outgoing=(), mutually_exclusive_incoming=(), mutually_exclusive_outgoing=(),
                  exclusive_outgoing=(), required_outgoing=(), **kwargs):
         self.multigraph = multigraph
         self.require_implicit_childless = require_implicit_childless
         self.allow_orphan_terminals = allow_orphan_terminals
-        self.allow_root_terminal_children = allow_root_terminal_children
         self.top_level_allowed = top_level_allowed
         self.top_level_only = top_level_only
         self.possible_multiple_incoming = possible_multiple_incoming

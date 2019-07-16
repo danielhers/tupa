@@ -23,7 +23,6 @@ class UccaConstraints(Constraints):
     def __init__(self, **kwargs):
         super().__init__(multigraph=True,
                          require_implicit_childless=True, allow_orphan_terminals=False,
-                         allow_root_terminal_children=False,
                          top_level_allowed={EdgeTags.ParallelScene, EdgeTags.Linker,
                                             EdgeTags.Function, EdgeTags.Ground,
                                             EdgeTags.Punctuation},

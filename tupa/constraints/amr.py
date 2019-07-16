@@ -263,7 +263,6 @@ def merge_punct(tokens):
 class AmrConstraints(Constraints):
     def __init__(self, **kwargs):
         super().__init__(multigraph=True, require_implicit_childless=False, allow_orphan_terminals=True,
-                         allow_root_terminal_children=True,
                          childless_incoming_trigger={POLARITY, CENTURY, DECADE, "polite", "li"}, **kwargs)
 
     def allow_action(self, action, history):
