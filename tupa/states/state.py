@@ -140,71 +140,76 @@ class State:
                 self.check(head.height <= self.args.max_height,
                            message and "Graph height: %d" % self.args.max_height, is_type=True)
 
-        def _check_possible_parent(node, t):
-            self.check(node.text is None, message and "Terminals may not have children: %s" % node.text, is_type=True)
+        def _check_possible_parent(parent_node, t):
+            self.check(parent_node.text is None, message and "Terminals may not have children: %s" % parent_node.text,
+                       is_type=True)
             if self.args.constraints and t is not None:
                 for rule in self.constraints.tag_rules:
-                    violation = rule.violation(node, t, Direction.outgoing, message=message)
+                    violation = rule.violation(parent_node, t, Direction.outgoing, message=message)
                     self.check(violation is None, violation)
-                self.check(self.constraints.allow_parent(node, t),
+                self.check(self.constraints.allow_parent(parent_node, t),
                            message and "%s may not be a '%s' parent (currently %s)" % (
-                               node, t, ", ".join(map(str, node.outgoing)) or "childless"))
+                               parent_node, t, ", ".join(map(str, parent_node.outgoing)) or "childless"))
 
-        def _check_possible_child(node, t):
-            self.check(not node.is_root, message and "Root may not have parents", is_type=True)
+        def _check_possible_child(child_node, t):
+            self.check(not child_node.is_root, message and "Root may not have parents", is_type=True)
             if self.args.constraints and t is not None:
                 for rule in self.constraints.tag_rules:
-                    violation = rule.violation(node, t, Direction.incoming, message=message)
+                    violation = rule.violation(child_node, t, Direction.incoming, message=message)
                     self.check(violation is None, violation)
-                self.check(self.constraints.allow_child(node, t),
+                self.check(self.constraints.allow_child(child_node, t),
                            message and "%s may not be a '%s' child (currently %s, %s)" % (
-                               node, t, ", ".join(map(str, node.incoming)) or "parentless",
-                               ", ".join(map(str, node.outgoing)) or "childless"))
+                               child_node, t, ", ".join(map(str, child_node.incoming)) or "parentless",
+                               ", ".join(map(str, child_node.outgoing)) or "childless"))
 
-        def _check_possible_edge(p, c, t):
-            _check_possible_parent(p, t)
-            _check_possible_child(c, t)
-            if self.args.constraints and t is not None:
-                if ROOT_LAB in p.incoming_labs:
-                    self.check(self.constraints.top_level_allowed is None or not t or
-                               t in self.constraints.top_level_allowed, message and "Root may not have %s edges" % t)
+        def _check_possible_edge(parent_node, child_node, edge_lab):
+            _check_possible_parent(parent_node, edge_lab)
+            _check_possible_child(child_node, edge_lab)
+            if self.args.constraints and edge_lab is not None:
+                if ROOT_LAB in parent_node.incoming_labs:
+                    self.check(self.constraints.top_level_allowed is None or not edge_lab or
+                               edge_lab in self.constraints.top_level_allowed,
+                               message and "Root may not have %s edges" % edge_lab)
                 else:
                     self.check(self.constraints.top_level_only is None or
-                               t not in self.constraints.top_level_only, message and "Only root may have %s edges" % t)
-            self.check(ROOT_LAB not in p.incoming_labs or c.text is None,
-                       message and "Virtual terminal child '%s' of virtual root" % c, is_type=True)
+                               edge_lab not in self.constraints.top_level_only,
+                               message and "Only root may have %s edges" % edge_lab)
+            self.check(ROOT_LAB not in parent_node.incoming_labs or child_node.text is None,
+                       message and "Virtual terminal child '%s' of virtual root" % child_node, is_type=True)
             if self.constraints.multigraph:  # Nodes may be connected by more than one edge
-                edge = StateEdge(p, c, t)
+                edge = StateEdge(parent_node, child_node, edge_lab)
                 self.check(self.constraints.allow_edge(edge), message and "Edge not allowed: %s (currently: %s)" % (
-                               edge, ", ".join(map(str, p.outgoing)) or "childless"))
+                    edge, ", ".join(map(str, parent_node.outgoing)) or "childless"))
             else:  # Simple graph, i.e., no more than one edge between the same pair of nodes
-                self.check(c not in p.children, message and "%s is already %s's child: %s" % (
-                    c, p, ", ".join(map(str, p.outgoing))), is_type=True)
-            self.check(p not in c.descendants, message and "Detected cycle by edge: %s->%s" % (p, c), is_type=True)
+                self.check(child_node not in parent_node.children, message and "%s is already %s's child: %s" % (
+                    child_node, parent_node, ", ".join(map(str, parent_node.outgoing))), is_type=True)
+            self.check(parent_node not in child_node.descendants, message and "Detected cycle by edge: %s->%s" % (
+                parent_node, child_node), is_type=True)
 
         def _check_possible_label():
             self.check(requires_node_labels(self.graph.framework), message and "Node labels disabled", is_type=True)
             try:
-                node = self.stack[-action.tag]
+                node_to_label = self.stack[-action.tag]
             except IndexError:
-                node = None
-            self.check(node is not None, message and "Labeling invalid node %s when stack size is %d" % (
+                node_to_label = None
+            self.check(node_to_label is not None, message and "Labeling invalid node %s when stack size is %d" % (
                 action.tag, len(self.stack)))
-            self.check(node.label is None, message and "Labeling already-labeled node: %s" % node)
-            self.check(node.text is None, message and "Setting label of virtual terminal: %s" % node)
-            self.check(node is not self.root, "Setting label of virtual root")
+            self.check(node_to_label.label is None, message and "Labeling already-labeled node: %s" % node_to_label)
+            self.check(node_to_label.text is None, message and "Setting label of virtual terminal: %s" % node_to_label)
+            self.check(node_to_label is not self.root, "Setting label of virtual root")
 
         def _check_possible_property():
             self.check(requires_node_properties(self.graph.framework), message and "Node properties disabled",
                        is_type=True)
             try:
-                node = self.stack[-action.tag]
+                node_for_prop = self.stack[-action.tag]
             except IndexError:
-                node = None
-            self.check(node is not None, message and "Setting property on invalid node %s when stack size is %d" % (
-                action.tag, len(self.stack)))
-            self.check(node.text is None, message and "Setting property of virtual terminal: %s" % node)
-            self.check(node is not self.root, "Setting property of virtual root")
+                node_for_prop = None
+            self.check(node_for_prop is not None, message and "Setting property on invalid node %s when stack size "
+                                                              "is %d" % (action.tag, len(self.stack)))
+            self.check(node_for_prop.text is None, message and "Setting property of virtual terminal: %s" %
+                       node_for_prop)
+            self.check(node_for_prop is not self.root, "Setting property of virtual root")
 
         def _check_possible_attribute():
             self.check(requires_edge_attributes(self.graph.framework), message and "Edge attributes disabled")
