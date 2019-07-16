@@ -538,3 +538,6 @@ def requires_edge_attributes(framework):
 
 def requires_anchors(framework):
     return framework != "amr"
+
+def requires_tops(framework):
+    return framework in ("ucca", "amr")

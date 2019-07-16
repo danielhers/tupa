@@ -7,7 +7,8 @@ from .edge import StateEdge
 from .node import StateNode
 from .ref_graph import RefGraph
 from ..action import Actions
-from ..config import Config, requires_node_labels, requires_node_properties, requires_edge_attributes, requires_anchors
+from ..config import Config, requires_node_labels, requires_node_properties, requires_edge_attributes, \
+    requires_anchors, requires_tops
 from ..constraints.validation import CONSTRAINTS, Constraints, Direction, ROOT_ID, ROOT_LAB, ANCHOR_LAB, DEFAULT_LABEL
 from ..model import NODE_LABEL_KEY, NODE_PROPERTY_KEY, EDGE_ATTRIBUTE_KEY
 
@@ -195,7 +196,7 @@ class State:
                            ("after " + ", ".join("%s" % a for a in self.actions[-3:])) if self.actions else "as first"))
         if action.is_type(Actions.Finish):
             self.check(not self.buffer, "May only finish at the end of the input buffer", is_type=True)
-            if self.args.swap:  # Without swap, the oracle may be incapable even of single action
+            if self.args.swap and requires_tops(self.framework):  # Without swap, the oracle parse may be incomplete
                 self.check(self.root.outgoing or all(ROOT_LAB in n.incoming_labs or n.text for n in self.nodes),
                            message and "Root has no child at parse end", is_type=True)
             for node in self.nodes:
