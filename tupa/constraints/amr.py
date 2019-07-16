@@ -96,25 +96,22 @@ def is_int_in_range(value, s=None, e=None):
     return Valid(s is None or num >= s, "%s < %s" % (num, s)) and Valid(e is None or num <= e, "%s > %s" % (num, e))
 
 
-def is_valid_arg(node, value, *labs, is_parent=True, is_node_label=True):
-    if value is None:  # Not labeled yet
-        return True
-    concept = value if is_node_label else None
-    const = value[1:-1] if value[0] == value[-1] == '"' else None
-    if PLACEHOLDER_PATTERN.search(value):
+def is_valid_arg(value, *labs, is_parent=True, is_node_label=True):
+    if value is None or PLACEHOLDER_PATTERN.search(value):  # Not labeled yet or not yet resolved properly
         return True
     valid = Valid(message="%s incompatible as %s of %s" % (value, "parent" if is_parent else "child", ", ".join(labs)))
     if is_parent:  # node is a parent of the edge
         if {DAY, MONTH, YEAR, YEAR2, DECADE, WEEKDAY, QUARTER, CENTURY, SEASON, TIMEZONE}.intersection(labs):
-            return valid(concept == DATE_ENTITY)
-    elif const == MINUS:  # :polarity excl,b_isconst,b_const=-
-        return valid({POLARITY, ARG2, VALUE}.issuperset(labs))
-    elif POLARITY in labs:
-        return valid(const == MINUS)
-    elif MODE in labs:  # :mode excl,b_isconst,b_const=[interrogative|expressive|imperative]
-        return valid(const in MODES)
-    elif const in MODES:
-        return valid(MODE in labs)
+            return valid(value == DATE_ENTITY)
+    elif not is_node_label:  # property value, i.e., constant
+        if value == MINUS:  # :polarity excl,b_isconst,b_const=-
+            return valid({POLARITY, ARG2, VALUE}.issuperset(labs))
+        elif POLARITY in labs:
+            return valid(value == MINUS)
+        elif MODE in labs:  # :mode excl,b_isconst,b_const=[interrogative|expressive|imperative]
+            return valid(value in MODES)
+        elif value in MODES:
+            return valid(MODE in labs)
     elif DAY in labs:  # :day  a=date-entity,b_isconst,b_const=[...]
         return is_int_in_range(value, 1, 31)
     elif MONTH in labs:  # :month  a=date-entity,b_isconst,b_const=[1|2|3|4|5|6|7|8|9|10|11|12]
@@ -124,18 +121,18 @@ def is_valid_arg(node, value, *labs, is_parent=True, is_node_label=True):
     elif {YEAR, YEAR2, DECADE, CENTURY}.intersection(labs):  # :year a=date-entity,b_isconst,b_const=[0-9]+
         return is_int_in_range(value)
     elif WEEKDAY in labs:  # :weekday  excl,a=date-entity,b=[monday|tuesday|wednesday|thursday|friday|saturday|sunday]
-        return valid(concept in WEEKDAYS)
-    elif concept in WEEKDAYS:
+        return valid(value in WEEKDAYS)
+    elif value in WEEKDAYS:
         return valid(WEEKDAY in labs)
     elif SEASON in labs:  # :season excl,a=date-entity,b=[winter|fall|spring|summer]+
-        return valid(concept in SEASONS)
+        return valid(value in SEASONS)
 
-    if not concept or "-" not in concept:
+    if not value or "-" not in value:
         return True  # What follows is a check for predicate arguments, only relevant for predicates
     args = [t for t in labs if t.startswith("ARG") and (t.endswith("-of") != is_parent)]
     if not args:
         return True
-    valid_args = ROLESETS.get(concept, ())
+    valid_args = ROLESETS.get(value, ())
     return not valid_args or valid(all(t.replace("-of", "").endswith(valid_args) for t in args),
                                    "valid args: " + ", ".join(valid_args))
 
@@ -152,12 +149,16 @@ class AmrConstraints(Constraints):
         return edge.lab in PREFIXED_RELATION_ENUM or edge not in edge.parent.outgoing
 
     def allow_parent(self, node, lab):
-        return not lab or is_valid_arg(node, node.label, lab)
+        return not lab or is_valid_arg(node.label, lab)
 
     def allow_child(self, node, lab):
-        return not lab or is_valid_arg(node, node.label, lab, is_parent=False)
+        return not lab or is_valid_arg(node.label, lab, is_parent=False)
 
     def allow_label(self, node, label):
         return not node.parents or \
-               is_valid_arg(node, label, *node.outgoing_labs) and \
-               is_valid_arg(node, label, *node.incoming_labs, is_parent=False)
+               is_valid_arg(label, *node.outgoing_labs) and \
+               is_valid_arg(label, *node.incoming_labs, is_parent=False)
+
+    def allow_property_value(self, node, property_value):
+        prop, value = property_value
+        return is_valid_arg(value, prop, is_parent=False)
