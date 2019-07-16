@@ -184,7 +184,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add_boolean_option(group, "use-bert", default=False, description="whether to use bert embeddings")
     add(group, "--bert-model", choices=["bert-base-uncased", "bert-large-uncased", "bert-base-cased",
                                         "bert-large-cased", "bert-base-multilingual-cased"],
-        default="bert-base-multilingual-cased")
+        default="bert-large-cased")
     add(group, "--bert-layers", type=int, nargs='+', default=[-1, -2, -3, -4])
     add(group, "--bert-layers-pooling", choices=["weighed", "sum", "concat"], default="weighed")
     add(group, "--bert-token-align-by", choices=["first", "sum", "mean"], default="sum")
