@@ -405,6 +405,7 @@ class NeuralNetwork(Classifier, SubModel):
         assert self.model, "Cannot finalize a model without initializing it first"
         # Drop unused axes (MLP params are initialized on first evaluate)
         self.axes = OrderedDict((a, m) for a, m in self.axes.items() if m.mlp.params)
+        self.labels = OrderedDict((a, l) for a, l in self.labels.items() if a in self.axes)
         if self.losses:
             loss = dy.esum(self.losses)
             loss.forward()
