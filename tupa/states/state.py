@@ -108,26 +108,30 @@ class State:
                 self.check(head.height <= self.args.max_height,
                            message and "Graph height: %d" % self.args.max_height, is_type=True)
 
-        def _check_possible_parent(parent_node, t):
+        def _check_possible_parent(parent_node, edge_lab):
             self.check(parent_node.text is None, message and "Terminals may not have children: %s" % parent_node.text,
                        is_type=True)
-            if self.args.constraints and t is not None:
+            self.check((edge_lab == ROOT_LAB) == parent_node.is_root,
+                       message and "All and only root edges must be '%s'" % ROOT_LAB)
+            if self.args.constraints and edge_lab is not None:
                 for rule in self.constraints.tag_rules:
-                    violation = rule.violation(parent_node, t, Direction.outgoing, message=message)
+                    violation = rule.violation(parent_node, edge_lab, Direction.outgoing, message=message)
                     self.check(violation is None, violation)
-                self.check(self.constraints.allow_parent(parent_node, t),
+                self.check(self.constraints.allow_parent(parent_node, edge_lab),
                            message and "%s may not be a '%s' parent (currently %s)" % (
-                               parent_node, t, ", ".join(map(str, parent_node.outgoing)) or "childless"))
+                               parent_node, edge_lab, ", ".join(map(str, parent_node.outgoing)) or "childless"))
 
-        def _check_possible_child(child_node, t):
+        def _check_possible_child(child_node, edge_lab):
             self.check(not child_node.is_root, message and "Root may not have parents", is_type=True)
-            if self.args.constraints and t is not None:
+            self.check((edge_lab == ANCHOR_LAB) == (child_node.text is not None),
+                       message and "All and only terminal edges must be '%s'" % ANCHOR_LAB)
+            if self.args.constraints and edge_lab is not None:
                 for rule in self.constraints.tag_rules:
-                    violation = rule.violation(child_node, t, Direction.incoming, message=message)
+                    violation = rule.violation(child_node, edge_lab, Direction.incoming, message=message)
                     self.check(violation is None, violation)
-                self.check(self.constraints.allow_child(child_node, t),
+                self.check(self.constraints.allow_child(child_node, edge_lab),
                            message and "%s may not be a '%s' child (currently %s, %s)" % (
-                               child_node, t, ", ".join(map(str, child_node.incoming)) or "parentless",
+                               child_node, edge_lab, ", ".join(map(str, child_node.incoming)) or "parentless",
                                ", ".join(map(str, child_node.outgoing)) or "childless"))
 
         def _check_possible_edge(parent_node, child_node, edge_lab):
@@ -143,7 +147,7 @@ class State:
                                edge_lab not in self.constraints.top_level_only,
                                message and "Only root may have %s edges" % edge_lab)
             self.check(ROOT_LAB not in parent_node.incoming_labs or child_node.text is None,
-                       message and "Virtual terminal child '%s' of virtual root" % child_node, is_type=True)
+                       message and "Virtual terminal child %s of virtual root" % child_node, is_type=True)
             if self.constraints.multigraph:  # Nodes may be connected by more than one edge
                 edge = StateEdge(parent_node, child_node, edge_lab)
                 self.check(self.constraints.allow_edge(edge), message and "Edge not allowed: %s (currently: %s)" % (
