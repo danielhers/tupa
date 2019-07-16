@@ -149,7 +149,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--layer-dim", type=int, default=50, help="dimension for hidden layers")
     add(group, "--layers", type=int, default=2, help="number of hidden layers")
     add(group, "--lstm-layer-dim", type=int, default=300, help="dimension for LSTM hidden layers")
-    add(group, "--lstm-layers", type=int, default=0, help="number of LSTM hidden layers")
+    add(group, "--lstm-layers", type=int, default=2, help="number of LSTM hidden layers")
     add(group, "--embedding-layer-dim", type=int, default=300, help="dimension for layers before LSTM")
     add(group, "--embedding-layers", type=int, default=1, help="number of layers before LSTM")
     add(group, "--activation", choices=ACTIVATIONS, default=DEFAULT_ACTIVATION, help="activation function")
