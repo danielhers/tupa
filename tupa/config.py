@@ -324,6 +324,7 @@ class Config(object, metaclass=Singleton):
         group.add_argument("--dynet-weight-decay", type=float, default=1e-5, help="weight decay for parameters")
         add_boolean_option(group, "dynet-apply-weight-decay-on-load", "workaround for clab/dynet#1206", default=False)
         add_boolean_option(group, "dynet-gpu", "GPU for training")
+        add_boolean_option(group, "pytorch-gpu", "GPU for BERT")
         group.add_argument("--dynet-gpus", type=int, default=1, help="how many GPUs you want to use")
         add_boolean_option(group, "dynet-autobatch", "auto-batching of training examples")
         DYNET_ARG_NAMES.update(get_group_arg_names(group))
