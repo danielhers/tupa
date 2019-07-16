@@ -185,8 +185,8 @@ class Model:
             axes.append(self.key(framework, NODE_PROPERTY_KEY))
         if requires_edge_attributes(state.framework):
             axes.append(self.key(framework, EDGE_ATTRIBUTE_KEY))
-        tokens = [node.label for node in state.graph.nodes if node.anchors]
-        lang = getattr(state.graph, "lang", "en")
+        tokens = [terminal.text for terminal in state.terminals]
+        lang = getattr(state.input_graph, "lang", "en")
         self.classifier.init_features(self.feature_extractor.init_features(state), axes, train, tokens, lang)
 
     def finalize(self, finished_epoch):

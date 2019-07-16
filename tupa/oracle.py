@@ -32,8 +32,7 @@ class Oracle:
         self.framework = framework
         self.terminal_ids = {int(terminal.id) for terminal in ref_graph.terminals}
         self.nodes_remaining = {int(n.id) for n in ref_graph.nodes
-                                if n.id != ref_graph.root.id
-                                and int(n.id) not in self.terminal_ids}
+                                if n.id != ref_graph.root.id and int(n.id) not in self.terminal_ids}
         self.edges_remaining = set(ref_graph.edges)
         self.found = False
         self.log = None
