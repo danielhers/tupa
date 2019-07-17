@@ -40,7 +40,7 @@ def resolve(node, value, introduce_placeholders=False, conservative=False, is_no
             category = CATEGORIES.get(value)  # category suffix to append to label
         elif CATEGORY_SEPARATOR in value:
             value = value[:value.find(CATEGORY_SEPARATOR)]  # remove category suffix
-        terminals = sorted([c for c in node.children if getattr(c, "text", None)], key=attrgetter("index"))
+        terminals = sorted([c for c in node.children if c.text is not None], key=attrgetter("index"))
         if terminals:
             if not introduce_placeholders and NUM_PATTERN.match(value):  # numeric
                 number = terminals_to_number(terminals)  # try replacing spelled-out numbers/months with digits
@@ -49,20 +49,18 @@ def resolve(node, value, introduce_placeholders=False, conservative=False, is_no
             else:
                 if len(terminals) > 1:
                     if introduce_placeholders or value.count(TOKEN_PLACEHOLDER) == 1:
-                        value = _replace(TOKEN_PLACEHOLDER, "".join(t.text for t in terminals))
+                        value = _replace(TOKEN_PLACEHOLDER, "".join(map(lemmatize, terminals)))
                     if introduce_placeholders or value.count(TOKEN_TITLE_PLACEHOLDER) == 1:
-                        value = _replace(TOKEN_TITLE_PLACEHOLDER, "_".join(merge_punct(t.text for t in terminals)))
+                        value = _replace(TOKEN_TITLE_PLACEHOLDER, "_".join(merge_punct(map(lemmatize, terminals))))
                     if conservative:
                         terminals = ()
                 for terminal in terminals:
                     lemma = lemmatize(terminal)
-                    if lemma:
-                        if introduce_placeholders and category is None:
-                            category = CATEGORIES.get(lemma)
-                        value = _replace(LEMMA_PLACEHOLDER, lemma)
+                    if introduce_placeholders and category is None:
+                        category = CATEGORIES.get(lemma)
+                    value = _replace(LEMMA_PLACEHOLDER, lemma)
                     value = _replace(TOKEN_PLACEHOLDER, terminal.text)
-                    value = _replace(TOKEN_TITLE_PLACEHOLDER, terminal.text.title())
-                    negation = NEGATIONS.get(terminal.text)
+                    negation = NEGATIONS.get(lemma)
                     if negation is not None:
                         value = _replace(NEGATION_PLACEHOLDER, negation)
                     if is_node_label:
@@ -98,7 +96,7 @@ def lemmatize(terminal):
     lemma = terminal.get("lemma")
     if lemma == "-PRON-":
         lemma = terminal.text
-    return lemma.translate(PUNCTUATION_REMOVER).lower() if lemma else None
+    return lemma.translate(PUNCTUATION_REMOVER).lower()
 
 
 def merge_punct(tokens):
