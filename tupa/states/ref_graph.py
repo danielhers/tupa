@@ -24,6 +24,7 @@ class RefGraph:
         self.nodes = [self.root]
         id2node = {}
         offset = len(conllu.nodes) + 1
+        self.graph_nodes = []
         self.edges = []
         for graph_node in graph.nodes:
             node_id = graph_node.id + offset
@@ -31,6 +32,7 @@ class RefGraph:
                 StateNode(node_id, node_id, ref_node=graph_node, label=graph_node.label,
                           properties=dict(zip(graph_node.properties or (), graph_node.values or ())))
             self.nodes.append(node)
+            self.graph_nodes.append(node)
             if graph_node.is_top:
                 self.edges.append(StateEdge(self.root, node, ROOT_LAB).add())
             if graph_node.anchors:
@@ -42,7 +44,7 @@ class RefGraph:
             self.edges.append(StateEdge(id2node[edge.src + offset],
                                         id2node[edge.tgt + offset], edge.lab,
                                         dict(zip(edge.attributes or (), edge.values or ()))).add())
-        for node in self.nodes:
+        for node in self.graph_nodes:
             node.label = resolve(node, node.label, introduce_placeholders=True)
             properties = node.properties.items() if node.properties else ()
             # Collapse :name (... / name) :op "..." into one string node

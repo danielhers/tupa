@@ -25,6 +25,10 @@ def resolve(node, value, introduce_placeholders=False, conservative=False, is_no
     :param is_node_label: is this a node label (not property value)
     :return: the resolved label, with or without placeholders and categories (depending on the value of reverse)
     """
+    if value is None:
+        return None
+    value = str(value)
+
     def _replace(old, new):  # replace only inside the label value/name
         new = new.strip('"()')
         if introduce_placeholders:
@@ -34,42 +38,41 @@ def resolve(node, value, introduce_placeholders=False, conservative=False, is_no
 
     read_resources()
 
-    if value is not None:
-        category = None
-        if introduce_placeholders:
-            category = CATEGORIES.get(value)  # category suffix to append to label
-        elif CATEGORY_SEPARATOR in value:
-            value = value[:value.find(CATEGORY_SEPARATOR)]  # remove category suffix
-        terminals = sorted([c for c in node.children if c.text is not None], key=attrgetter("index"))
-        if terminals:
-            if not introduce_placeholders and NUM_PATTERN.match(value):  # numeric
-                number = terminals_to_number(terminals)  # try replacing spelled-out numbers/months with digits
-                if number is not None:
-                    value = str(number)
-            else:
-                if len(terminals) > 1:
-                    if introduce_placeholders or value.count(TOKEN_PLACEHOLDER) == 1:
-                        value = _replace(TOKEN_PLACEHOLDER, "".join(map(lemmatize, terminals)))
-                    if introduce_placeholders or value.count(TOKEN_TITLE_PLACEHOLDER) == 1:
-                        value = _replace(TOKEN_TITLE_PLACEHOLDER, "_".join(merge_punct(map(lemmatize, terminals))))
-                    if conservative:
-                        terminals = ()
-                for terminal in terminals:
-                    lemma = lemmatize(terminal)
-                    if introduce_placeholders and category is None:
-                        category = CATEGORIES.get(lemma)
-                    value = _replace(LEMMA_PLACEHOLDER, lemma)
-                    value = _replace(TOKEN_PLACEHOLDER, terminal.text)
-                    negation = NEGATIONS.get(lemma)
-                    if negation is not None:
-                        value = _replace(NEGATION_PLACEHOLDER, negation)
-                    if is_node_label:
-                        morph = VERBALIZATION.get(lemma)
-                        if morph:
-                            for prefix, value in morph.items():  # V: verb, N: noun, A: noun actor
-                                value = _replace("<%s>" % prefix, value)
-        if introduce_placeholders and category:
-            value += CATEGORY_SEPARATOR + category
+    category = None
+    if introduce_placeholders:
+        category = CATEGORIES.get(value)  # category suffix to append to label
+    elif CATEGORY_SEPARATOR in value:
+        value = value[:value.find(CATEGORY_SEPARATOR)]  # remove category suffix
+    terminals = sorted([c for c in node.children if c.text is not None], key=attrgetter("index"))
+    if terminals:
+        if not introduce_placeholders and NUM_PATTERN.match(value):  # numeric
+            number = terminals_to_number(terminals)  # try replacing spelled-out numbers/months with digits
+            if number is not None:
+                value = str(number)
+        else:
+            if len(terminals) > 1:
+                if introduce_placeholders or value.count(TOKEN_PLACEHOLDER) == 1:
+                    value = _replace(TOKEN_PLACEHOLDER, "".join(map(lemmatize, terminals)))
+                if introduce_placeholders or value.count(TOKEN_TITLE_PLACEHOLDER) == 1:
+                    value = _replace(TOKEN_TITLE_PLACEHOLDER, "_".join(merge_punct(map(lemmatize, terminals))))
+                if conservative:
+                    terminals = ()
+            for terminal in terminals:
+                lemma = lemmatize(terminal)
+                if introduce_placeholders and category is None:
+                    category = CATEGORIES.get(lemma)
+                value = _replace(LEMMA_PLACEHOLDER, lemma)
+                value = _replace(TOKEN_PLACEHOLDER, terminal.text)
+                negation = NEGATIONS.get(lemma)
+                if negation is not None:
+                    value = _replace(NEGATION_PLACEHOLDER, negation)
+                if is_node_label:
+                    morph = VERBALIZATION.get(lemma)
+                    if morph:
+                        for prefix, value in morph.items():  # V: verb, N: noun, A: noun actor
+                            value = _replace("<%s>" % prefix, value)
+    if introduce_placeholders and category:
+        value += CATEGORY_SEPARATOR + category
     return value
 
 

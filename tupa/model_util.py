@@ -88,7 +88,7 @@ class AutoIncrementDict(DefaultOrderedDict):
         """
         super().__init__(None, sorted(d.items(), key=itemgetter(1)) if d else {}, size=size)
         self.finalized = (size is None)
-        self.unknown = self.setdefault(None, unknown)
+        self.unknown = unknown
         for key in keys:
             self.__missing__(key)
 
@@ -139,8 +139,11 @@ class DropoutDict(AutoIncrementDict):
             self.counts[item] += 1
             count = self.counts[item]
             if count < self.min_count or self.dropout and self.dropout/(count+self.dropout) > np.random.random_sample():
-                item = None
+                item = self.most_common()
         return super().__getitem__(item)
+
+    def most_common(self):
+        return self.counts.most_common(1)[0][0] if self.counts else self.unknown
 
 
 class KeyBasedDefaultDict(defaultdict):
