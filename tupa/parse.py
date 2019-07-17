@@ -403,17 +403,17 @@ class Parser(AbstractParser):
         self.trained = self.save_init = False
         self.accuracies = {}
 
-    def train(self, graphs=None, dev=None, test=None, iterations=1):
+    def train(self, graphs=None, dev=None, test=False, iterations=1):
         """
         Train parser on given graphs
         :param graphs: iterable of graphs to train on
         :param dev: iterable of graphs to tune on
-        :param test: iterable of graphs that would be tested on after train finished
+        :param test: whether there are graphs that would be tested on after train finished
         :param iterations: iterable of Iterations objects whose i attributes are the number of iterations to perform
         """
         self.trained = True
         self.dev = read_graphs_with_progress_bar(dev)
-        self.test = read_graphs_with_progress_bar(test)
+        self.test = test
         if graphs is not None:
             graphs = read_graphs_with_progress_bar(graphs)
             self.init_train()
@@ -448,7 +448,7 @@ class Parser(AbstractParser):
                 if dev:
                     if self.iteration < len(iterations):
                         self.model.load(is_finalized=False)  # Load best model to prepare for next iteration
-                    elif test:
+                    elif test is not None:
                         self.model.load()  # Load best model to prepare for test
         else:  # No graphs to train on, just load model
             self.model.load()
@@ -551,13 +551,14 @@ def train_test(train=None, dev=None, test=None, args=None, model_suffix=""):
     base, ext = os.path.splitext(args.model or args.classifier)
     model_file = base + model_suffix + ext
     parser = Parser(model_file=model_file, config=Config(), conllu=args.conllu, alignment=args.alignment)
-    yield from filter(None, parser.train(train, dev=dev, test=test, iterations=args.iterations))
+    yield from filter(None, parser.train(train, dev=dev, test=test is not None, iterations=args.iterations))
     if test is not None:
         if args.train or args.folds:
             print("Evaluating on test graphs", file=sys.stderr)
+        test = read_graphs_with_progress_bar(test)
         out = parser.parse(test, write=args.write)
         if args.evaluate:
-            results = score.mces.evaluate(test, out, cores=args.cores)
+            results = score.mces.evaluate(test, list(out), cores=args.cores)
             print_scores(results, args.testscores)
             yield results
         else:
@@ -643,7 +644,7 @@ def read_graphs_with_progress_bar(file_handle_or_graphs):
         graphs, _ = read_graphs(
             tqdm(file_handle_or_graphs, desc="Reading " + getattr(file_handle_or_graphs, "name", "input"),
                  unit=" graphs"), format="mrp")
-        return list(graphs)
+        return graphs
     return file_handle_or_graphs
 
 

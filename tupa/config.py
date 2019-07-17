@@ -520,11 +520,11 @@ class Config(object, metaclass=Singleton):
                 and (args.swap == COMPOUND or k != "max_swap")
                 and (not args.require_connected or k != "orphan_label")
                 and (args.classifier == BIRNN or k not in NN_ARG_NAMES | DYNET_ARG_NAMES)
-                and k != "graphs"]
+                and k not in ("input", "output")]
 
     def __str__(self):
         self.args.hyperparams = [HyperparamsInitializer(name, **args.vars()) for name, args in self.hyperparams.items()]
-        return " ".join(list(self.args.input) + self.args_str(self.args))
+        return " ".join([self.args.input.name, self.args.output.name] + self.args_str(self.args))
 
 
 def requires_node_labels(framework):
@@ -541,6 +541,7 @@ def requires_edge_attributes(framework):
 
 def requires_anchors(framework):
     return framework != "amr"
+
 
 def requires_tops(framework):
     return framework in ("ucca", "amr")
