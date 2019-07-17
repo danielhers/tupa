@@ -11,7 +11,7 @@ from .ref_graph import RefGraph
 from ..action import Actions
 from ..config import Config, requires_node_labels, requires_node_properties, requires_edge_attributes, \
     requires_anchors, requires_tops
-from ..constraints.validation import CONSTRAINTS, Constraints, Direction, ROOT_ID, ROOT_LAB, ANCHOR_LAB
+from ..constraints.validation import CONSTRAINTS, Constraints, Direction, ROOT_LAB, ANCHOR_LAB
 from ..model import NODE_LABEL_KEY, NODE_PROPERTY_KEY, EDGE_ATTRIBUTE_KEY
 
 
@@ -39,8 +39,8 @@ class State:
         self.constraints = CONSTRAINTS.get(self.framework, Constraints)()
         self.has_ref = bool(graph and graph.nodes)
         self.ref_graph = RefGraph(self.input_graph, conllu, self.framework)
-        self.root = StateNode(ROOT_ID, self.ref_graph.root.id, is_root=True, ref_node=self.ref_graph.root)
-        self.terminals = [StateNode(t.index, t.id, text=t.label, ref_node=t) for t in self.ref_graph.terminals]
+        self.root = self.ref_graph.root
+        self.terminals = self.ref_graph.terminals
         self.stack = [self.root]
         self.buffer = deque(self.terminals)
         self.heads = set()

@@ -10,15 +10,15 @@ class StateNode:
                  properties=None, anchors=None):
         self.index = index  # Index in the configuration's node list
         self.id = str(node_id)  # ID of the reference node
-        self.ref_node = ref_node  # Associated StateNode or graph.Node from the original Graph, during training
+        self.ref_node = ref_node or self  # Associated StateNode or graph.Node from the original Graph, during training
         self.text = text  # Text for terminals, None for non-terminals
         if label is None:
-            self.label = self.category = None
+            self.label = None if self.text is None else self.text
+            self.category = None
         else:  # Node label prediction is enabled
             self.label, _, self.category = label.partition("|")
             if not self.category:
                 self.category = None
-        self.node_index = int(self.id) if ref_node else None
         self.outgoing = []  # StateEdge list
         self.incoming = []  # StateEdge list
         self.children = []  # StateNode list: the children of all edges in outgoing
@@ -31,8 +31,7 @@ class StateNode:
         self._terminals = None
         self.is_root = is_root
         self.properties = properties
-        self.anchors = anchors
-        self.ref_anchors = self.expand_anchors(self.ref_node) if ref_node else None
+        self.anchors = self.expand_anchors(anchors)
 
     def get(self, prop):
         return self.ref_node.properties.get(prop)
@@ -76,6 +75,10 @@ class StateNode:
             self._terminals = sorted(terminals, key=attrgetter("index"))
         return self._terminals
 
+    @classmethod
+    def expand_anchors(cls, anchors):
+        return set.union(*[set(range(x["from"], x["to"])) for x in anchors]) if anchors else set()
+
     def __repr__(self):
         return StateNode.__name__ + "(" + str(self.index) + \
                ((", " + self.text) if self.text else "") + \
@@ -99,8 +102,3 @@ class StateNode:
 
     def __iter__(self):
         return iter(self.outgoing)
-
-    @classmethod
-    def expand_anchors(cls, node):
-        return set.union(*[set(range(x["from"], x["to"]))
-                           for x in node.anchors]) if node.anchors else set()

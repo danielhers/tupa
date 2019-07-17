@@ -1,6 +1,5 @@
 import re
 import string
-from operator import attrgetter
 
 from word2number import w2n
 
@@ -43,7 +42,7 @@ def resolve(node, value, introduce_placeholders=False, conservative=False, is_no
         category = CATEGORIES.get(value)  # category suffix to append to label
     elif CATEGORY_SEPARATOR in value:
         value = value[:value.find(CATEGORY_SEPARATOR)]  # remove category suffix
-    terminals = sorted([c for c in node.children if c.text is not None], key=attrgetter("index"))
+    terminals = node.terminals
     if terminals:
         if not introduce_placeholders and NUM_PATTERN.match(value):  # numeric
             number = terminals_to_number(terminals)  # try replacing spelled-out numbers/months with digits
@@ -96,7 +95,7 @@ def terminals_to_number(terminals):
 
 
 def lemmatize(terminal):
-    lemma = terminal.get("lemma")
+    lemma = terminal.properties["lemma"]
     if lemma == "-PRON-":
         lemma = terminal.text
     return lemma.translate(PUNCTUATION_REMOVER).lower()
