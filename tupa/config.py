@@ -100,11 +100,13 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
 
     group = ap.add_argument_group(title="Node properties")
-    add(group, "--max-node-properties", type=int, default=100, help="max number of node properties to allow")
+    add(group, "--max-node-properties", type=int, default=100, help="max number of node property values to allow")
     add(group, "--min-node-property-count", type=int, default=2, help="min number of occurrences for a property")
+    add(group, "--max-properties-per-node", type=int, default=3, help="max number of properties to allow on one node")
 
     group = ap.add_argument_group(title="Edge attributes")
-    add(group, "--max-edge-attributes", type=int, default=2, help="max number of edge attributes to allow")
+    add(group, "--max-edge-attributes", type=int, default=2, help="max number of edge attribute values to allow")
+    add(group, "--max-attributes-per-edge", type=int, default=1, help="max number of attributes to allow on one edge")
 
     group = ap.add_argument_group(title="Structural constraints")
     add_boolean(group, "constraints", "scheme-specific rules", default=True)

@@ -191,12 +191,16 @@ class State:
             self.check(node_for_prop.text is None, message and "Setting property of virtual terminal: %s" %
                        node_for_prop)
             self.check(node_for_prop is not self.root, "Setting property of virtual root")
+            self.check(len(node_for_prop.properties or ()) < self.args.max_properties_per_node,
+                       message and "Exceeded maximum number of properties per node: %s" % node_for_prop)
 
         def _check_possible_attribute():
             self.check(requires_edge_attributes(self.framework), message and "Edge attributes disabled")
             self.check(self.last_edge is not None, message and "Setting attribute on edge when no edge exists")
             self.check(self.last_edge.lab not in (ROOT_LAB, ANCHOR_LAB),
                        message and "Setting attribute on %s edge" % self.last_edge.lab)
+            self.check(len(self.last_edge.attributes or ()) < self.args.max_attributes_per_edge,
+                       message and "Exceeded maximum number of attributes per edge: %s" % self.last_edge)
 
         if self.args.constraints:
             self.check(self.constraints.allow_action(action, self.actions),
