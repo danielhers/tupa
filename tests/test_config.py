@@ -14,8 +14,7 @@ def config():
 
 
 def test_params(config):
-    d = {"max_words_external": 100, "word_dim_external": 100, "optimizer": "sgd", "layer_dim": 100, "layers": 1,
-         "lstm_layer_dim": 100, "lstm_layers": 1}
+    d = {"optimizer": "sgd", "layer_dim": 100, "layers": 1, "lstm_layer_dim": 100, "lstm_layers": 1}
     config.update(d)
     for attr, value in d.items():
         assert getattr(config.args, attr) == value, attr
@@ -23,7 +22,7 @@ def test_params(config):
 
 def test_hyperparams(config):
     assert config.hyperparams.shared.layer_dim == 50, "--hyperparams=shared=--layer-dim=50"
-    d = {"max_words_external": 100, "word_dim_external": 100, "optimizer": "sgd", "layer_dim": 100, "layers": 1}
+    d = {"optimizer": "sgd", "layer_dim": 100, "layers": 1}
     config.update(d)
     config.update_hyperparams(shared={"lstm_layer_dim": 100, "lstm_layers": 1}, ucca={"word_dim": 300},
                               **{"ucca.en": {"dep_dim": 1}})
