@@ -48,6 +48,10 @@ class StateNode:
         self.height = max(self.height, edge.child.height + 1)
         self._terminals = None  # Invalidate terminals because we might have added some
 
+    @staticmethod
+    def copy(node):
+        return StateNode(index=node.index, node_id=node.node_id, ref_node=node, )
+
     @property
     def descendants(self):
         """

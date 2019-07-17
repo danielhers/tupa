@@ -39,8 +39,8 @@ class State:
         self.constraints = CONSTRAINTS.get(self.framework, Constraints)()
         self.has_ref = bool(graph and graph.nodes)
         self.ref_graph = RefGraph(self.input_graph, conllu, self.framework)
-        self.root = self.ref_graph.root
-        self.terminals = self.ref_graph.terminals
+        self.root = StateNode.copy(self.ref_graph.root)
+        self.terminals = list(map(StateNode.copy, self.ref_graph.terminals))
         self.stack = [self.root]
         self.buffer = deque(self.terminals)
         self.heads = set()
@@ -191,7 +191,11 @@ class State:
             self.check(node_for_prop.text is None, message and "Setting property of virtual terminal: %s" %
                        node_for_prop)
             self.check(node_for_prop is not self.root, "Setting property of virtual root")
-            self.check(len(node_for_prop.properties or ()) < self.args.max_properties_per_node,
+            if self.framework == "amr":  # In AMR, properties and values are be evoked by tokens
+                max_props = self.args.max_node_ratio * len(self.terminals)
+            else:
+                max_props = self.args.max_properties_per_node
+            self.check(len(node_for_prop.properties or ()) < max_props,
                        message and "Exceeded maximum number of properties per node: %s" % node_for_prop)
 
         def _check_possible_attribute():
