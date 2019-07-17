@@ -29,6 +29,7 @@ install:
   - conda create -q -n test-env python=3.6 cython numpy pypandoc pytest
   - activate test-env
   - cinst pandoc
+  - pip install -r requirements.txt
   - pip install .
 
 build: off

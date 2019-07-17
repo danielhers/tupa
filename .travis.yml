@@ -5,6 +5,7 @@ language: python
 python: 3.6
 install:
   - pip uninstall -y numpy
+  - pip install -r requirements.txt
   - pip install .
   - pip install pytest
 jobs:
