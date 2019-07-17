@@ -31,7 +31,7 @@ class ParseMode(Enum):
 
 
 class AbstractParser:
-    def __init__(self, config, model, training=False, evaluation=False, conllu=None, alignment=None):
+    def __init__(self, config, model, training=False, conllu=None, alignment=None):
         """
         :param conllu: dict of graph id to graph specifying conllu preprocessing
         :param alignment: dict of graph id to graph specifying alignment preprocessing
@@ -39,7 +39,6 @@ class AbstractParser:
         self.config = config
         self.model = model
         self.training = training
-        self.evaluation = evaluation
         self.count = Counter()
         self.correct_count = Counter()
         self.num_tokens = self.f1 = 0
@@ -335,7 +334,7 @@ class BatchParser(AbstractParser):
                     self.config.print("skipped target " + target, level=1)
                     continue
                 parser = GraphParser(
-                    graph, self.config, self.model, self.training, self.evaluation,
+                    graph, self.config, self.model, self.training,
                     conllu=self.conllu[graph.id], alignment=self.alignment.get(graph.id), target=target)
                 if self.config.args.verbose and display:
                     progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) \
@@ -395,10 +394,9 @@ class BatchParser(AbstractParser):
 
 class Parser(AbstractParser):
     """ Main class to implement transition-based meaning representation parser """
-    def __init__(self, model_file=None, config=None, training=None, evaluation=None, conllu=None, alignment=None):
+    def __init__(self, model_file=None, config=None, training=None, conllu=None, alignment=None):
         super().__init__(config=config or Config(), model=Model(model_file or config.args.model),
                          training=config.args.train if training is None else training,
-                         evaluation=config.args.evaluate if evaluation is None else evaluation,
                          conllu=config.args.conllu if conllu is None else conllu,
                          alignment=config.args.alignment if alignment is None else alignment)
         self.best_score = self.dev = self.test = self.iteration = self.epoch = self.batch = None
@@ -495,7 +493,7 @@ class Parser(AbstractParser):
 
     def eval(self, graphs, mode, scores_filename, display=True):
         print("Evaluating on %s graphs" % mode.name, file=sys.stderr)
-        out = self.parse(graphs, mode=mode, evaluate=True, display=display)
+        out = self.parse(graphs, mode=mode, display=display)
         try:
             results = score.mces.evaluate(graphs, out, cores=self.config.args.cores)
         except (KeyError, ValueError) as e:
@@ -509,26 +507,23 @@ class Parser(AbstractParser):
         print_scores(results, scores_filename, prefix=prefix, prefix_title="iteration")
         return results["all"]["f"], out
 
-    def parse(self, graphs, mode=ParseMode.test, evaluate=False, display=True, write=False):
+    def parse(self, graphs, mode=ParseMode.test, display=True, write=False):
         """
         Parse given graphs
         :param graphs: iterable of graphs to parse
         :param mode: ParseMode value.
                      If train, use oracle to train on given graphs.
                      Otherwise, just parse with classifier.
-        :param evaluate: whether to evaluate parsed graphs with respect to given ones.
-                           Only possible when given graphs are annotated.
         :param display: whether to display information on each parsed graph
         :param write: whether to write output graphs to file
-        :return: generator of parsed graphs (or in train mode, the original ones),
-                 or, if evaluation=True, of pairs of (Graph, Scores).
+        :return: generator of parsed graphs
         """
         self.batch = 0
         assert mode in ParseMode, "Invalid parse mode: %s" % mode
         training = (mode is ParseMode.train)
         if not training and not self.trained:
             yield from self.train()  # Try to load model from file
-        parser = BatchParser(self.config, self.model, training, mode if mode is ParseMode.dev else evaluate,
+        parser = BatchParser(self.config, self.model, training,
                              conllu=self.conllu, alignment=self.alignment)
         for i, graph in enumerate(parser.parse(read_graphs_with_progress_bar(graphs), display=display, write=write,
                                                accuracies=self.accuracies), start=1):
@@ -560,10 +555,13 @@ def train_test(train=None, dev=None, test=None, args=None, model_suffix=""):
     if test is not None:
         if args.train or args.folds:
             print("Evaluating on test graphs", file=sys.stderr)
-        out = parser.parse(test, evaluate=args.evaluate or train is not None, write=args.write)
-        results = score.mces.evaluate(test, out, cores=args.cores)
-        print_scores(results, args.testscores)
-        yield results
+        out = parser.parse(test, write=args.write)
+        if args.evaluate:
+            results = score.mces.evaluate(test, out, cores=args.cores)
+            print_scores(results, args.testscores)
+            yield results
+        else:
+            list(out)  # Exhause the generator
 
 
 def percents_str(part, total, infix="", fraction=True):
