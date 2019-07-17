@@ -7,7 +7,7 @@ class StateNode:
     Temporary representation for graph.Node with only relevant information for parsing
     """
     def __init__(self, index, node_id, swap_index=None, ref_node=None, text=None, label=None, is_root=False,
-                 properties=None, anchors=None):
+                 properties=None, anchors=None, expand=True):
         self.index = index  # Index in the configuration's node list
         self.id = str(node_id)  # ID of the reference node
         self.ref_node = ref_node or self  # Associated StateNode or graph.Node from the original Graph, during training
@@ -31,7 +31,7 @@ class StateNode:
         self._terminals = None
         self.is_root = is_root
         self.properties = properties
-        self.anchors = self.expand_anchors(anchors)
+        self.anchors = self.expand_anchors(anchors) if expand else anchors
 
     def get(self, prop):
         return self.ref_node.properties.get(prop)
@@ -50,7 +50,8 @@ class StateNode:
 
     @staticmethod
     def copy(node):
-        return StateNode(index=node.index, node_id=node.node_id, ref_node=node, )
+        return StateNode(index=node.index, node_id=node.node_id, ref_node=node, text=node.text, label=node.label,
+                         is_root=node.is_root, properties=node.properties, anchors=node.anchors, expand=False)
 
     @property
     def descendants(self):
