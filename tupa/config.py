@@ -470,25 +470,26 @@ class Config(object, metaclass=Singleton):
                 pass
 
     def save(self, filename):
-        out_file = filename + ".yml"
-        print("Saving configuration to '%s'." % out_file, file=sys.stderr)
-        with open(out_file, "w") as f:
-            name = None
-            values = []
-            for arg in shlex.split(str(self), "--") + ["--"]:
-                if arg.startswith("--"):
-                    if name and name not in ("train", "dev"):
-                        if len(values) > 1:
-                            values[0] = "[" + values[0]
-                            values[-1] += "]"
-                        elif name.startswith("no-"):
-                            name = name[3:]
-                            values = ["false"]
-                        print("%s: %s" % (name, ", ".join(values) or "true"), file=f)
-                    name = arg[2:]
-                    values = []
-                else:
-                    values.append(arg)
+        if filename is not None:
+            out_file = filename + ".yml"
+            print("Saving configuration to '%s'." % out_file, file=sys.stderr)
+            with open(out_file, "w") as f:
+                name = None
+                values = []
+                for arg in shlex.split(str(self), "--") + ["--"]:
+                    if arg.startswith("--"):
+                        if name and name not in ("train", "dev"):
+                            if len(values) > 1:
+                                values[0] = "[" + values[0]
+                                values[-1] += "]"
+                            elif name.startswith("no-"):
+                                name = name[3:]
+                                values = ["false"]
+                            print("%s: %s" % (name, ", ".join(values) or "true"), file=f)
+                        name = arg[2:]
+                        values = []
+                    else:
+                        values.append(arg)
 
     def copy(self):
         cls = self.__class__

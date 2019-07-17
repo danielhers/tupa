@@ -87,7 +87,7 @@ PARAM_DEFS = [
 
 
 class Model:
-    def __init__(self, filename, config=None, *args, **kwargs):
+    def __init__(self, filename=None, config=None, *args, **kwargs):
         self.config = config or Config().copy()
         self.filename = filename
         self.feature_extractor = self.classifier = None
