@@ -389,7 +389,8 @@ class BatchParser(AbstractParser):
 class Parser(AbstractParser):
     """ Main class to implement transition-based meaning representation parser """
     def __init__(self, model_file=None, config=None):
-        super().__init__(config=config or Config(), model=Model(model_file or config.args.classifier))
+        super().__init__(config=config or Config(),
+                         model=Model(model_file or config.args.model or config.args.classifier))
         self.best_score = self.dev = self.test = self.iteration = self.epoch = self.batch = None
         self.trained = self.save_init = False
         self.accuracies = {}
