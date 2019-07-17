@@ -3,6 +3,7 @@ from collections import deque
 from graph import Graph
 
 from tupa.constraints.amr import NAME, OP
+from tupa.constraints.validation import DEFAULT_LABEL
 from tupa.recategorization import resolve
 from .edge import StateEdge
 from .node import StateNode
