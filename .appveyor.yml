@@ -5,6 +5,14 @@ platform: x64
 environment:
   MSVC_DEFAULT_OPTIONS: ON
   MINICONDA: "C:\\Miniconda36-x64"
+  matrix:
+    - FRAMEWORK: unit
+    - FRAMEWORK: ucca
+    - FRAMEWORK: amr
+    - FRAMEWORK: dm
+    - FRAMEWORK: eds
+    - FRAMEWORK: psd
+    - FRAMEWORK: output
 
 configuration: Release
 
@@ -26,4 +34,13 @@ install:
 build: off
 
 test_script:
+  - python -m tupa -t test_files/%FRAMEWORK%.mrp -d test_files/%FRAMEWORK%mrp --conllu test_files/udpipe.mrp --alignment test_files/isi.mrp -I2 --max-edge-labels=10 --max-node-labels=10 --max-node-properties=10 --max-words=10 --max-lemmas=10 --lstm-layer-dim=10
+
+for:
+-
+  matrix:
+    only:
+      - FRAMEWORK: unit
+
+  test_script:
   - pytest --durations=0 -v tests
