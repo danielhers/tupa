@@ -152,16 +152,15 @@ class FeatureParameters(Labels):
             keys = ()
             if self.dim and self.external:
                 vectors = self.word_vectors()
-                keys = vectors.keys()
-                self.init = np.array(list(vectors.values()))
+                if vectors:
+                    keys = vectors.keys()
+                    self.init = np.array(list(vectors.values()))
             self.data = DropoutDict(size=self.size, keys=keys, dropout=self.dropout, min_count=self.min_count)
 
     def word_vectors(self):
-        vectors, self.dim = get_word_vectors(self.dim, self.size, self.filename, Config().vocab(self.vocab))
+        vectors, self.dim = get_word_vectors(self.dim, self.size, self.filename, Config().vocab(self.vocab) or "en")
         if self.size is not None:
             assert len(vectors) <= self.size, "Wrong number of loaded vectors: %d > %d" % (len(vectors), self.size)
-        assert vectors, "Cannot load word vectors. Install using `python -m spacy download en` or choose a file " \
-                        "using the --word-vectors option."
         self.size = len(vectors)
         return vectors
 

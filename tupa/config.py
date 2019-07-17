@@ -452,8 +452,7 @@ class Config(object, metaclass=Singleton):
 
     def vocab(self, filename=None):
         if filename is None:
-            args = self.args
-            filename = args.vocab
+            filename = self.args.vocab
         if not filename:
             return None
         vocab = self._vocab.get(filename)
