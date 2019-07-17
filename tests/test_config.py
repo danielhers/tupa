@@ -7,7 +7,7 @@ from tupa.config import Config
 
 @pytest.fixture
 def config():
-    c = Config("test_files/ucca.mrp", "-m", "test")
+    c = Config("test_files/ucca.mrp")
     c.update({"no_node_labels": True, "evaluate": True, "minibatch_size": 50})
     c.update_hyperparams(shared={"layer_dim": 50})
     return c
