@@ -229,8 +229,7 @@ class GraphParser(AbstractParser):
             output = pred = self.predict(scores, outputs.all, self.state.is_valid_annotation(key))
         except StopIteration as e:
             if name == "action":
-                raise ParserException("No valid action available\n%s" % (
-                    name, self.oracle.log if self.oracle else "")) from e
+                raise ParserException("No valid action available\n%s" % (self.oracle.log if self.oracle else "")) from e
             output = pred = self.predict(scores, outputs.all)  # Try again without constraints if this is not an action
         output, is_correct, true_keys, true_values = self.correct(key, output, pred, scores, true, true_keys)
         if self.training:
