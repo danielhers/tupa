@@ -276,7 +276,8 @@ class GraphParser(AbstractParser):
         if display:
             self.config.print("%s%.3fs %s" % (self.accuracy_str, self.duration, status), level=1)
         if accuracies is not None:
-            accuracies[self.graph.id] = self.correct_count[None] / self.count[None] if self.count[None] else 0
+            count = sum(self.count.values())
+            accuracies[(self.graph.id, self.framework)] = sum(self.correct_count.values()) / count if count else 0
         return self.out
 
     @property
@@ -430,7 +431,7 @@ class Parser(AbstractParser):
                     print("Training epoch %d of %d: " % (self.epoch, end - 1), file=sys.stderr)
                     if self.config.args.curriculum and self.accuracies:
                         print("Sorting graphs by previous epoch accuracy...", file=sys.stderr)
-                        graphs = sorted(graphs, key=lambda p: self.accuracies.get(p.id, 0))
+                        graphs = sorted(graphs, key=lambda g: self.accuracies.get((g.id, g.framework), 0))
                     else:
                         self.config.random.shuffle(graphs)
                     if not sum(1 for _ in self.parse(graphs, mode=ParseMode.train, conllu=conllu, alignment=alignment)):
