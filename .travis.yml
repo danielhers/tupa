@@ -27,6 +27,7 @@ jobs:
     - env: FRAMEWORK=dm
     - env: FRAMEWORK=eds
     - env: FRAMEWORK=psd
+    - env: FRAMEWORK=output
 before_script: # https://github.com/travis-ci/travis-ci/issues/8982#issuecomment-354357640
   - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
 script:
