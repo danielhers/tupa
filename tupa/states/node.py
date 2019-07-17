@@ -50,7 +50,7 @@ class StateNode:
 
     @staticmethod
     def copy(node):
-        return StateNode(index=node.index, node_id=node.node_id, ref_node=node, text=node.text, label=node.label,
+        return StateNode(index=node.index, node_id=node.id, ref_node=node, text=node.text, label=node.label,
                          is_root=node.is_root, properties=node.properties, anchors=node.anchors, expand=False)
 
     @property
