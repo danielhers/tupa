@@ -79,7 +79,7 @@ class State:
                     edge.child.node.is_top = True
                 elif edge.child.text is not None:
                     if requires_anchors(self.framework):
-                        if node.node.anchors is None:
+                        if node.node.anchors is None:  # FIXME convert back to {from, to} dict
                             node.node.anchors = []
                         node.node.anchors += edge.child.ref_node.anchors
                 else:
