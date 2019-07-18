@@ -45,9 +45,9 @@ class RefGraph:
                                         id2node[edge.tgt + offset], edge.lab,
                                         dict(zip(edge.attributes or (), edge.values or ()))).add())
         for node in self.non_virtual_nodes:
-            node.label = resolve(node, node.label, introduce_placeholders=True)
             if node.properties:
                 if self.framework == "amr" and node.label == NAME:
                     node.properties = compress_name(node.properties)
                 node.properties = {prop: resolve(node, value, introduce_placeholders=True)
                                    for prop, value in node.properties.items()}
+            node.label = resolve(node, node.label, introduce_placeholders=True)  # Must be after properties in case NAME

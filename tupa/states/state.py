@@ -62,6 +62,7 @@ class State:
         for node in self.non_virtual_nodes:
             if node.label is None and requires_node_labels(self.framework):
                 node.label = DEFAULT_LABEL
+            node.label = resolve(node, node.label)  # Must be before properties in case label is to be resolved to NAME
             if node.properties:
                 node.properties = {prop: resolve(node, value) for prop, value in node.properties.items()}
                 if self.framework == "amr" and node.label == NAME:
@@ -69,8 +70,7 @@ class State:
                 properties, values = zip(*node.properties.items())
             else:
                 properties, values = (None, None)
-            node.graph_node = graph.add_node(int(node.id), label=resolve(node, node.label),
-                                             properties=properties, values=values)
+            node.graph_node = graph.add_node(int(node.id), label=node.label, properties=properties, values=values)
         for edge in self.root.outgoing:
             edge.child.node.is_top = True
         for node in self.non_virtual_nodes:
