@@ -31,7 +31,7 @@ class StateNode:
         self.graph_node = None  # Associated graph.Node, when creating final Graph
         self.swap_index = self.index if swap_index is None else swap_index  # To avoid swapping nodes more than once
         self.height = 0
-        self._terminals = None
+        self.terminals = []
         self.is_root = is_root
         self.properties = properties
         self.anchors = anchors
@@ -49,7 +49,9 @@ class StateNode:
         self.children.append(edge.child)
         self.outgoing_labs.add(edge.lab)
         self.height = max(self.height, edge.child.height + 1)
-        self._terminals = None  # Invalidate terminals because we might have added some
+        if edge.child.text is not None:
+            self.terminals.append(edge.child)
+            self.terminals = sorted(self.terminals, key=attrgetter("index"))
 
     @staticmethod
     def copy(node):
@@ -69,19 +71,6 @@ class StateNode:
                 queue.extend(node.children)
                 result.append(node)
         return result
-
-    @property
-    def terminals(self):
-        if self._terminals is None:
-            q = [self]
-            terminals = []
-            while q:
-                n = q.pop()
-                q.extend(n.children)
-                if n.text is not None:
-                    terminals.append(n)
-            self._terminals = sorted(terminals, key=attrgetter("index"))
-        return self._terminals
 
     def __repr__(self):
         return StateNode.__name__ + "(" + str(self.index) + \
