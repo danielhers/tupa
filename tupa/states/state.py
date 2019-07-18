@@ -72,7 +72,7 @@ class State:
                 properties, values = (None, None)
             node.graph_node = graph.add_node(int(node.id), label=node.label, properties=properties, values=values)
         for edge in self.root.outgoing:
-            edge.child.node.is_top = True
+            edge.child.graph_node.is_top = True
         for node in self.non_virtual_nodes:
             anchors = []
             for edge in node.outgoing:
