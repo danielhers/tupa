@@ -1,7 +1,7 @@
 import re
 from operator import attrgetter
 
-from tupa.config import Config, FEATURE_PROPERTIES
+from ..config import Config, FEATURE_PROPERTIES
 
 FEATURE_ELEMENT_PATTERN = re.compile(r"([sba])(\d)([lrLR]*)([%s]*)" % FEATURE_PROPERTIES)
 FEATURE_TEMPLATE_PATTERN = re.compile(r"^(%s)+$" % FEATURE_ELEMENT_PATTERN.pattern)

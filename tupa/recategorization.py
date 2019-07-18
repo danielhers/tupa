@@ -3,7 +3,7 @@ import string
 
 from word2number import w2n
 
-from tupa.constraints.amr import read_resources, CATEGORIES, NEGATIONS, VERBALIZATION, MONTHS
+from .constraints.amr import read_resources, CATEGORIES, NEGATIONS, VERBALIZATION, MONTHS
 
 NUM_PATTERN = re.compile(r"[+-]?\d+(\.\d+)?")
 TOKEN_PLACEHOLDER = "<t>"

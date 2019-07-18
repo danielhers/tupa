@@ -7,8 +7,8 @@ import numpy as np
 from configargparse import ArgParser, Namespace, ArgumentDefaultsHelpFormatter, SUPPRESS, FileType, Action
 from logbook import Logger, FileHandler, StderrHandler
 
-from tupa.classifiers.nn.constants import *
-from tupa.model_util import load_enum
+from .classifiers.nn.constants import *
+from .model_util import load_enum
 
 # Classifiers
 BIRNN = "bilstm"
