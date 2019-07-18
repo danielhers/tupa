@@ -68,8 +68,8 @@ def resolve(node, value, introduce_placeholders=False, conservative=False, is_no
                 if is_node_label:
                     morph = VERBALIZATION.get(lemma)
                     if morph:
-                        for prefix, value in morph.items():  # V: verb, N: noun, A: noun actor
-                            value = _replace("<%s>" % prefix, value)
+                        for prefix, morph_value in morph.items():  # V: verb, N: noun, A: noun actor
+                            value = _replace("<%s>" % prefix, morph_value)
     if introduce_placeholders and category:
         value += CATEGORY_SEPARATOR + category
     return value
