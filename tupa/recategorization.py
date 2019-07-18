@@ -11,7 +11,6 @@ TOKEN_TITLE_PLACEHOLDER = "<T>"
 LEMMA_PLACEHOLDER = "<l>"
 NEGATION_PLACEHOLDER = "<n>"
 CATEGORY_SEPARATOR = "|"  # after the separator there is the label category
-PUNCTUATION_REMOVER = str.maketrans("", "", string.punctuation)
 
 
 def resolve(node, value, introduce_placeholders=False, conservative=False, is_node_label=True):
@@ -98,7 +97,7 @@ def lemmatize(terminal):
     lemma = terminal.properties["lemma"]
     if lemma == "-PRON-":
         lemma = terminal.text
-    return lemma.translate(PUNCTUATION_REMOVER).lower()
+    return lemma.lower()
 
 
 def merge_punct(tokens):
