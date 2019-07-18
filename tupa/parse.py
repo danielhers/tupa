@@ -491,18 +491,18 @@ class Parser(AbstractParser):
         self.config.save(model.filename)
         model.save(save_init=self.save_init)
 
-    def eval(self, graphs, mode, scores_filename, display=True):
+    def eval(self, graphs, mode, scores_filename, display=True, write=False):
         print("Evaluating on %s graphs" % mode.name, file=sys.stderr)
-        out = self.parse(graphs, mode=mode, display=display)
+        out = self.parse(graphs, mode=mode, display=display, write=write)
         try:
             results = score.mces.evaluate(graphs, out, cores=self.config.args.cores)
         except (KeyError, ValueError) as e:
             raise ValueError("Failed evaluating graphs: \n" + "\n".join(json.dumps(
                 g.encode(), indent=None, ensure_ascii=False) for g in out)) from e
-        prefix = ".".join(map(str, [self.iteration, self.epoch] + (
-            [self.batch] if self.config.args.save_every else [])))
+        prefix = "" if self.iteration is None else "Evaluation " + ".".join(map(str, [self.iteration, self.epoch] + (
+            [self.batch] if self.config.args.save_every else []))) + ". "
         if display:
-            print("Evaluation %s, average F1 score on %s: %.3f" % (prefix, mode.name, results["all"]["f"]),
+            print("%sAverage F1 score on %s: %.3f" % (prefix, mode.name, results["all"]["f"]),
                   file=sys.stderr)
         print_scores(results, scores_filename, prefix=prefix, prefix_title="iteration")
         return results["all"]["f"], out
@@ -553,16 +553,9 @@ def train_test(train=None, dev=None, test=None, args=None, model_suffix=""):
     parser = Parser(model_file=model_file, config=Config(), conllu=args.conllu, alignment=args.alignment)
     yield from filter(None, parser.train(train, dev=dev, test=test is not None, iterations=args.iterations))
     if test is not None:
-        if args.train or args.folds:
-            print("Evaluating on test graphs", file=sys.stderr)
         test = read_graphs_with_progress_bar(test)
-        out = parser.parse(test, write=args.write)
-        if args.evaluate:
-            results = score.mces.evaluate(test, list(out), cores=args.cores)
-            print_scores(results, args.testscores)
-            yield results
-        else:
-            list(out)  # Exhause the generator
+        return parser.eval(test, ParseMode.test, args.testscores, write=args.write) if args.evaluate else \
+            list(parser.parse(test, write=args.write))
 
 
 def percents_str(part, total, infix="", fraction=True):
