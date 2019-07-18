@@ -3,14 +3,8 @@ import string
 
 from word2number import w2n
 
-from .constraints.util import read_resources, CATEGORIES, NEGATIONS, VERBALIZATION, MONTHS
-
-NUM_PATTERN = re.compile(r"[+-]?\d+(\.\d+)?")
-TOKEN_PLACEHOLDER = "<t>"
-TOKEN_TITLE_PLACEHOLDER = "<T>"
-LEMMA_PLACEHOLDER = "<l>"
-NEGATION_PLACEHOLDER = "<n>"
-CATEGORY_SEPARATOR = "|"  # after the separator there is the label category
+from .constraints.util import read_resources, CATEGORIES, NEGATIONS, VERBALIZATION, MONTHS, CATEGORY_SEPARATOR, \
+    NUM_PATTERN, TOKEN_PLACEHOLDER, TOKEN_TITLE_PLACEHOLDER, LEMMA_PLACEHOLDER, NEGATION_PLACEHOLDER, UNRESOLVED
 
 
 def resolve(node, value, introduce_placeholders=False, conservative=False, is_node_label=True):
@@ -26,6 +20,8 @@ def resolve(node, value, introduce_placeholders=False, conservative=False, is_no
     if value is None:
         return None
     value = str(value)
+    if value in UNRESOLVED:
+        return value
 
     def _replace(old, new):  # replace only inside the label value/name
         new = new.strip('"()')

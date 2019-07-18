@@ -1,38 +1,7 @@
-import re
-
-from .util import WEEKDAYS, SEASONS, ROLESETS
+from .util import WEEKDAYS, SEASONS, ROLESETS, INT_PATTERN, PLACEHOLDER_PATTERN, DAY, MONTH, YEAR, YEAR2, DECADE, \
+    WEEKDAY, QUARTER, CENTURY, SEASON, TIMEZONE, DATE_ENTITY, NAME, MINUS, POLARITY, ARG2, VALUE, MODE, MODES
 from .validation import Constraints, Valid
 from ..recategorization import resolve
-
-PLACEHOLDER_PATTERN = re.compile(r"<[^>]*>")
-INT_PATTERN = re.compile(r"[+-]?(\d+)")
-PREFIXED_RELATION_ENUM = ("op", "snt")
-PREFIXED_RELATION_PREP = "prep"
-PREFIXED_RELATION_PATTERN = re.compile(r"(?:(op|snt)\d+|(prep)-\w+)(-of)?")
-PREFIXED_RELATION_SUBSTITUTION = r"\1\2\3"
-
-# Specific relations
-POLARITY = "polarity"
-NAME = "name"
-OP = "op"
-MODE = "mode"
-ARG2 = "arg2"
-VALUE = "value"
-DAY = "day"
-MONTH = "month"
-YEAR = "year"
-YEAR2 = "year2"
-DECADE = "decade"
-WEEKDAY = "weekday"
-QUARTER = "quarter"
-CENTURY = "century"
-SEASON = "season"
-TIMEZONE = "timezone"
-
-# Specific node property values
-MINUS = "-"
-MODES = ("expressive", "imperative", "interrogative")
-DATE_ENTITY = "date-entity"
 
 
 def is_int_in_range(value, s=None, e=None):
