@@ -78,6 +78,9 @@ class GraphParser(AbstractParser):
             if self.alignment:  # Copy alignments to anchors, updating graph
                 for alignment_node in self.alignment.nodes:
                     node = self.graph.find_node(alignment_node.id)
+                    if node is None:
+                        self.config.log("graph %s: invalid alignment node %s" % (self.graph.id, alignment_node.id))
+                        continue
                     if node.anchors is None:
                         node.anchors = []
                     for conllu_node_id in (alignment_node.label or []) + list(chain(*alignment_node.values or [])):
