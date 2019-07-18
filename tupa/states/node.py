@@ -2,7 +2,7 @@ from collections import deque
 from itertools import groupby
 from operator import attrgetter
 
-from ..constraints.amr import OP
+from ..constraints.util import OP
 
 
 class StateNode:
