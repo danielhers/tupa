@@ -1,5 +1,8 @@
 from collections import deque
+from itertools import groupby
 from operator import attrgetter
+
+from ..constraints.amr import OP
 
 
 class StateNode:
@@ -7,7 +10,7 @@ class StateNode:
     Temporary representation for graph.Node with only relevant information for parsing
     """
     def __init__(self, index, node_id, swap_index=None, ref_node=None, text=None, label=None, is_root=False,
-                 properties=None, anchors=None, expand=True):
+                 properties=None, anchors=None):
         self.index = index  # Index in the configuration's node list
         self.id = str(node_id)  # ID of the reference node
         self.ref_node = ref_node or self  # Associated StateNode or graph.Node from the original Graph, during training
@@ -25,13 +28,13 @@ class StateNode:
         self.parents = []  # StateNode list: the parents of all edges in incoming
         self.outgoing_labs = set()  # String set
         self.incoming_labs = set()  # String set
-        self.node = None  # Associated graph.Node, when creating final Graph
+        self.graph_node = None  # Associated graph.Node, when creating final Graph
         self.swap_index = self.index if swap_index is None else swap_index  # To avoid swapping nodes more than once
         self.height = 0
         self._terminals = None
         self.is_root = is_root
         self.properties = properties
-        self.anchors = self.expand_anchors(anchors) if expand else anchors
+        self.anchors = anchors
 
     def get(self, prop):
         return self.ref_node.properties.get(prop)
@@ -51,7 +54,7 @@ class StateNode:
     @staticmethod
     def copy(node):
         return StateNode(index=node.index, node_id=node.id, ref_node=node, text=node.text, label=node.label,
-                         is_root=node.is_root, properties=node.properties, anchors=node.anchors, expand=False)
+                         is_root=node.is_root, properties=node.properties, anchors=node.anchors)
 
     @property
     def descendants(self):
@@ -80,10 +83,6 @@ class StateNode:
             self._terminals = sorted(terminals, key=attrgetter("index"))
         return self._terminals
 
-    @classmethod
-    def expand_anchors(cls, anchors):
-        return set.union(*[set(range(x["from"], x["to"])) for x in anchors]) if anchors else set()
-
     def __repr__(self):
         return StateNode.__name__ + "(" + str(self.index) + \
                ((", " + self.text) if self.text else "") + \
@@ -107,3 +106,33 @@ class StateNode:
 
     def __iter__(self):
         return iter(self.outgoing)
+
+
+def expand_anchors(anchors):
+    """ Convert {from, to} dict to set of integers with the full ranges """
+    return set.union(*[set(range(x["from"], x["to"])) for x in anchors]) if anchors else set()
+
+
+def compress_anchors(anchors):
+    """ Convert set of integers back to {from, to} dict """
+    return [compress_range(r) for _, r in groupby(zip(anchors, anchors[1:]), lambda x: x[0] + 1 == x[1])]
+
+
+def compress_range(r):
+    r = list(r)
+    return {"from": r[0][0], "to": r[-1][1] + 1}
+
+
+def compress_name(properties):
+    """ Collapse :name (... / name) :op "..." into one string node """
+    return {OP: "_".join(v for k, v in sorted(properties.items()))}
+
+
+def expand_name(properties):
+    """ Expand back names that have been collapsed """
+    properties = dict(properties)
+    op = properties.pop(OP, None)
+    if op is not None:
+        for i, op_i in enumerate(op.split("_"), start=1):
+            properties[OP + str(i)] = op_i
+    return properties

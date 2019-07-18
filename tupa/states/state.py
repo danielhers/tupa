@@ -2,17 +2,16 @@ from collections import deque
 
 from graph import Graph
 
-from tupa.constraints.amr import NAME, OP
-from tupa.constraints.validation import DEFAULT_LABEL
-from tupa.recategorization import resolve
 from .edge import StateEdge
-from .node import StateNode
+from .node import StateNode, compress_anchors, expand_name
 from .ref_graph import RefGraph
 from ..action import Actions
 from ..config import Config, requires_node_labels, requires_node_properties, requires_edge_attributes, \
     requires_anchors, requires_tops
-from ..constraints.validation import CONSTRAINTS, Constraints, Direction, ROOT_LAB, ANCHOR_LAB
+from ..constraints.amr import NAME
+from ..constraints.validation import CONSTRAINTS, Constraints, Direction, ROOT_LAB, ANCHOR_LAB, DEFAULT_LABEL
 from ..model import NODE_LABEL_KEY, NODE_PROPERTY_KEY, EDGE_ATTRIBUTE_KEY
+from ..recategorization import resolve
 
 
 class InvalidActionError(AssertionError):
@@ -45,6 +44,7 @@ class State:
         self.buffer = deque(self.terminals)
         self.heads = set()
         self.nodes = [self.root] + self.terminals
+        self.non_virtual_nodes = []
         self.actions = []  # History of applied actions
         self.log = []
         self.finished = False
@@ -59,33 +59,31 @@ class State:
         Config().print("Creating %s graph %s from state..." % (self.framework, self.input_graph.id), level=2)
         graph = Graph(self.input_graph.id, self.framework)
         graph.input = self.input_graph.input
-        for node in self.nodes:
-            if node.text is None and not node.is_root:
-                if node.label is None and requires_node_labels(self.framework):
-                    node.label = DEFAULT_LABEL
-                props = {prop: resolve(node, value) for prop, value in (node.properties or {}).items()}
-                # Expand back names that have been collapsed
+        for node in self.non_virtual_nodes:
+            if node.label is None and requires_node_labels(self.framework):
+                node.label = DEFAULT_LABEL
+            if node.properties:
+                node.properties = {prop: resolve(node, value) for prop, value in node.properties.items()}
                 if self.framework == "amr" and node.label == NAME:
-                    op = props.pop(OP, None)
-                    if op is not None:
-                        for i, op_i in enumerate(op.split("_"), start=1):
-                            props[OP + str(i)] = op_i
-                properties, values = zip(*props.items()) if props else (None, None)
-                node.node = graph.add_node(int(node.id), label=resolve(node, node.label),
-                                           properties=properties, values=values)
-        for node in self.nodes:
+                    node.properties = expand_name(node.properties)
+                properties, values = zip(*node.properties.items())
+            else:
+                properties, values = (None, None)
+            node.graph_node = graph.add_node(int(node.id), label=resolve(node, node.label),
+                                             properties=properties, values=values)
+        for edge in self.root.outgoing:
+            edge.child.node.is_top = True
+        for node in self.non_virtual_nodes:
+            anchors = []
             for edge in node.outgoing:
-                if node.is_root:
-                    edge.child.node.is_top = True
-                elif edge.child.text is not None:
+                if edge.child.text is not None:
                     if requires_anchors(self.framework):
-                        if node.node.anchors is None:  # FIXME convert back to {from, to} dict
-                            node.node.anchors = []
-                        node.node.anchors += edge.child.ref_node.anchors
+                        anchors += edge.child.ref_node.anchors
                 else:
                     attributes, values = zip(*edge.attributes.items()) if edge.attributes else (None, None)
                     graph.add_edge(int(edge.parent.id), int(edge.child.id), edge.lab,
                                    attributes=attributes, values=values)
+            node.graph_node.anchors = compress_anchors(anchors) if anchors else None
         return graph
 
     def is_valid_action(self, action):
@@ -213,15 +211,14 @@ class State:
         if action.is_type(Actions.Finish):
             self.check(not self.buffer, "May only finish at the end of the input buffer", is_type=True)
             if self.args.swap and requires_tops(self.framework):  # Without swap, the oracle parse may be incomplete
-                self.check(self.root.outgoing or all(ROOT_LAB in n.incoming_labs or n.text for n in self.nodes),
+                self.check(self.root.outgoing or not self.non_virtual_nodes,
                            message and "Root has no child at parse end", is_type=True)
-            for node in self.nodes:
-                if not node.is_root and node.text is None:
-                    self.check(not self.args.require_connected or ROOT_LAB in node.incoming_labs or
-                               node.incoming, message and "Non-terminal %s has no parent at parse end" % node)
-                    self.check(not requires_node_labels(self.framework) or node.label is not None,
-                               message and "Non-terminal %s has no label at parse end (orig node label: '%s')" % (
-                                   node, node.ref_node.label if node.ref_node else None))
+            for node in self.non_virtual_nodes:
+                self.check(not self.args.require_connected or ROOT_LAB in node.incoming_labs or
+                           node.incoming, message and "Non-terminal %s has no parent at parse end" % node)
+                self.check(not requires_node_labels(self.framework) or node.label is not None,
+                           message and "Non-terminal %s has no label at parse end (orig node label: '%s')" % (
+                               node, node.ref_node.label if node.ref_node else None))
         else:
             self.check(self.action_ratio() < self.args.max_action_ratio,
                        message and "Actions/terminals ratio: %.3f" % self.args.max_action_ratio, is_type=True)
@@ -404,6 +401,7 @@ class State:
         node = StateNode(index, index if ref_node is None else ref_node.id, swap_index=self.calculate_swap_index(),
                          ref_node=ref_node)
         self.nodes.append(node)
+        self.non_virtual_nodes.append(node)
         self.heads.add(node)
         self.log.append("node: %s (swap_index: %g)" % (node, node.swap_index))
         return node
@@ -496,8 +494,7 @@ class State:
         return self.str(" ")
 
     def __eq__(self, other):
-        return self.stack == other.stack and self.buffer == other.buffer and \
-               self.nodes == other.nodes
+        return self.stack == other.stack and self.buffer == other.buffer and self.nodes == other.nodes
 
     def __hash__(self):
         return hash((tuple(self.stack), tuple(self.buffer), tuple(self.nodes)))

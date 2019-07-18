@@ -1,8 +1,8 @@
-from tupa.constraints.amr import NAME, OP
-from tupa.recategorization import resolve
 from .edge import StateEdge
-from .node import StateNode
+from .node import StateNode, expand_anchors, compress_name
+from ..constraints.amr import NAME
 from ..constraints.validation import ROOT_ID, ROOT_LAB, ANCHOR_LAB
+from ..recategorization import resolve
 
 
 class RefGraph:
@@ -16,7 +16,8 @@ class RefGraph:
         :return: RefGraph with nodes, edges, root and terminals
         """
         self.framework = framework
-        self.terminals = [StateNode(i, conllu_node.id, anchors=conllu_node.anchors, text=conllu_node.label,
+        self.terminals = [StateNode(i, conllu_node.id, text=conllu_node.label,
+                                    anchors=expand_anchors(conllu_node.anchors),
                                     properties=dict(zip(conllu_node.properties or (), conllu_node.values or ())))
                           for i, conllu_node in enumerate(conllu.nodes)]  # Virtual node for tokens
         self.root = StateNode(ROOT_ID, ROOT_ID, is_root=True)  # Virtual root for tops
@@ -28,7 +29,8 @@ class RefGraph:
         for graph_node in graph.nodes:
             node_id = graph_node.id + offset
             id2node[node_id] = node = \
-                StateNode(node_id, node_id, ref_node=graph_node, label=graph_node.label, anchors=graph_node.anchors,
+                StateNode(node_id, node_id, ref_node=graph_node, label=graph_node.label,
+                          anchors=expand_anchors(graph_node.anchors),
                           properties=dict(zip(graph_node.properties or (), graph_node.values or ())))
             self.nodes.append(node)
             self.non_virtual_nodes.append(node)
@@ -44,8 +46,8 @@ class RefGraph:
                                         dict(zip(edge.attributes or (), edge.values or ()))).add())
         for node in self.non_virtual_nodes:
             node.label = resolve(node, node.label, introduce_placeholders=True)
-            properties = node.properties.items() if node.properties else ()
-            # Collapse :name (... / name) :op "..." into one string node
-            if self.framework == "amr" and node.label == NAME:
-                properties = [(OP, "_".join(v for k, v in sorted(properties)))]
-            node.properties = {prop: resolve(node, value, introduce_placeholders=True) for prop, value in properties}
+            if node.properties:
+                if self.framework == "amr" and node.label == NAME:
+                    node.properties = compress_name(node.properties)
+                node.properties = {prop: resolve(node, value, introduce_placeholders=True)
+                                   for prop, value in node.properties.items()}
