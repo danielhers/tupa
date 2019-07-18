@@ -41,9 +41,10 @@ class RefGraph:
                     if node.anchors & terminal.anchors:
                         self.edges.append(StateEdge(node, terminal, ANCHOR_LAB).add())
         for edge in graph.edges:
-            self.edges.append(StateEdge(id2node[edge.src + offset],
-                                        id2node[edge.tgt + offset], edge.lab,
-                                        dict(zip(edge.attributes or (), edge.values or ()))).add())
+            if edge.src != edge.tgt:  # Drop self-loops as the parser currently does not support them
+                self.edges.append(StateEdge(id2node[edge.src + offset],
+                                            id2node[edge.tgt + offset], edge.lab,
+                                            dict(zip(edge.attributes or (), edge.values or ()))).add())
         for node in self.non_virtual_nodes:
             if node.properties:
                 if self.framework == "amr" and node.label == NAME:
