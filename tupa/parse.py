@@ -332,13 +332,17 @@ class BatchParser(AbstractParser):
         id_width = 1
         graphs = self.add_progress_bar(graphs, display=display)
         for i, graph in enumerate(graphs, start=1):
+            conllu = self.conllu.get(graph.id)
+            if conllu is None:
+                self.config.print("skipped '%s', no companion data found" % graph.id)
+                continue
             for target in graph.targets() or [graph.framework]:
                 if not self.training and target not in self.model.classifier.labels:
                     self.config.print("skipped target " + target, level=1)
                     continue
                 parser = GraphParser(
                     graph, self.config, self.model, self.training,
-                    conllu=self.conllu[graph.id], alignment=self.alignment.get(graph.id), target=target)
+                    conllu=conllu, alignment=self.alignment.get(graph.id), target=target)
                 if self.config.args.verbose and display:
                     progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) \
                         if total and i <= total else "%d" % i
