@@ -282,11 +282,14 @@ class Config(object, metaclass=Singleton):
     def __init__(self, *args):
         self.arg_parser = ap = ArgParser(description="Transition-based meaning representation parser.",
                                          formatter_class=ArgumentDefaultsHelpFormatter)
-        ap.add_argument("input", nargs="?", type=FileType("r"), default=sys.stdin, help="file with one MRP per line")
-        ap.add_argument("output", nargs="?", type=FileType("w"), default=sys.stdout, help="output file to create")
+        ap.add_argument("input", nargs="?", type=FileType("r", encoding="utf-8"), default=sys.stdin,
+                        help="file with one MRP per line")
+        ap.add_argument("output", nargs="?", type=FileType("w", encoding="utf-8"), default=sys.stdout,
+                        help="output file to create")
         ap.add_argument("--version", action="version", version="")
         ap.add_argument("-C", "--config", is_config_file=True, help="configuration file to get arguments from")
-        ap.add_argument("--conllu", type=FileType("r"), help="file with one MRP per line, to get conllu features from")
+        ap.add_argument("--conllu", type=FileType("r", encoding="utf-8"),
+                        help="file with one MRP per line, to get conllu features from")
         ap.add_argument("--alignment", type=FileType("r", encoding="utf-8"), help="file to get AMR alignments from")
         ap.add_argument("-m", "--model", help="model file basename to load/save (default: <framework>_<model_type>")
         ap.add_argument("-c", "--classifier", choices=CLASSIFIERS, default=BIRNN, help="model type")
@@ -297,7 +300,8 @@ class Config(object, metaclass=Singleton):
 
         group = ap.add_argument_group(title="Training parameters")
         group.add_argument("-t", "--train", action="store_true", help="train a model on the input")
-        group.add_argument("-d", "--dev", type=FileType("r"), help="graph files/directories to tune on")
+        group.add_argument("-d", "--dev", type=FileType("r", encoding="utf-8"),
+                           help="graph files/directories to tune on")
         group.add_argument("-I", "--iterations", nargs="+", type=Iterations,
                            default=(Iterations(50), Iterations("100 --optimizer=" + EXTRA_TRAINER)),
                            help="number of training iterations along with optional hyperparameters per part")
