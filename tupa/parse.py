@@ -288,13 +288,9 @@ class GraphParser(AbstractParser):
     def accuracy_str(self):
         if self.oracle and self.count[None]:
             accuracy_str = "a=%-14s" % percents_str(self.correct_count[None], self.count[None])
-
-            if self.count[NODE_LABEL_KEY]:
-                accuracy_str += " l=%-14s" % percents_str(self.correct_count[NODE_LABEL_KEY],
-                                                          self.count[NODE_LABEL_KEY])
-            if self.count[NODE_PROPERTY_KEY]:
-                accuracy_str += " l=%-14s" % percents_str(self.correct_count[NODE_LABEL_KEY],
-                                                          self.count[NODE_LABEL_KEY])
+            for key in SHARED_OUTPUT_KEYS:
+                if self.count.get(key):
+                    accuracy_str += " l=%-14s" % percents_str(self.correct_count[key], self.count[key])
             return "%-33s" % accuracy_str
         return ""
 
