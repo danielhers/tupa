@@ -15,6 +15,8 @@ mkdir -p models
 
 if [[ -n "${FRAMEWORK}" ]]; then
     grep '"framework": "'${FRAMEWORK}'"' ../mrp/2019/training/training.mrp > models/mrp-${SUFFIX}.train.mrp
+else
+    cp ../mrp/2019/training/training.mrp models/mrp-${SUFFIX}.train.mrp
 fi
 
 python -m tupa --seed $RANDOM --no-validate-oracle \
