@@ -25,5 +25,6 @@ head -n$((TOTAL * 95 / 100)) models/mrp-${SUFFIX}.train_dev.mrp > models/mrp-${S
 head -n$((TOTAL * 5 / 100)) models/mrp-${SUFFIX}.train_dev.mrp > models/mrp-${SUFFIX}.dev.mrp
 
 python -m tupa --seed $RANDOM --cores=15 --no-validate-oracle \
+    --dynet-autobatch --dynet-mem=25000 \
     -t models/mrp-${SUFFIX}.train.mrp -d models/mrp-${SUFFIX}.dev.mrp \
     --conllu ../mrp/2019/companion/udpipe.mrp --alignment ../mrp/2019/companion/isi.mrp -m models/mrp-${SUFFIX} -v
