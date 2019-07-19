@@ -74,23 +74,20 @@ class GraphParser(AbstractParser):
             assert self.lang, "Attribute 'lang' is required per passage when using multilingual BERT"
         self.state_hash_history = set()
         self.state = self.oracle = None
-        if self.framework == "amr":
-            if self.alignment:  # Copy alignments to anchors, updating graph
-                for alignment_node in self.alignment.nodes:
-                    node = self.graph.find_node(alignment_node.id)
-                    if node is None:
-                        self.config.log("graph %s: invalid alignment node %s" % (self.graph.id, alignment_node.id))
-                        continue
-                    if node.anchors is None:
-                        node.anchors = []
-                    for conllu_node_id in (alignment_node.label or []) + list(chain(*alignment_node.values or [])):
-                        conllu_node = self.conllu.find_node(conllu_node_id)
-                        if conllu_node is None:
-                            raise ValueError("Alignments incompatible with tokenization: token %s "
-                                             "not found in graph %s" % (conllu_node_id, self.graph.id))
-                        node.anchors += conllu_node.anchors
-            else:
-                raise ValueError("No alignment found for AMR graph " + self.graph.id)
+        if self.framework == "amr" and self.alignment:  # Copy alignments to anchors, updating graph
+            for alignment_node in self.alignment.nodes:
+                node = self.graph.find_node(alignment_node.id)
+                if node is None:
+                    self.config.log("graph %s: invalid alignment node %s" % (self.graph.id, alignment_node.id))
+                    continue
+                if node.anchors is None:
+                    node.anchors = []
+                for conllu_node_id in (alignment_node.label or []) + list(chain(*alignment_node.values or [])):
+                    conllu_node = self.conllu.find_node(conllu_node_id)
+                    if conllu_node is None:
+                        raise ValueError("Alignments incompatible with tokenization: token %s "
+                                         "not found in graph %s" % (conllu_node_id, self.graph.id))
+                    node.anchors += conllu_node.anchors
 
     def init(self):
         self.config.set_framework(self.framework)
@@ -334,15 +331,18 @@ class BatchParser(AbstractParser):
         for i, graph in enumerate(graphs, start=1):
             conllu = self.conllu.get(graph.id)
             if conllu is None:
-                self.config.print("skipped '%s', no companion data found" % graph.id)
+                self.config.print("skipped '%s', no companion conllu data found" % graph.id)
                 continue
+            alignment = self.alignment.get(graph.id)
             for target in graph.targets() or [graph.framework]:
                 if not self.training and target not in self.model.classifier.labels:
-                    self.config.print("skipped target " + target, level=1)
+                    self.config.print("skipped target '%s' for '%s': did not train on it" % (target, graph.id), level=1)
+                    continue
+                if target == "amr" and alignment is None:
+                    self.config.print("skipped target 'amr' for '%s': no companion alignment found" % graph.id, level=1)
                     continue
                 parser = GraphParser(
-                    graph, self.config, self.model, self.training,
-                    conllu=conllu, alignment=self.alignment.get(graph.id), target=target)
+                    graph, self.config, self.model, self.training, conllu=conllu, alignment=alignment, target=target)
                 if self.config.args.verbose and display:
                     progress = "%3d%% %*d/%d" % (i / total * 100, pr_width, i, total) \
                         if total and i <= total else "%d" % i
