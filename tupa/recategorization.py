@@ -27,8 +27,12 @@ def resolve(node, value, introduce_placeholders=False, conservative=False, is_no
         new = new.strip('"()')
         if introduce_placeholders:
             old, new = new, old
-        replaceable = old and (len(old) > 2 or len(value) < 5)
-        return re.sub(re.escape(old) + r"(?![^<]*>|[^(]*\(|\d+$)", new, value, 1) if replaceable else value
+        if old and (len(old) > 2 or len(value) < 5):
+            try:
+                return re.sub(re.escape(old) + r"(?![^<]*>|[^(]*\(|\d+$)", new, value, 1)
+            except re.error:
+                pass
+        return value
 
     read_resources()
 
