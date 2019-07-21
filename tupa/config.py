@@ -250,7 +250,7 @@ class Config(object, metaclass=Singleton):
                                                  "bert-large-cased", "bert-base-multilingual-cased"],
                         default="bert-base-multilingual-cased")
         ap.add_argument("--bert-layers", type=int, nargs='+', default=[-1, -2, -3, -4])
-        ap.add_argument("--bert-layers-pooling", choices=["weighed", "sum", "concat"], default="weighed")
+        ap.add_argument("--bert-layers-pooling", choices=["weighted", "sum", "concat"], default="weighted")
         ap.add_argument("--bert-token-align-by", choices=["first", "sum", "mean"], default="sum")
         ap.add_argument("--bert-multilingual", choices=[0], type=int)
         add_boolean_option(ap, "use-default-word-embeddings", default=False,

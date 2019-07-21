@@ -67,6 +67,25 @@ Run the parser on a French/German text file (separate passages by blank lines):
     python -m tupa exemple.txt -m models/ucca-bilstm-fr --lang fr
     python -m tupa beispiel.txt -m models/ucca-bilstm-de --lang de
 
+### Using BERT embeddings
+
+It's possible to use BERT embeddings instead of the standard not-context-aware embeddings.
+To use them pass the `--use-bert` argument in the relevant command and install the packages in  requirements.bert.txt:
+
+    python -m pip install -r requirements.bert.txt
+
+See the possible config options in `config.py` (relevant configs are with the prefix `bert`).
+
+### Using BERT embeddings: Multilingual training
+It's possible, when using the BERT embeddings, to train a multilingual model which can leverage
+cross-lingual transfer and improve results on low-resource languages.
+To train in the multilingual settings you need to:
+1) Use BERT embeddings by passing the `--use-bert` argument.
+2) Use the BERT multilingual model by passing the argument`--bert-model=bert-base-multilingual-cased`
+3) Pass the `--bert-multilingual=0` argument.
+4) Make sure the UCCA passages files have the `lang` property. See the script 'set_lang' in the package `semstr`.
+
+
 Author
 ------
 * Daniel Hershcovich: daniel.hershcovich@gmail.com

@@ -331,6 +331,8 @@ class BatchParser(AbstractParser):
             passages = to_lower_case(passages)
         pr_width = len(str(total))
         id_width = 1
+        if self.config.args.use_bert:
+            passages = filter_passages_for_bert(passages, self.config.args)
         passages = self.add_progress_bar(textutil.annotate_all(
             passages, as_array=True, as_extra=False, lang=self.config.args.lang, verbose=self.config.args.verbose > 2,
             vocab=self.model.config.vocab(lang=self.config.args.lang)), display=display)
@@ -642,6 +644,26 @@ def read_passages(args, files):
     expanded = [f for pattern in files for f in sorted(glob(pattern)) or (pattern,)]
     return ioutil.read_files_and_dirs(expanded, sentences=args.sentences, paragraphs=args.paragraphs,
                                       converters=CONVERTERS, lang=Config().args.lang)
+
+
+def filter_passages_for_bert(passages, args):
+    from pytorch_pretrained_bert import BertTokenizer
+    is_uncased_model = "uncased" in args.bert_model
+    tokenizer = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=is_uncased_model)
+    for passage in passages:
+        text = [node.text for node in passage.layer(layer0.LAYER_ID).all]
+        bert_token = tokenizer.tokenize(" ".join(text))
+        length = len(bert_token)
+        if length >= (512-2):  # -2 for the special separators words.
+            lang = passage.attrib.get("lang")
+            print("Passage longer than 512!" +
+                  "\nFiltering passage:"
+                  "\nLang: " + str(lang) +
+                  " Id: " + str(passage.ID) +
+                  " Tokens Length: " + str(length) +
+                  " Passage Length: " + str(len(text)))
+        else:
+            yield passage
 
 
 # noinspection PyTypeChecker,PyStringFormat

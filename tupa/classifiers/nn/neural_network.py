@@ -160,7 +160,7 @@ class NeuralNetwork(Classifier, SubModel):
                 indexed_num[i] = np.fmax(indexed_num[i], param.num)  # indices to be looked up are collected
 
         if self.config.args.use_bert and init:
-            if self.config.args.bert_layers_pooling == "weighed":
+            if self.config.args.bert_layers_pooling == "weighted":
                 bert_weights = self.model.add_parameters(len(self.config.args.bert_layers), init=1)
                 self.params["bert_weights"] = bert_weights
 
@@ -212,7 +212,7 @@ class NeuralNetwork(Classifier, SubModel):
 
         with self.torch.no_grad():
             encoded_layers, _ = self.bert_model(tokens_tensor)
-        assert len(encoded_layers) == self.bert_layers_count
+        assert len(encoded_layers) == self.bert_layers_count, "Invalid BERT layer count %s" % len(encoded_layers)
 
         aligned_layer = []
         for layer in range(self.bert_layers_count):
@@ -226,12 +226,12 @@ class NeuralNetwork(Classifier, SubModel):
                 elif self.config.args.bert_token_align_by == "first":
                     aligned_layer[layer].append(token_embeddings[0].cpu().data.numpy())
                 else:
-                    assert False
+                    raise ValueError("Invalid BERT token align option '%s'" % self.config.args.bert_token_align_by)
 
         layer_list_to_use = self.config.args.bert_layers
         aligned_layer = [aligned_layer[i] for i in layer_list_to_use]
 
-        if self.config.args.bert_layers_pooling == "weighed":
+        if self.config.args.bert_layers_pooling == "weighted":
             bert_softmax = dy.softmax(self.params["bert_weights"])
             embeds = dy.cmult(dy.inputTensor(np.asarray(aligned_layer)), bert_softmax)
             embeds = dy.sum_dim(embeds, [0])
@@ -240,7 +240,7 @@ class NeuralNetwork(Classifier, SubModel):
         elif self.config.args.bert_layers_pooling == "sum":
             embeds = dy.inputTensor(np.sum(aligned_layer, axis=0))
         else:
-            assert False
+            raise ValueError("Invalid BERT pooling option '%s'" % self.config.args.bert_layers_pooling)
 
         if self.config.args.bert_multilingual == 0:
             assert lang
@@ -256,21 +256,21 @@ class NeuralNetwork(Classifier, SubModel):
 
             embeds = dy.transpose(dy.concatenate_cols(multilingual_embeds))
 
-        if self.config.args.bert_layers_pooling == "weighed":
+        if self.config.args.bert_layers_pooling == "weighted":
             single_token_embed_len = self.bert_embedding_len
         elif self.config.args.bert_layers_pooling == "concat":
             single_token_embed_len = self.bert_embedding_len * len(layer_list_to_use)
         elif self.config.args.bert_layers_pooling == "sum":
             single_token_embed_len = self.bert_embedding_len
         else:
-            assert False
+            raise ValueError("Invalid BERT pooling option '%s'" % self.config.args.bert_layers_pooling)
         if self.config.args.bert_multilingual == 0:
             single_token_embed_len += 50
 
         # TODO: try dropout strategies like dropping at the per layer embeddings or dropping entire layers.
-        assert embeds.dim() == ((len(passage), single_token_embed_len), 1)
+        assert embeds.dim() == ((len(passage), single_token_embed_len), 1), "Invalid BERT dim %s" % embeds.dim()
 
-        assert(0 <= self.config.args.bert_dropout < 1)
+        assert 0 <= self.config.args.bert_dropout < 1, "Invalid BERT dropout %s" % self.config.args.bert_dropout
         if train:
             embeds = dy.dropout(embeds, self.config.args.bert_dropout)
 
@@ -297,7 +297,7 @@ class NeuralNetwork(Classifier, SubModel):
             embeddings[0].append(('BERT', bert_emded))
             embeddings[1].append(('BERT', bert_emded))
 
-            if "bert_weights" in self.params:
+            if "bert_weights" in self.params and self.config.args.verbose >= 4:
                 print("\n--Bert Weights Changed--: ")
                 print(str(dy.softmax(self.params["bert_weights"]).value()) != self.last_weights)
                 print("\n--Bert Weights--: ")
