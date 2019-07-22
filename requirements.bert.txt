@@ -1,2 +1,2 @@
 torch==1.1.0.post2
-pytorch_pretrained_bert
+pytorch_pretrained_bert==0.6.2
