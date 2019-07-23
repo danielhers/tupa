@@ -25,7 +25,7 @@ TOTAL=`cat models/mrp-${SUFFIX}.train_dev.mrp | wc -l`
 head -n$((TOTAL * 95 / 100)) models/mrp-${SUFFIX}.train_dev.mrp > models/mrp-${SUFFIX}.train.mrp
 head -n$((TOTAL * 5 / 100)) models/mrp-${SUFFIX}.train_dev.mrp > models/mrp-${SUFFIX}.dev.mrp
 
-python -m tupa --seed $RANDOM --cores=15 --use-bert --dynet-gpu --pytorch-gpu --no-validate-oracle --save-every=5000 \
+python -m tupa --seed $RANDOM --cores=15 --use-bert --dynet-gpu --pytorch-gpu --no-validate-oracle --save-every=5000 --timeout=20 \
     --dynet-autobatch --dynet-mem=25000 \
     -t models/mrp-${SUFFIX}.train.mrp -d models/mrp-${SUFFIX}.dev.mrp \
     --conllu ../mrp/2019/companion/udpipe.mrp --alignment ../mrp/2019/companion/isi.mrp -m models/mrp-${SUFFIX} -v
