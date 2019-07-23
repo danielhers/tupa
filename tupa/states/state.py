@@ -302,11 +302,13 @@ class State:
 
     def check_valid_property_value(self, property_value, message=False):
         self.check(property_value is not None, message and "None property-value pair")
+        try:
+            prop, value = property_value
+        except ValueError as e:
+            raise ValueError("Invalid property-value pair: " + str(property_value)) from e
+        self.check(not self.need_property.properties or prop not in self.need_property.properties,
+                   message and "Property %s already set for %s" % (prop, self.need_property))
         if self.args.constraints:
-            try:
-                prop, value = property_value
-            except ValueError as e:
-                raise ValueError("Invalid property-value pair: " + str(property_value)) from e
             resolved_value = resolve(self.need_property, value, conservative=True, is_node_label=False)
             valid = self.constraints.allow_property_value(self.need_property, (prop, resolved_value))
             self.check(valid, message and "May not set property value for %s to %s=%s (%s): %s" % (
@@ -325,6 +327,12 @@ class State:
 
     def check_valid_attribute_value(self, attribute_value, message=False):
         self.check(attribute_value is not None, message and "None attribute-value pair")
+        try:
+            attrib, value = attribute_value
+        except ValueError as e:
+            raise ValueError("Invalid attribute-value pair: " + str(attribute_value)) from e
+        self.check(not self.need_attribute.attributes or attrib not in self.need_attribute.attributes,
+                   message and "Attribute %s already set for %s" % (attrib, self.need_attribute))
         if self.args.constraints:
             valid = self.constraints.allow_attribute_value(self.need_attribute, attribute_value)
             self.check(valid, message and "May not set attribute value for %s to %s: %s" % (
