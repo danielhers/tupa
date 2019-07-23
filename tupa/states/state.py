@@ -57,7 +57,7 @@ class State:
         :return: Graph created from self.nodes
         """
         Config().print("Creating %s graph %s from state..." % (self.framework, self.input_graph.id), level=2)
-        graph = Graph(self.input_graph.id, self.framework)
+        graph = Graph(self.input_graph.id, framework=self.framework)
         graph.input = self.input_graph.input
         for node in self.non_virtual_nodes:
             if node.label is None and requires_node_labels(self.framework):
