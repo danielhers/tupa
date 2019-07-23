@@ -133,6 +133,9 @@ class MultilayerPerceptron(SubModel):
 
     def load_sub_model(self, d, *args, **kwargs):
         d = super().load_sub_model(d, *args, **kwargs)
+        if not d:
+            self.config.print("Skipped empty MLP: %s" % self, level=4)
+            return
         self.args.layers = self.layers = d["layers"]
         self.args.layer_dim = self.layer_dim = d["layer_dim"]
         self.args.output_dim = self.output_dim = d["output_dim"]
@@ -166,8 +169,11 @@ class MultilayerPerceptron(SubModel):
         return None if input_keys is None else " ".join("%s:%d" % (k, len(list(l))) for k, l in groupby(input_keys))
 
     def __str__(self):
-        return "%s layers: %d, total_layers: %d, layer_dim: %d, output_dim: %d, activation: %s, init: %s, " \
-               "dropout: %f, gated: %d, num_labels: %s, input_dim: %d, input_keys: %s, params: %s" % (
-                "/".join(self.save_path), self.layers, self.total_layers, self.layer_dim, self.output_dim,
-                self.activation, self.init, self.dropout, self.gated, self.num_labels, self.input_dim,
-                self.input_keys_str(self.input_keys), list(self.params.keys()))
+        try:
+            return "%s layers: %d, total_layers: %d, layer_dim: %d, output_dim: %d, activation: %s, init: %s, " \
+                   "dropout: %f, gated: %d, num_labels: %s, input_dim: %d, input_keys: %s, params: %s" % (
+                    "/".join(self.save_path), self.layers, self.total_layers, self.layer_dim, self.output_dim,
+                    self.activation, self.init, self.dropout, self.gated, self.num_labels, self.input_dim,
+                    self.input_keys_str(self.input_keys), list(self.params.keys()))
+        except TypeError:
+            return "not initialized"

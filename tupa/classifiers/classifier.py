@@ -154,4 +154,4 @@ class Classifier:
 
 
 def dict_value(d):
-    return next(iter(d.values())) if len(d) == 1 else ", ".join("%s: %d" % i for i in d.items())
+    return next(iter(d.values())) if len(d) == 1 else ", ".join("%s: %d" % (k, v or 0) for k, v in d.items())
