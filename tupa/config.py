@@ -183,7 +183,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--max-length", type=int, default=120, help="maximum length of input sentence")
     add(group, "--rnn", choices=["None"] + list(RNNS), default=DEFAULT_RNN, help="type of recurrent neural network")
     add(group, "--gated", type=int, nargs="?", default=2, help="gated input to BiRNN and MLP")
-    add_boolean_option(group, "use-bert", default=False, description="whether to use bert embeddings")
+    add(group, "--use-bert", action="store_true", help="whether to use bert embeddings")
     add(group, "--bert-model", choices=["bert-base-uncased", "bert-large-uncased", "bert-base-cased",
                                         "bert-large-cased", "bert-base-multilingual-cased"],
         default="bert-large-cased")
@@ -191,8 +191,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--bert-layers-pooling", choices=["weighed", "sum", "concat"], default="weighed")
     add(group, "--bert-token-align-by", choices=["first", "sum", "mean"], default="sum")
     add(group, "--bert-multilingual", choices=[0], type=int)
-    add_boolean_option(group, "use-default-word-embeddings", default=False,
-                       description="whether to use default word embeddings")
+    add(group, "--use-default-word-embeddings", action="store_true", help="whether to use external word vectors")
     add(group, "--bert-dropout", type=float, default=0, choices=np.linspace(0, 0.9, num=10))
     NN_ARG_NAMES.update(get_group_arg_names(group))
     return ap
