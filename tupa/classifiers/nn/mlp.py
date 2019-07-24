@@ -73,7 +73,7 @@ class MultilayerPerceptron(SubModel):
         input_keys, inputs = list(map(list, zip(*list(inputs))))
         if self.input_keys:
             assert input_keys == self.input_keys, "Got:     %s\nBut expected input keys: %s" % (
-                self.input_keys_str(self.input_keys), self.input_keys_str(input_keys))
+                self.input_keys_str(input_keys), self.input_keys_str(self.input_keys))
         else:
             self.input_keys = input_keys
         if self.gated:
