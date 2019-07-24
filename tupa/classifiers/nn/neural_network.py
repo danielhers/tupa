@@ -295,14 +295,18 @@ class NeuralNetwork(Classifier, SubModel):
             embeddings[1].append(('BERT', bert_emded))
 
             if "bert_weights" in self.params:
-                self.config.print("\n--Bert Weights Changed--: ")
-                self.config.print(str(dy.softmax(self.params["bert_weights"]).value()) != self.last_weights)
-                self.config.print("\n--Bert Weights--: ")
-                self.config.print(str(dy.softmax(self.params["bert_weights"]).value()))
-                self.last_weights = str(dy.softmax(self.params["bert_weights"]).value())
+                self.config.print(self.print_bert_weights)
 
         for birnn in self.get_birnns(*axes):
             birnn.init_features(embeddings[int(birnn.shared)], train)
+
+    def print_bert_weights(self):
+        bert_weights = str(self.params["bert_weights"].value())
+        s = "\n--Bert Weights--: " + bert_weights
+        if bert_weights != self.last_weights:
+            s += "\n--Bert Weights Changed-- "
+        self.last_weights = bert_weights
+        return s
 
     def generate_inputs(self, features, axis):
         indices = []  # list, not set, in order to maintain consistent order
