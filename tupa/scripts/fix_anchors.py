@@ -13,7 +13,10 @@ def main(args):
         basename = os.path.basename(f.name)
         with open(os.path.join(args.out_dir, basename), "w", encoding="utf-8") as out_f:
             for line in tqdm(list(f), unit=" graphs", desc=basename):
-                graph = json.loads(line)
+                try:
+                    graph = json.loads(line)
+                except json.decoder.JSONDecodeError:
+                    continue
                 nodes = graph.get("nodes") or ()
                 for node in nodes:
                     anchors = node.get("anchors") or ()
