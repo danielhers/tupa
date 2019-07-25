@@ -1,6 +1,7 @@
 from collections import deque
-from itertools import groupby
 from operator import attrgetter
+
+from itertools import groupby
 
 from ..constraints.util import OP
 
@@ -104,11 +105,12 @@ def expand_anchors(anchors):
 
 def compress_anchors(anchors):
     """ Convert set of integers back to {from, to} dict """
+    anchors = sorted(anchors)
     return [compress_range(r) for _, r in groupby(zip(anchors, anchors[1:]), lambda x: x[0] + 1 == x[1])]
 
 
 def compress_range(r):
-    r = list(r)
+    r = sorted(r)
     return {"from": r[0][0], "to": r[-1][1] + 1}
 
 
