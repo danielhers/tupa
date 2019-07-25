@@ -9,5 +9,5 @@ else
     SUFFIX="$1"
 fi
 
-python -m tupa ../mrp/2019/evaluation/input.mrp models/mrp-${SUFFIX}.output.mrp \
+python -m tupa ../mrp/2019/evaluation/input.mrp models/mrp-${SUFFIX}.output.mrp --timeout=60 \
     --conllu ../mrp/2019/evaluation/udpipe.mrp --alignment ../mrp/2019/evaluation/isi.mrp -m models/mrp-${SUFFIX} -v

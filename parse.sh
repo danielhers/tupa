@@ -10,6 +10,6 @@ else
     SUFFIX="$1"
 fi
 
-python -m tupa --use-bert --dynet-gpu --pytorch-gpu \
+python -m tupa --use-bert --dynet-gpu --pytorch-gpu --timeout=60 \
     ../mrp/2019/evaluation/input.mrp models/mrp-${SUFFIX}.output.mrp \
     --conllu ../mrp/2019/evaluation/udpipe.mrp --alignment ../mrp/2019/evaluation/isi.mrp -m models/mrp-${SUFFIX} -v
