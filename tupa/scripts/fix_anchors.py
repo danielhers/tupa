@@ -22,7 +22,8 @@ def main(args):
                     anchors = node.get("anchors") or ()
                     expanded = expand_anchors(anchors)
                     compressed = compress_anchors(expanded)
-                    node["anchors"] = compressed
+                    if compressed:
+                        node["anchors"] = compressed
                 json.dump(graph, out_f, indent=None, ensure_ascii=False)
                 print(file=out_f)
 
