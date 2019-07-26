@@ -4,7 +4,7 @@ import os
 
 from tqdm import tqdm
 
-from tupa.states.node import expand_anchors, compress_anchors
+from tupa.states.anchors import expand_anchors, compress_anchors
 
 
 def main(args):

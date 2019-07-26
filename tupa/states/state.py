@@ -2,8 +2,9 @@ from collections import deque
 
 from graph import Graph
 
+from .anchors import compress_anchors
 from .edge import StateEdge
-from .node import StateNode, compress_anchors, expand_name
+from .node import StateNode
 from .ref_graph import RefGraph
 from ..action import Actions
 from ..config import Config, requires_node_labels, requires_node_properties, requires_edge_attributes, \
@@ -11,7 +12,7 @@ from ..config import Config, requires_node_labels, requires_node_properties, req
 from ..constraints.util import NAME
 from ..constraints.validation import CONSTRAINTS, Constraints, Direction, ROOT_LAB, ANCHOR_LAB, DEFAULT_LABEL
 from ..model import NODE_LABEL_KEY, NODE_PROPERTY_KEY, EDGE_ATTRIBUTE_KEY
-from ..recategorization import resolve
+from ..recategorization import resolve, expand_name
 
 
 class InvalidActionError(AssertionError):

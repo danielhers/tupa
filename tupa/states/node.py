@@ -1,10 +1,6 @@
 from collections import deque
 from operator import attrgetter
 
-from itertools import groupby
-
-from ..constraints.util import OP
-
 
 class StateNode:
     """
@@ -96,34 +92,3 @@ class StateNode:
 
     def __iter__(self):
         return iter(self.outgoing)
-
-
-def expand_anchors(anchors):
-    """ Convert {from, to} dict to set of integers with the full ranges """
-    return set.union(*[set(range(x["from"], x["to"])) for x in anchors]) if anchors else set()
-
-
-def compress_anchors(anchors):
-    """ Convert set of integers back to {from, to} dict """
-    anchors = sorted(anchors)
-    return [compress_range(r) for _, r in groupby(zip(anchors, anchors[1:]), lambda x: x[0] + 1 == x[1])]
-
-
-def compress_range(r):
-    r = sorted(r)
-    return {"from": r[0][0], "to": r[-1][1] + 1}
-
-
-def compress_name(properties):
-    """ Collapse :name (... / name) :op "..." into one string node """
-    return {OP: "_".join(v for k, v in sorted(properties.items()))}
-
-
-def expand_name(properties):
-    """ Expand back names that have been collapsed """
-    properties = dict(properties)
-    op = properties.pop(OP, None)
-    if op is not None:
-        for i, op_i in enumerate(op.split("_"), start=1):
-            properties[OP + str(i)] = op_i
-    return properties

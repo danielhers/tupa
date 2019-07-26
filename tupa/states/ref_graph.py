@@ -1,8 +1,9 @@
+from .anchors import expand_anchors
 from .edge import StateEdge
-from .node import StateNode, expand_anchors, compress_name
+from .node import StateNode
 from ..constraints.amr import NAME
 from ..constraints.validation import ROOT_ID, ROOT_LAB, ANCHOR_LAB
-from ..recategorization import resolve
+from ..recategorization import resolve, compress_name
 
 
 class RefGraph:

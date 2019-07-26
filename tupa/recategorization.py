@@ -3,6 +3,7 @@ import string
 
 from word2number import w2n
 
+from tupa.constraints.util import OP
 from .constraints.util import read_resources, CATEGORIES, NEGATIONS, VERBALIZATION, MONTHS, CATEGORY_SEPARATOR, \
     NUM_PATTERN, TOKEN_PLACEHOLDER, TOKEN_TITLE_PLACEHOLDER, LEMMA_PLACEHOLDER, NEGATION_PLACEHOLDER, UNRESOLVED
 
@@ -119,3 +120,18 @@ def merge_punct(tokens):
         else:
             break
     return ret
+
+
+def compress_name(properties):
+    """ Collapse :name (... / name) :op "..." into one string node """
+    return {OP: "_".join(v for k, v in sorted(properties.items()))}
+
+
+def expand_name(properties):
+    """ Expand back names that have been collapsed """
+    properties = dict(properties)
+    op = properties.pop(OP, None)
+    if op is not None:
+        for i, op_i in enumerate(op.split("_"), start=1):
+            properties[OP + str(i)] = op_i
+    return properties
