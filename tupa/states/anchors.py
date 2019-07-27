@@ -1,6 +1,7 @@
 def expand_anchors(anchors):
     """ Convert {from, to} dict to set of integers with the full ranges """
-    return set.union(*[set(range(x["from"], x["to"])) for x in anchors]) if anchors else set()
+    return set.union(*[set(range(x["from"] if x["from"] < x["to"] else x["from"] - 1, x["to"]))
+                       for x in anchors]) if anchors else set()
 
 
 # noinspection PyTypeChecker

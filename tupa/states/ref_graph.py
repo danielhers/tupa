@@ -38,9 +38,12 @@ class RefGraph:
             if graph_node.is_top:
                 self.edges.append(StateEdge(self.root, node, ROOT_LAB).add())
             if node.anchors:
-                for terminal in self.terminals:
-                    if node.anchors & terminal.anchors:
-                        self.edges.append(StateEdge(node, terminal, ANCHOR_LAB).add())
+                anchor_terminals = [terminal for terminal in self.terminals if node.anchors & terminal.anchors]
+                if self.framework == "eds" and not anchor_terminals:
+                    anchor_terminals = [min(self.terminals, key=lambda terminal: min(
+                        x - y for x in terminal.anchors for y in node.anchors))]  # Must have anchors, get closest one
+                for terminal in anchor_terminals:
+                    self.edges.append(StateEdge(node, terminal, ANCHOR_LAB).add())
         for edge in graph.edges:
             if edge.src != edge.tgt:  # Drop self-loops as the parser currently does not support them
                 self.edges.append(StateEdge(id2node[edge.src + offset],
