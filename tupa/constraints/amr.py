@@ -1,6 +1,6 @@
 from .util import WEEKDAYS, SEASONS, ROLESETS, INT_PATTERN, PLACEHOLDER_PATTERN, DAY, MONTH, YEAR, YEAR2, DECADE, \
     WEEKDAY, QUARTER, CENTURY, SEASON, TIMEZONE, DATE_ENTITY, NAME, MINUS, POLARITY, ARG2, VALUE, MODE, MODES
-from .validation import Constraints, Valid
+from .validation import Constraints, Valid, ROOT_LAB
 from ..recategorization import resolve
 
 
@@ -59,6 +59,7 @@ def is_valid_arg(value, *labs, is_parent=True, is_node_label=True):
 class AmrConstraints(Constraints):
     def __init__(self, **kwargs):
         super().__init__(multigraph=True, require_implicit_childless=False, allow_orphan_terminals=True,
+                         unique_outgoing={ROOT_LAB},
                          childless_incoming_trigger={POLARITY, CENTURY, DECADE, "polite", "li"}, **kwargs)
 
     def allow_action(self, action, history):

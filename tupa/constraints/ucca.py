@@ -1,4 +1,4 @@
-from .validation import Constraints, ANCHOR_LAB
+from .validation import Constraints, ANCHOR_LAB, ROOT_LAB
 
 
 class EdgeTags:
@@ -32,5 +32,5 @@ class UccaConstraints(Constraints):
                                           EdgeTags.ParallelScene, EdgeTags.Linker,
                                           EdgeTags.Connector,
                                           EdgeTags.Punctuation},
-                         unique_outgoing={EdgeTags.Process, EdgeTags.State},
+                         unique_outgoing={EdgeTags.Process, EdgeTags.State, ROOT_LAB},
                          mutually_exclusive_outgoing={EdgeTags.Process, EdgeTags.State}, **kwargs)
