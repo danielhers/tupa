@@ -84,6 +84,8 @@ class State:
                     attributes, values = zip(*edge.attributes.items()) if edge.attributes else (None, None)
                     graph.add_edge(int(edge.parent.id), int(edge.child.id), edge.lab,
                                    attributes=attributes, values=values)
+            if anchors and self.framework == "eds":
+                anchors = set(range(min(anchors), max(anchors) + 1))  # Force contiguous anchoring for EDS
             node.graph_node.anchors = compress_anchors(anchors) if anchors else None
         return graph
 
@@ -235,7 +237,7 @@ class State:
                 self.check(self.stack, message and "%s with empty stack" % action, is_type=True)
                 s0 = self.stack[-1]
                 if action.is_type(Actions.Reduce):
-                    if s0.text is None:
+                    if s0.text is None and not s0.is_root:
                         self.check(not self.args.require_connected or s0.incoming,
                                    message and "Reducing parentless non-terminal %s" % s0, is_type=True)
                         self.check(not self.constraints.required_outgoing or
