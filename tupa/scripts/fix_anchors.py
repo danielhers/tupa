@@ -17,13 +17,37 @@ def main(args):
                     graph = json.loads(line)
                 except json.decoder.JSONDecodeError:
                     continue
-                nodes = graph.get("nodes") or ()
-                for node in nodes:
-                    anchors = node.get("anchors") or ()
-                    expanded = expand_anchors(anchors)
-                    compressed = compress_anchors(expanded)
-                    if compressed:
-                        node["anchors"] = compressed
+                nodes = graph.get("nodes")
+                if nodes:
+                    removed_ids = []
+                    for node in nodes:
+                        anchors = node.get("anchors") or ()
+                        expanded = expand_anchors(anchors)
+                        compressed = compress_anchors(expanded)
+                        if compressed:
+                            node["anchors"] = compressed
+                        elif graph["framework"] == "eds":
+                            removed_ids.append(node["id"])  # No anchoring found
+                    nodes = [node for node in nodes if node["id"] not in removed_ids]
+                    if nodes:
+                        graph["nodes"] = nodes
+                    else:
+                        del graph["nodes"]
+                    edges = graph.get("edges")
+                    if edges:
+                        edges = [edge for edge in edges if edge["source"] not in removed_ids
+                                 and edge["target"] not in removed_ids]
+                        if edges:
+                            graph["edges"] = edges
+                        else:
+                            del graph["edges"]
+                    tops = graph.get("tops")
+                    if tops:
+                        tops = [top for top in tops if top not in removed_ids]
+                        if tops:
+                            graph["tops"] = tops
+                        else:
+                            del graph["tops"]
                 json.dump(graph, out_f, indent=None, ensure_ascii=False)
                 print(file=out_f)
 
