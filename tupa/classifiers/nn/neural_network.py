@@ -138,7 +138,9 @@ class NeuralNetwork(Classifier, SubModel):
         for key, param in sorted(self.input_params.items()):
             if not param.enabled:
                 continue
-            if (not self.config.args.use_default_word_embeddings or self.config.args.bert_multilingual is not None) \
+            if self.config.args.use_bert and \
+                    (not self.config.args.bert_use_default_word_embeddings
+                     or self.config.args.bert_multilingual is not None) \
                     and key == 'W':
                 i = self.birnn_indices(param)
                 indexed_num[i] = np.fmax(indexed_num[i], param.num)  # indices to be looked up are collected

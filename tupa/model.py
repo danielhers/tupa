@@ -260,9 +260,20 @@ class Model:
                 self.feature_extractor.save(self.filename, save_init=save_init)
                 node_labels = self.feature_extractor.params.get(NODE_LABEL_KEY)
                 skip_labels = (NODE_LABEL_KEY,) if node_labels and node_labels.size else ()
+                bert_configs = {
+                        "use_bert": self.config.args.use_bert,
+                        "bert_model": self.config.args.bert_model,
+                        "bert_layers": self.config.args.bert_layers,
+                        "bert_layers_pooling": self.config.args.bert_layers_pooling,
+                        "bert_token_align_by": self.config.args.bert_token_align_by,
+                        "bert_multilingual": self.config.args.bert_multilingual,
+                        "bert_use_default_word_embeddings": self.config.args.bert_use_default_word_embeddings,
+                        "bert_dropout": self.config.args.bert_dropout}\
+                    if self.config.args.use_bert else {"use_bert": self.config.args.use_bert}
                 self.classifier.save(self.filename, skip_labels=skip_labels,
                                      multilingual=self.config.args.multilingual,
-                                     omit_features=self.config.args.omit_features)
+                                     omit_features=self.config.args.omit_features,
+                                     **bert_configs)
                 textutil.models["vocab"] = self.config.args.vocab
                 save_json(self.filename + ".nlp.json", textutil.models)
                 remove_backup(self.filename)
@@ -279,6 +290,16 @@ class Model:
                 self.config.args.classifier = Classifier.get_property(self.filename, "type")
                 self.config.args.multilingual = Classifier.get_property(self.filename, "multilingual")
                 self.config.args.omit_features = Classifier.get_property(self.filename, "omit_features")
+                self.config.args.use_bert = Classifier.get_property(self.filename, "use_bert")
+                if self.config.args.use_bert:
+                    self.config.args.bert_model = Classifier.get_property(self.filename, "bert_model")
+                    self.config.args.bert_layers = Classifier.get_property(self.filename, "bert_layers")
+                    self.config.args.bert_layers_pooling = Classifier.get_property(self.filename, "bert_layers_pooling")
+                    self.config.args.bert_token_align_by = Classifier.get_property(self.filename, "bert_token_align_by")
+                    self.config.args.bert_multilingual = Classifier.get_property(self.filename, "bert_multilingual")
+                    self.config.args.bert_use_default_word_embeddings =\
+                        Classifier.get_property(self.filename, "bert_use_default_word_embeddings")
+                    self.config.args.bert_dropout = Classifier.get_property(self.filename, "bert_dropout")
                 self.init_model(init_params=False)
                 self.feature_extractor.load(self.filename, order=[p.name for p in self.param_defs()])
                 if not is_finalized:

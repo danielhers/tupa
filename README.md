@@ -85,6 +85,45 @@ To train in the multilingual settings you need to:
 3) Pass the `--bert-multilingual=0` argument.
 4) Make sure the UCCA passages files have the `lang` property. See the script 'set_lang' in the package `semstr`.
 
+### BERT Performance
+Here are the average results over 3 Bert multilingual models trained on the [German _20K Leagues_ corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_German-20K),
+[English Wiki_corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_English-Wiki) 
+and only on 15 sentences from the [French _20K Leagues_ corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_French-20K), 
+with the following settings:
+```
+bert-model=bert-base-multilingual-cased
+bert-layers= -1 -2 -3 -4
+bert-layers-pooling=weighted
+bert-token-align-by=sum
+```
+The results:
+
+| description          | test primary F1 | test remote F1 | test average |
+| --------------------  | ------------------- | --------------- | ---------------- |
+| German_20K Leagues |      0.828           |     0.6723        |    0.824          |
+| English_20K Leagues |      0.763           |     0.359        |    0.755          |
+| French_20K Leagues |      0.739           |     0.46        |    0.732          |
+| English_Wiki |      0.789           |     0.581        |    0.784          |
+
+*[English _20K Leagues_ corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_English-20K) is used as out of domain test.
+
+### BERT Pre-trained models
+
+To download and extract [a multilingual model](https://github.com/huji-nlp/tupa/releases/download/v1.4.0/bert_multilingual_layers_4_layers_pooling_weighted_align_sum.tar.gz), run:
+
+    curl -LO https://github.com/huji-nlp/tupa/releases/download/v1.4.0/bert_multilingual_layers_4_layers_pooling_weighted_align_sum.tar.gz
+    tar xvzf bert_multilingual_layers_4_layers_pooling_weighted_align_sum.tar.gz
+
+To run the parser using the mode, use the following command. Pay attention that you need to replace `[example lang]` with
+ the language symbol of the sentence in `example.txt` (fr, en, de, etc.):
+
+    python -m tupa example.txt --lang [example lang] -m bert_multilingual_layers_4_layers_pooling_weighed_align_sum
+
+The model was trained on the [German _20K Leagues_ corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_German-20K),
+[English Wiki_corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_English-Wiki) 
+and only on 15 sentences from the [French _20K Leagues_ corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_French-20K).
+
+See the expected performance at [BERT Performance](#bert-performance).
 
 Author
 ------

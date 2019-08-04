@@ -253,7 +253,7 @@ class Config(object, metaclass=Singleton):
         ap.add_argument("--bert-layers-pooling", choices=["weighted", "sum", "concat"], default="weighted")
         ap.add_argument("--bert-token-align-by", choices=["first", "sum", "mean"], default="sum")
         ap.add_argument("--bert-multilingual", choices=[0], type=int)
-        add_boolean_option(ap, "use-default-word-embeddings", default=False,
+        add_boolean_option(ap, "bert-use-default-word-embeddings", default=False,
                            description="whether to use default word embeddings")
         ap.add_argument("--bert-dropout", type=float, default=0, choices=np.linspace(0, 0.9, num=10))
 
