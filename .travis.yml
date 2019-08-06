@@ -61,13 +61,41 @@ jobs:
         apt:
           packages:
             - libboost-all-dev
-    - env: acl2018 CORPUS=wiki
+    - env: acl2018 CORPUS=wiki MODEL=
       script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=20k
+    - env: acl2018 CORPUS=wiki MODEL=-amr
       script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=fr
+    - env: acl2018 CORPUS=wiki MODEL=-dm
       script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=de
+    - env: acl2018 CORPUS=wiki MODEL=-ud++
+      script: experiments/acl2018.sh
+    - env: acl2018 CORPUS=wiki MODEL=-amr-dm
+      script: experiments/acl2018.sh
+    - env: acl2018 CORPUS=wiki MODEL=-amr-ud++
+      script: experiments/acl2018.sh
+    - env: acl2018 CORPUS=wiki MODEL=-amr-dm-ud++
+      script: experiments/acl2018.sh
+    - env: acl2018 CORPUS=20k MODEL=
+      script: experiments/acl2018.sh
+    - env: acl2018 CORPUS=20k MODEL=-amr
+      script: experiments/acl2018.sh
+    - env: acl2018 CORPUS=20k MODEL=-dm
+      script: experiments/acl2018.sh
+    - env: acl2018 CORPUS=20k MODEL=-ud++
+      script: experiments/acl2018.sh
+    - env: acl2018 CORPUS=20k MODEL=-amr-dm
+      script: experiments/acl2018.sh
+    - env: acl2018 CORPUS=20k MODEL=-amr-ud++
+      script: experiments/acl2018.sh
+    - env: acl2018 CORPUS=20k MODEL=-amr-dm-ud++
+      script: experiments/acl2018.sh
+    - env: acl2018 CORPUS=fr MODEL=
+      script: experiments/acl2018.sh
+    - env: acl2018 CORPUS=fr MODEL=-ud
+      script: experiments/acl2018.sh
+    - env: acl2018 CORPUS=de MODEL=
+      script: experiments/acl2018.sh
+    - env: acl2018 CORPUS=de MODEL=-ud
       script: experiments/acl2018.sh
 before_script: # https://github.com/travis-ci/travis-ci/issues/8982#issuecomment-354357640
   - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
