@@ -17,6 +17,7 @@ env:
   global:
     - TWINE_USERNAME=danielh
     - secure: "Z1Y/2naCxRmTKarwOmx0a1AxJVSDheS7GRDJCnv1+CdHNvnqSXPjVKkaXbENTRRL7ACTtAF2tQKnhE9aEMJWGngmln81wo48OGwC28FyYrN/TiNdC6pTGtZiphOv7TphF0Q0zWRUO+BkXwn8P9TABmT8LLj48tzLs0ug2SZL9NJy4qnM8FD1IPY80z2TaVeLgXaGeCy7icLjkmoY/hO/1Ysw8vtMz2p57lnIt5Tq6Eu9yWMiP+RRCqUosn4y1RLL4I1eNQmtDH+Z+7COPPQ28SmRdutzIjpEYzY4kTFaM0cjw3rzTEGiANgqvOkbSrM33qd9Cht2g4k10SPLAikGVTa4P61dM7gusX3O6yuGaW2QIxtr9kU8oAEcFRyavbs6tU4s61jv62tFFqnKQzVJ7ouYF8jmywfkU+KzvSiAILd0lQh8vusvOtfPofEaAxnMCN7ASoVZGtCp7dKH0kXzCitrP0HgVRAmm5nTTeKhx1Up43G98m1wSreJUufcHkTc15Z3EhgPkWMr8wW9JIzdSt9Tt8eTL2A68CC+U4XWfeCXQ5/JV96PxFmTsAGYjXI5oWuxPB6AS81WaLZiJHaBN6njDU1FEJOZLnAiVpJXllyfjgB9BMjCjQHB5/zRhS51FkSj26CFXXr/Bg8QLHAlu0lL9eEcUdP02owo5DyYjaQ="
+    - SCRIPT=ci/test.sh
   matrix:
   - TEST_SUITE=unit TEST_OPTIONS=--multitask
   - TEST_SUITE=toy-ucca
@@ -49,58 +50,38 @@ jobs:
         - conda update -q conda
         - conda create -q -n env python=3.6 numpy cython
         - source activate env
-    - env: acl2017 CORPUS=wiki
-      script: experiments/acl2017.sh
+    - env: SCRIPT=experiments/acl2017.sh CORPUS=wiki
       addons:
         apt:
           packages:
             - libboost-all-dev
-    - env: acl2017 CORPUS=20k
-      script: experiments/acl2017.sh
+    - env: SCRIPT=experiments/acl2017.sh CORPUS=20k
       addons:
         apt:
           packages:
             - libboost-all-dev
-    - env: acl2018 CORPUS=wiki MODEL=
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=wiki MODEL=-amr
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=wiki MODEL=-dm
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=wiki MODEL=-ud++
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=wiki MODEL=-amr-dm
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=wiki MODEL=-amr-ud++
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=wiki MODEL=-amr-dm-ud++
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=20k MODEL=
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=20k MODEL=-amr
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=20k MODEL=-dm
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=20k MODEL=-ud++
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=20k MODEL=-amr-dm
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=20k MODEL=-amr-ud++
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=20k MODEL=-amr-dm-ud++
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=fr MODEL=
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=fr MODEL=-ud
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=de MODEL=
-      script: experiments/acl2018.sh
-    - env: acl2018 CORPUS=de MODEL=-ud
-      script: experiments/acl2018.sh
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=wiki MODEL=
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=wiki MODEL=-amr
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=wiki MODEL=-dm
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=wiki MODEL=-ud++
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=wiki MODEL=-amr-dm
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=wiki MODEL=-amr-ud++
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=wiki MODEL=-amr-dm-ud++
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=20k MODEL=
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=20k MODEL=-amr
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=20k MODEL=-dm
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=20k MODEL=-ud++
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=20k MODEL=-amr-dm
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=20k MODEL=-amr-ud++
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=20k MODEL=-amr-dm-ud++
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=fr MODEL=
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=fr MODEL=-ud
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=de MODEL=
+    - env: SCRIPT=experiments/acl2018.sh CORPUS=de MODEL=-ud
 before_script: # https://github.com/travis-ci/travis-ci/issues/8982#issuecomment-354357640
   - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
 script:
-  - ci/test.sh
+  - $SCRIPT
 deploy:
   provider: script
   script: ci/deploy.sh
