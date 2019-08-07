@@ -71,22 +71,30 @@ class State:
                 properties, values = zip(*node.properties.items())
             else:
                 properties, values = (None, None)
-            node.graph_node = graph.add_node(int(node.id), label=node.label, properties=properties, values=values)
-        for edge in self.root.outgoing:
-            edge.child.graph_node.is_top = True
-        for node in self.non_virtual_nodes:
-            anchors = []
-            for edge in node.outgoing:
-                if edge.child.text is not None:
-                    if requires_anchors(self.framework):
+            anchors = None
+            if requires_anchors(self.framework):
+                anchors = []
+                for edge in node.outgoing:
+                    if edge.child.text is not None:
                         anchors += edge.child.ref_node.anchors
-                else:
-                    attributes, values = zip(*edge.attributes.items()) if edge.attributes else (None, None)
-                    graph.add_edge(int(edge.parent.id), int(edge.child.id), edge.lab,
-                                   attributes=attributes, values=values)
-            if anchors and self.framework == "eds":
-                anchors = set(range(min(anchors), max(anchors) + 1))  # Force contiguous anchoring for EDS
-            node.graph_node.anchors = compress_anchors(anchors) if anchors else None
+                if self.framework == "eds":
+                    if anchors:
+                        anchors = set(range(min(anchors), max(anchors) + 1))  # Force contiguous anchoring for EDS
+                    else:
+                        continue  # Drop nodes without anchors in EDS
+                anchors = compress_anchors(anchors) if anchors else None
+            node.graph_node = graph.add_node(int(node.id), label=node.label, properties=properties, values=values,
+                                             anchors=anchors)
+        for edge in self.root.outgoing:
+            if edge.child.graph_node is not None:
+                edge.child.graph_node.is_top = True
+        for node in self.non_virtual_nodes:
+            if node.graph_node is not None:
+                for edge in node.outgoing:
+                    if edge.child.text is None and edge.child.graph_node is not None:
+                        attributes, values = zip(*edge.attributes.items()) if edge.attributes else (None, None)
+                        graph.add_edge(int(edge.parent.id), int(edge.child.id), edge.lab,
+                                       attributes=attributes, values=values)
         return graph
 
     def is_valid_action(self, action):
