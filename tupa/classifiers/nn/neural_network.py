@@ -3,7 +3,6 @@ from collections import OrderedDict
 from itertools import repeat
 
 import dynet as dy
-import dynet_config
 import numpy as np
 from tqdm import tqdm
 
@@ -178,7 +177,8 @@ class NeuralNetwork(Classifier, SubModel):
 
     def init_cg(self, renew=True):
         if renew:
-            dy.renew_cg()
+            check_validity = self.config.args.dynet_check_validity
+            dy.renew_cg(immediate_compute=check_validity, check_validity=check_validity)
         self.empty_values.clear()
 
     def get_empty_values(self, key):

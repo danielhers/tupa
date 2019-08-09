@@ -315,6 +315,7 @@ class Config(object, metaclass=Singleton):
         add_boolean_option(group, "dynet-gpu", "GPU for training")
         group.add_argument("--dynet-gpus", type=int, default=1, help="how many GPUs you want to use")
         add_boolean_option(group, "dynet-autobatch", "auto-batching of training examples")
+        add_boolean_option(group, "dynet-check-validity", "check validity of expressions immediately")
         DYNET_ARG_NAMES.update(get_group_arg_names(group))
 
         ap.add_argument("-H", "--hyperparams", type=HyperparamsInitializer.action, nargs="*",
