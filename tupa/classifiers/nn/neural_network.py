@@ -356,13 +356,7 @@ class NeuralNetwork(Classifier, SubModel):
         super().score(features, axis)
         num_labels = self.num_labels[axis]
         if self.updates > 0 and num_labels > 1:
-            logits = self.evaluate(features, axis)
-            if dynet_config.gpu():  # RestrictedLogSoftmax is not implemented for GPU, so we move the value to CPU first
-                logits = dy.to_device(logits, 'CPU')
-            scores = dy.log_softmax(logits, restrict=list(range(num_labels))).npvalue()
-            if dynet_config.gpu():  # then move it back to GPU: if the device name is '', the default device is selected
-                scores = dy.to_device(scores, "")
-            return scores[:num_labels]
+            return self.evaluate(features, axis).npvalue()[:num_labels]
         self.config.print("  no updates done yet, returning zero vector.", level=4)
         return np.zeros(num_labels)
 
