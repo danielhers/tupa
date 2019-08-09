@@ -412,10 +412,10 @@ class NeuralNetwork(Classifier, SubModel):
         self.labels = OrderedDict((a, l) for a, l in self.labels.items() if a in self.axes)
         if self.losses:
             loss = dy.esum(self.losses)
-            loss.forward()
-            self.config.print(lambda: "Total loss from %d time steps: %g" % (self.steps, loss.value()), level=4)
-            loss.backward()
             try:
+                loss.forward()
+                self.config.print(lambda: "Total loss from %d time steps: %g" % (self.steps, loss.value()), level=4)
+                loss.backward()
                 self.trainer.update()
             except RuntimeError as e:
                 Config().log("Error in update(): %s\n" % e)
