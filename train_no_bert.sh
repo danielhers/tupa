@@ -21,6 +21,6 @@ tail -n+501 -q models/mrp-${SUFFIX}.train_dev.*.mrp | shuf > models/mrp-${SUFFIX
 rm -f models/mrp-${SUFFIX}.train_dev.*.mrp
 
 python -m tupa --seed $RANDOM --cores=15 --no-validate-oracle --save-every=5000 --timeout=20 \
-    --dynet-autobatch --dynet-mem=25000 \
+    --dynet-autobatch --dynet-mem=25000 --dynet-check-validity \
     -t models/mrp-${SUFFIX}.train.mrp -d models/mrp-${SUFFIX}.dev.mrp \
     --conllu ../mrp/2019/companion/udpipe.mrp --alignment ../mrp/2019/companion/isi.mrp -m models/mrp-${SUFFIX} -v

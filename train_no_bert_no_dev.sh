@@ -20,6 +20,6 @@ else
 fi
 
 python -m tupa --seed $RANDOM --no-validate-oracle --save-every=5000 --timeout=20 \
-    --dynet-autobatch --dynet-mem=25000 \
+    --dynet-autobatch --dynet-mem=25000 --dynet-check-validity \
     -t models/mrp-${SUFFIX}.train.mrp \
     --conllu ../mrp/2019/companion/udpipe.mrp --alignment ../mrp/2019/companion/isi.mrp -m models/mrp-${SUFFIX} -v
