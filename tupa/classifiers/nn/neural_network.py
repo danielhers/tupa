@@ -3,6 +3,7 @@ from collections import OrderedDict
 from itertools import repeat
 
 import dynet as dy
+import dynet_config
 import numpy as np
 from tqdm import tqdm
 
