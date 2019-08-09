@@ -1,4 +1,4 @@
-LOSSES = ("softmax", "max_margin")
+LOSSES = ("softmax",)
 DEFAULT_LOSS = "softmax"
 
 TRAINERS = {

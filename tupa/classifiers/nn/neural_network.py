@@ -356,13 +356,13 @@ class NeuralNetwork(Classifier, SubModel):
         super().score(features, axis)
         num_labels = self.num_labels[axis]
         if self.updates > 0 and num_labels > 1:
-            value = self.evaluate(features, axis)
+            logits = self.evaluate(features, axis)
             if dynet_config.gpu():  # RestrictedLogSoftmax is not implemented for GPU, so we move the value to CPU first
-                value = dy.to_device(value, 'CPU')
-            value = dy.log_softmax(value, restrict=list(range(num_labels))).npvalue()
+                logits = dy.to_device(logits, 'CPU')
+            scores = dy.log_softmax(logits, restrict=list(range(num_labels))).npvalue()
             if dynet_config.gpu():  # then move it back to GPU: if the device name is '', the default device is selected
-                value = dy.to_device(value, "")
-            return value[:num_labels]
+                scores = dy.to_device(scores, "")
+            return scores[:num_labels]
         self.config.print("  no updates done yet, returning zero vector.", level=4)
         return np.zeros(num_labels)
 
@@ -375,16 +375,11 @@ class NeuralNetwork(Classifier, SubModel):
         :param true: true labels (non-negative integers bounded by num_labels[axis])
         """
         super().update(features, axis, pred, true)
-        losses = self.calc_loss(self.evaluate(features, axis, train=True), axis, true)
+        logits = self.evaluate(features, axis, train=True)
+        losses = [dy.pickneglogsoftmax(logits, t) for t in true]
         self.config.print(lambda: "  loss=" + ", ".join("%g" % l.value() for l in losses), level=4)
         self.losses += losses
         self.steps += 1
-
-    def calc_loss(self, scores, axis, true):
-        ret = [dy.pickneglogsoftmax(scores, t) for t in true]
-        if self.loss == "max_margin":
-            ret.append(dy.max_dim(dy.log_softmax(scores, restrict=list(set(range(self.num_labels[axis])) - set(true)))))
-        return ret
 
     def finished_step(self, train=False):
         super().invalidate_caches()
