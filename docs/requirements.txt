@@ -1,2 +1,2 @@
-pypandoc
+pypandoc>=1.4
 sphinx-automodapi
