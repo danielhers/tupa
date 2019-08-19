@@ -180,7 +180,7 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--edge-attribute-dropout", type=float, default=0.2, help="edge attribute dropout parameter")
     add(group, "--node-dropout", type=float, default=0.1, help="probability to drop features for a whole node")
     add(group, "--dropout", type=float, default=0.4, help="dropout parameter between layers")
-    add(group, "--max-length", type=int, default=120, help="maximum length of input sentence")
+    add(group, "--max-length", type=int, default=80, help="maximum length of input sentence")
     add(group, "--rnn", choices=["None"] + list(RNNS), default=DEFAULT_RNN, help="type of recurrent neural network")
     add(group, "--gated", type=int, nargs="?", default=2, help="gated input to BiRNN and MLP")
     add(group, "--use-bert", action="store_true", help="whether to use bert embeddings")
