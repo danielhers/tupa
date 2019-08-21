@@ -23,7 +23,8 @@ Alternatively, install the latest code from GitHub (may be unstable):
     cd tupa
     pip install .
 
-### Train the parser
+Train the parser
+----------------
 
 Having a directory with UCCA passage files
 (for example, [the English Wiki corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_English-Wiki)),
@@ -67,32 +68,34 @@ Run the parser on a French/German text file (separate passages by blank lines):
     python -m tupa exemple.txt -m models/ucca-bilstm-fr --lang fr
     python -m tupa beispiel.txt -m models/ucca-bilstm-de --lang de
 
-### Using BERT embeddings
+Using BERT
+----------
+BERT can be used instead of standard word embeddings.
+First, install the required dependencies:
 
-It's possible to use BERT embeddings instead of the standard not-context-aware embeddings.
-To use them pass the `--use-bert` argument in the relevant command and install the packages in  requirements.bert.txt:
+    pip install -r requirements.bert.txt
+    
+Then pass the `--use-bert` argument to the training command.
 
-    python -m pip install -r requirements.bert.txt
+See the possible configuration options in `config.py` (relevant options have the prefix `bert`).
 
-See the possible config options in `config.py` (relevant configs are with the prefix `bert`).
+### BERT Multilingual Training
+A multilingual model can be trained, to leverage
+cross-lingual transfer and improve results on low-resource languages:
 
-### Using BERT embeddings: Multilingual training
-It's possible, when using the BERT embeddings, to train a multilingual model which can leverage
-cross-lingual transfer and improve results on low-resource languages.
-To train in the multilingual settings you need to:
-1) Use BERT embeddings by passing the `--use-bert` argument.
-2) Use the BERT multilingual model by passing the argument`--bert-model=bert-base-multilingual-cased`
-3) Pass the `--bert-multilingual=0` argument.
-4) Make sure the UCCA passages files have the `lang` property. See the script 'set_lang' in the package `semstr`.
+1. Make sure the input passage files have the `lang` attribute. See the script [`set_lang`](https://github.com/huji-nlp/semstr/blob/master/semstr/scripts/set_lang.py) in the package `semstr`.
+2. Enable BERT by passing the `--use-bert` argument.
+3. Use the multilingual model by passing `--bert-model=bert-base-multilingual-cased`.
+4. Pass the `--bert-multilingual=0` argument to enable multilingual training.
 
 ### BERT Performance
-Here are the average results over 3 Bert multilingual models trained on the [German _20K Leagues_ corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_German-20K),
-[English Wiki_corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_English-Wiki) 
+Here are the average results over 3 BERT multilingual models trained on the [German _20K Leagues_ corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_German-20K),
+[English Wiki corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_English-Wiki) 
 and only on 15 sentences from the [French _20K Leagues_ corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_French-20K), 
 with the following settings:
 ```
 bert-model=bert-base-multilingual-cased
-bert-layers= -1 -2 -3 -4
+bert-layers=-1 -2 -3 -4
 bert-layers-pooling=weighted
 bert-token-align-by=sum
 ```
@@ -100,30 +103,24 @@ The results:
 
 | description          | test primary F1 | test remote F1 | test average |
 | --------------------  | ------------------- | --------------- | ---------------- |
-| German_20K Leagues |      0.828           |     0.6723        |    0.824          |
-| English_20K Leagues |      0.763           |     0.359        |    0.755          |
-| French_20K Leagues |      0.739           |     0.46        |    0.732          |
-| English_Wiki |      0.789           |     0.581        |    0.784          |
+| German 20K Leagues |      0.828           |     0.6723        |    0.824          |
+| English 20K Leagues |      0.763           |     0.359        |    0.755          |
+| French 20K Leagues |      0.739           |     0.46        |    0.732          |
+| English Wiki |      0.789           |     0.581        |    0.784          |
 
 *[English _20K Leagues_ corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_English-20K) is used as out of domain test.
 
-### BERT Pre-trained models
+### Pre-trained Models with BERT
 
-To download and extract [a multilingual model](https://github.com/huji-nlp/tupa/releases/download/v1.4.0/bert_multilingual_layers_4_layers_pooling_weighted_align_sum.tar.gz), run:
+To download and extract [a multilingual model](https://github.com/huji-nlp/tupa/releases/download/v1.4.0/bert_multilingual_layers_4_layers_pooling_weighted_align_sum.tar.gz) trained with the settings above, run:
 
     curl -LO https://github.com/huji-nlp/tupa/releases/download/v1.4.0/bert_multilingual_layers_4_layers_pooling_weighted_align_sum.tar.gz
     tar xvzf bert_multilingual_layers_4_layers_pooling_weighted_align_sum.tar.gz
 
-To run the parser using the mode, use the following command. Pay attention that you need to replace `[example lang]` with
- the language symbol of the sentence in `example.txt` (fr, en, de, etc.):
+To run the parser using the model, use the following command. Pay attention that you need to replace `[lang]` with
+ the right language symbol (`fr`, `en`, or `de`):
 
-    python -m tupa example.txt --lang [example lang] -m bert_multilingual_layers_4_layers_pooling_weighed_align_sum
-
-The model was trained on the [German _20K Leagues_ corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_German-20K),
-[English Wiki_corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_English-Wiki) 
-and only on 15 sentences from the [French _20K Leagues_ corpus](https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_French-20K).
-
-See the expected performance at [BERT Performance](#bert-performance).
+    python -m tupa example.txt --lang [lang] -m bert_multilingual_layers_4_layers_pooling_weighed_align_sum
 
 Author
 ------
