@@ -3,6 +3,6 @@ cython>=0.29
 tqdm>=4.32.2
 configargparse>=0.14.0
 dynet==2.1
-logbook==1.4.3
+logbook>=1.5.2
 word2number>=1.1
 git+https://github.com/cfmrp/mtool.git#egg=mtool
