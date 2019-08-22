@@ -19,6 +19,7 @@ else
     cp ../mrp/2019/training/training.mrp models/mrp-${SUFFIX}.train.mrp
 fi
 
+echo $SUFFIX
 python -m tupa --seed $RANDOM --no-validate-oracle --save-every=5000 --timeout=20 \
     --dynet-autobatch --dynet-mem=25000 --dynet-check-validity \
     -t models/mrp-${SUFFIX}.train.mrp \

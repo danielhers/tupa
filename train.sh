@@ -21,7 +21,7 @@ head -n 500 -q models/mrp-${SUFFIX}.train_dev.*.mrp > models/mrp-${SUFFIX}.dev.m
 tail -n+501 -q models/mrp-${SUFFIX}.train_dev.*.mrp | shuf > models/mrp-${SUFFIX}.train.mrp
 rm -f models/mrp-${SUFFIX}.train_dev.*.mrp
 
-python -m tupa --seed $RANDOM --cores=15 --use-bert --dynet-gpu --pytorch-gpu --no-validate-oracle --save-every=5000 --timeout=20 \
-    --dynet-autobatch --dynet-mem=25000 \
+echo $SUFFIX
+python -m tupa --seed $RANDOM --cores=15 --use-bert --dynet-gpu --pytorch-gpu --no-validate-oracle --save-every=50000 --timeout=20 \
     -t models/mrp-${SUFFIX}.train.mrp -d models/mrp-${SUFFIX}.dev.mrp \
     --conllu ../mrp/2019/companion/udpipe.mrp --alignment ../mrp/2019/companion/isi.mrp -m models/mrp-${SUFFIX} -v
