@@ -414,6 +414,7 @@ class Parser(AbstractParser):
         :param test: whether there are graphs that would be tested on after train finished
         :param iterations: iterable of Iterations objects whose i attributes are the number of iterations to perform
         """
+        self.batch = 0
         self.trained = True
         self.dev = read_graphs_with_progress_bar(dev)
         self.test = test
@@ -521,7 +522,6 @@ class Parser(AbstractParser):
         :param write: whether to write output graphs to file
         :return: generator of parsed graphs
         """
-        self.batch = 0
         assert mode in ParseMode, "Invalid parse mode: %s" % mode
         training = (mode is ParseMode.train)
         if not training and not self.trained:
