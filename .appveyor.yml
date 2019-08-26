@@ -35,8 +35,8 @@ install:
 build: off
 
 test_script:
-  - python -m tupa -t test_files/%FRAMEWORK%.mrp -d test_files/%FRAMEWORK%.mrp -m %FRAMEWORK% --conllu test_files/udpipe.mrp --alignment test_files/isi.mrp -I2 --max-edge-labels=10 --max-node-labels=10 --max-node-properties=10 --max-words=10 --max-lemmas=10 --lstm-layer-dim=10 -v
-  - python -m tupa test_files/input.mrp -m %FRAMEWORK% --conllu test_files/udpipe.mrp --alignment test_files/isi.mrp -v
+  - python -m tupa -t test_files/%FRAMEWORK%.mrp -d test_files/%FRAMEWORK%.mrp -m %FRAMEWORK% --conllu test_files/udpipe.mrp --alignment test_files/isi.mrp -I2 --max-edge-labels=10 --max-node-labels=10 --max-node-properties=10 --max-words=10 --max-lemmas=10 --lstm-layer-dim=10 --timeout=1 -v
+  - python -m tupa test_files/input.mrp -m %FRAMEWORK% --conllu test_files/udpipe.mrp --alignment test_files/isi.mrp --timeout=1 -v
 
 for:
 -
