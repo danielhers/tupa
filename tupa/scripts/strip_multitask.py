@@ -7,9 +7,9 @@ from tupa.scripts.export import load_model
 
 
 def strip_multitask(model, keep):
-    if "amr" not in keep:  # Remove AMR-specific features: node label and category
+    if "amr" not in keep:  # Remove AMR-specific features: node label
         for d in model.feature_params, model.classifier.params:
-            for key in NODE_LABEL_KEY, "c":
+            for key in NODE_LABEL_KEY:
                 try:
                     del d[key]
                 except KeyError:

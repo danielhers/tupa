@@ -71,7 +71,6 @@ SHARED_OUTPUT_PARAM_DEFS = [
     (EDGE_ATTRIBUTE_KEY, dict(dim="edge_attribute_dim", size="max_edge_attributes", dropout="edge_attribute_dropout")),
 ]
 PARAM_DEFS = [
-    ("c",            dict(dim="node_category_dim", size="max_node_categories")),
     ("W",            dict(dim="word_dim_external", size="max_words_external", dropout="word_dropout_external",
                           updated="update_word_vectors", filename="word_vectors", vocab="vocab"), dict(
                                                                                  copy_from="w")),

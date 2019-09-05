@@ -14,11 +14,8 @@ class StateNode:
         self.text = text  # Text for terminals, None for non-terminals
         if label is None:
             self.label = None if self.text is None else self.text
-            self.category = None
         else:  # Node label prediction is enabled
-            self.label, _, self.category = label.partition("|")
-            if not self.category:
-                self.category = None
+            self.label = label
         self.outgoing = []  # StateEdge list
         self.incoming = []  # StateEdge list
         self.children = []  # StateNode list: the children of all edges in outgoing

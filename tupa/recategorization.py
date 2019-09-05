@@ -4,19 +4,19 @@ import string
 from word2number import w2n
 
 from tupa.constraints.util import OP
-from .constraints.util import read_resources, CATEGORIES, NEGATIONS, VERBALIZATION, MONTHS, CATEGORY_SEPARATOR, \
-    NUM_PATTERN, TOKEN_PLACEHOLDER, TOKEN_TITLE_PLACEHOLDER, LEMMA_PLACEHOLDER, NEGATION_PLACEHOLDER, UNRESOLVED
+from .constraints.util import MONTHS, NUM_PATTERN, TOKEN_PLACEHOLDER, TOKEN_TITLE_PLACEHOLDER, LEMMA_PLACEHOLDER, \
+    UNRESOLVED
 
 
 def resolve(node, value, introduce_placeholders=False, conservative=False, is_node_label=True):
     """
-    Replace any placeholder in node label/property with the corresponding terminals' text, and remove category suffix
+    Replace any placeholder in node label/property with the corresponding terminals' text
     :param node: node whose label or property value is to be resolved
     :param value: the label or property value to resolve
-    :param introduce_placeholders: if True, *introduce* placeholders and categories into the label rather than resolving
+    :param introduce_placeholders: if True, *introduce* placeholders into the label rather than resolving
     :param conservative: avoid replacement when risky due to multiple terminal children that could match
     :param is_node_label: is this a node label (not property value)
-    :return: the resolved label, with or without placeholders and categories (depending on the value of reverse)
+    :return: the resolved label, with or without placeholders (depending on the value of reverse)
     """
     if value is None:
         return None
@@ -35,13 +35,6 @@ def resolve(node, value, introduce_placeholders=False, conservative=False, is_no
                 pass
         return value
 
-    read_resources()
-
-    category = None
-    if introduce_placeholders:
-        category = CATEGORIES.get(value)  # category suffix to append to label
-    elif CATEGORY_SEPARATOR in value:
-        value = value[:value.find(CATEGORY_SEPARATOR)]  # remove category suffix
     terminals = node.terminals
     if terminals:
         if not introduce_placeholders and NUM_PATTERN.match(value):  # numeric
@@ -57,21 +50,8 @@ def resolve(node, value, introduce_placeholders=False, conservative=False, is_no
                 if conservative:
                     terminals = ()
             for terminal in terminals:
-                lemma = lemmatize(terminal)
-                if introduce_placeholders and category is None:
-                    category = CATEGORIES.get(lemma)
-                value = _replace(LEMMA_PLACEHOLDER, lemma)
+                value = _replace(LEMMA_PLACEHOLDER, lemmatize(terminal))
                 value = _replace(TOKEN_PLACEHOLDER, terminal.text)
-                negation = NEGATIONS.get(lemma)
-                if negation is not None:
-                    value = _replace(NEGATION_PLACEHOLDER, negation)
-                if is_node_label:
-                    morph = VERBALIZATION.get(lemma)
-                    if morph:
-                        for prefix, morph_value in morph.items():  # V: verb, N: noun, A: noun actor
-                            value = _replace("<%s>" % prefix, morph_value)
-    if introduce_placeholders and category:
-        value += CATEGORY_SEPARATOR + category
     return value
 
 

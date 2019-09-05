@@ -76,8 +76,6 @@ def main():
         ("dep_dim",                 False,  range(5, 16)),
         ("edge_label_dim",          False,  range(15, 26)),
         ("node_label_dim",          False,  range(15, 30)),
-        ("node_category_dim",       False,  range(5, 15)),
-        ("max_node_categories",     False,  range(10, 26)),
         ("punct_dim",               False,  3),
         ("action_dim",              False,  range(2, 6)),
         ("ner_dim",                 False,  range(3, 9)),

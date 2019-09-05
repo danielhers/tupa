@@ -1,4 +1,4 @@
-from .util import WEEKDAYS, SEASONS, ROLESETS, INT_PATTERN, PLACEHOLDER_PATTERN, DAY, MONTH, YEAR, YEAR2, DECADE, \
+from .util import WEEKDAYS, SEASONS, INT_PATTERN, PLACEHOLDER_PATTERN, DAY, MONTH, YEAR, YEAR2, DECADE, \
     WEEKDAY, QUARTER, CENTURY, SEASON, TIMEZONE, DATE_ENTITY, NAME, MINUS, POLARITY, ARG2, VALUE, MODE, MODES
 from .validation import Constraints, Valid, ROOT_LAB
 from ..recategorization import resolve
@@ -45,15 +45,7 @@ def is_valid_arg(value, *labs, is_parent=True, is_node_label=True):
         return is_int_in_range(value, 1, 4)
     elif {YEAR, YEAR2, DECADE, CENTURY}.intersection(labs):  # :year a=date-entity,b_isconst,b_const=[0-9]+
         return is_int_in_range(value)
-
-    if not value or "-" not in value:
-        return True  # What follows is a check for predicate arguments, only relevant for predicates
-    args = [t for t in labs if t.startswith("arg") and (t.endswith("-of") != is_parent)]
-    if not args:
-        return True
-    valid_args = ROLESETS.get(value, ())
-    return not valid_args or valid(all(t.replace("-of", "").endswith(valid_args) for t in args),
-                                   "valid args: " + ", ".join(valid_args))
+    return True
 
 
 class AmrConstraints(Constraints):

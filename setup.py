@@ -61,7 +61,6 @@ setup(name="TUPA",
       extras_require={"server": open(os.path.join("server", "requirements.txt")).read().splitlines(),
                       "viz": ["scipy", "pillow", "matplotlib"]},
       packages=find_packages(),
-      package_data={"tupa.constraints": ["resources/*.txt"]},
       cmdclass={"install": install},
       entry_points={"console_scripts": ["tupa = tupa.__main__:main"]},
       )

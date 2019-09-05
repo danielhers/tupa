@@ -15,7 +15,7 @@ BIRNN = "bilstm"
 NOOP = "noop"
 CLASSIFIERS = (BIRNN, NOOP)
 
-FEATURE_PROPERTIES = "wmtudhencpqxyANEPC"
+FEATURE_PROPERTIES = "wmtudhenpqxyANEPC"
 
 # Swap types
 REGULAR = "regular"
@@ -96,7 +96,6 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
 
     group = ap.add_argument_group(title="Node labels")
     add(group, "--max-node-labels", type=int, default=1000, help="max number of node labels to allow")
-    add(group, "--max-node-categories", type=int, default=25, help="max node categories to allow")
     add(group, "--min-node-label-count", type=int, default=2, help="min number of occurrences for a label")
 
     group = ap.add_argument_group(title="Node properties")
@@ -143,7 +142,6 @@ def add_param_arguments(ap=None, arg_default=None):  # arguments with possible f
     add(group, "--edge-label-dim", type=int, default=20, help="dimension for edge label embeddings")
     add(group, "--edge-attribute-dim", type=int, default=1, help="dimension for edge attribute embeddings")
     add(group, "--node-label-dim", type=int, default=20, help="dimension for node label embeddings")
-    add(group, "--node-category-dim", type=int, default=5, help="dimension for node category embeddings")
     add(group, "--node-property-dim", type=int, default=20, help="dimension for node property embeddings")
     add(group, "--punct-dim", type=int, default=1, help="dimension for separator punctuation embeddings")
     add(group, "--action-dim", type=int, default=3, help="dimension for input action type embeddings")
