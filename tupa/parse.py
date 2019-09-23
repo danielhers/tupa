@@ -499,7 +499,8 @@ class Parser(AbstractParser):
         print("Evaluating on %s graphs" % mode.name, file=sys.stderr)
         out = self.parse(graphs, mode=mode, display=display, write=write)
         try:
-            results = score.mces.evaluate(graphs, out, cores=self.config.args.cores)
+            results = score.mces.evaluate(graphs, out, cores=self.config.args.cores,
+                                          limits={"rrhc": 10, "mces": 5000} if mode == ParseMode.dev else None)
         except (KeyError, ValueError) as e:
             raise ValueError("Failed evaluating graphs: \n" + "\n".join(json.dumps(
                 g.encode(), indent=None, ensure_ascii=False) for g in out)) from e
