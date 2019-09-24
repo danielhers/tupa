@@ -315,6 +315,8 @@ class Config(object, metaclass=Singleton):
         group.add_argument("-l", "--log", help="output log file (default: model filename + .log)")
         group.add_argument("--devscores", help="output CSV file for dev scores (default: model filename + .dev.csv)")
         group.add_argument("--testscores", help="output CSV file for test scores (default: model filename + .test.csv)")
+        group.add_argument("--diagnostics", help="output CSV file for diagnostics info (default: model filename + "
+                                                 ".diagnostics.csv)")
         group.add_argument("--action-stats", help="output CSV file for action statistics")
 
         group = ap.add_argument_group(title="Sanity checks")
@@ -349,6 +351,11 @@ class Config(object, metaclass=Singleton):
                 self.args.devscores = self.args.model + ".dev.csv"
             if self.args.input and not self.args.testscores:
                 self.args.testscores = self.args.model + ".test.csv"
+            if self.args.input and not self.args.diagnostics:
+                self.args.diagnostics = self.args.model + ".diagnostics.csv"
+            if self.args.diagnostics:
+                with open(self.args.diagnostics, "a") as f:
+                    print("id", "framework", "tokens", "actions", sep=",", file=f)
         elif not self.args.log:
             self.args.log = "parse.log"
         self.sub_configs = []  # Copies to be stored in Models so that they do not interfere with each other

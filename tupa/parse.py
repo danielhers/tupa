@@ -282,6 +282,12 @@ class GraphParser(AbstractParser):
         if accuracies is not None:
             count = sum(self.count.values())
             accuracies[(self.graph.id, self.framework)] = sum(self.correct_count.values()) / count if count else 0
+        if self.config.args.diagnostics:
+            try:
+                with open(self.config.args.diagnostics, "a") as f:
+                    print(self.graph.id, self.framework, len(self.conllu.nodes), self.count[None], sep=",", file=f)
+            except OSError:
+                pass
         return self.out
 
     @property
