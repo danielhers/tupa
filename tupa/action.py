@@ -51,7 +51,7 @@ class Action(dict):
 class Actions(Labels):
     Shift = Action("SHIFT")
     Node = Action("NODE")
-    Implicit = Action("IMPLICIT")
+    Implicit = Action("IMPLICIT")  # Called "CHILD" in the paper
     Label = Action("LABEL")
     Property = Action("PROPERTY")
     Attribute = Action("ATTRIBUTE")
