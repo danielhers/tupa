@@ -120,7 +120,7 @@ To download and extract [a multilingual model](https://github.com/huji-nlp/tupa/
 To run the parser using the model, use the following command. Pay attention that you need to replace `[lang]` with
  the right language symbol (`fr`, `en`, or `de`):
 
-    python -m tupa example.txt --lang [lang] -m bert_multilingual_layers_4_layers_pooling_weighed_align_sum
+    python -m tupa example.txt --lang [lang] -m bert_multilingual_layers_4_layers_pooling_weighted_align_sum
 
 Author
 ------
