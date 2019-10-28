@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH --mem=50G
 #SBATCH --time=7-0
-#SBATCH -c16
+#SBATCH -c2
 
 if [[ $# -lt 1 ]]; then
     SUFFIX=no-bert-`date '+%Y%m%d'`
@@ -21,7 +21,7 @@ tail -n+501 -q models/mrp-${SUFFIX}.train_dev.*.mrp | shuf > models/mrp-${SUFFIX
 rm -f models/mrp-${SUFFIX}.train_dev.*.mrp
 
 echo $SUFFIX
-python -m tupa --seed $RANDOM --cores=15 --no-validate-oracle --save-every=50000 --timeout=20 \
+python -m tupa --seed $RANDOM --cores=2 --no-validate-oracle --save-every=50000 --timeout=20 \
     --dynet-autobatch --dynet-mem=15000 --dynet-check-validity \
-    -t models/mrp-${SUFFIX}.train.mrp -d models/mrp-${SUFFIX}.dev.mrp \
+    --max-training-per-framework=6572 -t models/mrp-${SUFFIX}.train.mrp -d models/mrp-${SUFFIX}.dev.mrp \
     --conllu ../mrp/2019/companion/udpipe.mrp --alignment ../mrp/2019/companion/isi.mrp -m models/mrp-${SUFFIX} -v

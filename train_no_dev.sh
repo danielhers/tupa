@@ -23,5 +23,5 @@ fi
 echo $SUFFIX
 python -m tupa --seed $RANDOM --use-bert --dynet-gpu --pytorch-gpu --no-validate-oracle --save-every=5000 --timeout=20 \
     --dynet-autobatch --dynet-mem=25000 \
-    -t models/mrp-${SUFFIX}.train.mrp \
+    --max-training-per-framework=6572 -t models/mrp-${SUFFIX}.train.mrp \
     --conllu ../mrp/2019/companion/udpipe.mrp --alignment ../mrp/2019/companion/isi.mrp -m models/mrp-${SUFFIX} -v
