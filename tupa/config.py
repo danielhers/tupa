@@ -244,6 +244,8 @@ class Config(object, metaclass=Singleton):
     def __init__(self, *args):
         self.arg_parser = ap = ArgParser(description="Transition-based parser for UCCA.",
                                          formatter_class=ArgumentDefaultsHelpFormatter)
+        add_boolean_option(ap, "use-min-nn-architecture", default=False,
+                           description="whether to use a minimized architecture version of the NN model")
 
         add_boolean_option(ap, "use-bert", default=False, description="whether to use bert embeddings")
         add_boolean_option(ap, "cache-bert", default=False, description="whether to cache bert embeddings to RAM")

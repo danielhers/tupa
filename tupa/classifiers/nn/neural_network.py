@@ -81,9 +81,11 @@ class NeuralNetwork(Classifier, SubModel):
 
             if self.config.args.cache_bert:
                 self.bert_embeddings_cache = {}
+                self.bert_current_embedding = None
+
         else:
             self.torch = self.tokenizer = self.bert_model = self.bert_layers_count = self.bert_embedding_len = \
-                self.last_weights = None
+                self.last_weights = self.bert_embeddings_cache = self.bert_current_embedding = None
 
     @property
     def input_dim(self):
@@ -325,8 +327,11 @@ class NeuralNetwork(Classifier, SubModel):
                 print(str(dy.softmax(self.params["bert_weights"]).value()))
                 self.last_weights = str(dy.softmax(self.params["bert_weights"]).value())
 
-        for birnn in self.get_birnns(*axes):
-            birnn.init_features(embeddings[int(birnn.shared)], train)
+        if self.config.args.use_min_nn_architecture:
+            self.bert_current_embedding = self.get_bert_embed(passage, lang, train)
+        else:
+            for birnn in self.get_birnns(*axes):
+                birnn.init_features(embeddings[int(birnn.shared)], train)
 
     def generate_inputs(self, features, axis):
         indices = []  # list, not set, in order to maintain consistent order
@@ -345,12 +350,22 @@ class NeuralNetwork(Classifier, SubModel):
                 yield from ((key, self.get_empty_values(key) if x == MISSING_VALUE else lookup[x]) for x in values)
             self.config.print(lambda: "%s: %s" % (key, values), level=4)
         if indices:
-            for birnn in self.get_birnns(axis):
-                yield from birnn.evaluate(indices)
+            if self.config.args.use_min_nn_architecture:
+                for indice in indices:
+                    if indice == -1:
+                        yield ('BERT', dy.inputVector(np.zeros(self.bert_embedding_len, dtype=float)))
+                    else:
+                        yield ('BERT', self.bert_current_embedding[indice])
+            else:
+                for birnn in self.get_birnns(axis):
+                    yield from birnn.evaluate(indices)
 
     def get_birnns(self, *axes):
         """ Return shared + axis-specific BiRNNs """
-        return [m.birnn for m in [self] + [self.axes[axis] for axis in axes]]
+        if self.config.args.use_min_nn_architecture:
+            return []
+        else:
+            return [m.birnn for m in [self] + [self.axes[axis] for axis in axes]]
 
     def evaluate(self, features, axis, train=False):
         """
