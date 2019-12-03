@@ -246,6 +246,7 @@ class Config(object, metaclass=Singleton):
                                          formatter_class=ArgumentDefaultsHelpFormatter)
 
         add_boolean_option(ap, "use-bert", default=False, description="whether to use bert embeddings")
+        add_boolean_option(ap, "cache-bert", default=False, description="whether to cache bert embeddings to RAM")
         ap.add_argument("--bert-model", choices=["bert-base-uncased", "bert-large-uncased", "bert-base-cased",
                                                  "bert-large-cased", "bert-base-multilingual-cased"],
                         default="bert-base-multilingual-cased")

@@ -29,6 +29,7 @@ class AxisModel:
     """
     Format-specific parameters that are part of the network
     """
+
     def __init__(self, axis, num_labels, config, model, birnn_type):
         args = config.hyperparams.specific[axis]
         self.birnn = birnn_type(config, args, model, save_path=("axes", axis, "birnn"),
@@ -77,6 +78,9 @@ class NeuralNetwork(Classifier, SubModel):
             self.bert_embedding_len = 1024 if "large" in self.config.args.bert_model else 768
 
             self.last_weights = ""
+
+            if self.config.args.cache_bert:
+                self.bert_embeddings_cache = {}
         else:
             self.torch = self.tokenizer = self.bert_model = self.bert_layers_count = self.bert_embedding_len = \
                 self.last_weights = None
@@ -84,7 +88,7 @@ class NeuralNetwork(Classifier, SubModel):
     @property
     def input_dim(self):
         return OrderedDict((a, m.mlp.input_dim) for a, m in self.axes.items())
-    
+
     @property
     def birnn_type(self):
         return BIRNN_TYPES.get(self.model_type, EmptyRNN)
@@ -189,47 +193,61 @@ class NeuralNetwork(Classifier, SubModel):
         return value
 
     def get_bert_embed(self, passage, lang, train=False):
-        orig_tokens = passage
-        bert_tokens = []
-        # Token map will be an int -> int mapping between the `orig_tokens` index and
-        # the `bert_tokens` index.
-        orig_to_tok_map = []
-
-        # Example:
-        # orig_tokens = ["John", "Johanson", "'s",  "house"]
-        # bert_tokens == ["[CLS]", "john", "johan", "##son", "'", "s", "house", "[SEP]"]
-        # orig_to_tok_map == [(1), (2,3), (4,5), (6)]
-
-        bert_tokens.append("[CLS]")
-        for orig_token in orig_tokens:
-            start_token = len(bert_tokens)
-            bert_token = self.tokenizer.tokenize(orig_token)
-            bert_tokens.extend(bert_token)
-            end_token = start_token + len(bert_token)
-            orig_to_tok_map.append(slice(start_token, end_token))
-        bert_tokens.append("[SEP]")
-
-        indexed_tokens = self.tokenizer.convert_tokens_to_ids(bert_tokens)
-        tokens_tensor = self.torch.tensor([indexed_tokens])
-        tokens_tensor = tokens_tensor.to('cuda')
-
-        with self.torch.no_grad():
-            encoded_layers, _ = self.bert_model(tokens_tensor)
-        assert len(encoded_layers) == self.bert_layers_count, "Invalid BERT layer count %s" % len(encoded_layers)
+        def bert_cache_token_key(full_sentence: str, layer: int):
+            return f'{full_sentence}_{layer}'
 
         aligned_layer = []
-        for layer in range(self.bert_layers_count):
-            aligned_layer.append([])
-            for mapping_range in orig_to_tok_map:
-                token_embeddings = encoded_layers[layer][0][mapping_range]
-                if self.config.args.bert_token_align_by == "mean":
-                    aligned_layer[layer].append(self.torch.mean(token_embeddings, dim=(0,)).cpu().data.numpy())
-                elif self.config.args.bert_token_align_by == "sum":
-                    aligned_layer[layer].append(self.torch.sum(token_embeddings, dim=(0,)).cpu().data.numpy())
-                elif self.config.args.bert_token_align_by == "first":
-                    aligned_layer[layer].append(token_embeddings[0].cpu().data.numpy())
-                else:
-                    raise ValueError("Invalid BERT token align option '%s'" % self.config.args.bert_token_align_by)
+        if self.config.args.cache_bert and any(bert_cache_token_key(passage, layer) in self.bert_embeddings_cache
+                                               for layer in range(self.bert_layers_count)):
+            assert all(bert_cache_token_key(passage, layer) in self.bert_embeddings_cache
+                       for layer in range(self.bert_layers_count))
+            aligned_layer = [self.bert_embeddings_cache[bert_cache_token_key(passage, layer)]
+                             for layer in range(self.bert_layers_count)]
+
+        else:
+            orig_tokens = passage
+            bert_tokens = []
+            # Token map will be an int -> int mapping between the `orig_tokens` index and
+            # the `bert_tokens` index.
+            orig_to_tok_map = []
+
+            # Example:
+            # orig_tokens = ["John", "Johanson", "'s",  "house"]
+            # bert_tokens == ["[CLS]", "john", "johan", "##son", "'", "s", "house", "[SEP]"]
+            # orig_to_tok_map == [(1), (2,3), (4,5), (6)]
+
+            bert_tokens.append("[CLS]")
+            for orig_token in orig_tokens:
+                start_token = len(bert_tokens)
+                bert_token = self.tokenizer.tokenize(orig_token)
+                bert_tokens.extend(bert_token)
+                end_token = start_token + len(bert_token)
+                orig_to_tok_map.append(slice(start_token, end_token))
+            bert_tokens.append("[SEP]")
+
+            indexed_tokens = self.tokenizer.convert_tokens_to_ids(bert_tokens)
+            tokens_tensor = self.torch.tensor([indexed_tokens])
+            tokens_tensor = tokens_tensor.to('cuda')
+
+            with self.torch.no_grad():
+                encoded_layers, _ = self.bert_model(tokens_tensor)
+            assert len(encoded_layers) == self.bert_layers_count, "Invalid BERT layer count %s" % len(encoded_layers)
+
+            for layer in range(self.bert_layers_count):
+                aligned_layer.append([])
+                for mapping_range in orig_to_tok_map:
+                    token_embeddings = encoded_layers[layer][0][mapping_range]
+                    if self.config.args.bert_token_align_by == "mean":
+                        aligned_layer[layer].append(self.torch.mean(token_embeddings, dim=(0,)).cpu().data.numpy())
+                    elif self.config.args.bert_token_align_by == "sum":
+                        aligned_layer[layer].append(self.torch.sum(token_embeddings, dim=(0,)).cpu().data.numpy())
+                    elif self.config.args.bert_token_align_by == "first":
+                        aligned_layer[layer].append(token_embeddings[0].cpu().data.numpy())
+                    else:
+                        raise ValueError("Invalid BERT token align option '%s'" % self.config.args.bert_token_align_by)
+
+                if self.config.args.cache_bert:
+                    self.bert_embeddings_cache[bert_cache_token_key(passage, layer)] = aligned_layer[layer]
 
         layer_list_to_use = self.config.args.bert_layers
         aligned_layer = [aligned_layer[i] for i in layer_list_to_use]
@@ -431,12 +449,12 @@ class NeuralNetwork(Classifier, SubModel):
         if self.config.args.verbose > 2:
             self.trainer.status()
         return self
-            
+
     def sub_models(self):
         """ :return: ordered list of SubModels """
         axes = list(filter(None, map(self.axes.get, self.labels or self.labels_t)))
         return [self] + [m.mlp for m in axes] + [m.birnn for m in axes + [self]]
-    
+
     def save_sub_model(self, d, *args):
         return SubModel.save_sub_model(
             self, d,
@@ -517,7 +535,7 @@ class NeuralNetwork(Classifier, SubModel):
                 model.birnn.load_sub_model(d, *shared_values, load_path=self.birnn.save_path)
                 if self.config.args.verbose <= 3:
                     self.config.print(lambda: "Copied from %s to %s" %
-                                      ("/".join(self.birnn.save_path), model.birnn.params_str()), level=1)
+                                              ("/".join(self.birnn.save_path), model.birnn.params_str()), level=1)
                 self.init_axis_model(axis, init=False)  # Update input_dim
 
     def params_num(self, d):
@@ -528,12 +546,12 @@ class NeuralNetwork(Classifier, SubModel):
         for model in self.sub_models():
             for key, value in model.params.items():
                 for name, param in ((key, value),) if isinstance(value, (dy.Parameters, dy.LookupParameters)) else [
-                        ("%s%s%d%d%d" % (key, p, i, j, k), v) for i, (f, b) in
-                        enumerate(value.builder_layers)
-                        for p, r in (("f", f), ("b", b)) for j, l in enumerate(r.get_parameters())
-                        for k, v in enumerate(l)] if isinstance(value, dy.BiRNNBuilder) else [
-                        ("%s%d%d" % (key, j, k), v) for j, l in enumerate(value.get_parameters())
-                        for k, v in enumerate(l)]:
+                    ("%s%s%d%d%d" % (key, p, i, j, k), v) for i, (f, b) in
+                    enumerate(value.builder_layers)
+                    for p, r in (("f", f), ("b", b)) for j, l in enumerate(r.get_parameters())
+                    for k, v in enumerate(l)] if isinstance(value, dy.BiRNNBuilder) else [
+                    ("%s%d%d" % (key, j, k), v) for j, l in enumerate(value.get_parameters())
+                    for k, v in enumerate(l)]:
                     d["_".join(model.save_path + (name,))] = param.as_array() if as_array else param
         return d
 
