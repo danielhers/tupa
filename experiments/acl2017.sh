@@ -15,6 +15,7 @@ if python -m virtualenv --version || pip install --user virtualenv; then
     python -m virtualenv --python=/usr/bin/python3 venv
     . venv/bin/activate              # on bash
 fi
+pip install cython
 pip install "tupa>=1.0,<1.1"
 git clone https://github.com/huji-nlp/ucca-corpora --branch v1.2
 mkdir -p models wiki-sentences 20k-sentences
