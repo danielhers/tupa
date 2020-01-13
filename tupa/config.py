@@ -256,6 +256,7 @@ class Config(object, metaclass=Singleton):
         add_boolean_option(ap, "bert-use-default-word-embeddings", default=False,
                            description="whether to use default word embeddings")
         ap.add_argument("--bert-dropout", type=float, default=0, choices=np.linspace(0, 0.9, num=10))
+        add_boolean_option(ap, "bert-gpu", default=True, description="whether to use CUDA and GPU for BERT embeddings")
 
         ap.add_argument("passages", nargs="*", help="passage files/directories to test on/parse")
         ap.add_argument("--version", action="version", version="")

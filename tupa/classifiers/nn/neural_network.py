@@ -72,7 +72,8 @@ class NeuralNetwork(Classifier, SubModel):
             self.tokenizer = BertTokenizer.from_pretrained(self.config.args.bert_model, do_lower_case=is_uncased_model)
             self.bert_model = BertModel.from_pretrained(self.config.args.bert_model)
             self.bert_model.eval()
-            self.bert_model.to('cuda')
+            if self.config.args.bert_gpu:
+                self.bert_model.to('cuda')
             self.bert_layers_count = 24 if "large" in self.config.args.bert_model else 12
             self.bert_embedding_len = 1024 if "large" in self.config.args.bert_model else 768
 
@@ -211,7 +212,8 @@ class NeuralNetwork(Classifier, SubModel):
 
         indexed_tokens = self.tokenizer.convert_tokens_to_ids(bert_tokens)
         tokens_tensor = self.torch.tensor([indexed_tokens])
-        tokens_tensor = tokens_tensor.to('cuda')
+        if self.config.args.bert_gpu:
+            tokens_tensor = tokens_tensor.to('cuda')
 
         with self.torch.no_grad():
             encoded_layers, _ = self.bert_model(tokens_tensor)
