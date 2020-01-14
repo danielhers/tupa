@@ -22,6 +22,8 @@ run:
 
     python -m tupa -t <train_dir> -d <dev_dir> -m <model_filename>
 
+Alternatively, download any of the pre-trained models from https://github.com/danielhers/tupa/releases/tag/mrp2019.
+
 ### Parse a text file
 
 Run the parser on a text file (here named `example.txt`) using a trained model:
