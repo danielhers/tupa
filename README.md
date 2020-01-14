@@ -3,25 +3,17 @@ Transition-based UCCA Parser
 TUPA is a transition-based parser for [Universal Conceptual Cognitive Annotation (UCCA)][1].
 
 ### Requirements
-* Python 3.6
+* Python 3.6+
 
 ### Install
 
-Create a Python virtual environment. For example, on Linux:
-    
-    virtualenv --python=/usr/bin/python3 venv
-    . venv/bin/activate              # on bash
-    source venv/bin/activate.csh     # on csh
-
 Install the latest release:
 
-    pip install tupa
+    pip install tupa[bert]
 
 Alternatively, install the latest code from GitHub (may be unstable):
 
-    git clone https://github.com/danielhers/tupa
-    cd tupa
-    pip install .
+    pip install git+git://github.com/danielhers/tupa.git#egg=tupa
 
 Train the parser
 ----------------
@@ -72,6 +64,10 @@ Using BERT
 ----------
 BERT can be used instead of standard word embeddings.
 First, install the required dependencies:
+
+    pip install tupa[bert]
+
+or, if you cloned the repository,
 
     pip install -r requirements.bert.txt
     
