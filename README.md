@@ -10,22 +10,14 @@ and extended to support DM, PSD, EDS and AMR.
 
 ### Install
 
-Create a Python virtual environment. For example, on Linux:
-    
-    virtualenv --python=/usr/bin/python3 venv
-    . venv/bin/activate              # on bash
-    source venv/bin/activate.csh     # on csh
+Install the latest code from GitHub:
 
-Install the latest code from GitHub (may be unstable):
-
-    git clone https://github.com/danielhers/tupa --branch=mrp
-    cd tupa
-    pip install .
+    pip install git+https://github.com/danielhers/tupa.git@mrp
 
 ### Train the parser
 
 Having a directory with MRP graph files
-(for example, [the MRP sample](http://svn.nlpl.eu/mrp/2019/public/sample.tgz)),
+(for example, [the MRP UCCA data](http://svn.nlpl.eu/mrp/2019/public/ucca.tgz)),
 run:
 
     python -m tupa -t <train_dir> -d <dev_dir> -m <model_filename>
@@ -49,15 +41,16 @@ Contributors
 
 Citation
 --------
-If you make use of this software, please cite [the following paper](http://aclweb.org/anthology/P18-1035):
+If you make use of this software, please cite [the following paper](https://www.aclweb.org/anthology/K19-2002):
 
-    @InProceedings{hershcovich2018multitask,
-      author    = {Hershcovich, Daniel  and  Abend, Omri  and  Rappoport, Ari},
-      title     = {Multitask Parsing Across Semantic Representations},
-      booktitle = {Proc. of ACL},
-      year      = {2018},
-      pages     = {373--385},
-      url       = {http://aclweb.org/anthology/P18-1035}
+    @InProceedings{hershcovich-arviv-2019-tupa,
+      author    = {Hershcovich, Daniel  and  Arviv, Ofir},
+      title     = {{TUPA} at {MRP} 2019: A Multi-Task Baseline Syste},
+      booktitle = {Proc. of CoNLL MRP Shared Task},
+      year      = {2019},
+      pages     = {28--39},
+      url       = {https://www.aclweb.org/anthology/K19-2002},
+      doi       = {10.18653/v1/K19-2002}
     }
 
 
