@@ -1,7 +1,7 @@
 Transition-based Meaning Representation Parser
 ==============================================
 TUPA is a transition-based parser used as a baseline system in the
-[CoNLL 2019 on Cross-Framework Meaning Representation Parsing](http://mrp.nlpl.eu/).
+[CoNLL 2019 Shared Task on Cross-Framework Meaning Representation Parsing](http://mrp.nlpl.eu/).
 It was originally built for Universal Conceptual Cognitive Annotation (UCCA),
 and extended to support DM, PSD, EDS and AMR.
 
