@@ -38,7 +38,7 @@ Run the parser using a trained model:
 
     python -m tupa example.mrp -m <model_filename>
 
-An `mrp` file will be created per instance (separate by blank lines in the text file).
+An `mrp` file will be created per instance (separate by newlines in the text file).
 
 If you already have a preprocessed `mrp` file (for example, from the shared task data), then there is no need to run UDPipe and mtool.
 
