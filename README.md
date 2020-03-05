@@ -26,11 +26,21 @@ Alternatively, download any of the pre-trained models from https://github.com/da
 
 ### Parse a text file
 
-Run the parser on a text file (here named `example.txt`) using a trained model:
+Preprocess a text file (here named `example.txt`) using [UDPipe](http://ufal.mff.cuni.cz/udpipe):
 
-    python -m tupa example.txt -m <model_filename>
+    udpipe --tag --parse --input horizontal --tokenizer "ranges;presegmented;normalized_spaces" --output conllu english-ewt-ud-2.4-190531.udpipe < example.txt > example.conllu
+
+Convert the output to `mrp` using [mtool](https://github.com/cfmrp/mtool):
+    
+    tool/main.py --read conllu --write mrp < example.conllu > example.mrp
+
+Run the parser using a trained model:
+
+    python -m tupa example.mrp -m <model_filename>
 
 An `mrp` file will be created per instance (separate by blank lines in the text file).
+
+If you already have a preprocessed `mrp` file (for example, from the shared task data), then there is no need to run UDPipe and mtool.
 
 Author
 ------
