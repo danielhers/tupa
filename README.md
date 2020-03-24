@@ -34,6 +34,10 @@ Run the parser on a text file (here named `example.txt`) using a trained model:
 
 An `xml` file will be created per passage (separate by blank lines in the text file).
 
+To visualize output graphs, use the [visualize](https://github.com/danielhers/ucca/blob/master/scripts/visualize.py) command:
+
+    python -m scripts.visualize <xml_files>
+
 ### Pre-trained models
 
 To download and extract [a model pre-trained on the Wiki corpus](https://github.com/huji-nlp/tupa/releases/download/v1.3.10/ucca-bilstm-1.3.10.tar.gz), run:
