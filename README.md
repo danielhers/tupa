@@ -174,7 +174,7 @@ This package is licensed under the GPLv3 or later license (see [`LICENSE.txt`](L
 
 [1]: http://github.com/huji-nlp/ucca
 
-
+                [ ~ Dependencies scanned by PyUp.io ~ ]
 [![Build Status (Travis CI)](https://travis-ci.org/danielhers/tupa.svg?branch=master)](https://travis-ci.org/danielhers/tupa)
 [![Build Status (AppVeyor)](https://ci.appveyor.com/api/projects/status/github/danielhers/tupa?svg=true)](https://ci.appveyor.com/project/danielh/tupa)
 [![Build Status (Docs)](https://readthedocs.org/projects/tupa/badge/?version=latest)](http://tupa.readthedocs.io/en/latest/)
