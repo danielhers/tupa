@@ -13,12 +13,12 @@ if ! [[ "$ACTION" =~ ^(toy|unit)$ ]]; then
     case "$FORMAT" in
     ucca)
         mkdir pickle
-        curl -L https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_English-Wiki/releases/download/v1.2.4/ucca-sample.tar.gz | tar xz -C pickle
+        curl -L --insecure https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_English-Wiki/releases/download/v1.2.4/ucca-sample.tar.gz | tar xz -C pickle
         TRAIN_DATA="pickle/train/*"
         DEV_DATA="pickle/dev/*"
         ;;
     amr)
-        curl -L --remote-name-all https://amr.isi.edu/download/2016-03-14/alignment-release-{training,dev,test}-bio.txt
+        curl -L --insecure --remote-name-all https://amr.isi.edu/download/2016-03-14/alignment-release-{training,dev,test}-bio.txt
         rename 's/.txt/.amr/' alignment-release-*-bio.txt
         CONVERT_DATA=alignment-release-dev-bio.amr
         TRAIN_DATA=alignment-release-training-bio.amr
@@ -26,7 +26,7 @@ if ! [[ "$ACTION" =~ ^(toy|unit)$ ]]; then
         ;;
     sdp)
         mkdir data
-        curl -L http://svn.delph-in.net/sdp/public/2015/trial/current.tgz | tar xz -C data
+        curl -L --insecure http://svn.delph-in.net/sdp/public/2015/trial/current.tgz | tar xz -C data
         python -m semstr.scripts.split -q data/sdp/trial/dm.sdp -o data/sdp/trial/dm
         python -m scripts.split_corpus -q data/sdp/trial/dm -t 120 -d 36 -l
         CONVERT_DATA=data/sdp/trial/*.sdp
