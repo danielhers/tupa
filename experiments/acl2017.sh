@@ -9,6 +9,9 @@ set -e
 #   pages     = {1127--1138},
 #   url       = {http://aclweb.org/anthology/P17-1104}
 # }
+#
+# On Ubuntu, requires first installing the following packages:
+# python3-distutils python3-dev cmake libboost-all-dev
 mkdir -p hershcovich2017a
 cd hershcovich2017a
 if python -m virtualenv --version || pip install --user virtualenv; then
