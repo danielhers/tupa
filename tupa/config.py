@@ -22,9 +22,9 @@ REGULAR = "regular"
 COMPOUND = "compound"
 
 # Required number of edge labels per framework
-NODE_LABELS_NUM = {"amr": 1000, "dm": 1000, "psd": 1000, "eds": 1000, "ucca": 0}
-NODE_PROPERTY_NUM = {"amr": 1000, "dm": 510, "psd": 1000, "eds": 1000, "ucca": 0}
-EDGE_LABELS_NUM = {"amr": 141, "dm": 59, "psd": 90, "eds": 10, "ucca": 15}
+NODE_LABELS_NUM = {"amr": 1000, "dm": 1000, "psd": 1000, "eds": 1000, "ucca": 0, "ptg": 1000}
+NODE_PROPERTY_NUM = {"amr": 1000, "dm": 510, "psd": 1000, "eds": 1000, "ucca": 0, "ptg": 1000}
+EDGE_LABELS_NUM = {"amr": 141, "dm": 59, "psd": 90, "eds": 10, "ucca": 15, "ptg": 150}
 EDGE_ATTRIBUTE_NUM = {"amr": 0, "dm": 0, "psd": 0, "eds": 0, "ucca": 2}
 NN_ARG_NAMES = set()
 DYNET_ARG_NAMES = set()
@@ -537,11 +537,11 @@ class Config(object, metaclass=Singleton):
 
 
 def requires_node_labels(framework):
-    return framework != "ucca"
+    return framework not in ("ucca", "drg", "ptg")
 
 
 def requires_node_properties(framework):
-    return framework != "ucca"
+    return framework not in ("ucca", "drg")
 
 
 def requires_edge_attributes(framework):
@@ -549,8 +549,8 @@ def requires_edge_attributes(framework):
 
 
 def requires_anchors(framework):
-    return framework != "amr"
+    return framework not in ("amr", "drg")
 
 
 def requires_tops(framework):
-    return framework in ("ucca", "amr")
+    return framework in ("ucca", "amr", "drg", "ptg")

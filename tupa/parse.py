@@ -57,6 +57,7 @@ class AbstractParser:
 
 class GraphParser(AbstractParser):
     """ Parser for a single graph, has a state and optionally an oracle """
+
     def __init__(self, graph, *args, target=None, **kwargs):
         """
         :param graph: gold Graph to get the correct nodes and edges from (in training), or just to get id from (in test)
@@ -74,7 +75,7 @@ class GraphParser(AbstractParser):
             assert self.lang, "Attribute 'lang' is required per passage when using multilingual BERT"
         self.state_hash_history = set()
         self.state = self.oracle = None
-        if self.framework == "amr" and self.alignment:  # Copy alignments to anchors, updating graph
+        if self.framework in ("amr", "drg", "ptg") and self.alignment:  # Copy alignments to anchors, updating graph
             for alignment_node in self.alignment.nodes:
                 node = self.graph.find_node(alignment_node.id)
                 if node is None:
@@ -82,12 +83,46 @@ class GraphParser(AbstractParser):
                     continue
                 if node.anchors is None:
                     node.anchors = []
-                for conllu_node_id in (alignment_node.label or []) + list(chain(*alignment_node.values or [])):
-                    conllu_node = self.conllu.find_node(conllu_node_id)
-                    if conllu_node is None:
-                        raise ValueError("Alignments incompatible with tokenization: token %s "
-                                         "not found in graph %s" % (conllu_node_id, self.graph.id))
-                    node.anchors += conllu_node.anchors
+
+                conllu_node_id_list = None
+                alignment_node_anchor_char_range_list = None
+                if self.alignment.framework == "alignment":
+                    conllu_node_id_list = (alignment_node.label or []) + list(chain(*alignment_node.values or []))
+                elif self.alignment.framework == "anchoring" and self.framework in ("amr", "ptg"):
+                    conllu_node_id_list = set([alignment_dict["#"] for alignment_dict in
+                                               (alignment_node.anchors or [])
+                                               + ([anchor for anchor_list in (alignment_node.anchorings or []) for anchor in anchor_list])])
+                elif self.alignment.framework == "anchoring" and self.framework == "drg":
+                    alignment_node_anchor_char_range_list = [(int(alignment_dict["from"]),(int(alignment_dict["to"]))) for alignment_dict in
+                                                                 (alignment_node.anchors or [])
+                                                                 + ([anchor for anchor_list in (alignment_node.anchorings or []) for anchor in anchor_list])]
+                    assert all([len(conllu_node.anchors) == 1 for conllu_node in self.conllu.nodes])
+                    anchors_to_conllu_node = {(int(conllu_node.anchors[0]["from"]), int(conllu_node.anchors[0]["to"])):
+                                                  conllu_node
+                                              for conllu_node in self.conllu.nodes}
+                else:
+                    raise ValueError(f'Unknown alignments framework: {alignment_node.framework}')
+
+                if conllu_node_id_list is not None:
+                    assert self.framework in ("amr", "ptg")
+                    for conllu_node_id in conllu_node_id_list:
+                        conllu_node = self.conllu.find_node(conllu_node_id + 1)
+
+                        if conllu_node is None:
+                            raise ValueError("Alignments incompatible with tokenization: token %s "
+                                             "not found in graph %s" % (conllu_node_id, self.graph.id))
+                        node.anchors += conllu_node.anchors
+
+                elif alignment_node_anchor_char_range_list is not None:
+                    for alignment_node_char_range in alignment_node_anchor_char_range_list:
+                        for conllu_anchor_range in anchors_to_conllu_node:
+                            if alignment_node_char_range[0] <= conllu_anchor_range[0] \
+                                    and alignment_node_char_range[1] >= conllu_anchor_range[1]:
+                                conllu_node = anchors_to_conllu_node[conllu_anchor_range]
+                                if conllu_node is None:
+                                    raise ValueError("Alignments incompatible with tokenization: token %s "
+                                                     "not found in graph %s" % (conllu_anchor_range, self.graph.id))
+                                node.anchors += conllu_node.anchors
 
     def init(self):
         self.config.set_framework(self.framework)
@@ -320,6 +355,7 @@ class GraphParser(AbstractParser):
 
 class BatchParser(AbstractParser):
     """ Parser for a single training iteration or single pass over dev/test graphs """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.seen_per_framework = defaultdict(int)
@@ -335,13 +371,10 @@ class BatchParser(AbstractParser):
             if conllu is None:
                 self.config.print("skipped '%s', no companion conllu data found" % graph.id)
                 continue
-            alignment = self.alignment.get(graph.id)
+            alignment = self.alignment.get(graph.id) if self.alignment else None
             for target in graph.targets() or [graph.framework]:
                 if not self.training and target not in self.model.classifier.labels:
                     self.config.print("skipped target '%s' for '%s': did not train on it" % (target, graph.id), level=1)
-                    continue
-                if target == "amr" and alignment is None:
-                    self.config.print("skipped target 'amr' for '%s': no companion alignment found" % graph.id, level=1)
                     continue
                 parser = GraphParser(
                     graph, self.config, self.model, self.training, conllu=conllu, alignment=alignment, target=target)
@@ -403,6 +436,7 @@ class BatchParser(AbstractParser):
 
 class Parser(AbstractParser):
     """ Main class to implement transition-based meaning representation parser """
+
     def __init__(self, model_file=None, config=None, training=None, conllu=None, alignment=None):
         super().__init__(config=config or Config(), model=Model(model_file or config.args.model),
                          training=config.args.train if training is None else training,
@@ -646,7 +680,7 @@ def read_graphs_with_progress_bar(file_handle_or_graphs):
     if isinstance(file_handle_or_graphs, IOBase):
         graphs, _ = read_graphs(
             tqdm(file_handle_or_graphs, desc="Reading " + getattr(file_handle_or_graphs, "name", "input"),
-                 unit=" graphs"), format="mrp")
+                 unit=" graphs"), format="mrp", robust=True)
         return graphs
     return file_handle_or_graphs
 

@@ -1,3 +1,6 @@
+import sys
+from typing import List, Tuple
+
 from .anchors import expand_anchors
 from .edge import StateEdge
 from .node import StateNode
@@ -5,6 +8,7 @@ from ..constraints.amr import NAME
 from ..constraints.validation import ROOT_ID, ROOT_LAB, ANCHOR_LAB
 from ..recategorization import resolve, compress_name
 
+import networkx as nx
 
 class RefGraph:
     def __init__(self, graph, conllu, framework):
@@ -27,6 +31,7 @@ class RefGraph:
         offset = len(conllu.nodes) + 1
         self.non_virtual_nodes = []
         self.edges = []
+        have_anchors = False
         for graph_node in graph.nodes:
             node_id = graph_node.id + offset
             id2node[node_id] = node = \
@@ -43,7 +48,21 @@ class RefGraph:
                     anchor_terminals = [min(self.terminals, key=lambda terminal: min(
                         x - y for x in terminal.anchors for y in node.anchors))]  # Must have anchors, get closest one
                 for terminal in anchor_terminals:
+                    have_anchors = True
                     self.edges.append(StateEdge(node, terminal, ANCHOR_LAB).add())
+
+        if not have_anchors:
+            print(f'framework {graph.framework} graph id {graph.id} have no anchors', file=sys.stderr)
+
+        cycle = find_cycle(graph)
+        while len(cycle) > 0:
+            edge_list = list(graph.edges)
+            first_edge_idx = \
+            [i for i, edge in enumerate(graph.edges) if edge.src == cycle[0][0] and edge.tgt == cycle[0][1]][0]
+            del edge_list[first_edge_idx]
+            graph.edges = set(edge_list)
+            cycle = find_cycle(graph)
+
         for edge in graph.edges:
             if edge.src != edge.tgt:  # Drop self-loops as the parser currently does not support them
                 self.edges.append(StateEdge(id2node[edge.src + offset],
@@ -55,4 +74,30 @@ class RefGraph:
                     node.properties = compress_name(node.properties)
                 node.properties = {prop: resolve(node, value, introduce_placeholders=True)
                                    for prop, value in node.properties.items()}
+
             node.label = resolve(node, node.label, introduce_placeholders=True)  # Must be after properties in case NAME
+
+
+def find_cycle(graph, plot_graph=False) -> List[Tuple[int, int]]:
+    edges_tuple = [(e.src, e.tgt) for e in graph.edges]
+    nx_graph = nx.DiGraph()
+    nx_graph.add_edges_from(edges_tuple)
+    try:
+        cycle = nx.find_cycle(nx_graph)
+    except nx.exception.NetworkXNoCycle as e:
+        cycle = []
+
+    if plot_graph:
+        import matplotlib.pyplot as plt
+        nx.draw(nx_graph, with_labels=True, font_weight='bold')
+        plt.show()
+
+    return cycle
+
+
+def is_directed_acyclic_graph(graph) -> bool:
+    edges_tuple = list(map(lambda x: (x.src, x.tgt), graph.edges))
+    nx_graph = nx.DiGraph()
+    nx_graph.add_edges_from(edges_tuple)
+
+    assert nx.is_directed_acyclic_graph(nx_graph)

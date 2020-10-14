@@ -193,8 +193,12 @@ class Oracle:
         return true_label, raw_true_label
 
     def get_node_property_value(self, state, node):
-        true_property_value = next((k, v) for k, v in node.ref_node.properties.items()
-                                   if k not in (node.properties or ()))
+        try:
+            true_property_value = next((k, v) for k, v in (node.ref_node.properties.items()
+                                                           if node.ref_node.properties else [])
+                                       if k not in (node.properties or ()))
+        except StopIteration:
+            return None
         if self.args.validate_oracle:
             try:
                 state.check_valid_property_value(true_property_value, message=True)

@@ -155,12 +155,18 @@ def eds_constraints(**kwargs):
     return EdsConstraints(**kwargs)
 
 
+def ptg_constraints(**kwargs):
+    from .ptg import PtgConstraints
+    return PtgConstraints(**kwargs)
+
+
 CONSTRAINTS = {
     "ucca":   ucca_constraints,
     "amr":    amr_constraints,
     "dm":     sdp_constraints,
     "psd":    sdp_constraints,
     "eds":    eds_constraints,
+    "ptg":    ptg_constraints,
 }
 
 
