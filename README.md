@@ -17,7 +17,7 @@ Install the latest code from GitHub:
 ### Train the parser
 
 Having a directory with MRP graph files
-(for example, [the MRP UCCA data](http://svn.nlpl.eu/mrp/2019/public/ucca.tgz)),
+(for example, [the MRP 2019 UCCA data](http://svn.nlpl.eu/mrp/2019/public/ucca.tgz)),
 run:
 
     python -m tupa -t <train_dir> -d <dev_dir> -m <model_filename>
