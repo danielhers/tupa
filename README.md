@@ -22,7 +22,7 @@ run:
 
     python -m tupa -t <train_dir> -d <dev_dir> -m <model_filename>
 
-Alternatively, download any of the pre-trained for [MRP 2019](https://github.com/danielhers/tupa/releases/tag/mrp2019) and [MRP 2020](https://github.com/danielhers/tupa/releases/tag/mrp2020).
+Alternatively, download any of the pre-trained models for [MRP 2019](https://github.com/danielhers/tupa/releases/tag/mrp2019) and [MRP 2020](https://github.com/danielhers/tupa/releases/tag/mrp2020).
 
 ### Parse a text file
 
